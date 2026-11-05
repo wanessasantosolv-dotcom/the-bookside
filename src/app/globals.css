@@ -1,26 +1,137 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/*
+ * The Bookside — tokens do design system.
+ * Valores de tokens.css (design system "The Bookside").
+ */
+@theme {
+  --color-bordo: #6b0d24;
+  --color-bordo-escuro: #4b0d1b;
+  --color-bordo-suave: #8e1d3d;
+  --color-rosa-antigo: #b75a6b;
+  --color-rosa-claro: #e8b4bf;
+  --color-rosa-fundo: #f6e3e7;
+  --color-creme: #f9f5ee;
+  --color-creme-quente: #fff8f3;
+  --color-papel: #f5efe6;
+  --color-bege: #d8c3aa;
+  --color-ameixa: #2b1420;
+  --color-oliva: #6b7a5e;
+  --color-linha: #e6d5ce;
+  --color-cinza: #7a6a6e;
+  --color-ouro: #c9a46a;
+  --color-mesa: #e9e1d3;
+
+  --font-display: var(--font-playfair), Georgia, serif;
+  --font-accent: var(--font-dm-serif), Georgia, serif;
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-maquina: var(--font-special-elite), "Courier New", monospace;
+
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 24px;
+  --radius-pill: 999px;
+
+  --animate-subir: subir 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+@keyframes subir {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  background: var(--color-mesa);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  background: var(--color-mesa);
+  color: var(--color-ameixa);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-bordo);
+  outline-offset: 2px;
+}
+
+/* rótulo pequeno em caixa alta (eyebrow) */
+.eyebrow {
+  font: 600 11px/16px var(--font-sans);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* padrões de capa do perfil */
+.pat-linhas { background: repeating-linear-gradient(90deg, #e8b4bf 0 2px, transparent 2px 12px), #f9f5ee; }
+.pat-bolinhas { background: radial-gradient(circle, #b75a6b 1.6px, transparent 2px) 0 0 / 12px 12px, #f9f5ee; }
+.pat-ondas { background: repeating-radial-gradient(circle at 50% 135%, #d8c3aa 0 2px, transparent 2px 11px), #f9f5ee; }
+.pat-estrelas { background: radial-gradient(circle, #6b0d24 1px, transparent 1.6px) 0 0 / 22px 22px, #f6e3e7; }
+
+.papel-pontilhado {
+  background-color: var(--color-creme);
+  background-image: radial-gradient(rgba(107, 13, 36, 0.07) 1px, transparent 1.5px);
+  background-size: 16px 16px;
+}
+
+/* ── login: logo animada ── */
+.login-logo { animation: entra-logo 1.4s cubic-bezier(0.2, 0.7, 0.2, 1) 0.15s both; }
+.login-frase { animation: entra-frase 1.2s ease-out 0.9s both; }
+.login-folha { animation: sobe-folha 1s cubic-bezier(0.2, 0.8, 0.2, 1) 0.4s both; }
+.login-campos > * { animation: subir 0.6s ease-out both; }
+.login-campos > *:nth-child(1) { animation-delay: 1.1s; }
+.login-campos > *:nth-child(2) { animation-delay: 1.25s; }
+.login-campos > *:nth-child(3) { animation-delay: 1.4s; }
+.login-campos > *:nth-child(4) { animation-delay: 1.55s; }
+.login-estrela { animation: brilha 3.2s ease-in-out infinite; }
+.login-arco-luz {
+  -webkit-mask-image: linear-gradient(100deg, transparent 35%, #000 50%, transparent 65%);
+  mask-image: linear-gradient(100deg, transparent 35%, #000 50%, transparent 65%);
+  -webkit-mask-size: 300% 100%;
+  mask-size: 300% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  animation: varre-arco 4.5s ease-in-out 2.4s infinite;
+}
+@keyframes entra-logo { from { opacity: 0; transform: translateY(18px) scale(0.96); } to { opacity: 1; transform: none; } }
+@keyframes entra-frase { from { opacity: 0; letter-spacing: 0.12em; } to { opacity: 1; letter-spacing: 0; } }
+@keyframes sobe-folha { from { transform: translateY(100%); } to { transform: none; } }
+@keyframes brilha { 0%, 100% { opacity: 0.35; transform: scale(0.7) rotate(0); } 50% { opacity: 1; transform: scale(1.12) rotate(14deg); } }
+@keyframes varre-arco { 0% { -webkit-mask-position: 100% 0; mask-position: 100% 0; } 60%, 100% { -webkit-mask-position: 0 0; mask-position: 0 0; } }
+
+/* ── gostos: pilha de livros ── */
+.pilha { position: relative; display: flex; flex-direction: column; gap: 4px; padding-left: 12px; }
+.pilha::before { content: ""; position: absolute; left: 0; top: 0; bottom: 14px; width: 12px; border-radius: 3px 0 0 3px; background: linear-gradient(90deg, #e6d5ce, #f5efe6); }
+.lombada-livro {
+  position: relative; display: flex; align-items: center; box-sizing: border-box; width: 100%; height: 30px;
+  padding: 0 14px 0 16px; border-radius: 2px 4px 4px 2px; background: #fff8f3; border: 1px solid #d8c3aa;
+  box-shadow: inset -4px 0 0 #efe4d8, 0 2px 3px -2px rgba(43, 20, 32, 0.4); cursor: pointer;
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), background 0.25s, border-color 0.25s;
+}
+.lombada-livro::before { content: ""; position: absolute; left: 0; top: -1px; bottom: -1px; width: 7px; border-radius: 2px 0 0 2px; background: var(--c); }
+.lombada-livro span { font: 400 13px/1 var(--font-maquina); letter-spacing: 0.02em; color: #2b1420; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color 0.25s; }
+.lombada-livro:has(input:checked) { background: var(--c); border-color: var(--c); transform: translateX(-12px); box-shadow: inset -4px 0 0 rgba(0, 0, 0, 0.12), 0 6px 8px -6px rgba(43, 20, 32, 0.5); }
+.lombada-livro:has(input:checked)::before { background: #c9a46a; }
+.lombada-livro:has(input:checked) span { color: #f9f5ee; }
+.lombada-livro:has(input:focus-visible) { outline: 2px solid var(--color-bordo); outline-offset: 2px; }
+.prateleira { height: 8px; margin-top: 6px; border-radius: 3px; background: linear-gradient(#e6d5ce, #d8c3aa); }
+
+/* ── perfil pronto: o livro que abre ── */
+.livro3d { perspective: 1200px; transform: rotate(-2deg); }
+.livro3d .capa { transform-origin: left center; transition: transform 1.2s cubic-bezier(0.6, 0.1, 0.3, 1); backface-visibility: hidden; }
+.livro3d .folha { transform-origin: left center; transition: transform 0.9s cubic-bezier(0.5, 0, 0.3, 1); backface-visibility: hidden; }
+.livro3d .revela { opacity: 0; transition: opacity 0.9s ease; }
+.livro3d[data-aberto="true"] .capa { transform: rotateY(-166deg); }
+.livro3d[data-aberto="true"] .f1 { transform: rotateY(-172deg); transition-delay: 0.3s; }
+.livro3d[data-aberto="true"] .f2 { transform: rotateY(-174deg); transition-delay: 0.55s; }
+.livro3d[data-aberto="true"] .f3 { transform: rotateY(-176deg); transition-delay: 0.8s; }
+.livro3d[data-aberto="true"] .revela { opacity: 1; }
+.estrelinha { opacity: 0; transform: scale(0.4); transition: opacity 0.6s ease, transform 0.6s ease; }
+[data-aberto="true"] .estrelinha { opacity: 1; transform: scale(1); animation: cintila 3s ease-in-out 2.4s infinite; }
+@keyframes cintila { 0%, 100% { opacity: 0.45; } 50% { opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
 }
