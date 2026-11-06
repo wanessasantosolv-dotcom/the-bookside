@@ -135,3 +135,53 @@ body {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* ── teste "what's your bookside" ── */
+.papel-teste {
+  background-color: var(--color-creme);
+  background-image: radial-gradient(rgba(107, 13, 36, 0.09) 1px, transparent 1.5px);
+  background-size: 16px 16px;
+}
+.papel-noite {
+  background-color: var(--color-ameixa);
+  background-image: radial-gradient(rgba(232, 180, 191, 0.13) 1px, transparent 1.5px);
+  background-size: 16px 16px;
+}
+.washi {
+  display: inline-block; padding: 6px 14px;
+  background-color: rgba(232, 180, 191, 0.88);
+  background-image: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.3) 0 5px, transparent 5px 10px);
+  font: italic 400 14px/1.2 var(--font-accent); color: var(--color-ameixa);
+  box-shadow: 0 1px 2px rgba(43, 20, 32, 0.15); white-space: nowrap;
+}
+.opcao-teste {
+  display: flex; align-items: center; gap: 12px; width: 100%; min-height: 60px; padding: 10px 14px; text-align: left;
+  border: 1.5px solid var(--color-ameixa); border-radius: 10px; background: var(--color-creme-quente);
+  box-shadow: 3px 3px 0 var(--color-rosa-claro); font: 500 15px/1.3 var(--font-sans); color: var(--color-ameixa);
+  transition: background 0.15s, transform 0.15s, box-shadow 0.15s; animation: aparece 0.8s ease-out both;
+}
+.opcao-teste:hover { background: var(--color-rosa-fundo); }
+.opcao-teste:active, .opcao-teste[data-escolhida="true"] { background: var(--color-rosa-fundo); box-shadow: 1px 1px 0 var(--color-rosa-claro); transform: translate(2px, 2px) rotate(0deg) !important; }
+.estrela-pisca { animation: pisca 3s ease-in-out infinite; pointer-events: none; }
+@keyframes pisca { 0%, 100% { opacity: 0.25; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.1); } }
+@keyframes aparece { from { opacity: 0; } to { opacity: 1; } }
+.aparece { animation: aparece 0.8s ease-out both; }
+.anel { border: 1px dashed var(--color-rosa-claro); border-radius: 999px; animation: gira 18s linear infinite; }
+@keyframes gira { to { transform: rotate(360deg); } }
+.enche { animation: enche 3s ease-out both; }
+@keyframes enche { from { width: 0; } to { width: 100%; } }
+
+/* envelope / carta lacrada */
+.envelope {
+  background: #b75a6b;
+  background-image: repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.07) 0 12px, transparent 12px 24px);
+}
+.envelope-aba { background: #a24c5c; clip-path: polygon(0 0, 100% 0, 100% 18%, 50% 100%, 0 18%); }
+.carta-papel { background: #fffdf8; box-shadow: 0 20px 34px -18px rgba(43, 20, 32, 0.6); transform: rotate(0.5deg); }
+.lacre {
+  background: radial-gradient(circle at 34% 30%, #8e1d3d, #5a0b1c); box-shadow: 0 5px 10px -4px rgba(43, 20, 32, 0.65);
+  animation: selar 0.6s 0.5s cubic-bezier(0.3, 1.5, 0.6, 1) both;
+}
+@keyframes selar { from { opacity: 0; transform: scale(1.8); } to { opacity: 1; transform: scale(1); } }
+.manuscrito { font: italic 400 15px/1.62 var(--font-accent); color: var(--color-ameixa); }
+.rotulo-carta { font: 600 9px/1.4 var(--font-sans); letter-spacing: 0.2em; text-transform: uppercase; color: var(--color-cinza); }

@@ -5,12 +5,16 @@ import { useEffect, useState } from "react";
 import { Tela } from "@/components/ui/Tela";
 import { Botao, BotaoLink } from "@/components/ui/Botao";
 import { temas } from "@/lib/dados";
+import { arquetipos, type ArquetipoId } from "@/lib/teste";
 import { usePerfil } from "@/lib/perfil-store";
 
 export default function ProntoPage() {
-  const { nome, usuario, livros, gostos, tema, atualizar } = usePerfil();
+  const { nome, usuario, livros, gostos, tema, bookside, atualizar } = usePerfil();
   const [aberto, setAberto] = useState(false);
-  const nomeTema = temas.find((t) => t.id === tema)?.nome ?? "nova leitora";
+  const selo = bookside
+    ? arquetipos[bookside.principal as ArquetipoId]?.nome.replace(/^a /, "")
+    : temas.find((t) => t.id === tema)?.nome;
+  const nomeTema = selo ?? "nova leitora";
 
   useEffect(() => {
     atualizar({ onboardingConcluido: true });

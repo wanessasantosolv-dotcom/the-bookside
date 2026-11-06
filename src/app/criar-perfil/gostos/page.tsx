@@ -20,8 +20,7 @@ export default function GostosPage() {
       titulo="do que você gosta?"
       descricao="escolha pelo menos três livros da pilha. isso ajuda a sugerir leituras, dá para mudar depois."
       rodape={
-        // TODO: o teste "what's your bookside" entra aqui antes do clube.
-        <BotaoLink href="/bem-vinda/clube" desabilitado={total < MINIMO}>
+        <BotaoLink href="/teste" desabilitado={total < MINIMO}>
           continuar
         </BotaoLink>
       }

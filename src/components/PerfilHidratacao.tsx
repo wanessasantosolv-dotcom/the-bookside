@@ -2,6 +2,7 @@
 
 import { useEffect, useSyncExternalStore } from "react";
 import { usePerfil } from "@/lib/perfil-store";
+import { useTeste } from "@/lib/teste-store";
 
 /**
  * O perfil fica salvo no navegador. Ele só é lido depois que a página monta,
@@ -10,6 +11,7 @@ import { usePerfil } from "@/lib/perfil-store";
 export function PerfilHidratacao() {
   useEffect(() => {
     void usePerfil.persist.rehydrate();
+    void useTeste.persist.rehydrate();
   }, []);
   return null;
 }
