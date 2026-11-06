@@ -18,7 +18,7 @@ export function PreviaPerfil() {
       <div className="absolute top-[70px] left-1/2 size-[68px] -translate-x-1/2 overflow-hidden rounded-full border-[3px] border-creme bg-linha">
         {foto ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={foto} alt="" className="size-full object-cover" />
+          <img src={foto} alt="" className="size-full object-cover object-[50%_30%]" />
         ) : null}
       </div>
       <p className="absolute inset-x-0 top-[148px] text-center font-display text-[22px] leading-[1.1] font-semibold italic text-ameixa">

@@ -48,12 +48,31 @@ export const pilhasDeGostos = [
  * Sugestões de primeiro livro. As capas reais vão vir de um catálogo
  * autorizado (ex.: Open Library / Google Books) quando a busca for ligada.
  */
-export const sugestoesDeLivros = [
-  { id: "recursao", titulo: "Recursão", autor: "blake crouch", cor: "#2B1420" },
-  { id: "daisy-jones", titulo: "Daisy Jones & the Six", autor: "taylor jenkins reid", cor: "#B75A6B" },
-  { id: "aguas-frescas", titulo: "Águas frescas para as flores", autor: "valérie perrin", cor: "#6B7A5E" },
-  { id: "o-morro-dos-ventos-uivantes", titulo: "O morro dos ventos uivantes", autor: "emily brontë", cor: "#4B0D1B" },
-  { id: "orgulho-e-preconceito", titulo: "Orgulho e preconceito", autor: "jane austen", cor: "#8E1D3D" },
+export type LivroCatalogo = {
+  id: string;
+  titulo: string;
+  autor: string;
+  ano?: number;
+  genero?: string;
+  sinopse?: string;
+  cor: string;
+};
+
+export const sugestoesDeLivros: LivroCatalogo[] = [
+  { id: "recursao", titulo: "Recursão", autor: "blake crouch", ano: 2019, cor: "#2B1420" },
+  {
+    id: "10-minutos",
+    titulo: "10 minutos e 38 segundos",
+    autor: "elif shafak",
+    ano: 2019,
+    genero: "romance",
+    sinopse:
+      "Tequila Leila morre em Istambul. Nos dez minutos que seguem sua morte, sua mente revive as lembranças da vida que teve.",
+    cor: "#8E1D3D",
+  },
+  { id: "aguas-frescas", titulo: "Águas frescas para as flores", autor: "valérie perrin", ano: 2025, cor: "#6B7A5E" },
+  { id: "daisy-jones", titulo: "Daisy Jones & the Six", autor: "taylor jenkins reid", ano: 2019, cor: "#B75A6B" },
+  { id: "torto-arado", titulo: "Torto arado", autor: "itamar vieira junior", ano: 2019, cor: "#4B0D1B" },
 ];
 
 export const PASSOS_PERFIL = 8;

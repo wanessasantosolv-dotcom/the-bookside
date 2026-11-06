@@ -12,7 +12,8 @@ import { createJSONStorage, persist } from "zustand/middleware";
 export type PadraoCapa = "linhas" | "bolinhas" | "ondas" | "estrelas";
 export type EscolhaEstante = "lendo" | "quero" | "vazia";
 
-export type LivroSalvo = { id: string; titulo: string; autor: string };
+export type StatusLivro = "lendo" | "quero" | "lido";
+export type LivroSalvo = { id: string; titulo: string; autor: string; status?: StatusLivro };
 
 export type Perfil = {
   email: string | null;
@@ -34,6 +35,7 @@ type Acoes = {
   atualizar: (dados: Partial<Perfil>) => void;
   alternarGosto: (gosto: string) => void;
   alternarLivro: (livro: LivroSalvo) => void;
+  guardarLivro: (livro: LivroSalvo) => void;
   sair: () => void;
 };
 
@@ -68,6 +70,8 @@ export const usePerfil = create<Perfil & Acoes>()(
             ? s.livros.filter((l) => l.id !== livro.id)
             : [...s.livros, livro],
         })),
+      guardarLivro: (livro) =>
+        set((s) => ({ livros: [...s.livros.filter((l) => l.id !== livro.id), livro] })),
       sair: () => set({ ...perfilInicial }),
     }),
     {

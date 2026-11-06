@@ -1,13 +1,14 @@
 "use client";
 
+import Link from "next/link";
 import type { ReactNode } from "react";
 import { Passo } from "@/components/onboarding/Passo";
-import { BotaoLink } from "@/components/ui/Botao";
 import { usePerfil, type EscolhaEstante } from "@/lib/perfil-store";
 
-const opcoes: { id: EscolhaEstante; rotulo: string; titulo: string; icone: ReactNode }[] = [
+const opcoes: { id: EscolhaEstante; href: string; rotulo: string; titulo: string; icone: ReactNode }[] = [
   {
     id: "lendo",
+    href: "/criar-perfil/estante/buscar",
     rotulo: "estou lendo um",
     titulo: "já comecei um livro",
     icone: (
@@ -18,6 +19,7 @@ const opcoes: { id: EscolhaEstante; rotulo: string; titulo: string; icone: React
   },
   {
     id: "quero",
+    href: "/criar-perfil/estante/descobrir",
     rotulo: "quero ler",
     titulo: "quero começar um agora",
     icone: (
@@ -29,6 +31,7 @@ const opcoes: { id: EscolhaEstante; rotulo: string; titulo: string; icone: React
   },
   {
     id: "vazia",
+    href: "/criar-perfil/gostos",
     rotulo: "só olhando",
     titulo: "a estante fica vazia por enquanto",
     icone: (
@@ -40,7 +43,6 @@ const opcoes: { id: EscolhaEstante; rotulo: string; titulo: string; icone: React
 ];
 
 export default function EstantePage() {
-  const estante = usePerfil((s) => s.estante);
   const atualizar = usePerfil((s) => s.atualizar);
 
   return (
@@ -50,49 +52,29 @@ export default function EstantePage() {
       eyebrow="sua estante"
       titulo={<span className="text-[30px]">o que você está lendo?</span>}
       descricao="a gente monta sua estante a partir disso. ela começa vazia, e tudo bem."
-      rodape={<BotaoLink href="/criar-perfil/gostos">continuar</BotaoLink>}
     >
-      <fieldset className="flex flex-col gap-3">
-        <legend className="sr-only">sua estante</legend>
-        {opcoes.map((o) => {
-          const marcado = o.id === estante;
-          return (
-            <label
-              key={o.id}
-              className={`flex h-24 cursor-pointer items-center gap-3.5 rounded-md px-4 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-bordo ${
-                marcado ? "border-[1.5px] border-bordo bg-rosa-fundo" : "border border-linha bg-creme-quente"
-              }`}
+      <ul className="flex flex-col gap-3">
+        {opcoes.map((o) => (
+          <li key={o.id}>
+            <Link
+              href={o.href}
+              onClick={() => atualizar({ estante: o.id })}
+              className="flex h-24 items-center gap-3.5 rounded-md border border-linha bg-creme-quente px-4 transition-colors hover:border-bordo active:border-[1.5px] active:border-bordo active:bg-rosa-fundo"
             >
-              <input
-                type="radio"
-                name="estante"
-                className="sr-only"
-                checked={marcado}
-                onChange={() => atualizar({ estante: o.id })}
-              />
-              <span
-                className={`flex size-[52px] flex-none items-center justify-center rounded-md ${
-                  marcado ? "bg-creme-quente" : "bg-rosa-fundo"
-                }`}
-              >
-                {o.icone}
-              </span>
+              <span className="flex size-[52px] flex-none items-center justify-center rounded-md bg-rosa-fundo">{o.icone}</span>
               <span className="min-w-0 flex-1">
                 <span className="eyebrow block !text-[10px] text-cinza">{o.rotulo}</span>
                 <span className="mt-1.5 block font-display text-lg leading-[1.2] font-semibold italic text-ameixa">
                   {o.titulo}
                 </span>
               </span>
-              <span
-                aria-hidden
-                className={`size-5 flex-none rounded-full ${
-                  marcado ? "border-[6px] border-bordo" : "border-[1.5px] border-rosa-antigo"
-                }`}
-              />
-            </label>
-          );
-        })}
-      </fieldset>
+              <span aria-hidden className="flex-none text-[17px] text-rosa-antigo">
+                ›
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
     </Passo>
   );
 }

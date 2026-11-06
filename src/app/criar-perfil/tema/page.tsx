@@ -7,6 +7,7 @@ import { usePerfil } from "@/lib/perfil-store";
 
 export default function TemaPage() {
   const tema = usePerfil((s) => s.tema);
+  const foto = usePerfil((s) => s.foto);
   const atualizar = usePerfil((s) => s.atualizar);
 
   return (
@@ -40,11 +41,16 @@ export default function TemaPage() {
               <div
                 className="absolute inset-x-0 top-0 h-10"
                 style={{
-                  background: `repeating-linear-gradient(-45deg,${t.destaque} 0 8px,rgba(255,255,255,.16) 8px 16px)`,
+                  background: `repeating-linear-gradient(90deg,${t.destaque} 0 2px,transparent 2px 12px)`,
                 }}
               />
               <div className="absolute inset-x-0 top-[30px] bottom-0 rounded-t-[18px]" style={{ background: t.papel }} />
-              <div className="absolute top-5 left-1/2 size-7 -translate-x-1/2 rounded-full border-2 border-creme-quente bg-[#D8C4B4]" />
+              <div className="absolute top-5 left-1/2 size-7 -translate-x-1/2 overflow-hidden rounded-full border-2 border-creme-quente bg-[#D8C4B4]">
+                {foto ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={foto} alt="" className="size-full object-cover object-[50%_30%]" />
+                ) : null}
+              </div>
               {marcado ? (
                 <span
                   aria-hidden
