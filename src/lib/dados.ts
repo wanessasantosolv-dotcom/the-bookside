@@ -5,11 +5,13 @@ export const temas = [
   { id: "romance-de-epoca", nome: "romance de época", papel: "#ECEBE9", destaque: "#55514F", texto: "#55514F" },
   { id: "madrugada-de-leitura", nome: "madrugada de leitura", papel: "#E7E5EE", destaque: "#464052", texto: "#464052" },
   { id: "jardim-de-livros", nome: "jardim de livros", papel: "#E8E7DC", destaque: "#79806B", texto: "#5E6553" },
-  { id: "noite-de-tinta", nome: "noite de tinta", papel: "#29252A", destaque: "#A88B64", texto: "#F5EFE6" },
+  { id: "noite-de-tinta", nome: "noite de tinta", papel: "#29252A", destaque: "#A88B64", texto: "#F5EFE6", escuro: true },
   { id: "orelha-rosa", nome: "orelha rosa", papel: "#F9D9E2", destaque: "#C0506F", texto: "#9E3A57" },
   { id: "capa-kraft", nome: "capa kraft", papel: "#D9C3A0", destaque: "#692536", texto: "#692536" },
   { id: "poesia-de-bolso", nome: "poesia de bolso", papel: "#CFDDEB", destaque: "#2B4C7E", texto: "#2B4C7E" },
 ] as const;
+
+export type Tema = (typeof temas)[number];
 
 export const conjuntosDeFrases: string[][] = [
   ["gosto de finais que doem", "always one more chapter", "lendo com a luz baixa", "books are small cities"],

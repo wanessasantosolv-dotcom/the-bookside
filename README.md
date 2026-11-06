@@ -23,7 +23,10 @@ Abra http://localhost:3000 (o app é mobile: use o modo celular do navegador, 39
 | `/bem-vinda/clube` | ONB 5 · clube (entrar, criar ou depois) |
 | `/bem-vinda/primeiro-livro` | ONB 6 · primeiro livro |
 | `/bem-vinda/pronto` | ONB 7 · perfil pronto (o livro que abre) |
-| `/inicio`, `/perfil`, `/em-breve` | provisórias |
+| `/criar-perfil/estante/buscar`, `/descobrir` | buscar livro · descobrir (passar / quero ler / já li) |
+| `/teste` … `/teste/salvar` | teste "what's your bookside" (15 perguntas, resultado, DNA, livros, frase, salvar) |
+| `/perfil`, `/perfil/editar`, `/perfil/configuracoes` | meu perfil · editar perfil · configurações |
+| `/inicio`, `/estantes`, `/clubes`, `/numeros`, `/em-breve` | provisórias (com o menu inferior) |
 
 ## Organização
 
@@ -37,6 +40,6 @@ Abra http://localhost:3000 (o app é mobile: use o modo celular do navegador, 39
 
 1. Supabase: login de verdade (`/entrar`), tabela `perfis` e upload de foto/capa no Storage
    (procure `TODO(supabase)`).
-2. Teste “what's your bookside” entre gostos e clube.
+2. Revisar os textos dos arquétipos marcados como rascunho em `src/lib/teste.ts`.
 3. Busca de livros com capas de catálogo autorizado (procure `TODO(catálogo)`).
 4. Feed, estantes, perfil e clubes.

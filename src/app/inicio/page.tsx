@@ -5,8 +5,8 @@ export default function InicioPage() {
     <EmConstrucao
       eyebrow="início"
       titulo="o feed vem aí"
-      texto="citações, amigas e fichas de leitura. esta é a próxima tela a ser construída."
-      voltar={{ href: "/perfil", rotulo: "ver meu perfil" }}
+      texto="citações, amigas e fichas de leitura. esta é uma das próximas telas a ser construída."
+      aba="inicio"
     />
   );
 }
