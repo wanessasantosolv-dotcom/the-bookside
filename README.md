@@ -32,7 +32,8 @@ Abra http://localhost:3000 (o app é mobile: use o modo celular do navegador, 39
 | `/estantes/nova` | criar nova estante |
 | `/buscar?estante=…` | buscar livro e adicionar na estante |
 | `/livro/[id]`, `/livro/[id]/progresso`, `/livro/[id]/avaliar` | página do livro · lendo agora / progresso · avaliar |
-| `/inicio`, `/clubes`, `/numeros`, `/em-breve` | provisórias (com o menu do app) |
+| `/numeros`, `/numeros/generos`, `/numeros/retrospectiva` | seus números: meta, páginas, meses, gêneros, autores e retrospectiva (no computador: layout web) |
+| `/inicio`, `/clubes`, `/em-breve` | provisórias (com o menu do app) |
 
 ## Versão web
 
@@ -55,4 +56,4 @@ A busca usa a [Open Library](https://openlibrary.org/dev/docs/api/search) direto
 1. Supabase: login de verdade (`/entrar`), tabela `perfis` e upload de foto/capa no Storage
    (procure `TODO(supabase)`).
 2. Revisar os textos dos arquétipos marcados como rascunho em `src/lib/teste.ts`.
-4. Feed, números e clubes.
+4. Feed e clubes.

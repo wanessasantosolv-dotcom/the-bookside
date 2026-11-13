@@ -62,7 +62,7 @@ export function BuscaLivros({ status, rotuloInicial = "sugestões para começar"
               <button
                 type="button"
                 aria-pressed={naEstante}
-                onClick={() => alternarLivro({ id: l.id, titulo: l.titulo, autor: l.autor, capa: l.capa, paginas: l.paginas, status })}
+                onClick={() => alternarLivro({ id: l.id, titulo: l.titulo, autor: l.autor, capa: l.capa, genero: l.genero, paginas: l.paginas, status })}
                 className={`ml-auto flex h-11 flex-none items-center rounded-pill border px-3 text-[11px] font-semibold whitespace-nowrap transition-colors ${
                   naEstante ? "border-linha bg-[#F1E4DC] text-cinza" : "border-bordo text-bordo hover:bg-rosa-fundo"
                 }`}

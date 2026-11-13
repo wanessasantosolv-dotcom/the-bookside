@@ -40,7 +40,7 @@ export default function LivroPage() {
   const livro = { ...encontrado, sinopse: encontrado.sinopse ?? sinopseOL };
   const salvo = livros.some((l) => l.id === id);
   const status = salvo ? (livro.status ?? "lendo") : null;
-  const base = { id: livro.id, titulo: livro.titulo, autor: livro.autor, capa: livro.capa };
+  const base = { id: livro.id, titulo: livro.titulo, autor: livro.autor, capa: livro.capa, genero: livro.genero };
   const estantesProprias = todasAsEstantes(proprias ?? []).filter((e) => e.propria);
   const progresso = livro.paginas && livro.paginaAtual ? Math.round((livro.paginaAtual / livro.paginas) * 100) : null;
   const voltar = status === "lido" ? { href: "/estantes/lidos", r: "lidos" } : status === "quero" ? { href: "/estantes/quero-ler", r: "quero ler" } : status === "lendo" ? { href: "/estantes/lendo", r: "lendo" } : { href: "/estantes", r: "estantes" };

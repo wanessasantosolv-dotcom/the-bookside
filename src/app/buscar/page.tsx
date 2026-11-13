@@ -29,7 +29,7 @@ function Busca() {
   }
 
   function adicionar(l: LivroBusca) {
-    const base = { id: l.id, titulo: l.titulo, autor: l.autor, capa: l.capa };
+    const base = { id: l.id, titulo: l.titulo, autor: l.autor, capa: l.capa, genero: l.genero };
     const atual = livros.find((x) => x.id === l.id);
     if (estante.status) {
       const agora = new Date().toISOString();

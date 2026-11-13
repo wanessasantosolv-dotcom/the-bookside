@@ -22,6 +22,7 @@ export type LivroSalvo = {
   status?: StatusLivro;
   /** URL da capa (Open Library) */
   capa?: string;
+  genero?: string;
   /** quando entrou na estante (ISO) */
   adicionadoEm?: string;
   paginas?: number;
@@ -67,7 +68,7 @@ type Acoes = {
   alternarLivro: (livro: LivroSalvo) => void;
   guardarLivro: (livro: LivroSalvo) => void;
   /** junta dados num livro da estante (cria se não existir) */
-  editarLivro: (base: Pick<LivroSalvo, "id" | "titulo" | "autor" | "capa">, dados: Partial<LivroSalvo>) => void;
+  editarLivro: (base: Pick<LivroSalvo, "id" | "titulo" | "autor" | "capa" | "genero">, dados: Partial<LivroSalvo>) => void;
   removerLivro: (id: string) => void;
   criarEstante: (e: Omit<EstantePropria, "id" | "criadaEm">) => string;
   sair: () => void;
