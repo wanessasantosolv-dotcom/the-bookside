@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { usePerfil, type LivroSalvo } from "@/lib/perfil-store";
+import { corDoLivro } from "@/lib/cores";
 import { sugestoesDeLivros, type LivroCatalogo } from "@/lib/dados";
 
 /**
@@ -53,6 +54,11 @@ function lembrar(livros: LivroBusca[]) {
   } catch {
     /* sem sessionStorage: tudo bem */
   }
+}
+
+/** Guarda livros vistos fora da busca (feed, perfil de amiga) para a página do livro abrir. */
+export function lembrarLivros(livros: { id: string; titulo: string; autor: string; capa?: string; genero?: string; paginas?: number }[]) {
+  lembrar(livros.map((l) => ({ ...l, cor: corDoLivro(l.id) })));
 }
 
 export function livroLembrado(id: string): LivroBusca | undefined {

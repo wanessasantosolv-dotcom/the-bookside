@@ -62,6 +62,8 @@ export type Perfil = {
   /** resultado do teste, salvo só com consentimento */
   bookside: { principal: string; secundario: string; respostas: (number | null)[]; livros: string[]; salvoEm: string } | null;
   onboardingConcluido: boolean;
+  /** última vez que abriu as novidades (para marcar o que é novo) */
+  novidadesVistasEm: string | null;
 };
 
 type Acoes = {
@@ -93,6 +95,7 @@ export const perfilInicial: Perfil = {
   estantesProprias: [],
   bookside: null,
   onboardingConcluido: false,
+  novidadesVistasEm: null,
 };
 
 export const usePerfil = create<Perfil & Acoes>()(

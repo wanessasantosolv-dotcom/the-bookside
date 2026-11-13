@@ -6,6 +6,7 @@ import type { CSSProperties } from "react";
 import { CapaLivro } from "@/components/CapaLivro";
 import { AppShell } from "@/components/AppShell";
 import { PerfilWeb } from "@/components/perfil/PerfilWeb";
+import { MeusSeguidores } from "@/components/social/Pessoas";
 import { useHidratado } from "@/components/PerfilHidratacao";
 import { corDoLivro } from "@/lib/cores";
 import { temas } from "@/lib/dados";
@@ -67,6 +68,7 @@ export default function PerfilPage() {
         quero={quero}
         favoritos={favoritos}
         abrirResultado={abrirResultado}
+        detalhe={<MeusSeguidores usuario={p.usuario} className="!justify-start" />}
       />
       <div className="flex min-h-dvh flex-col bg-[var(--papel)] text-[var(--tinta)] lg:hidden">
         {/* barra do app */}
@@ -123,6 +125,7 @@ export default function PerfilPage() {
             {p.nome || "sem nome"}
           </h1>
           <p className="mt-2.5 text-center text-xs font-medium text-[var(--suave)]">@{p.usuario || "seu.nome"}</p>
+          <MeusSeguidores usuario={p.usuario} className="mt-1.5 text-xs text-[var(--suave)]" />
           {p.frase ? (
             <p className="mx-4 mt-3 animate-subir text-center font-accent text-[15px] leading-5 italic text-[var(--acc)] [animation-delay:.24s]">
               {p.frase}

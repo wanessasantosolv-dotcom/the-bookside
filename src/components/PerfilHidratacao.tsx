@@ -3,6 +3,7 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { iniciarCapas } from "@/lib/catalogo";
 import { iniciarNuvem } from "@/lib/nuvem";
+import { iniciarAtividades } from "@/lib/social";
 import { usePerfil } from "@/lib/perfil-store";
 import { useTeste } from "@/lib/teste-store";
 
@@ -20,9 +21,11 @@ export function PerfilHidratacao() {
       if (!ativo) return;
       const pararNuvem = iniciarNuvem();
       const pararCapas = iniciarCapas();
+      const pararAtividades = iniciarAtividades();
       parar = () => {
         pararNuvem();
         pararCapas();
+        pararAtividades();
       };
     });
     return () => {

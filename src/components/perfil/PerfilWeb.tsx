@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { CapaLivro } from "@/components/CapaLivro";
 import { corDoLivro } from "@/lib/cores";
 import type { Tema } from "@/lib/dados";
@@ -63,6 +63,9 @@ export function PerfilWeb({
   quero,
   favoritos,
   abrirResultado,
+  acoes,
+  detalhe,
+  links = {},
 }: {
   perfil: Perfil;
   tema: Tema;
@@ -71,8 +74,21 @@ export function PerfilWeb({
   lendo: LivroSalvo[];
   quero: LivroSalvo[];
   favoritos: LivroSalvo[];
-  abrirResultado: () => void;
+  abrirResultado?: () => void;
+  /** troca os botões do topo (ex.: "seguir" no perfil de outra pessoa) */
+  acoes?: ReactNode;
+  /** linha extra embaixo do @usuário (ex.: seguidores) */
+  detalhe?: ReactNode;
+  links?: { numeros?: string; favoritos?: string; lidos?: string; quero?: string };
 }) {
+  const href = {
+    numeros: "/numeros",
+    favoritos: "/perfil/favoritos",
+    lidos: "/estantes/lidos",
+    quero: "/estantes/quero-ler",
+    ...links,
+  };
+  const outra = !!acoes;
   const [copiado, setCopiado] = useState(false);
   const base = tema.id === "biblioteca-classica" ? "#692536" : tema.destaque;
   const acc = tema.id === "noite-de-tinta" ? "#692536" : base;
@@ -125,14 +141,19 @@ export function PerfilWeb({
           <div className="pb-16">
             <h1 className="mb-1.5 font-revista text-4xl leading-none text-jornal italic">{p.nome || "sem nome"}</h1>
             <p className="text-xs font-semibold text-white/80">@{p.usuario || "seu.nome"}</p>
+            {detalhe ? <div className="mt-1.5 text-xs text-white/80">{detalhe}</div> : null}
           </div>
           <div className="ml-auto flex gap-3.5 pb-[70px]">
-            <Link href="/perfil/editar" className={botaoHero}>
-              editar perfil
-            </Link>
-            <button type="button" onClick={compartilhar} className={botaoHero}>
-              {copiado ? "link copiado ✓" : "compartilhar"}
-            </button>
+            {acoes ?? (
+              <>
+                <Link href="/perfil/editar" className={botaoHero}>
+                  editar perfil
+                </Link>
+                <button type="button" onClick={compartilhar} className={botaoHero}>
+                  {copiado ? "link copiado ✓" : "compartilhar"}
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -147,13 +168,14 @@ export function PerfilWeb({
           <button
             type="button"
             onClick={abrirResultado}
+            disabled={!abrirResultado}
             className="min-h-8 rounded-pill border border-[var(--acc-web)] px-4 text-[10px] font-bold tracking-[.12em] text-[var(--acc-web)] uppercase hover:bg-[var(--acc-web)]/5"
           >
-            {arquetipo ? `♡ ${arquetipo.nome.replace(/^a /, "")} · ${tema.nome}` : "✧ descobrir meu bookside"}
+            {arquetipo ? `♡ ${arquetipo.nome.replace(/^a /, "")} · ${tema.nome}` : outra ? `✧ ${tema.nome}` : "✧ descobrir meu bookside"}
           </button>
         </div>
 
-        <Link href="/numeros" aria-label="ver seus números" className="mb-10 grid grid-cols-4 border-y border-fio">
+        <Link href={href.numeros} aria-label={outra ? "ver os lidos" : "ver seus números"} className="mb-10 grid grid-cols-4 border-y border-fio">
           {[
             { n: lidos.length, r: "lidos" },
             { n: lendo.length, r: "lendo" },
@@ -172,10 +194,10 @@ export function PerfilWeb({
             <div className="mb-3.5 flex items-baseline justify-between border-b border-tinta pb-2">
               <h2 className="font-revista text-[19px] leading-none italic">favoritos</h2>
               <Link
-                href="/perfil/favoritos"
+                href={href.favoritos}
                 className="text-[9px] font-bold tracking-[.1em] text-[var(--acc-web)] uppercase"
               >
-                escolher →
+                {outra ? "" : "escolher →"}
               </Link>
             </div>
             {favoritos.length ? (
@@ -190,21 +212,21 @@ export function PerfilWeb({
               </ul>
             ) : (
               <p className="font-revista text-[13px] leading-[1.4] italic text-grafite">
-                escolha até 4 livros para ficarem em destaque.
+                {outra ? "nenhum favorito escolhido ainda." : "escolha até 4 livros para ficarem em destaque."}
               </p>
             )}
           </section>
           <Coluna
             titulo={`lidos · ${lidos.length}`}
-            href="/estantes/lidos"
+            href={href.lidos}
             livros={lidos}
             vazio="nenhum livro lido por aqui ainda."
           />
           <Coluna
             titulo="quero ler"
-            href="/estantes/quero-ler"
+            href={href.quero}
             livros={quero}
-            vazio="sua lista de quero ler está vazia."
+            vazio={outra ? "a lista de quero ler está vazia." : "sua lista de quero ler está vazia."}
           />
         </div>
 

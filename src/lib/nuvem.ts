@@ -29,6 +29,11 @@ function dadosDoStore(): Partial<Perfil> {
 
 let carregado = false;
 
+/** O perfil da nuvem já foi carregado (antes disso, mudanças no store não são da pessoa). */
+export function nuvemPronta() {
+  return carregado;
+}
+
 /** Copia o perfil local para a nuvem. */
 export async function salvarPerfil(id: string) {
   if (!supabase) return;
