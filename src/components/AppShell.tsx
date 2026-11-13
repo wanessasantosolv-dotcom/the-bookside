@@ -25,10 +25,7 @@ export function AppShell({
       <aside className="hidden lg:sticky lg:top-0 lg:block lg:h-dvh lg:w-[236px] lg:flex-none lg:border-r lg:border-fio lg:px-7 lg:py-8">
         <Link href="/inicio" aria-label="the bookside · início" className="mb-10 block">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/brand/logo-sem-slogan-bordo.png" alt="" className="w-[148px]" />
-          <span aria-hidden className="mt-1.5 flex items-center gap-1.5 font-accent text-[13px] leading-none italic text-bordo">
-            read <Estrela /> track <Estrela /> belong
-          </span>
+          <img src="/brand/logo-bordo.png" alt="" className="w-[160px]" />
         </Link>
         <nav aria-label="Principal" className="flex flex-col">
           {abas.map((a) => {
@@ -58,11 +55,3 @@ export function AppShell({
   );
 }
 
-/** Estrelinha de 4 pontas do slogan (desenhada, para não depender da fonte). */
-function Estrela() {
-  return (
-    <svg width="7" height="7" viewBox="0 0 10 10" aria-hidden className="flex-none">
-      <path d="M5 0C5.4 3.2 6.8 4.6 10 5 6.8 5.4 5.4 6.8 5 10 4.6 6.8 3.2 5.4 0 5 3.2 4.6 4.6 3.2 5 0Z" fill="currentColor" />
-    </svg>
-  );
-}
