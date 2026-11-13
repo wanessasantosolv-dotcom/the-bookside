@@ -29,6 +29,12 @@ export default function ProntoPage() {
           data-aberto={aberto}
           className="relative flex w-full flex-1 flex-col items-center lg:max-w-[460px] lg:flex-none"
         >
+          <Link
+            href="/bem-vinda/primeiro-livro"
+            className="absolute top-2 -left-2 flex min-h-11 items-center px-2 text-[13px] font-semibold text-bordo"
+          >
+            ‹ voltar
+          </Link>
           <p className="eyebrow mt-5 !text-[10px] !tracking-[.14em] text-cinza">tudo pronto ✦</p>
 
           <div className={`mt-2 text-center transition-opacity duration-500 ${aberto ? "opacity-0" : ""}`}>

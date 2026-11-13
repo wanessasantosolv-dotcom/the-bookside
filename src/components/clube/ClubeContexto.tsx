@@ -138,12 +138,20 @@ function Cabecalho({ c, papel, rodada }: { c: Clube; papel: Papel | null; rodada
       {!inicio ? (
         <div className="hidden border-b border-fio lg:block">
           <div className={`${largura} flex items-center justify-between gap-6 py-4`}>
-            <Link href={base} className="flex items-center gap-3.5">
-              <span>
-                <span className="block font-revista text-xl leading-none italic">{c.nome}</span>
-                <span className="mt-1 block text-[11px] text-grafite">{rodada ?? "clube de leitura"}</span>
-              </span>
-            </Link>
+            <span className="flex items-center gap-5">
+              <Link
+                href="/clubes"
+                className="-ml-2 flex min-h-11 items-center px-2 text-[11px] font-bold tracking-[.1em] text-grafite uppercase hover:text-vinho"
+              >
+                ‹ clubes
+              </Link>
+              <Link href={base} className="flex items-center gap-3.5 border-l border-fio pl-5">
+                <span>
+                  <span className="block font-revista text-xl leading-none italic">{c.nome}</span>
+                  <span className="mt-1 block text-[11px] text-grafite">{rodada ?? "clube de leitura"}</span>
+                </span>
+              </Link>
+            </span>
             <Abas base={base} sublinhadas />
           </div>
         </div>

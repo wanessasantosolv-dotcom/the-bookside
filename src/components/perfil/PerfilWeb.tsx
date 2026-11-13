@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { CapaLivro } from "@/components/CapaLivro";
 import { corDoLivro } from "@/lib/cores";
@@ -89,6 +90,7 @@ export function PerfilWeb({
     ...links,
   };
   const outra = !!acoes;
+  const router = useRouter();
   const [copiado, setCopiado] = useState(false);
   const base = tema.id === "biblioteca-classica" ? "#692536" : tema.destaque;
   const acc = tema.id === "noite-de-tinta" ? "#692536" : base;
@@ -121,6 +123,15 @@ export function PerfilWeb({
             : `linear-gradient(135deg, ${base}, ${escurecer(base)})`,
         }}
       >
+        {outra ? (
+          <button
+            type="button"
+            onClick={() => (window.history.length > 1 ? router.back() : router.push("/inicio"))}
+            className="absolute top-5 left-14 z-10 flex min-h-10 items-center rounded-pill bg-black/25 px-4 text-[11px] font-bold tracking-[.1em] text-jornal uppercase hover:bg-black/35"
+          >
+            ‹ voltar
+          </button>
+        ) : null}
         {p.capaImagem ? null : (
           <div
             aria-hidden
@@ -171,11 +182,19 @@ export function PerfilWeb({
             disabled={!abrirResultado}
             className="min-h-8 rounded-pill border border-[var(--acc-web)] px-4 text-[10px] font-bold tracking-[.12em] text-[var(--acc-web)] uppercase hover:bg-[var(--acc-web)]/5"
           >
-            {arquetipo ? `♡ ${arquetipo.nome.replace(/^a /, "")} · ${tema.nome}` : outra ? `✧ ${tema.nome}` : "✧ descobrir meu bookside"}
+            {arquetipo
+              ? `♡ ${arquetipo.nome.replace(/^a /, "")} · ${tema.nome}`
+              : outra
+                ? `✧ ${tema.nome}`
+                : "✧ descobrir meu bookside"}
           </button>
         </div>
 
-        <Link href={href.numeros} aria-label={outra ? "ver os lidos" : "ver seus números"} className="mb-10 grid grid-cols-4 border-y border-fio">
+        <Link
+          href={href.numeros}
+          aria-label={outra ? "ver os lidos" : "ver seus números"}
+          className="mb-10 grid grid-cols-4 border-y border-fio"
+        >
           {[
             { n: lidos.length, r: "lidos" },
             { n: lendo.length, r: "lendo" },

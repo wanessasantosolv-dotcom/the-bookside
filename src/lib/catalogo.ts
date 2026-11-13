@@ -57,7 +57,9 @@ function lembrar(livros: LivroBusca[]) {
 }
 
 /** Guarda livros vistos fora da busca (feed, perfil de amiga) para a página do livro abrir. */
-export function lembrarLivros(livros: { id: string; titulo: string; autor: string; capa?: string; genero?: string; paginas?: number }[]) {
+export function lembrarLivros(
+  livros: { id: string; titulo: string; autor: string; capa?: string; genero?: string; paginas?: number }[],
+) {
   lembrar(livros.map((l) => ({ ...l, cor: corDoLivro(l.id) })));
 }
 
@@ -113,15 +115,35 @@ function doGoogle(v: VolumeGB, i: number): LivroBusca | null {
   };
 }
 
-/** Google Books: bom em títulos em português e em palavras ainda incompletas. */
-async function buscarNoGoogle(termo: string, signal?: AbortSignal): Promise<LivroBusca[]> {
+let semRota = false;
+
+/**
+ * Pede ao Google Books. Primeiro pela rota do próprio app (/api/livros, com a
+ * chave do projeto e cache de 1 dia: mais rápido e sem bloqueio); sem chave
+ * configurada, direto do navegador, como antes.
+ */
+async function volumesDoGoogle(q: string, max: number, signal?: AbortSignal): Promise<VolumeGB[]> {
+  if (!semRota) {
+    try {
+      const r = await fetch(`/api/livros?q=${encodeURIComponent(q)}&max=${max}`, { signal });
+      if (r.ok) return ((await r.json()) as { items?: VolumeGB[] }).items ?? [];
+      if (r.status === 503 || r.status === 404) semRota = true;
+    } catch (e) {
+      if ((e as Error).name === "AbortError") throw e;
+    }
+  }
   const r = await fetch(
-    `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(termo)}&maxResults=20&printType=books&fields=items(id,volumeInfo(title,subtitle,authors,publishedDate,pageCount,categories,description,imageLinks/thumbnail))`,
+    `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=${max}&printType=books&fields=items(id,volumeInfo(title,subtitle,authors,publishedDate,pageCount,categories,description,imageLinks/thumbnail))`,
     { signal },
   );
   if (!r.ok) throw new Error(`busca falhou (${r.status})`);
-  const { items } = (await r.json()) as { items?: VolumeGB[] };
-  return (items ?? []).map(doGoogle).filter((l): l is LivroBusca => !!l);
+  return ((await r.json()) as { items?: VolumeGB[] }).items ?? [];
+}
+
+/** Google Books: bom em títulos em português e em palavras ainda incompletas. */
+async function buscarNoGoogle(termo: string, signal?: AbortSignal): Promise<LivroBusca[]> {
+  const items = await volumesDoGoogle(termo, 20, signal);
+  return items.map(doGoogle).filter((l): l is LivroBusca => !!l);
 }
 
 async function buscarNaOpenLibrary(termo: string, signal?: AbortSignal): Promise<LivroBusca[]> {
@@ -170,7 +192,9 @@ export async function buscarLivros(termo: string, signal?: AbortSignal): Promise
 export async function buscarPorAutoria(autor: string, signal?: AbortSignal): Promise<LivroBusca[]> {
   const [google, openLibrary] = await Promise.allSettled([
     buscarNoGoogle(`inauthor:"${autor}"`, signal),
-    fetch(`https://openlibrary.org/search.json?author=${encodeURIComponent(autor)}&limit=40&fields=${CAMPOS}`, { signal })
+    fetch(`https://openlibrary.org/search.json?author=${encodeURIComponent(autor)}&limit=40&fields=${CAMPOS}`, {
+      signal,
+    })
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
       .then((d: { docs: DocOL[] }) => d.docs.filter((x) => x.title).map(paraLivro)),
   ]);
@@ -193,7 +217,10 @@ type EntidadeWD = {
  * título em português e devolve o título original/em inglês e a autoria.
  * Ex.: "a biblioteca da meia-noite" → "The Midnight Library", Matt Haig.
  */
-export async function traducoesDoTitulo(titulo: string, signal?: AbortSignal): Promise<{ titulo: string; autor?: string }[]> {
+export async function traducoesDoTitulo(
+  titulo: string,
+  signal?: AbortSignal,
+): Promise<{ titulo: string; autor?: string }[]> {
   const base = "https://www.wikidata.org/w/api.php?format=json&origin=*";
   const busca = (await fetch(
     `${base}&action=wbsearchentities&type=item&limit=7&language=pt&uselang=pt&search=${encodeURIComponent(titulo)}`,
@@ -221,7 +248,9 @@ export async function traducoesDoTitulo(titulo: string, signal?: AbortSignal): P
   return obras
     .flatMap((e) => {
       const idAutor = e.claims?.P50?.[0]?.mainsnak?.datavalue?.value?.id;
-      const autor = idAutor ? (autorias[idAutor]?.labels?.en?.value ?? autorias[idAutor]?.labels?.pt?.value) : undefined;
+      const autor = idAutor
+        ? (autorias[idAutor]?.labels?.en?.value ?? autorias[idAutor]?.labels?.pt?.value)
+        : undefined;
       const original = e.claims?.P1476?.[0]?.mainsnak?.datavalue?.value?.text;
       return [e.labels?.en?.value, original, e.labels?.pt?.value]
         .filter((t): t is string => !!t)
@@ -305,12 +334,8 @@ const daObraOriginal: Fonte = (titulo, autor) =>
 /** Google Books: cobre bem as edições brasileiras (títulos em português). */
 const noGoogleBooks: Fonte = async (titulo, autor) => {
   const q = `intitle:${titulo}${autor ? ` inauthor:${autor}` : ""}`;
-  const r = await fetch(
-    `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=12&printType=books&fields=items(volumeInfo/imageLinks)`,
-  );
-  if (!r.ok) throw new Error(String(r.status));
-  const { items } = (await r.json()) as { items?: { volumeInfo?: { imageLinks?: { thumbnail?: string } } }[] };
-  return (items ?? [])
+  const items = await volumesDoGoogle(q, 12);
+  return items
     .map((i) => i.volumeInfo?.imageLinks?.thumbnail)
     .filter((u): u is string => !!u)
     .map((u) => u.replace(/^http:/, "https:").replace("&edge=curl", ""));
