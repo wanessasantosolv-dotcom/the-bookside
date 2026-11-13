@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import { usePerfil } from "@/lib/perfil-store";
+import { usePerfil, type LivroSalvo } from "@/lib/perfil-store";
 import { sugestoesDeLivros, type LivroCatalogo } from "@/lib/dados";
 
 /**
@@ -100,7 +100,7 @@ const useCapas = create<{
       definir: (id, url) => set((s) => ({ capas: { ...s.capas, [id]: url } })),
     }),
     {
-      name: "bookside-capas-v3",
+      name: "bookside-capas-v4",
       storage: createJSONStorage(() => localStorage),
     },
   ),
@@ -113,114 +113,155 @@ function tituloCurto(titulo: string) {
   return titulo.split(/[:(\[]/)[0].trim();
 }
 
+type Fonte = (titulo: string, autor?: string) => Promise<string[]>;
+
+async function urlsDaOpenLibrary(params: string): Promise<string[]> {
+  const r = await fetch(`https://openlibrary.org/search.json?${params}&limit=8&fields=cover_i`);
+  if (!r.ok) throw new Error(String(r.status));
+  const { docs } = (await r.json()) as { docs: { cover_i?: number }[] };
+  return docs.filter((d) => d.cover_i).map((d) => `https://covers.openlibrary.org/b/id/${d.cover_i}-M.jpg`);
+}
+
+/** Edições com esse título (e autoria) na Open Library. */
+const naOpenLibrary: Fonte = (titulo, autor) =>
+  urlsDaOpenLibrary(`title=${encodeURIComponent(titulo)}${autor ? `&author=${encodeURIComponent(autor)}` : ""}`);
+
 /**
  * Busca ampla: acha a obra por qualquer edição (inclusive traduzida), então
  * "jogos vorazes" encontra "the hunger games" e usa a capa da obra original.
  */
-async function capaDaObraOriginal(titulo: string, autor?: string): Promise<string> {
-  const q = `${titulo}${autor ? ` ${autor}` : ""}`;
-  const r = await fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(q)}&limit=5&fields=cover_i`);
-  if (!r.ok) throw new Error(String(r.status));
-  const { docs } = (await r.json()) as { docs: { cover_i?: number }[] };
-  const capa = docs.find((d) => d.cover_i)?.cover_i;
-  return capa ? `https://covers.openlibrary.org/b/id/${capa}-M.jpg` : "";
-}
-
-async function capaNaOpenLibrary(titulo: string, autor?: string): Promise<string> {
-  const url = `https://openlibrary.org/search.json?title=${encodeURIComponent(titulo)}${
-    autor ? `&author=${encodeURIComponent(autor)}` : ""
-  }&limit=5&fields=cover_i`;
-  const r = await fetch(url);
-  if (!r.ok) throw new Error(String(r.status));
-  const { docs } = (await r.json()) as { docs: { cover_i?: number }[] };
-  const capa = docs.find((d) => d.cover_i)?.cover_i;
-  return capa ? `https://covers.openlibrary.org/b/id/${capa}-M.jpg` : "";
-}
+const daObraOriginal: Fonte = (titulo, autor) =>
+  urlsDaOpenLibrary(`q=${encodeURIComponent(`${titulo}${autor ? ` ${autor}` : ""}`)}`);
 
 /** Google Books: cobre bem as edições brasileiras (títulos em português). */
-async function capaNoGoogleBooks(titulo: string, autor?: string): Promise<string> {
+const noGoogleBooks: Fonte = async (titulo, autor) => {
   const q = `intitle:${titulo}${autor ? ` inauthor:${autor}` : ""}`;
   const r = await fetch(
-    `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=10&printType=books&fields=items(volumeInfo/imageLinks)`,
+    `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=12&printType=books&fields=items(volumeInfo/imageLinks)`,
   );
   if (!r.ok) throw new Error(String(r.status));
-  const { items } = (await r.json()) as {
-    items?: {
-      volumeInfo?: {
-        imageLinks?: { thumbnail?: string; smallThumbnail?: string };
-      };
-    }[];
-  };
-  const link = items
-    ?.map((i) => i.volumeInfo?.imageLinks?.thumbnail ?? i.volumeInfo?.imageLinks?.smallThumbnail)
-    .find(Boolean);
-  return link ? link.replace(/^http:/, "https:").replace("&edge=curl", "") : "";
+  const { items } = (await r.json()) as { items?: { volumeInfo?: { imageLinks?: { thumbnail?: string } } }[] };
+  return (items ?? [])
+    .map((i) => i.volumeInfo?.imageLinks?.thumbnail)
+    .filter((u): u is string => !!u)
+    .map((u) => u.replace(/^http:/, "https:").replace("&edge=curl", ""));
+};
+
+function carregar(url: string, cors: boolean) {
+  return new Promise<HTMLImageElement>((ok, falha) => {
+    const i = new Image();
+    if (cors) i.crossOrigin = "anonymous";
+    const tempo = setTimeout(() => falha(new Error("demorou")), 8000);
+    i.onload = () => (clearTimeout(tempo), ok(i));
+    i.onerror = () => (clearTimeout(tempo), falha(new Error("erro")));
+    i.src = url;
+  });
+}
+
+/** Fundo branco/claro nas bordas: é foto do livro (mockup), não a capa. */
+function bordaClara(img: HTMLImageElement) {
+  try {
+    const w = 40;
+    const h = Math.round((img.naturalHeight / img.naturalWidth) * w);
+    const c = document.createElement("canvas");
+    c.width = w;
+    c.height = h;
+    const ctx = c.getContext("2d")!;
+    ctx.drawImage(img, 0, 0, w, h);
+    const d = ctx.getImageData(0, 0, w, h).data;
+    let claros = 0;
+    let total = 0;
+    for (let y = 0; y < h; y++)
+      for (let x = 0; x < w; x++) {
+        if (x > 1 && x < w - 2 && y > 1 && y < h - 2) continue;
+        const k = (y * w + x) * 4;
+        total++;
+        if (d[k] > 228 && d[k + 1] > 228 && d[k + 2] > 228) claros++;
+      }
+    return claros / total > 0.6;
+  } catch {
+    return false; // imagem sem permissão de leitura: confia na proporção
+  }
+}
+
+/**
+ * A imagem parece uma capa de verdade? Precisa existir, ter proporção de
+ * livro (em pé, ~2:3) e não ser uma foto do livro sobre fundo branco.
+ */
+async function pareceCapa(url: string): Promise<boolean> {
+  let img: HTMLImageElement;
+  let legivel = true;
+  try {
+    img = await carregar(url, true);
+  } catch {
+    legivel = false;
+    try {
+      img = await carregar(url, false);
+    } catch {
+      return false;
+    }
+  }
+  const { naturalWidth: w, naturalHeight: h } = img;
+  if (w < 40 || h < 40) return false;
+  const proporcao = h / w;
+  if (proporcao < 1.3 || proporcao > 1.75) return false;
+  return !(legivel && bordaClara(img));
+}
+
+async function procurarCapa(tituloCompleto: string, autorCompleto: string): Promise<string> {
+  const titulo = tituloCurto(tituloCompleto);
+  const autor = !autorCompleto || autorCompleto.startsWith("autoria") ? undefined : autorCompleto;
+  const tentativas: [Fonte, string | undefined][] = [
+    // primeiro as edições brasileiras (Google Books), depois a Open Library
+    [noGoogleBooks, autor],
+    [naOpenLibrary, autor],
+    [noGoogleBooks, undefined],
+    // sem edição em português com capa: usa a capa da obra original (ex.: em inglês)
+    [daObraOriginal, autor],
+    [naOpenLibrary, undefined],
+  ];
+  let falhas = 0;
+  const vistas = new Set<string>();
+  for (const [fonte, a] of tentativas) {
+    let urls: string[];
+    try {
+      urls = await fonte(titulo, a);
+    } catch {
+      falhas++;
+      continue;
+    }
+    for (const u of urls.slice(0, 6)) {
+      if (vistas.has(u)) continue;
+      vistas.add(u);
+      if (await pareceCapa(u)) return u;
+    }
+  }
+  // tudo falhou por rede: não guarda "sem capa", tenta outra hora
+  if (falhas === tentativas.length) throw new Error("sem conexão");
+  return "";
 }
 
 /**
  * Várias capas possíveis para um livro (edições diferentes), das duas fontes,
  * para a pessoa escolher. Falhas de rede de uma fonte não derrubam a outra.
  */
-export async function opcoesDeCapa(tituloCompleto: string, autorCompleto: string, signal?: AbortSignal): Promise<string[]> {
-  const titulo = tituloCurto(tituloCompleto);
-  const autor = !autorCompleto || autorCompleto.startsWith("autoria") ? "" : autorCompleto;
-  const google = fetch(
-    `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(`intitle:${titulo}${autor ? ` inauthor:${autor}` : ""}`)}&maxResults=24&printType=books&fields=items(volumeInfo/imageLinks)`,
-    { signal },
-  )
-    .then((r) => (r.ok ? r.json() : { items: [] }))
-    .then((d: { items?: { volumeInfo?: { imageLinks?: { thumbnail?: string } } }[] }) =>
-      (d.items ?? [])
-        .map((i) => i.volumeInfo?.imageLinks?.thumbnail)
-        .filter((u): u is string => !!u)
-        .map((u) => u.replace(/^http:/, "https:").replace("&edge=curl", "")),
-    )
-    .catch(() => [] as string[]);
-  const openLibrary = fetch(
-    `https://openlibrary.org/search.json?title=${encodeURIComponent(titulo)}${autor ? `&author=${encodeURIComponent(autor)}` : ""}&limit=10&fields=cover_i`,
-    { signal },
-  )
-    .then((r) => (r.ok ? r.json() : { docs: [] }))
-    .then((d: { docs: { cover_i?: number }[] }) =>
-      d.docs.filter((x) => x.cover_i).map((x) => `https://covers.openlibrary.org/b/id/${x.cover_i}-M.jpg`),
-    )
-    .catch(() => [] as string[]);
-  const original = fetch(
-    `https://openlibrary.org/search.json?q=${encodeURIComponent(`${titulo} ${autor}`.trim())}&limit=10&fields=cover_i`,
-    { signal },
-  )
-    .then((r) => (r.ok ? r.json() : { docs: [] }))
-    .then((d: { docs: { cover_i?: number }[] }) =>
-      d.docs.filter((x) => x.cover_i).map((x) => `https://covers.openlibrary.org/b/id/${x.cover_i}-M.jpg`),
-    )
-    .catch(() => [] as string[]);
-  const todas = [...(await google), ...(await openLibrary), ...(await original)];
-  return todas.filter((u, i) => todas.indexOf(u) === i).slice(0, 24);
-}
-
-async function procurarCapa(tituloCompleto: string, autorCompleto: string): Promise<string> {
+export async function opcoesDeCapa(tituloCompleto: string, autorCompleto: string): Promise<string[]> {
   const titulo = tituloCurto(tituloCompleto);
   const autor = !autorCompleto || autorCompleto.startsWith("autoria") ? undefined : autorCompleto;
-  let falhas = 0;
-  const tentativas = [
-    () => capaNaOpenLibrary(titulo, autor),
-    () => capaNoGoogleBooks(titulo, autor),
-    () => capaNoGoogleBooks(titulo),
-    // sem edição em português com capa: usa a capa da obra original (ex.: em inglês)
-    () => capaDaObraOriginal(titulo, autor),
-    () => capaNaOpenLibrary(titulo),
-  ];
-  for (const tentar of tentativas) {
-    try {
-      const capa = await tentar();
-      if (capa) return capa;
-    } catch {
-      falhas++;
-    }
-  }
-  // tudo falhou por rede: não guarda "sem capa", tenta outra hora
-  if (falhas === tentativas.length) throw new Error("sem conexão");
-  return "";
+  const listas = await Promise.all(
+    [noGoogleBooks, naOpenLibrary, daObraOriginal].map((f) => f(titulo, autor).catch(() => [] as string[])),
+  );
+  const todas = [...new Set(listas.flat())].slice(0, 30);
+  const boas = await Promise.all(todas.map(pareceCapa));
+  return todas.filter((_, i) => boas[i]);
+}
+
+/**
+ * Capa que o app colocou sozinho (não veio da busca nem foi escolhida pela
+ * pessoa): pode ser revista quando a busca de capas melhora.
+ */
+function capaAutomatica(l: LivroSalvo) {
+  return !!l.capa && !l.capaEscolhida && (!l.id.startsWith("ol-") || l.capa.includes("books.google"));
 }
 
 /**
@@ -239,7 +280,7 @@ export async function completarCapas() {
         titulo: l.titulo,
         autor: l.autor,
       })),
-      ...usePerfil.getState().livros.filter((l) => !l.capa),
+      ...usePerfil.getState().livros.filter((l) => !l.capa || capaAutomatica(l)),
     ].filter(
       (l, i, todos) => todos.findIndex((x) => x.id === l.id) === i && useCapas.getState().capas[l.id] === undefined,
     );
@@ -255,10 +296,16 @@ export async function completarCapas() {
   }
   const { capas } = useCapas.getState();
   const livros = usePerfil.getState().livros;
-  if (livros.some((l) => !l.capa && capas[l.id])) {
-    usePerfil.setState({
-      livros: livros.map((l) => (!l.capa && capas[l.id] ? { ...l, capa: capas[l.id] } : l)),
-    });
+  const nova = (l: LivroSalvo) => {
+    const achada = capas[l.id];
+    if (achada === undefined || achada === l.capa) return l.capa;
+    if (!l.capa) return achada || undefined;
+    if (!capaAutomatica(l)) return l.capa;
+    // capa automática revista: usa a nova; sem nova, só tira a foto do Google
+    return achada || (l.capa.includes("books.google") ? undefined : l.capa);
+  };
+  if (livros.some((l) => nova(l) !== l.capa)) {
+    usePerfil.setState({ livros: livros.map((l) => (nova(l) !== l.capa ? { ...l, capa: nova(l) } : l)) });
   }
 }
 
@@ -267,7 +314,10 @@ export function iniciarCapas() {
   void completarCapas();
   let espera: ReturnType<typeof setTimeout> | undefined;
   return usePerfil.subscribe((s, antes) => {
-    if (s.livros === antes.livros || !s.livros.some((l) => !l.capa && useCapas.getState().capas[l.id] === undefined))
+    if (
+      s.livros === antes.livros ||
+      !s.livros.some((l) => (!l.capa || capaAutomatica(l)) && useCapas.getState().capas[l.id] === undefined)
+    )
       return;
     clearTimeout(espera);
     espera = setTimeout(() => void completarCapas(), 800);

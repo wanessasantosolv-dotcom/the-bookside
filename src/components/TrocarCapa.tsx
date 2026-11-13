@@ -32,7 +32,7 @@ export function TrocarCapa({
 
   useEffect(() => {
     const c = new AbortController();
-    opcoesDeCapa(titulo, autor, c.signal).then(setOpcoes);
+    opcoesDeCapa(titulo, autor).then((o) => !c.signal.aborted && setOpcoes(o));
     return () => c.abort();
   }, [titulo, autor]);
 

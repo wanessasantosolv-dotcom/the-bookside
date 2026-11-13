@@ -22,6 +22,8 @@ export type LivroSalvo = {
   status?: StatusLivro;
   /** URL da capa (Open Library) */
   capa?: string;
+  /** a pessoa escolheu ou enviou esta capa: o app não troca sozinho */
+  capaEscolhida?: boolean;
   genero?: string;
   /** quando entrou na estante (ISO) */
   adicionadoEm?: string;

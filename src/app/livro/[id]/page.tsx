@@ -238,7 +238,7 @@ export default function LivroPage() {
           autor={livro.autor}
           atual={livro.capa}
           onFechar={() => setTrocandoCapa(false)}
-          onEscolher={(capa) => editarLivro(base, { capa })}
+          onEscolher={(capa) => editarLivro(base, { capa, capaEscolhida: true })}
         />
       ) : null}
     </AppShell>
