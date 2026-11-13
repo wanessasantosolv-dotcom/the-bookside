@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
+import { AjustarFoto } from "@/components/AjustarFoto";
 import { useHidratado } from "@/components/PerfilHidratacao";
 import { Tela } from "@/components/ui/Tela";
 import { metas, temas } from "@/lib/dados";
@@ -23,6 +24,7 @@ function Formulario({ inicial }: { inicial: Rascunho }) {
   const livrosLidos = usePerfil((s) => s.livros.filter((l) => l.status === "lido").length);
   const [r, setR] = useState<Rascunho>(inicial);
   const fotoRef = useRef<HTMLInputElement>(null);
+  const [fotoParaAjustar, setFotoParaAjustar] = useState<string | null>(null);
   const capaRef = useRef<HTMLInputElement>(null);
   const mudar = (d: Partial<Rascunho>) => setR((x) => ({ ...x, ...d }));
   const valido = r.nome.trim() && r.usuario.trim();
@@ -112,10 +114,30 @@ function Formulario({ inicial }: { inicial: Rascunho }) {
           hidden
           onChange={async (e) => {
             const f = e.target.files?.[0];
-            if (f) mudar({ foto: await reduzirImagem(f, 320) });
+            e.target.value = "";
+            if (f) setFotoParaAjustar(await reduzirImagem(f, 1600, 0.9));
           }}
         />
+        {r.foto ? (
+          <button
+            type="button"
+            onClick={() => setFotoParaAjustar(r.foto)}
+            className="absolute top-[34px] left-[92px] flex min-h-11 items-center text-xs font-semibold whitespace-nowrap text-bordo"
+          >
+            ajustar foto
+          </button>
+        ) : null}
       </div>
+      {fotoParaAjustar ? (
+        <AjustarFoto
+          src={fotoParaAjustar}
+          onCancelar={() => setFotoParaAjustar(null)}
+          onPronto={(dataUrl) => {
+            mudar({ foto: dataUrl });
+            setFotoParaAjustar(null);
+          }}
+        />
+      ) : null}
 
       <div className="flex-1 px-6 pt-3 pb-6">
         <div className="flex gap-3">

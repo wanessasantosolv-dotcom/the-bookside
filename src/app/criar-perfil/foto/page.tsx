@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRef, useState } from "react";
+import { AjustarFoto } from "@/components/AjustarFoto";
 import { Passo } from "@/components/onboarding/Passo";
 import { Botao, BotaoLink } from "@/components/ui/Botao";
 import { reduzirImagem } from "@/lib/imagem";
@@ -13,12 +14,16 @@ export default function FotoPage() {
   const galeria = useRef<HTMLInputElement>(null);
   const camera = useRef<HTMLInputElement>(null);
   const [erro, setErro] = useState<string | null>(null);
+  // imagem escolhida, em tamanho bom para recortar (fica só nesta tela)
+  const [original, setOriginal] = useState<string | null>(null);
+  const [ajustando, setAjustando] = useState(false);
 
   async function escolher(arquivo?: File) {
     if (!arquivo) return;
     try {
       setErro(null);
-      atualizar({ foto: await reduzirImagem(arquivo, 320) });
+      setOriginal(await reduzirImagem(arquivo, 1600, 0.9));
+      setAjustando(true);
     } catch {
       setErro("não deu para abrir essa imagem. tente outra.");
     }
@@ -39,14 +44,36 @@ export default function FotoPage() {
         )
       }
     >
-      <input ref={galeria} type="file" accept="image/*" hidden onChange={(e) => escolher(e.target.files?.[0])} />
+      {ajustando && (original ?? foto) ? (
+        <AjustarFoto
+          src={(original ?? foto)!}
+          onCancelar={() => setAjustando(false)}
+          onPronto={(dataUrl) => {
+            atualizar({ foto: dataUrl });
+            setAjustando(false);
+          }}
+        />
+      ) : null}
+      <input
+        ref={galeria}
+        type="file"
+        accept="image/*"
+        hidden
+        onChange={(e) => {
+          void escolher(e.target.files?.[0]);
+          e.target.value = "";
+        }}
+      />
       <input
         ref={camera}
         type="file"
         accept="image/*"
         capture="user"
         hidden
-        onChange={(e) => escolher(e.target.files?.[0])}
+        onChange={(e) => {
+          void escolher(e.target.files?.[0]);
+          e.target.value = "";
+        }}
       />
 
       <button
@@ -72,7 +99,12 @@ export default function FotoPage() {
         </p>
       ) : null}
 
-      <Botao variante="contorno" className="mt-9 !h-12" onClick={() => camera.current?.click()}>
+      {foto ? (
+        <Botao variante="contorno" className="mt-9 !h-12" onClick={() => setAjustando(true)}>
+          ajustar foto
+        </Botao>
+      ) : null}
+      <Botao variante="contorno" className={`${foto ? "mt-3" : "mt-9"} !h-12`} onClick={() => camera.current?.click()}>
         {foto ? "tirar outra foto" : "tirar uma foto"}
       </Botao>
 
