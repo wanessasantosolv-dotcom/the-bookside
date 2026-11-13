@@ -11,7 +11,8 @@ import { estrelas } from "@/lib/estantes";
 import { nomeDe, useConsulta, useMeuId } from "@/lib/social";
 
 const secao = "flex items-baseline justify-between border-b border-linha pb-2 lg:border-tinta";
-const tituloSecao = "font-display text-[22px] leading-none font-semibold italic text-bordo lg:font-revista lg:text-[19px] lg:font-normal lg:text-tinta";
+const tituloSecao =
+  "font-display text-[22px] leading-none font-semibold italic text-bordo lg:font-revista lg:text-[19px] lg:font-normal lg:text-tinta";
 const linkSecao = "text-[10px] font-semibold tracking-[.12em] text-bordo uppercase";
 
 export default function ClubeInicioPage() {
@@ -44,15 +45,32 @@ export default function ClubeInicioPage() {
         <section>
           <div className={secao}>
             <h2 className={tituloSecao}>lendo agora</h2>
-            {lendo?.rodada ? <span className="text-[10px] font-semibold tracking-[.12em] text-rosa-antigo uppercase">leitura nº {lendo.rodada}</span> : null}
+            {lendo?.rodada ? (
+              <span className="text-[10px] font-semibold tracking-[.12em] text-rosa-antigo uppercase">
+                leitura nº {lendo.rodada}
+              </span>
+            ) : null}
           </div>
           {lendo ? (
             <Link href={`/clubes/${clube.id}/leitura`} className="mt-4 flex gap-4">
-              <CapaLivro titulo={lendo.livro.titulo} capa={lendo.livro.capa} cor={corDoLivro(lendo.livro.id)} className="w-[92px] -rotate-1 [&>span:last-child]:text-xs" />
+              <CapaLivro
+                titulo={lendo.livro.titulo}
+                capa={lendo.livro.capa}
+                cor={corDoLivro(lendo.livro.id)}
+                className="w-[92px] -rotate-1 [&>span:last-child]:text-xs"
+              />
               <span className="min-w-0 pt-1">
-                <span className="block font-display text-xl leading-tight font-semibold italic lg:font-revista lg:font-normal">{lendo.livro.titulo}</span>
-                <span className="mt-1.5 block text-[10px] font-semibold tracking-[.16em] text-cinza uppercase">{lendo.livro.autor}</span>
-                {quemSugeriu ? <span className="mt-2.5 block font-accent text-sm italic text-cinza">{quemSugeriu.id === eu ? "sugestão sua" : `escolha da ${nomeDe(quemSugeriu)}`}</span> : null}
+                <span className="block font-display text-xl leading-tight font-semibold italic lg:font-revista lg:font-normal">
+                  {lendo.livro.titulo}
+                </span>
+                <span className="mt-1.5 block text-[10px] font-semibold tracking-[.16em] text-cinza uppercase">
+                  {lendo.livro.autor}
+                </span>
+                {quemSugeriu ? (
+                  <span className="mt-2.5 block font-accent text-sm italic text-cinza">
+                    {quemSugeriu.id === eu ? "sugestão sua" : `escolha da ${nomeDe(quemSugeriu)}`}
+                  </span>
+                ) : null}
                 {and ? (
                   <span className="mt-2.5 inline-flex min-h-6 items-center rounded-pill bg-rosa-fundo px-2.5 text-[10px] font-semibold tracking-[.1em] text-bordo uppercase">
                     {and.faltam ? `faltam ${and.faltam} ${and.faltam === 1 ? "dia" : "dias"}` : "último dia!"}
@@ -62,14 +80,23 @@ export default function ClubeInicioPage() {
             </Link>
           ) : (
             <div className="mt-4 rounded-xl border border-dashed border-bege p-4 lg:rounded-[4px]">
-              <p className="font-display text-lg font-semibold italic text-bordo lg:font-revista lg:font-normal lg:text-tinta">nenhuma leitura rolando</p>
+              <p className="font-display text-lg font-semibold italic text-bordo lg:font-revista lg:font-normal lg:text-tinta">
+                nenhuma leitura rolando
+              </p>
               <p className="mt-1 text-[13px] text-cinza">
                 {sugestoes.length
                   ? `${sugestoes.length} ${sugestoes.length === 1 ? "sugestão esperando" : "sugestões esperando"} a votação.`
                   : "sugira um livro para começar a primeira rodada."}
               </p>
-              <Link href={`/clubes/${clube.id}/${sugestoes.length ? "sugestoes" : "sugerir"}`} className="mt-3 inline-flex min-h-11 items-center rounded-pill bg-bordo px-5 text-[13px] font-semibold text-creme">
-                {sugestoes.length ? (papel === "moderadora" ? "escolher a leitura" : "ver e votar") : "sugerir um livro"}
+              <Link
+                href={`/clubes/${clube.id}/${sugestoes.length ? "sugestoes" : "sugerir"}`}
+                className="mt-3 inline-flex min-h-11 items-center rounded-pill bg-bordo px-5 text-[13px] font-semibold text-creme"
+              >
+                {sugestoes.length
+                  ? papel === "moderadora"
+                    ? "escolher a leitura"
+                    : "ver e votar"
+                  : "sugerir um livro"}
               </Link>
             </div>
           )}
@@ -87,14 +114,23 @@ export default function ClubeInicioPage() {
               {amados.map(({ l, m }) => (
                 <li key={l.id}>
                   <Link href={`/clubes/${clube.id}/livro/${l.id}`}>
-                    <CapaLivro titulo={l.livro.titulo} capa={l.livro.capa} cor={corDoLivro(l.livro.id)} className="w-full" />
-                    <span className="mt-1.5 block text-center text-[10px] text-bordo">{estrelas(Math.round(m! * 2) / 2)}</span>
+                    <CapaLivro
+                      titulo={l.livro.titulo}
+                      capa={l.livro.capa}
+                      cor={corDoLivro(l.livro.id)}
+                      className="w-full"
+                    />
+                    <span className="mt-1.5 block text-center text-[10px] text-bordo">
+                      {estrelas(Math.round(m! * 2) / 2)}
+                    </span>
                   </Link>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="mt-3 font-accent text-sm italic text-cinza">quando o clube terminar um livro e escrever as fichas, os preferidos aparecem aqui.</p>
+            <p className="mt-3 font-accent text-sm italic text-cinza">
+              quando o clube terminar um livro e escrever as fichas, os preferidos aparecem aqui.
+            </p>
           )}
         </section>
       </div>
@@ -110,15 +146,25 @@ export default function ClubeInicioPage() {
           <ul className="mt-4 flex flex-wrap gap-4">
             {membros.map((m) => (
               <li key={m.usuario_id}>
-                <Link href={m.pessoa.usuario ? `/u/${m.pessoa.usuario}` : "#"} className="flex w-14 flex-col items-center gap-1.5 text-center">
+                <Link
+                  href={m.pessoa.usuario ? `/clubes/${clube.id}/membro/${m.pessoa.usuario}` : "#"}
+                  className="flex w-14 flex-col items-center gap-1.5 text-center"
+                >
                   <Avatar pessoa={m.pessoa} tamanho={48} />
-                  <span className="w-full truncate font-accent text-xs italic">{m.usuario_id === eu ? "você" : m.pessoa.nome || m.pessoa.usuario}</span>
+                  <span className="w-full truncate font-accent text-xs italic">
+                    {m.usuario_id === eu ? "você" : m.pessoa.nome || m.pessoa.usuario}
+                  </span>
                 </Link>
               </li>
             ))}
             <li>
-              <Link href={`/clubes/${clube.id}/convidar`} className="flex w-14 flex-col items-center gap-1.5 text-center">
-                <span className="flex size-12 items-center justify-center rounded-full border border-dashed border-rosa-antigo text-xl text-rosa-antigo">+</span>
+              <Link
+                href={`/clubes/${clube.id}/convidar`}
+                className="flex w-14 flex-col items-center gap-1.5 text-center"
+              >
+                <span className="flex size-12 items-center justify-center rounded-full border border-dashed border-rosa-antigo text-xl text-rosa-antigo">
+                  +
+                </span>
                 <span className="font-accent text-xs italic text-cinza">convidar</span>
               </Link>
             </li>
@@ -134,9 +180,17 @@ export default function ClubeInicioPage() {
           </div>
           {proximo ? (
             <p className="mt-3 text-sm">
-              <b className="font-display text-lg font-semibold italic text-bordo lg:font-revista lg:font-normal lg:text-tinta">{proximo.titulo}</b>
+              <b className="font-display text-lg font-semibold italic text-bordo lg:font-revista lg:font-normal lg:text-tinta">
+                {proximo.titulo}
+              </b>
               <span className="mt-1 block text-[13px] text-cinza">
-                {new Date(proximo.quando).toLocaleString("pt-BR", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })}
+                {new Date(proximo.quando).toLocaleString("pt-BR", {
+                  weekday: "long",
+                  day: "numeric",
+                  month: "long",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
                 {proximo.local ? ` · ${proximo.local}` : ""}
               </span>
             </p>
@@ -145,15 +199,16 @@ export default function ClubeInicioPage() {
           )}
           {lendo && and ? (
             <p className="mt-3 text-[13px] text-cinza">
-              a leitura de <i>{lendo.livro.titulo}</i> termina em {and.fim.toLocaleDateString("pt-BR", { day: "numeric", month: "long" })}.
+              a leitura de <i>{lendo.livro.titulo}</i> termina em{" "}
+              {and.fim.toLocaleDateString("pt-BR", { day: "numeric", month: "long" })}.
             </p>
           ) : null}
         </section>
 
         {fichas.length ? (
           <p className="text-[13px] text-cinza">
-            média geral do clube: <b className="text-bordo">{virgula(media(fichas.map((f) => f.nota)))}★</b> em {fichas.length}{" "}
-            {fichas.length === 1 ? "ficha" : "fichas"}
+            média geral do clube: <b className="text-bordo">{virgula(media(fichas.map((f) => f.nota)))}★</b> em{" "}
+            {fichas.length} {fichas.length === 1 ? "ficha" : "fichas"}
           </p>
         ) : null}
       </div>

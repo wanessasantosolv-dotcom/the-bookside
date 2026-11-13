@@ -1,15 +1,24 @@
 "use client";
 
+import { Animacao } from "@/components/Animacao";
 import Link from "next/link";
 import { AppShell } from "@/components/AppShell";
 import { CapaLivro } from "@/components/CapaLivro";
 import { Avatares } from "@/components/clube/Pecas";
-import { Carregando, ComConta, ErroOuFalta, Vazio } from "@/components/social/Estados";
+import { ComConta, ErroOuFalta, Vazio } from "@/components/social/Estados";
 import { andamento, meusClubes, type ResumoClube } from "@/lib/clubes";
 import { corDoLivro } from "@/lib/cores";
 import { pessoasPorId, useConsulta, useMeuId } from "@/lib/social";
 
-function Cartao({ c, pessoas, eu }: { c: ResumoClube; pessoas: Awaited<ReturnType<typeof pessoasPorId>>; eu: string | null }) {
+function Cartao({
+  c,
+  pessoas,
+  eu,
+}: {
+  c: ResumoClube;
+  pessoas: Awaited<ReturnType<typeof pessoasPorId>>;
+  eu: string | null;
+}) {
   const lista = c.membros.map((id) => pessoas.get(id)!).filter(Boolean);
   const nomes = lista.map((p) => (p.id === eu ? "você" : p.nome || p.usuario)).join(" · ");
   const and = c.lendo ? andamento(c.lendo) : null;
@@ -74,7 +83,8 @@ function Lista() {
     const pessoas = await pessoasPorId(clubes.flatMap((c) => c.membros));
     return { clubes, pessoas };
   }, []);
-  if (consulta.carregando && !consulta.dados) return <Carregando texto="trazendo seus clubes…" linhas={2} />;
+  if (consulta.carregando && !consulta.dados)
+    return <Animacao tipo="fita" titulo="colando as fotos do clube" sub="seus clubes já já ficam prontos" />;
   if (consulta.erro) return <ErroOuFalta erro={consulta.erro} onTentar={consulta.recarregar} />;
   const { clubes, pessoas } = consulta.dados!;
   const lendo = clubes.filter((c) => c.lendo).length;
@@ -101,7 +111,10 @@ function Lista() {
           />
         )}
         <p className="mt-6 text-center lg:text-left">
-          <Link href="/clubes/entrar" className="inline-flex min-h-11 items-center font-accent text-[15px] italic text-cinza underline underline-offset-4">
+          <Link
+            href="/clubes/entrar"
+            className="inline-flex min-h-11 items-center font-accent text-[15px] italic text-cinza underline underline-offset-4"
+          >
             tenho um código de convite
           </Link>
         </p>
@@ -117,7 +130,10 @@ export default function ClubesPage() {
         <header className="flex items-center justify-between px-6 pt-3 lg:px-0 lg:pt-0">
           <span className="text-[13px] font-semibold lg:hidden">clubes</span>
           <span className="hidden lg:block" />
-          <Link href="/clubes/novo" className="-mr-2 flex min-h-11 items-center px-2 text-[13px] font-semibold text-bordo">
+          <Link
+            href="/clubes/novo"
+            className="-mr-2 flex min-h-11 items-center px-2 text-[13px] font-semibold text-bordo"
+          >
             + criar clube
           </Link>
         </header>

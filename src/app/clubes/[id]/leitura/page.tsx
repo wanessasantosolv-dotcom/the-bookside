@@ -1,11 +1,12 @@
 "use client";
 
+import { Animacao } from "@/components/Animacao";
 import Link from "next/link";
 import { useState } from "react";
 import { CapaLivro } from "@/components/CapaLivro";
 import { useClube } from "@/components/clube/ClubeContexto";
 import { botaoContorno, botaoPrincipal, campo, rotuloCampo } from "@/components/clube/Pecas";
-import { Carregando, ErroOuFalta, Vazio } from "@/components/social/Estados";
+import { ErroOuFalta, Vazio } from "@/components/social/Estados";
 import { Avatar } from "@/components/social/Pessoas";
 import { andamento, comecarLeitura, encerrarLeitura, fichasDe, livrosDoClube, type LivroDoClube } from "@/lib/clubes";
 import { corDoLivro } from "@/lib/cores";
@@ -17,7 +18,15 @@ function emDias(n: number) {
 }
 
 /** Moderadora escolhe (ou sorteia) a próxima leitura e o prazo. */
-function Escolher({ sugestoes, aoComecar, temAtual }: { sugestoes: LivroDoClube[]; aoComecar: () => void; temAtual: boolean }) {
+function Escolher({
+  sugestoes,
+  aoComecar,
+  temAtual,
+}: {
+  sugestoes: LivroDoClube[];
+  aoComecar: () => void;
+  temAtual: boolean;
+}) {
   const { clube } = useClube();
   const [escolhido, setEscolhido] = useState(sugestoes[0]?.id ?? "");
   const [prazo, setPrazo] = useState(emDias(20));
@@ -59,11 +68,26 @@ function Escolher({ sugestoes, aoComecar, temAtual }: { sugestoes: LivroDoClube[
       <ul className="mt-3 space-y-2">
         {sugestoes.map((s) => (
           <li key={s.id}>
-            <label className={`flex cursor-pointer items-center gap-3 rounded-md border p-2.5 ${escolhido === s.id ? "border-bordo bg-rosa-fundo/50" : "border-linha"}`}>
-              <input type="radio" name="proxima" checked={escolhido === s.id} onChange={() => setEscolhido(s.id)} className="accent-bordo" />
-              <CapaLivro titulo={s.livro.titulo} capa={s.livro.capa} cor={corDoLivro(s.livro.id)} className="w-8 [&>span:last-child]:hidden" />
+            <label
+              className={`flex cursor-pointer items-center gap-3 rounded-md border p-2.5 ${escolhido === s.id ? "border-bordo bg-rosa-fundo/50" : "border-linha"}`}
+            >
+              <input
+                type="radio"
+                name="proxima"
+                checked={escolhido === s.id}
+                onChange={() => setEscolhido(s.id)}
+                className="accent-bordo"
+              />
+              <CapaLivro
+                titulo={s.livro.titulo}
+                capa={s.livro.capa}
+                cor={corDoLivro(s.livro.id)}
+                className="w-8 [&>span:last-child]:hidden"
+              />
               <span className="min-w-0 flex-1">
-                <span className="block truncate font-display text-[15px] font-semibold italic lg:font-revista lg:font-normal">{s.livro.titulo}</span>
+                <span className="block truncate font-display text-[15px] font-semibold italic lg:font-revista lg:font-normal">
+                  {s.livro.titulo}
+                </span>
                 <span className="block text-xs text-cinza">
                   {s.votos.length} {s.votos.length === 1 ? "voto" : "votos"}
                 </span>
@@ -76,9 +100,18 @@ function Escolher({ sugestoes, aoComecar, temAtual }: { sugestoes: LivroDoClube[
         <span className={rotuloCampo}>prazo da leitura</span>
         <input type="date" value={prazo} min={emDias(1)} onChange={(e) => setPrazo(e.target.value)} className={campo} />
       </label>
-      {erro ? <p role="alert" className="mt-3 text-[13px] text-bordo">{erro}</p> : null}
+      {erro ? (
+        <p role="alert" className="mt-3 text-[13px] text-bordo">
+          {erro}
+        </p>
+      ) : null}
       <div className="mt-4 flex gap-2.5">
-        <button type="button" disabled={ocupado || !escolhido} onClick={() => comecar(escolhido)} className={botaoPrincipal}>
+        <button
+          type="button"
+          disabled={ocupado || !escolhido}
+          onClick={() => comecar(escolhido)}
+          className={botaoPrincipal}
+        >
           começar leitura
         </button>
         <button type="button" disabled={ocupado} onClick={sortear} className={botaoContorno}>
@@ -100,7 +133,8 @@ export default function LeituraPage() {
     return { livros, lendo, fichas };
   }, [clube.id]);
 
-  if (consulta.carregando && !consulta.dados) return <Carregando texto="abrindo a leitura…" linhas={1} />;
+  if (consulta.carregando && !consulta.dados)
+    return <Animacao tipo="marcador" titulo="separando sua página" sub="onde vocês pararam no livro" />;
   if (consulta.erro) return <ErroOuFalta erro={consulta.erro} onTentar={consulta.recarregar} />;
   const { livros, lendo, fichas } = consulta.dados!;
   const sugestoes = livros.filter((l) => l.estado === "sugerido").sort((a, b) => b.votos.length - a.votos.length);
@@ -113,7 +147,9 @@ export default function LeituraPage() {
   if (!lendo)
     return (
       <div className="px-6 pt-6 lg:max-w-[640px] lg:px-0">
-        <h2 className="font-display text-[26px] font-semibold italic text-bordo lg:font-revista lg:font-normal lg:text-tinta">nenhuma leitura rolando</h2>
+        <h2 className="font-display text-[26px] font-semibold italic text-bordo lg:font-revista lg:font-normal lg:text-tinta">
+          nenhuma leitura rolando
+        </h2>
         {moderadora ? (
           <Escolher sugestoes={sugestoes} aoComecar={recarregar} temAtual={false} />
         ) : (
@@ -130,21 +166,36 @@ export default function LeituraPage() {
   const and = andamento(lendo);
   const quem = lendo.sugerido_por ? membros.find((m) => m.usuario_id === lendo.sugerido_por)?.pessoa : null;
   const minha = fichas.find((f) => f.autor === eu);
-  const marcas = and ? Array.from(new Set([1, ...[0.2, 0.4, 0.6, 0.8].map((x) => Math.max(1, Math.round(and.total * x))), and.total])) : [];
+  const marcas = and
+    ? Array.from(new Set([1, ...[0.2, 0.4, 0.6, 0.8].map((x) => Math.max(1, Math.round(and.total * x))), and.total]))
+    : [];
 
   return (
     <div className="px-6 pt-6 lg:grid lg:max-w-[1000px] lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-10 lg:px-0">
       <div>
-        <p className="text-[10px] font-semibold tracking-[.16em] text-rosa-antigo uppercase">lendo agora{lendo.rodada ? ` · rodada ${lendo.rodada}` : ""}</p>
+        <p className="text-[10px] font-semibold tracking-[.16em] text-rosa-antigo uppercase">
+          lendo agora{lendo.rodada ? ` · rodada ${lendo.rodada}` : ""}
+        </p>
         <div className="mt-3 flex gap-4">
-          <CapaLivro titulo={lendo.livro.titulo} capa={lendo.livro.capa} cor={corDoLivro(lendo.livro.id)} className="w-[110px] -rotate-1 [&>span:last-child]:text-sm" />
+          <CapaLivro
+            titulo={lendo.livro.titulo}
+            capa={lendo.livro.capa}
+            cor={corDoLivro(lendo.livro.id)}
+            className="w-[110px] -rotate-1 [&>span:last-child]:text-sm"
+          />
           <div className="min-w-0 pt-1">
-            <h2 className="font-display text-[26px] leading-[1.1] font-semibold italic text-bordo lg:font-revista lg:font-normal lg:text-tinta">{lendo.livro.titulo}</h2>
+            <h2 className="font-display text-[26px] leading-[1.1] font-semibold italic text-bordo lg:font-revista lg:font-normal lg:text-tinta">
+              {lendo.livro.titulo}
+            </h2>
             <p className="mt-1.5 text-[13px] text-cinza">
               {lendo.livro.autor}
               {lendo.livro.paginas ? ` · ${lendo.livro.paginas} páginas` : ""}
             </p>
-            {quem ? <p className="mt-2 font-accent text-sm italic text-cinza">sugerido {quem.id === eu ? "por você" : `pela ${nomeDe(quem)}`}</p> : null}
+            {quem ? (
+              <p className="mt-2 font-accent text-sm italic text-cinza">
+                sugerido {quem.id === eu ? "por você" : `pela ${nomeDe(quem)}`}
+              </p>
+            ) : null}
           </div>
         </div>
 
@@ -156,12 +207,25 @@ export default function LeituraPage() {
               </p>
               <p className="text-[10px] font-semibold tracking-[.14em] text-cinza uppercase">prazo da leitura</p>
             </div>
-            <div className="relative mt-3 h-2 rounded-full bg-rosa-fundo" role="progressbar" aria-valuemin={1} aria-valuemax={and.total} aria-valuenow={and.dia}>
-              <i className="absolute inset-y-0 left-0 rounded-full bg-bordo" style={{ width: `${(and.dia / and.total) * 100}%` }} />
+            <div
+              className="relative mt-3 h-2 rounded-full bg-rosa-fundo"
+              role="progressbar"
+              aria-valuemin={1}
+              aria-valuemax={and.total}
+              aria-valuenow={and.dia}
+            >
+              <i
+                className="absolute inset-y-0 left-0 rounded-full bg-bordo"
+                style={{ width: `${(and.dia / and.total) * 100}%` }}
+              />
             </div>
             <div className="relative mt-1.5 h-4 text-[10px] text-cinza">
               {marcas.map((m) => (
-                <span key={m} className="absolute -translate-x-1/2" style={{ left: `${((m - 0.5) / and.total) * 100}%` }}>
+                <span
+                  key={m}
+                  className="absolute -translate-x-1/2"
+                  style={{ left: `${((m - 0.5) / and.total) * 100}%` }}
+                >
                   {String(m).padStart(2, "0")}
                 </span>
               ))}
@@ -186,15 +250,23 @@ export default function LeituraPage() {
                 }`}
                 style={{ transform: `rotate(${[-3, 2, -1][i]}deg)` }}
               >
-                <span aria-hidden className="absolute inset-x-0 top-0 h-1/2 border-b border-bege/80 [clip-path:polygon(0_0,100%_0,50%_100%)] bg-[#EBDAC2]" />
-                <span aria-hidden className={`relative mt-3 font-display text-xl italic ${s ? "text-bordo" : "text-bege"}`}>
+                <span
+                  aria-hidden
+                  className="absolute inset-x-0 top-0 h-1/2 border-b border-bege/80 [clip-path:polygon(0_0,100%_0,50%_100%)] bg-[#EBDAC2]"
+                />
+                <span
+                  aria-hidden
+                  className={`relative mt-3 font-display text-xl italic ${s ? "text-bordo" : "text-bege"}`}
+                >
                   ?
                 </span>
               </Link>
             ))}
           </div>
           <p className="mt-2 text-xs text-cinza">
-            {sugestoes.length ? `${sugestoes.length} ${sugestoes.length === 1 ? "sugestão lacrada" : "sugestões lacradas"} esperando a vez.` : "nenhuma sugestão ainda."}
+            {sugestoes.length
+              ? `${sugestoes.length} ${sugestoes.length === 1 ? "sugestão lacrada" : "sugestões lacradas"} esperando a vez.`
+              : "nenhuma sugestão ainda."}
           </p>
         </section>
 
@@ -227,7 +299,9 @@ export default function LeituraPage() {
 
       <aside className="mt-8 lg:mt-0">
         <div className="rounded-xl border border-linha p-4 lg:rounded-[4px] lg:border-fio lg:p-5">
-          <p className="text-[10px] font-semibold tracking-[.16em] text-cinza uppercase">fichas entregues · {fichas.length} de {membros.length}</p>
+          <p className="text-[10px] font-semibold tracking-[.16em] text-cinza uppercase">
+            fichas entregues · {fichas.length} de {membros.length}
+          </p>
           <ul className="mt-3 space-y-2.5">
             {membros.map((m) => {
               const f = fichas.find((x) => x.autor === m.usuario_id);
@@ -241,7 +315,10 @@ export default function LeituraPage() {
             })}
           </ul>
           {fichas.length ? (
-            <Link href={`/clubes/${clube.id}/livro/${lendo.id}`} className="mt-4 inline-flex min-h-9 items-center text-xs font-semibold text-bordo underline underline-offset-4">
+            <Link
+              href={`/clubes/${clube.id}/livro/${lendo.id}`}
+              className="mt-4 inline-flex min-h-9 items-center text-xs font-semibold text-bordo underline underline-offset-4"
+            >
               ler as fichas →
             </Link>
           ) : null}

@@ -15,13 +15,18 @@ export default function EditarClubePage() {
   const [nome, setNome] = useState(clube.nome);
   const [descricao, setDescricao] = useState(clube.descricao ?? "");
   const [capa, setCapa] = useState<string | null>(clube.capa);
+  const [limite, setLimite] = useState<string>(clube.limite_sugestoes ? String(clube.limite_sugestoes) : "");
+  const [maximo, setMaximo] = useState<string>(clube.max_membros ? String(clube.max_membros) : "");
   const [ocupado, setOcupado] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
   if (papel !== "moderadora")
     return (
       <div className="px-6 pt-6 lg:px-0">
-        <Vazio titulo="só quem modera edita o clube" acao={{ href: `/clubes/${clube.id}`, rotulo: "voltar ao clube" }} />
+        <Vazio
+          titulo="só quem modera edita o clube"
+          acao={{ href: `/clubes/${clube.id}`, rotulo: "voltar ao clube" }}
+        />
       </div>
     );
 
@@ -31,7 +36,13 @@ export default function EditarClubePage() {
     setOcupado(true);
     setErro(null);
     try {
-      await editarClube(clube.id, { nome: nome.trim(), descricao: descricao.trim() || null, capa });
+      await editarClube(clube.id, {
+        nome: nome.trim(),
+        descricao: descricao.trim() || null,
+        capa,
+        limite_sugestoes: limite ? Number(limite) : null,
+        max_membros: maximo ? Math.max(Number(maximo), membros.length) : null,
+      });
       recarregar();
       router.push(`/clubes/${clube.id}`);
     } catch {
@@ -41,7 +52,12 @@ export default function EditarClubePage() {
   }
 
   async function apagar() {
-    if (!confirm(`apagar o clube ${clube.nome} para todo mundo? as fichas, sugestões e a agenda somem junto. não dá para desfazer.`)) return;
+    if (
+      !confirm(
+        `apagar o clube ${clube.nome} para todo mundo? as fichas, sugestões e a agenda somem junto. não dá para desfazer.`,
+      )
+    )
+      return;
     await apagarClube(clube.id);
     router.push("/clubes");
   }
@@ -58,9 +74,50 @@ export default function EditarClubePage() {
         </label>
         <label className="block">
           <span className={rotuloCampo}>descrição</span>
-          <textarea value={descricao} onChange={(e) => setDescricao(e.target.value)} maxLength={280} rows={2} className={`${campo} resize-none font-accent italic`} />
+          <textarea
+            value={descricao}
+            onChange={(e) => setDescricao(e.target.value)}
+            maxLength={280}
+            rows={2}
+            className={`${campo} resize-none font-accent italic`}
+          />
         </label>
         <CampoCapa valor={capa} onMudar={setCapa} />
+        <fieldset className="space-y-4">
+          <legend className={rotuloCampo}>regras do clube</legend>
+          <label className="flex items-center justify-between gap-4 text-sm">
+            sugestões por pessoa, por mês
+            <select
+              value={limite}
+              onChange={(e) => setLimite(e.target.value)}
+              className="min-h-11 rounded-md border border-linha bg-creme-quente px-3"
+            >
+              {["1", "2", "3", "5"].map((n) => (
+                <option key={n} value={n}>
+                  {n}
+                </option>
+              ))}
+              <option value="">sem limite</option>
+            </select>
+          </label>
+          <label className="flex items-center justify-between gap-4 text-sm">
+            máximo de pessoas
+            <select
+              value={maximo}
+              onChange={(e) => setMaximo(e.target.value)}
+              className="min-h-11 rounded-md border border-linha bg-creme-quente px-3"
+            >
+              <option value="">sem limite</option>
+              {[4, 6, 8, 10, 12, 15, 20, 30]
+                .filter((n) => n >= membros.length)
+                .map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+            </select>
+          </label>
+        </fieldset>
         <div className="border-t border-linha lg:border-fio">
           <Link href={`/clubes/${clube.id}/convidar`} className={linha}>
             membros e papéis <span className="text-cinza">{membros.length} ›</span>

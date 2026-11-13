@@ -6,7 +6,8 @@ import { CapaLivro } from "@/components/CapaLivro";
 import { useClube } from "@/components/clube/ClubeContexto";
 import { botaoPrincipal, campo, Rodape, rotuloCampo, TopoForm } from "@/components/clube/Pecas";
 import { useBuscaLivros, type LivroBusca } from "@/lib/catalogo";
-import { sugerir } from "@/lib/clubes";
+import { minhasSugestoesNoMes, sugerir } from "@/lib/clubes";
+import { useConsulta } from "@/lib/social";
 import { corDoLivro } from "@/lib/cores";
 
 const climas = ["suspense", "ficção", "romance", "fantasia", "leve", "chorar", "clássico", "não ficção"];
@@ -21,6 +22,10 @@ export default function SugerirPage() {
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const busca = useBuscaLivros(termo);
+  const feitas = useConsulta(() => minhasSugestoesNoMes(clube.id), [clube.id]);
+  const limite = clube.limite_sugestoes;
+  const restam = limite && feitas.dados !== undefined ? Math.max(0, limite - feitas.dados) : null;
+  const esgotou = restam === 0;
 
   async function enviar(e: FormEvent) {
     e.preventDefault();
@@ -42,25 +47,45 @@ export default function SugerirPage() {
       );
       router.push(`/clubes/${clube.id}/sugestoes`);
     } catch {
-      setErro("não deu para enviar agora. tente de novo.");
+      setErro(
+        limite
+          ? `não deu para enviar. lembre: cada pessoa sugere ${limite} por mês.`
+          : "não deu para enviar agora. tente de novo.",
+      );
       setEnviando(false);
     }
   }
 
   return (
     <form onSubmit={enviar} className="flex min-h-[70dvh] flex-col">
-      <TopoForm voltar={{ href: `/clubes/${clube.id}/sugestoes`, r: "sugestões" }} rotulo="sugestões abertas" titulo="sugerir um livro" frase="qual vai para o clube? ✦" />
+      <TopoForm
+        voltar={{ href: `/clubes/${clube.id}/sugestoes`, r: "sugestões" }}
+        rotulo="sugestões abertas"
+        titulo="sugerir um livro"
+        frase="qual vai para o clube? ✦"
+      />
       <div className="mt-6 space-y-6 px-6 lg:max-w-[640px] lg:px-0">
         <div>
           <p className={rotuloCampo}>o livro</p>
           {livro ? (
             <div className="mt-2 flex items-center gap-3 rounded-md border border-bordo bg-rosa-fundo/40 p-3">
-              <CapaLivro titulo={livro.titulo} capa={livro.capa} cor={livro.cor || corDoLivro(livro.id)} className="w-10 [&>span:last-child]:hidden" />
+              <CapaLivro
+                titulo={livro.titulo}
+                capa={livro.capa}
+                cor={livro.cor || corDoLivro(livro.id)}
+                className="w-10 [&>span:last-child]:hidden"
+              />
               <span className="min-w-0 flex-1">
-                <span className="block truncate font-display text-base font-semibold italic lg:font-revista lg:font-normal">{livro.titulo}</span>
+                <span className="block truncate font-display text-base font-semibold italic lg:font-revista lg:font-normal">
+                  {livro.titulo}
+                </span>
                 <span className="block truncate text-xs text-cinza">{livro.autor}</span>
               </span>
-              <button type="button" onClick={() => setLivro(null)} className="min-h-9 px-2 text-xs font-semibold text-bordo underline underline-offset-4">
+              <button
+                type="button"
+                onClick={() => setLivro(null)}
+                className="min-h-9 px-2 text-xs font-semibold text-bordo underline underline-offset-4"
+              >
                 trocar
               </button>
             </div>
@@ -83,8 +108,17 @@ export default function SugerirPage() {
                 ) : (
                   busca.resultados.slice(0, 12).map((l) => (
                     <li key={l.id}>
-                      <button type="button" onClick={() => setLivro(l)} className="flex w-full items-center gap-3 border-b border-linha/70 px-3 py-2 text-left hover:bg-rosa-fundo/50">
-                        <CapaLivro titulo={l.titulo} capa={l.capa} cor={l.cor} className="w-8 [&>span:last-child]:hidden" />
+                      <button
+                        type="button"
+                        onClick={() => setLivro(l)}
+                        className="flex w-full items-center gap-3 border-b border-linha/70 px-3 py-2 text-left hover:bg-rosa-fundo/50"
+                      >
+                        <CapaLivro
+                          titulo={l.titulo}
+                          capa={l.capa}
+                          cor={l.cor}
+                          className="w-8 [&>span:last-child]:hidden"
+                        />
                         <span className="min-w-0">
                           <span className="block truncate text-sm font-semibold">{l.titulo}</span>
                           <span className="block truncate text-xs text-cinza">{l.autor}</span>
@@ -129,6 +163,21 @@ export default function SugerirPage() {
             })}
           </div>
         </fieldset>
+        <div className="rounded-md border border-linha px-4 py-3 lg:border-fio">
+          <p className={rotuloCampo}>a regra do clube</p>
+          <p className="mt-1 text-[13px] text-cinza">
+            {limite
+              ? `cada pessoa pode sugerir ${limite} ${limite === 1 ? "livro" : "livros"} por mês.`
+              : "pode sugerir quantos livros quiser."}
+            {restam !== null ? (
+              <b className={`font-semibold ${esgotou ? "text-bordo" : "text-ameixa"}`}>
+                {esgotou
+                  ? " você já usou a sua deste mês ✦"
+                  : ` você ainda tem ${restam} ${restam === 1 ? "disponível" : "disponíveis"} ✦`}
+              </b>
+            ) : null}
+          </p>
+        </div>
         {erro ? (
           <p role="alert" className="text-[13px] text-bordo">
             {erro}
@@ -136,7 +185,7 @@ export default function SugerirPage() {
         ) : null}
       </div>
       <Rodape>
-        <button type="submit" disabled={enviando || !livro} className={`${botaoPrincipal} lg:max-w-[640px]`}>
+        <button type="submit" disabled={enviando || !livro || esgotou} className={`${botaoPrincipal} lg:max-w-[640px]`}>
           {enviando ? "enviando…" : "enviar para as sugestões"}
         </button>
       </Rodape>

@@ -39,6 +39,11 @@ create table if not exists public.clubes (
   criado_em timestamptz not null default now()
 );
 
+-- regras do clube (também para quem já tinha rodado este arquivo antes)
+alter table public.clubes add column if not exists limite_sugestoes int default 1 check (limite_sugestoes between 1 and 10);
+alter table public.clubes add column if not exists max_membros int check (max_membros between 2 and 100);
+alter table public.clubes add column if not exists codigo_expira_em timestamptz default now() + interval '7 days';
+
 create table if not exists public.membros (
   clube_id uuid not null references public.clubes (id) on delete cascade,
   usuario_id uuid not null references auth.users (id) on delete cascade,
@@ -58,15 +63,13 @@ create or replace function public.e_moderadora(c uuid) returns boolean
   select exists (select 1 from membros where clube_id = c and usuario_id = auth.uid() and papel = 'moderadora');
 $$;
 
--- criar clube: gera o código de convite e coloca quem criou como moderadora
-create or replace function public.criar_clube(p_nome text, p_descricao text default null) returns uuid
-  language plpgsql security definer set search_path = public as $$
+-- código de convite: 6 caracteres sem os que confundem (0/O, 1/I)
+create or replace function public.gerar_codigo() returns text
+  language plpgsql volatile set search_path = public as $$
 declare
-  novo uuid;
   cod text;
   letras text := 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 begin
-  if auth.uid() is null then raise exception 'precisa estar logada'; end if;
   loop
     cod := '';
     for i in 1..6 loop
@@ -74,27 +77,54 @@ begin
     end loop;
     exit when not exists (select 1 from clubes where codigo = cod);
   end loop;
-  insert into clubes (nome, descricao, codigo, criado_por)
-    values (trim(p_nome), nullif(trim(coalesce(p_descricao, '')), ''), cod, auth.uid())
+  return cod;
+end $$;
+
+-- criar clube: gera o código de convite e coloca quem criou como moderadora
+create or replace function public.criar_clube(p_nome text, p_descricao text default null) returns uuid
+  language plpgsql security definer set search_path = public as $$
+declare novo uuid;
+begin
+  if auth.uid() is null then raise exception 'precisa estar logada'; end if;
+  insert into clubes (nome, descricao, codigo, criado_por, codigo_expira_em)
+    values (trim(p_nome), nullif(trim(coalesce(p_descricao, '')), ''), gerar_codigo(), auth.uid(), now() + interval '7 days')
     returning id into novo;
   insert into membros (clube_id, usuario_id, papel) values (novo, auth.uid(), 'moderadora');
   return novo;
 end $$;
 
--- entrar com o código de 6 caracteres
+-- novo código de convite (só moderadora): o antigo para de funcionar
+create or replace function public.novo_codigo(p_clube uuid) returns text
+  language plpgsql security definer set search_path = public as $$
+declare cod text;
+begin
+  if not e_moderadora(p_clube) then raise exception 'só quem modera gera convite'; end if;
+  cod := gerar_codigo();
+  update clubes set codigo = cod, codigo_expira_em = now() + interval '7 days' where id = p_clube;
+  return cod;
+end $$;
+
+-- entrar com o código de 6 caracteres (vale 7 dias; respeita o limite de membros)
 create or replace function public.entrar_no_clube(p_codigo text) returns uuid
   language plpgsql security definer set search_path = public as $$
-declare c uuid;
+declare c clubes%rowtype;
 begin
   if auth.uid() is null then raise exception 'precisa estar logada'; end if;
-  select id into c from clubes where codigo = upper(trim(p_codigo));
-  if c is null then return null; end if;
-  insert into membros (clube_id, usuario_id) values (c, auth.uid()) on conflict do nothing;
-  return c;
+  select * into c from clubes where codigo = upper(trim(p_codigo));
+  if c.id is null then return null; end if;
+  if exists (select 1 from membros where clube_id = c.id and usuario_id = auth.uid()) then return c.id; end if;
+  if c.codigo_expira_em is not null and c.codigo_expira_em < now() then raise exception 'convite expirado'; end if;
+  if c.max_membros is not null and (select count(*) from membros where clube_id = c.id) >= c.max_membros then
+    raise exception 'clube cheio';
+  end if;
+  insert into membros (clube_id, usuario_id) values (c.id, auth.uid()) on conflict do nothing;
+  return c.id;
 end $$;
 
 grant execute on function public.criar_clube(text, text) to authenticated;
 grant execute on function public.entrar_no_clube(text) to authenticated;
+grant execute on function public.novo_codigo(uuid) to authenticated;
+revoke execute on function public.gerar_codigo() from public, anon, authenticated;
 
 alter table public.clubes enable row level security;
 drop policy if exists "membros veem o clube" on public.clubes;
@@ -127,12 +157,23 @@ create table if not exists public.clube_livros (
   criado_em timestamptz not null default now()
 );
 create index if not exists clube_livros_clube on public.clube_livros (clube_id, estado);
+-- ainda dá para sugerir este mês? (regra do clube: N sugestões por pessoa por mês)
+create or replace function public.pode_sugerir(c uuid) returns boolean
+  language sql stable security definer set search_path = public as $$
+  select e_membro(c) and (
+    (select limite_sugestoes from clubes where id = c) is null
+    or (select count(*) from clube_livros
+        where clube_id = c and sugerido_por = auth.uid() and criado_em >= date_trunc('month', now()))
+       < (select limite_sugestoes from clubes where id = c)
+  );
+$$;
+
 alter table public.clube_livros enable row level security;
 drop policy if exists "membros veem os livros" on public.clube_livros;
 create policy "membros veem os livros" on public.clube_livros for select to authenticated using (public.e_membro(clube_id));
 drop policy if exists "membros sugerem" on public.clube_livros;
 create policy "membros sugerem" on public.clube_livros for insert to authenticated
-  with check (public.e_membro(clube_id) and sugerido_por = auth.uid() and estado = 'sugerido');
+  with check (public.pode_sugerir(clube_id) and sugerido_por = auth.uid() and estado = 'sugerido');
 drop policy if exists "moderadora organiza a leitura" on public.clube_livros;
 create policy "moderadora organiza a leitura" on public.clube_livros for update to authenticated
   using (public.e_moderadora(clube_id)) with check (public.e_moderadora(clube_id));

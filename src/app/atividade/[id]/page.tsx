@@ -1,10 +1,11 @@
 "use client";
 
+import { Animacao } from "@/components/Animacao";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { AppShell } from "@/components/AppShell";
-import { Carregando, ComConta, ErroOuFalta, Vazio } from "@/components/social/Estados";
+import { ComConta, ErroOuFalta, Vazio } from "@/components/social/Estados";
 import { Avatar, CartaoAtividade } from "@/components/social/Pessoas";
 import {
   apagarComentario,
@@ -58,9 +59,17 @@ function Conversa({ id }: { id: string }) {
     }
   }
 
-  if (consulta.carregando && !consulta.dados) return <Carregando texto="abrindo a conversa…" linhas={1} />;
+  if (consulta.carregando && !consulta.dados)
+    return <Animacao tipo="escrevendo" titulo="abrindo a conversa" frase="eu também amei esse…" sub="só um instante" />;
   if (consulta.erro) return <ErroOuFalta erro={consulta.erro} onTentar={consulta.recarregar} />;
-  if (!consulta.dados) return <Vazio className="mx-6 mt-6 lg:mx-0" titulo="essa publicação não existe mais" acao={{ href: "/inicio", rotulo: "voltar ao início" }} />;
+  if (!consulta.dados)
+    return (
+      <Vazio
+        className="mx-6 mt-6 lg:mx-0"
+        titulo="essa publicação não existe mais"
+        acao={{ href: "/inicio", rotulo: "voltar ao início" }}
+      />
+    );
   const { a, comentarios, pessoas } = consulta.dados;
   const n = comentarios.length;
 
@@ -87,7 +96,11 @@ function Conversa({ id }: { id: string }) {
                 <p className="mt-1 flex items-center gap-3 text-[10px] font-semibold tracking-[.1em] text-cinza uppercase">
                   {quandoFoi(c.criado_em)}
                   {posso ? (
-                    <button type="button" onClick={() => apagar(c.id)} className="min-h-6 tracking-normal normal-case underline underline-offset-2 hover:text-bordo">
+                    <button
+                      type="button"
+                      onClick={() => apagar(c.id)}
+                      className="min-h-6 tracking-normal normal-case underline underline-offset-2 hover:text-bordo"
+                    >
                       apagar
                     </button>
                   ) : null}
@@ -118,7 +131,17 @@ function Conversa({ id }: { id: string }) {
           aria-label="enviar comentário"
           className="flex size-12 flex-none items-center justify-center rounded-full bg-bordo text-creme disabled:opacity-50"
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden
+          >
             <path d="M12 19V5M5 12l7-7 7 7" />
           </svg>
         </button>
@@ -140,7 +163,11 @@ export default function AtividadePage() {
       <div className="flex flex-1 flex-col lg:bg-jornal lg:px-12 lg:py-8">
         <div className="flex flex-1 flex-col lg:max-w-[720px]">
           <header className="flex items-center justify-between px-6 pt-2 lg:px-0 lg:pt-0">
-            <button type="button" onClick={() => router.back()} className="-ml-2 flex min-h-11 items-center px-2 text-[13px] font-semibold text-bordo">
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className="-ml-2 flex min-h-11 items-center px-2 text-[13px] font-semibold text-bordo"
+            >
               ‹ voltar
             </button>
             <span className="text-[11px] font-semibold tracking-[.16em] text-bordo uppercase">comentários</span>

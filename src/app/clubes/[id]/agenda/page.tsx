@@ -8,7 +8,16 @@ import { Carregando, ErroOuFalta } from "@/components/social/Estados";
 import { desmarcarEncontro, encontrosDe, livrosDoClube, marcarEncontro } from "@/lib/clubes";
 import { nomeDe, useConsulta, useMeuId } from "@/lib/social";
 
-type Evento = { id: string; quando: Date; rotulo: string; titulo: string; detalhe?: string; encontroId?: string; criado_por?: string | null; href?: string };
+type Evento = {
+  id: string;
+  quando: Date;
+  rotulo: string;
+  titulo: string;
+  detalhe?: string;
+  encontroId?: string;
+  criado_por?: string | null;
+  href?: string;
+};
 
 function NovoEncontro({ aoMarcar }: { aoMarcar: () => void }) {
   const { clube } = useClube();
@@ -39,30 +48,57 @@ function NovoEncontro({ aoMarcar }: { aoMarcar: () => void }) {
 
   if (!aberto)
     return (
-      <button type="button" onClick={() => setAberto(true)} className="flex min-h-11 items-center rounded-pill bg-bordo px-5 text-[13px] font-semibold text-creme">
+      <button
+        type="button"
+        onClick={() => setAberto(true)}
+        className="flex min-h-11 items-center rounded-pill bg-bordo px-5 text-[13px] font-semibold text-creme"
+      >
         + marcar encontro
       </button>
     );
   return (
-    <form onSubmit={marcar} className="space-y-4 rounded-xl border border-linha bg-creme-quente p-4 lg:rounded-[4px] lg:border-fio lg:bg-transparent lg:p-5">
+    <form
+      onSubmit={marcar}
+      className="space-y-4 rounded-xl border border-linha bg-creme-quente p-4 lg:rounded-[4px] lg:border-fio lg:bg-transparent lg:p-5"
+    >
       <label className="block">
         <span className={rotuloCampo}>o que é</span>
         <input value={titulo} onChange={(e) => setTitulo(e.target.value)} maxLength={80} required className={campo} />
       </label>
       <label className="block">
         <span className={rotuloCampo}>quando</span>
-        <input type="datetime-local" value={quando} onChange={(e) => setQuando(e.target.value)} required className={campo} />
+        <input
+          type="datetime-local"
+          value={quando}
+          onChange={(e) => setQuando(e.target.value)}
+          required
+          className={campo}
+        />
       </label>
       <label className="block">
         <span className={rotuloCampo}>onde (opcional)</span>
-        <input value={local} onChange={(e) => setLocal(e.target.value)} maxLength={120} placeholder="café da esquina, chamada de vídeo…" className={campo} />
+        <input
+          value={local}
+          onChange={(e) => setLocal(e.target.value)}
+          maxLength={120}
+          placeholder="café da esquina, chamada de vídeo…"
+          className={campo}
+        />
       </label>
-      {erro ? <p role="alert" className="text-[13px] text-bordo">{erro}</p> : null}
+      {erro ? (
+        <p role="alert" className="text-[13px] text-bordo">
+          {erro}
+        </p>
+      ) : null}
       <div className="flex gap-2.5">
         <button type="submit" disabled={ocupado} className={botaoPrincipal}>
           marcar
         </button>
-        <button type="button" onClick={() => setAberto(false)} className="min-h-[52px] px-4 text-sm font-semibold text-cinza">
+        <button
+          type="button"
+          onClick={() => setAberto(false)}
+          className="min-h-[52px] px-4 text-sm font-semibold text-cinza"
+        >
           cancelar
         </button>
       </div>
@@ -117,8 +153,12 @@ export default function AgendaPage() {
   ];
   const agora = Date.now();
   const lista = eventos
-    .filter((e) => (aba === "proximos" ? e.quando.getTime() >= agora - 864e5 / 2 : e.quando.getTime() < agora - 864e5 / 2))
-    .sort((a, b) => (aba === "proximos" ? a.quando.getTime() - b.quando.getTime() : b.quando.getTime() - a.quando.getTime()));
+    .filter((e) =>
+      aba === "proximos" ? e.quando.getTime() >= agora - 864e5 / 2 : e.quando.getTime() < agora - 864e5 / 2,
+    )
+    .sort((a, b) =>
+      aba === "proximos" ? a.quando.getTime() - b.quando.getTime() : b.quando.getTime() - a.quando.getTime(),
+    );
 
   return (
     <div className="px-6 pt-5 lg:max-w-[760px] lg:px-0">
@@ -152,12 +192,20 @@ export default function AgendaPage() {
                 <span className="block text-[10px] font-semibold tracking-[.12em] text-cinza uppercase">
                   {e.quando.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "")}
                 </span>
-                <span className="block font-display text-[28px] leading-none font-semibold text-bordo">{e.quando.getDate()}</span>
-                <span className="block text-[10px] text-cinza">{e.quando.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "")}</span>
+                <span className="block font-display text-[28px] leading-none font-semibold text-bordo">
+                  {e.quando.getDate()}
+                </span>
+                <span className="block text-[10px] text-cinza">
+                  {e.quando.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "")}
+                </span>
               </span>
               <span className="min-w-0 flex-1 border-l border-linha pl-4">
-                <span className="block text-[10px] font-semibold tracking-[.14em] text-rosa-antigo uppercase">{e.rotulo}</span>
-                <span className="mt-0.5 block font-display text-lg leading-tight font-semibold italic lg:font-revista lg:font-normal">{e.titulo}</span>
+                <span className="block text-[10px] font-semibold tracking-[.14em] text-rosa-antigo uppercase">
+                  {e.rotulo}
+                </span>
+                <span className="mt-0.5 block font-display text-lg leading-tight font-semibold italic lg:font-revista lg:font-normal">
+                  {e.titulo}
+                </span>
                 {e.detalhe ? <span className="mt-0.5 block text-xs text-cinza">{e.detalhe}</span> : null}
               </span>
             </>

@@ -5,7 +5,7 @@ import { Suspense, useRef, useState, type ClipboardEvent, type FormEvent, type K
 import { AppShell } from "@/components/AppShell";
 import { botaoPrincipal, Rodape, TopoForm } from "@/components/clube/Pecas";
 import { ComConta, faltaTabela } from "@/components/social/Estados";
-import { entrarNoClube } from "@/lib/clubes";
+import { ConviteInvalido, entrarNoClube } from "@/lib/clubes";
 
 const TAM = 6;
 const limpar = (s: string) => s.toUpperCase().replace(/[^A-Z0-9]/g, "");
@@ -20,7 +20,9 @@ function Codigo() {
   const codigo = letras.join("");
 
   function preencher(texto: string, de = 0) {
-    const c = limpar(texto).slice(0, TAM - de).split("");
+    const c = limpar(texto)
+      .slice(0, TAM - de)
+      .split("");
     setLetras((l) => l.map((x, i) => (i >= de && i < de + c.length ? c[i - de] : x)));
     caixas.current[Math.min(TAM - 1, de + c.length)]?.focus();
   }
@@ -43,7 +45,13 @@ function Codigo() {
         setEnviando(false);
       } else router.push(`/clubes/${id}`);
     } catch (x) {
-      setErro(faltaTabela(x) ? "falta criar as tabelas de clubes no Supabase (supabase/social.sql)." : "não deu para entrar agora. tente de novo.");
+      setErro(
+        x instanceof ConviteInvalido
+          ? x.message
+          : faltaTabela(x)
+            ? "falta criar as tabelas de clubes no Supabase (supabase/social.sql)."
+            : "não deu para entrar agora. tente de novo.",
+      );
       setEnviando(false);
     }
   }
@@ -85,7 +93,9 @@ function Codigo() {
       </fieldset>
       <div className="mx-6 mt-6 rounded-md border border-linha bg-creme-quente px-4 py-3 lg:mx-0 lg:max-w-[420px]">
         <p className="text-[10px] font-semibold tracking-[.16em] text-bordo uppercase">dica</p>
-        <p className="mt-1 text-[13px] text-cinza">o código vem junto com o link de convite. se você abriu o link, ele já aparece preenchido.</p>
+        <p className="mt-1 text-[13px] text-cinza">
+          o código vem junto com o link de convite. se você abriu o link, ele já aparece preenchido.
+        </p>
       </div>
       {erro ? (
         <p role="alert" className="mt-4 px-6 text-[13px] text-bordo lg:px-0">

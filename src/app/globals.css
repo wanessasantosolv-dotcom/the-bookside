@@ -196,3 +196,49 @@ body {
 @keyframes selar { from { opacity: 0; transform: scale(1.8); } to { opacity: 1; transform: scale(1); } }
 .manuscrito { font: italic 400 15px/1.62 var(--font-accent); color: var(--color-ameixa); }
 .rotulo-carta { font: 600 9px/1.4 var(--font-sans); letter-spacing: 0.2em; text-transform: uppercase; color: var(--color-cinza); }
+
+/* ───────── animações de carregamento (canvas: loading 45a–45h) ───────── */
+@keyframes ld-pisca { 0%, 100% { opacity: .22; transform: scale(.8); } 50% { opacity: 1; transform: scale(1); } }
+@keyframes ld-brilho { 0%, 100% { opacity: .25; transform: scale(.8); } 50% { opacity: 1; transform: scale(1.1); } }
+@keyframes ld-vira { 0% { transform: rotateY(0); } 55%, 100% { transform: rotateY(-178deg); } }
+@keyframes ld-embaralha {
+  0%, 100% { transform: translate(0, 0) rotate(0); }
+  25% { transform: translate(28px, -16px) rotate(8deg); }
+  50% { transform: translate(0, 0) rotate(0); }
+  75% { transform: translate(-24px, 11px) rotate(-7deg); }
+}
+@keyframes ld-carimba {
+  0% { opacity: 0; transform: scale(2.2) rotate(-16deg); }
+  18% { opacity: 1; transform: scale(1) rotate(-9deg); }
+  72% { opacity: 1; transform: scale(1) rotate(-9deg); }
+  88%, 100% { opacity: 0; transform: scale(1.06) rotate(-9deg); }
+}
+@keyframes ld-desce { 0%, 100% { transform: translateY(-12px); } 50% { transform: translateY(64px); } }
+@keyframes ld-enche { 0%, 100% { width: 0; } 50% { width: 100%; } }
+@keyframes ld-cola { 0% { clip-path: inset(0 100% 0 0); opacity: 1; } 55% { clip-path: inset(0 0 0 0); opacity: 1; } 82%, 100% { clip-path: inset(0 0 0 0); opacity: 0; } }
+@keyframes ld-digita { 0% { width: 0; } 60%, 100% { width: 100%; } }
+@keyframes ld-cursor { 50% { border-color: transparent; } }
+@keyframes ld-acende {
+  0%, 10% { color: var(--color-linha); transform: scale(1) rotate(0); }
+  20% { color: var(--color-bordo); transform: scale(1.4) rotate(-12deg); }
+  30%, 100% { color: var(--color-bordo); transform: scale(1) rotate(0); }
+}
+@keyframes ld-surge { 0%, 58% { opacity: 0; transform: translateY(10px); } 74%, 100% { opacity: 1; transform: none; } }
+
+.ld-pontos i { animation: ld-pisca 1.3s ease-in-out infinite; }
+.ld-brilho { animation: ld-brilho 3.2s ease-in-out infinite; }
+.ld-pagina { transform-origin: left center; animation: ld-vira 2.1s ease-in-out infinite; }
+.ld-capa { animation: ld-embaralha 2.6s ease-in-out infinite; }
+.ld-carimbo { opacity: 0; animation: ld-carimba 2.8s cubic-bezier(.2, .9, .3, 1.2) infinite; }
+.ld-fita { animation: ld-desce 2.8s ease-in-out infinite; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 83%, 0 100%); }
+.ld-trilha { animation: ld-enche 2.8s ease-in-out infinite; }
+.ld-durex { clip-path: inset(0 100% 0 0); animation: ld-cola 2.6s ease-in-out infinite; }
+.ld-texto { width: 0; animation: ld-digita 3.4s steps(24, end) infinite, ld-cursor .8s step-end infinite; }
+.ld-estrela { animation: ld-acende 2.6s infinite; }
+.ld-media { opacity: 0; animation: ld-surge 2.6s infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ld-pontos i, .ld-brilho, .ld-pagina, .ld-capa, .ld-fita, .ld-trilha, .ld-estrela { animation: none; }
+  .ld-carimbo, .ld-media, .ld-durex { animation: none; opacity: 1; clip-path: none; }
+  .ld-texto { animation: none; width: auto; }
+}

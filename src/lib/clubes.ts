@@ -16,6 +16,12 @@ export type Clube = {
   capa: string | null;
   criado_por: string;
   criado_em: string;
+  /** sugestões por pessoa por mês (null = sem limite) */
+  limite_sugestoes: number | null;
+  /** máximo de pessoas no clube (null = sem limite) */
+  max_membros: number | null;
+  /** o código de convite vale até aqui */
+  codigo_expira_em: string | null;
 };
 export type Papel = "moderadora" | "membro";
 export type Membro = { usuario_id: string; papel: Papel; entrou_em: string; pessoa: PessoaResumo };
@@ -66,7 +72,8 @@ function db() {
   return supabase;
 }
 
-const CAMPOS_LIVRO = "id,clube_id,livro,estado,sugerido_por,motivo,rodada,prazo,iniciado_em,encerrado_em,criado_em,votos(usuario_id)";
+const CAMPOS_LIVRO =
+  "id,clube_id,livro,estado,sugerido_por,motivo,rodada,prazo,iniciado_em,encerrado_em,criado_em,votos(usuario_id)";
 
 // ───────── clubes ─────────
 
@@ -105,7 +112,11 @@ export async function clube(id: string): Promise<Clube | null> {
 }
 
 export async function membrosDe(clubeId: string): Promise<Membro[]> {
-  const { data, error } = await db().from("membros").select("usuario_id,papel,entrou_em").eq("clube_id", clubeId).order("entrou_em");
+  const { data, error } = await db()
+    .from("membros")
+    .select("usuario_id,papel,entrou_em")
+    .eq("clube_id", clubeId)
+    .order("entrou_em");
   if (error) throw error;
   const pessoas = await pessoasPorId((data ?? []).map((m) => m.usuario_id));
   return (data ?? []).map((m) => ({ ...(m as Omit<Membro, "pessoa">), pessoa: pessoas.get(m.usuario_id)! }));
@@ -119,13 +130,52 @@ export async function criarClube(nome: string, descricao: string, capa: string |
   return id;
 }
 
+export class ConviteInvalido extends Error {}
+
+/** Entra pelo código. Convite vencido ou clube cheio viram ConviteInvalido com a explicação. */
 export async function entrarNoClube(codigo: string): Promise<string | null> {
   const { data, error } = await db().rpc("entrar_no_clube", { p_codigo: codigo });
-  if (error) throw error;
+  if (error) {
+    if (/expirado/i.test(error.message))
+      throw new ConviteInvalido("esse convite venceu. peça um código novo para quem te chamou.");
+    if (/cheio/i.test(error.message)) throw new ConviteInvalido("esse clube já está com todas as vagas preenchidas.");
+    throw error;
+  }
   return (data as string | null) ?? null;
 }
 
-export async function editarClube(id: string, dados: Partial<Pick<Clube, "nome" | "descricao" | "capa">>) {
+/** Gera um código novo (o antigo para de valer) — só moderadora. */
+export async function novoCodigo(clubeId: string): Promise<string> {
+  const { data, error } = await db().rpc("novo_codigo", { p_clube: clubeId });
+  if (error) throw error;
+  return data as string;
+}
+
+export function conviteVencido(c: Clube) {
+  return !!c.codigo_expira_em && new Date(c.codigo_expira_em).getTime() < Date.now();
+}
+
+/** Quantas sugestões você já fez neste clube no mês corrente. */
+export async function minhasSugestoesNoMes(clubeId: string): Promise<number> {
+  const eu = meuId();
+  if (!eu) return 0;
+  const inicio = new Date();
+  inicio.setDate(1);
+  inicio.setHours(0, 0, 0, 0);
+  const { count, error } = await db()
+    .from("clube_livros")
+    .select("*", { count: "exact", head: true })
+    .eq("clube_id", clubeId)
+    .eq("sugerido_por", eu)
+    .gte("criado_em", inicio.toISOString());
+  if (error) throw error;
+  return count ?? 0;
+}
+
+export async function editarClube(
+  id: string,
+  dados: Partial<Pick<Clube, "nome" | "descricao" | "capa" | "limite_sugestoes" | "max_membros">>,
+) {
   const { error } = await db().from("clubes").update(dados).eq("id", id);
   if (error) throw error;
 }
@@ -143,7 +193,11 @@ export async function tirarMembro(clubeId: string, usuarioId: string) {
 // ───────── livros do clube ─────────
 
 export async function livrosDoClube(clubeId: string): Promise<LivroDoClube[]> {
-  const { data, error } = await db().from("clube_livros").select(CAMPOS_LIVRO).eq("clube_id", clubeId).order("criado_em", { ascending: false });
+  const { data, error } = await db()
+    .from("clube_livros")
+    .select(CAMPOS_LIVRO)
+    .eq("clube_id", clubeId)
+    .order("criado_em", { ascending: false });
   if (error) throw error;
   return (data ?? []) as LivroDoClube[];
 }
@@ -190,7 +244,10 @@ export async function comecarLeitura(clubeId: string, livroId: string, prazo: st
 }
 
 export async function encerrarLeitura(livroId: string) {
-  const { error } = await db().from("clube_livros").update({ estado: "lido", encerrado_em: new Date().toISOString() }).eq("id", livroId);
+  const { error } = await db()
+    .from("clube_livros")
+    .update({ estado: "lido", encerrado_em: new Date().toISOString() })
+    .eq("id", livroId);
   if (error) throw error;
 }
 
@@ -231,7 +288,11 @@ export async function fichasDoClube(livroIds: string[]): Promise<Ficha[]> {
   return (data ?? []) as Ficha[];
 }
 
-export async function salvarFicha(l: LivroDoClube, f: Omit<Ficha, "id" | "clube_livro_id" | "autor" | "criado_em">, jaExistia: boolean) {
+export async function salvarFicha(
+  l: LivroDoClube,
+  f: Omit<Ficha, "id" | "clube_livro_id" | "autor" | "criado_em">,
+  jaExistia: boolean,
+) {
   const eu = meuId();
   if (!eu) return;
   const { error } = await db()
@@ -240,7 +301,13 @@ export async function salvarFicha(l: LivroDoClube, f: Omit<Ficha, "id" | "clube_
   if (error) throw error;
   if (!jaExistia) {
     try {
-      await publicarAtividade({ tipo: "ficha", livro: l.livro, nota: f.nota, texto: f.citacao || f.texto, clube_id: l.clube_id });
+      await publicarAtividade({
+        tipo: "ficha",
+        livro: l.livro,
+        nota: f.nota,
+        texto: f.citacao || f.texto,
+        clube_id: l.clube_id,
+      });
     } catch {
       /* a ficha está salva; só o aviso no feed do clube falhou */
     }
@@ -265,7 +332,13 @@ export async function encontrosDe(clubeId: string): Promise<Encontro[]> {
 export async function marcarEncontro(clubeId: string, e: { titulo: string; quando: string; local: string }) {
   const { error } = await db()
     .from("encontros")
-    .insert({ clube_id: clubeId, titulo: e.titulo.trim(), quando: e.quando, local: e.local.trim() || null, criado_por: meuId() });
+    .insert({
+      clube_id: clubeId,
+      titulo: e.titulo.trim(),
+      quando: e.quando,
+      local: e.local.trim() || null,
+      criado_por: meuId(),
+    });
   if (error) throw error;
 }
 

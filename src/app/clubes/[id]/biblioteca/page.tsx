@@ -1,10 +1,11 @@
 "use client";
 
+import { Animacao } from "@/components/Animacao";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { CapaLivro } from "@/components/CapaLivro";
 import { useClube } from "@/components/clube/ClubeContexto";
-import { Carregando, ErroOuFalta, Vazio } from "@/components/social/Estados";
+import { ErroOuFalta, Vazio } from "@/components/social/Estados";
 import { andamento, livrosDoClube, type LivroDoClube } from "@/lib/clubes";
 import { corDoLivro } from "@/lib/cores";
 import { useConsulta } from "@/lib/social";
@@ -36,8 +37,13 @@ function Prateleira({
         >
           {selo}
         </span>
-        <h2 className="font-display text-xl font-semibold italic text-bordo lg:font-revista lg:font-normal lg:text-tinta">{titulo}</h2>
-        <Link href={abrir} className="ml-auto text-[10px] font-semibold tracking-[.12em] text-cinza uppercase hover:text-bordo">
+        <h2 className="font-display text-xl font-semibold italic text-bordo lg:font-revista lg:font-normal lg:text-tinta">
+          {titulo}
+        </h2>
+        <Link
+          href={abrir}
+          className="ml-auto text-[10px] font-semibold tracking-[.12em] text-cinza uppercase hover:text-bordo"
+        >
           abrir →
         </Link>
       </div>
@@ -46,7 +52,12 @@ function Prateleira({
           {livros.map((l) => (
             <li key={l.id} className="w-[72px] flex-none lg:w-[84px]">
               <Link href={link(l)} aria-label={l.livro.titulo}>
-                <CapaLivro titulo={l.livro.titulo} capa={l.livro.capa} cor={corDoLivro(l.livro.id)} className="w-full" />
+                <CapaLivro
+                  titulo={l.livro.titulo}
+                  capa={l.livro.capa}
+                  cor={corDoLivro(l.livro.id)}
+                  className="w-full"
+                />
               </Link>
             </li>
           ))}
@@ -62,11 +73,14 @@ function Prateleira({
 export default function BibliotecaPage() {
   const { clube } = useClube();
   const consulta = useConsulta(() => livrosDoClube(clube.id), [clube.id]);
-  if (consulta.carregando && !consulta.dados) return <Carregando texto="abrindo a biblioteca…" linhas={2} />;
+  if (consulta.carregando && !consulta.dados)
+    return <Animacao tipo="pilha" titulo="procurando na estante" sub="isso pode levar um instante" />;
   if (consulta.erro) return <ErroOuFalta erro={consulta.erro} onTentar={consulta.recarregar} />;
   const livros = consulta.dados!;
   const lendo = livros.filter((l) => l.estado === "lendo");
-  const lidos = livros.filter((l) => l.estado === "lido").sort((a, b) => (b.encerrado_em ?? "").localeCompare(a.encerrado_em ?? ""));
+  const lidos = livros
+    .filter((l) => l.estado === "lido")
+    .sort((a, b) => (b.encerrado_em ?? "").localeCompare(a.encerrado_em ?? ""));
   const sugeridos = livros.filter((l) => l.estado === "sugerido").sort((a, b) => b.votos.length - a.votos.length);
   const ano = new Date().getFullYear();
   const desteAno = lidos.filter((l) => l.encerrado_em?.startsWith(String(ano))).length;
@@ -79,7 +93,10 @@ export default function BibliotecaPage() {
         <p className="text-[10px] font-semibold tracking-[.16em] text-cinza uppercase">
           todos · {livros.length} &nbsp; lidos · {lidos.length}
         </p>
-        <Link href={`${base}/sugerir`} className="flex min-h-9 items-center rounded-pill bg-bordo px-4 text-xs font-semibold text-creme">
+        <Link
+          href={`${base}/sugerir`}
+          className="flex min-h-9 items-center rounded-pill bg-bordo px-4 text-xs font-semibold text-creme"
+        >
           + sugerir
         </Link>
       </div>

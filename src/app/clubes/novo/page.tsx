@@ -25,7 +25,11 @@ function Formulario() {
       const id = await criarClube(nome, descricao, capa);
       router.push(`/clubes/${id}/convidar?novo=1`);
     } catch (x) {
-      setErro(faltaTabela(x) ? "falta criar as tabelas de clubes no Supabase (supabase/social.sql)." : "não deu para criar agora. tente de novo.");
+      setErro(
+        faltaTabela(x)
+          ? "falta criar as tabelas de clubes no Supabase (supabase/social.sql)."
+          : "não deu para criar agora. tente de novo.",
+      );
       setEnviando(false);
     }
   }
@@ -35,7 +39,14 @@ function Formulario() {
       <div className="mt-7 space-y-6 px-6 lg:max-w-[560px] lg:px-0">
         <label className="block">
           <span className={rotuloCampo}>nome do clube</span>
-          <input value={nome} onChange={(e) => setNome(e.target.value)} maxLength={60} placeholder="dois amores" className={campo} required />
+          <input
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
+            maxLength={60}
+            placeholder="dois amores"
+            className={campo}
+            required
+          />
         </label>
         <label className="block">
           <span className={rotuloCampo}>descrição</span>
@@ -68,7 +79,12 @@ export default function NovoClubePage() {
   return (
     <AppShell aba="clubes">
       <div className="flex flex-1 flex-col lg:bg-jornal lg:px-12 lg:py-8">
-        <TopoForm voltar={{ href: "/clubes", r: "clubes" }} rotulo="novo clube" titulo="criar um clube" frase="ele começa com você ✦" />
+        <TopoForm
+          voltar={{ href: "/clubes", r: "clubes" }}
+          rotulo="novo clube"
+          titulo="criar um clube"
+          frase="ele começa com você ✦"
+        />
         <ComConta>
           <Formulario />
         </ComConta>

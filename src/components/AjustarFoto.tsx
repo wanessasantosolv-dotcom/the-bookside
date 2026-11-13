@@ -5,12 +5,30 @@ import { Botao } from "@/components/ui/Botao";
 
 const ZOOM_MAX = 4;
 
-/** foto: círculo 1:1 · capa: faixa 2:1 · livro: capa de livro 2:3 */
-const FORMATOS = {
-  foto: { qw: 260, qh: 260, sw: 400, sh: 400, titulo: "ajuste sua foto", redondo: true },
-  capa: { qw: 300, qh: 150, sw: 1200, sh: 600, titulo: "ajuste a capa", redondo: false },
-  livro: { qw: 200, qh: 300, sw: 400, sh: 600, titulo: "ajuste a capa do livro", redondo: false },
-} as const;
+/**
+ * Formatos de corte. O quadro tem a MESMA proporção de onde a imagem aparece:
+ * - foto: círculo 1:1
+ * - capa (perfil): 2:1, como no celular; `guia` marca a faixa do meio que
+ *   aparece no topo do perfil no computador (mais largo e baixo)
+ * - clube: 3:1, igual ao topo do clube em qualquer tela
+ * - livro: capa de livro 2:3
+ */
+type Formato = {
+  qw: number;
+  qh: number;
+  sw: number;
+  sh: number;
+  titulo: string;
+  redondo: boolean;
+  qualidade: number;
+  guia?: number;
+};
+const FORMATOS: Record<"foto" | "capa" | "clube" | "livro", Formato> = {
+  foto: { qw: 260, qh: 260, sw: 400, sh: 400, titulo: "ajuste sua foto", redondo: true, qualidade: 0.85 },
+  capa: { qw: 300, qh: 150, sw: 1200, sh: 600, titulo: "ajuste a capa", redondo: false, qualidade: 0.78, guia: 0.47 },
+  clube: { qw: 330, qh: 110, sw: 1500, sh: 500, titulo: "ajuste a capa do clube", redondo: false, qualidade: 0.8 },
+  livro: { qw: 200, qh: 300, sw: 400, sh: 600, titulo: "ajuste a capa do livro", redondo: false, qualidade: 0.85 },
+};
 
 type Props = {
   /** endereço da imagem (object URL ou data URL) */
@@ -25,7 +43,7 @@ type Props = {
  * zoom pela barra, pelo gesto de pinça ou pela rodinha do mouse.
  */
 export function AjustarFoto({ src, formato = "foto", onCancelar, onPronto }: Props) {
-  const { qw: QW, qh: QH, sw: SW, sh: SH, titulo: textoTitulo, redondo } = FORMATOS[formato];
+  const { qw: QW, qh: QH, sw: SW, sh: SH, titulo: textoTitulo, redondo, qualidade, guia } = FORMATOS[formato];
   const [img, setImg] = useState<HTMLImageElement | null>(null);
   const [zoom, setZoom] = useState(1);
   const [pos, setPos] = useState({ x: 0, y: 0 });
@@ -117,16 +135,30 @@ export function AjustarFoto({ src, formato = "foto", onCancelar, onPronto }: Pro
     const ctx = canvas.getContext("2d")!;
     ctx.imageSmoothingQuality = "high";
     ctx.drawImage(img, -esquerda / k, -topo / k, QW / k, QH / k, 0, 0, SW, SH);
-    onPronto(canvas.toDataURL("image/jpeg", formato === "capa" ? 0.78 : 0.85));
+    onPronto(canvas.toDataURL("image/jpeg", qualidade));
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ameixa/70 sm:items-center" role="dialog" aria-modal="true" aria-labelledby="titulo-ajustar">
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-ameixa/70 sm:items-center"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="titulo-ajustar"
+    >
       <div className="w-full max-w-[430px] animate-subir rounded-t-[28px] bg-creme px-6 pt-6 pb-[max(24px,env(safe-area-inset-bottom))] sm:rounded-[28px]">
-        <h2 id="titulo-ajustar" ref={titulo} tabIndex={-1} style={{ outline: "none" }} className="font-display text-2xl font-semibold italic text-bordo">
+        <h2
+          id="titulo-ajustar"
+          ref={titulo}
+          tabIndex={-1}
+          style={{ outline: "none" }}
+          className="font-display text-2xl font-semibold italic text-bordo"
+        >
           {textoTitulo}
         </h2>
-        <p className="mt-1 text-[13px] text-cinza">arraste para posicionar e use o zoom para aproximar.</p>
+        <p className="mt-1 text-[13px] text-cinza">
+          arraste para posicionar e use o zoom para aproximar.
+          {guia ? " no celular aparece o quadro todo; no computador, só a faixa marcada." : ""}
+        </p>
 
         <div
           role="application"
@@ -148,16 +180,38 @@ export function AjustarFoto({ src, formato = "foto", onCancelar, onPronto }: Pro
               alt=""
               draggable={false}
               className="pointer-events-none absolute top-1/2 left-1/2 max-w-none"
-              style={{ width: largura, height: altura, transform: `translate(calc(-50% + ${pos.x}px), calc(-50% + ${pos.y}px))` }}
+              style={{
+                width: largura,
+                height: altura,
+                transform: `translate(calc(-50% + ${pos.x}px), calc(-50% + ${pos.y}px))`,
+              }}
             />
           ) : (
-            <span className="absolute inset-0 flex items-center justify-center font-accent text-sm italic text-cinza">abrindo…</span>
+            <span className="absolute inset-0 flex items-center justify-center font-accent text-sm italic text-cinza">
+              abrindo…
+            </span>
           )}
-          <span aria-hidden className={`pointer-events-none absolute inset-0 ring-2 ring-creme/80 ring-inset ${redondo ? "rounded-full" : "rounded-md"}`} />
+          <span
+            aria-hidden
+            className={`pointer-events-none absolute inset-0 ring-2 ring-creme/80 ring-inset ${redondo ? "rounded-full" : "rounded-md"}`}
+          />
+          {guia ? (
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-x-0 border-y-2 border-dashed border-creme/90 shadow-[0_0_0_999px_rgba(43,20,32,.28)]"
+              style={{ top: `${((1 - guia) / 2) * 100}%`, bottom: `${((1 - guia) / 2) * 100}%` }}
+            >
+              <span className="absolute top-1 right-1.5 rounded-pill bg-ameixa/70 px-2 py-0.5 text-[9px] font-semibold tracking-[.08em] text-creme">
+                no computador
+              </span>
+            </span>
+          ) : null}
         </div>
 
         <label className="mt-6 flex items-center gap-3">
-          <span aria-hidden className="text-sm text-cinza">−</span>
+          <span aria-hidden className="text-sm text-cinza">
+            −
+          </span>
           <span className="sr-only">zoom</span>
           <input
             type="range"
@@ -168,7 +222,9 @@ export function AjustarFoto({ src, formato = "foto", onCancelar, onPronto }: Pro
             onChange={(e) => mudarZoom(Number(e.target.value))}
             className="h-11 flex-1 accent-bordo"
           />
-          <span aria-hidden className="text-lg text-cinza">+</span>
+          <span aria-hidden className="text-lg text-cinza">
+            +
+          </span>
         </label>
 
         <div className="mt-4 flex gap-2.5">

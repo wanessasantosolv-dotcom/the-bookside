@@ -1,9 +1,10 @@
 "use client";
 
+import { Animacao } from "@/components/Animacao";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
-import { Carregando, ErroOuFalta, Vazio } from "@/components/social/Estados";
+import { ErroOuFalta, Vazio } from "@/components/social/Estados";
 import { clube, membrosDe, tirarMembro, type Clube, type Membro, type Papel } from "@/lib/clubes";
 import { useConsulta, useMeuId } from "@/lib/social";
 
@@ -93,11 +94,18 @@ function Cabecalho({ c, papel, rodada }: { c: Clube; papel: Papel | null; rodada
     <>
       <div className="relative">
         <div
-          className={`h-[150px] bg-cover bg-center lg:h-[200px] ${c.capa ? "" : "pat-estrelas"}`}
-          style={c.capa ? { backgroundImage: `linear-gradient(rgba(43,20,32,.05),rgba(43,20,32,.35)), url("${c.capa}")` } : undefined}
+          className={`aspect-[3/1] w-full bg-cover bg-center lg:mx-12 lg:mt-6 lg:w-[calc(100%-6rem)] lg:max-w-[960px] lg:rounded-[4px] ${c.capa ? "" : "pat-estrelas"}`}
+          style={
+            c.capa
+              ? { backgroundImage: `linear-gradient(rgba(43,20,32,.05),rgba(43,20,32,.35)), url("${c.capa}")` }
+              : undefined
+          }
         />
         <div className="absolute inset-x-0 top-0 flex items-center justify-between px-4 pt-2 lg:px-12">
-          <Link href="/clubes" className="flex min-h-11 items-center rounded-pill bg-creme/85 px-3 text-[11px] font-semibold tracking-[.14em] text-bordo uppercase">
+          <Link
+            href="/clubes"
+            className="flex min-h-11 items-center rounded-pill bg-creme/85 px-3 text-[11px] font-semibold tracking-[.14em] text-bordo uppercase"
+          >
             ‹ clubes
           </Link>
           <span className="rounded-pill bg-creme/85">
@@ -105,13 +113,15 @@ function Cabecalho({ c, papel, rodada }: { c: Clube; papel: Papel | null; rodada
           </span>
         </div>
       </div>
-      <div className="relative -mt-7 rounded-t-[28px] bg-creme px-6 pt-5 text-center lg:mx-12 lg:rounded-t-[4px] lg:bg-jornal lg:px-0 lg:text-left">
+      <div className="relative bg-creme px-6 pt-5 text-center lg:mx-12 lg:bg-jornal lg:px-0 lg:text-left">
         {rodada ? <p className="text-[10px] font-semibold tracking-[.16em] text-cinza uppercase">{rodada}</p> : null}
         <h1 className="mt-1 font-display text-[34px] leading-[1.05] font-semibold italic text-bordo lg:font-revista lg:text-[44px] lg:font-normal lg:text-tinta">
           {c.nome}
         </h1>
         <p className="mt-1 text-[10px] font-semibold tracking-[.2em] text-cinza uppercase">clube de leitura</p>
-        {c.descricao ? <p className="mx-auto mt-2 max-w-[30em] font-accent text-sm italic text-cinza lg:mx-0">{c.descricao}</p> : null}
+        {c.descricao ? (
+          <p className="mx-auto mt-2 max-w-[30em] font-accent text-sm italic text-cinza lg:mx-0">{c.descricao}</p>
+        ) : null}
         <nav aria-label="seções do clube" className="-mx-6 mt-4 flex gap-1.5 overflow-x-auto px-6 pb-1 lg:mx-0 lg:px-0">
           {abas.map((a) => {
             const href = a.id ? `${base}/${a.id}` : base;
@@ -144,7 +154,8 @@ export function ClubeProvedor({ id, children }: { id: string; children: ReactNod
     return c ? { c, membros } : null;
   }, [id]);
 
-  if (consulta.carregando && !consulta.dados) return <Carregando texto="abrindo o clube…" />;
+  if (consulta.carregando && !consulta.dados)
+    return <Animacao tipo="livro" titulo="abrindo o clube" sub="arrumando as estantes e as fichas do mês" />;
   if (consulta.erro) return <ErroOuFalta erro={consulta.erro} onTentar={consulta.recarregar} />;
   if (!consulta.dados)
     return (
