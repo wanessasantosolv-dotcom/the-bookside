@@ -215,6 +215,20 @@ export async function lendoEntreAmigas(): Promise<{ pessoa: PessoaResumo; livro:
     .filter((x) => x !== null);
 }
 
+/** Quem você segue e tem este livro na estante (para a página do livro). */
+export async function amigasComLivro(livroId: string): Promise<{ pessoa: PessoaResumo; livro: LivroSalvo }[]> {
+  const sigo = [...(await idsQueSigo())];
+  if (!sigo.length) return [];
+  const { data, error } = await db().from("perfis_publicos").select("id,usuario,nome,foto,livros:dados->livros").in("id", sigo);
+  if (error) throw error;
+  return (data ?? [])
+    .map((p) => {
+      const livro = ((p as unknown as { livros?: LivroSalvo[] }).livros ?? []).find((l) => l.id === livroId);
+      return livro ? { pessoa: { id: p.id, usuario: p.usuario, nome: p.nome, foto: p.foto }, livro } : null;
+    })
+    .filter((x) => x !== null);
+}
+
 export async function curtir(atividadeId: string, sim: boolean) {
   const eu = meuId();
   if (!eu) return;

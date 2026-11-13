@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { CapaLivro } from "@/components/CapaLivro";
 import { TrocarCapa } from "@/components/TrocarCapa";
+import { AmigasComLivro } from "@/components/social/AmigasComLivro";
 import { useHidratado } from "@/components/PerfilHidratacao";
 import { livroLembrado, sinopseDaObra } from "@/lib/catalogo";
 import { corDoLivro } from "@/lib/cores";
@@ -218,7 +219,7 @@ export default function LivroPage() {
           <aside className="mt-6 px-6 pb-8 lg:mt-0 lg:px-0 lg:pb-0">
             <div className="rounded-md border border-linha p-4 lg:rounded-[4px] lg:border-fio lg:p-5">
               <p className={secao}>entre suas amigas</p>
-              <p className="mt-2 font-accent text-sm italic text-cinza">quando suas amigas lerem este livro, elas aparecem aqui.</p>
+              <AmigasComLivro livroId={livro.id} />
             </div>
             {salvo ? (
               <button

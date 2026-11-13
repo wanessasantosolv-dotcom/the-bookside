@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
+import { AvisoOffline } from "@/components/AvisoOffline";
 import { PerfilHidratacao } from "@/components/PerfilHidratacao";
 import "./globals.css";
 
@@ -86,6 +87,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     >
       <body>
         <PerfilHidratacao />
+        <AvisoOffline />
         {children}
       </body>
     </html>

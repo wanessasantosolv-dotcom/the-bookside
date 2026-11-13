@@ -225,9 +225,7 @@ export default function InicioPage() {
 
           <aside className="hidden space-y-5 lg:block">
             {!bookside ? <BannerTeste /> : null}
-            <ComConta carregando={null}>
-              <AmigasLendoWeb />
-            </ComConta>
+            <AmigasLendoWeb />
             <Link href="/numeros" className="block rounded-[4px] border border-fio p-5 hover:bg-[#F3ECDF]">
               <p className="mb-2.5 text-[10px] font-semibold tracking-[.18em] text-grafite uppercase">seus números</p>
               <div className="grid grid-cols-3 border-y border-fio">

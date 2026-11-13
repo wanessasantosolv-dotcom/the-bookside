@@ -106,9 +106,17 @@ export function iniciarNuvem() {
     espera = setTimeout(() => void salvarPerfil(usuario.id), 1200);
   });
 
+  // a internet voltou: manda o que mudou enquanto estava sem conexão
+  const voltou = () => {
+    const usuario = useNuvem.getState().usuario;
+    if (carregado && usuario) void salvarPerfil(usuario.id);
+  };
+  window.addEventListener("online", voltou);
+
   return () => {
     clearTimeout(espera);
     assinatura.subscription.unsubscribe();
     pararStore();
+    window.removeEventListener("online", voltou);
   };
 }
