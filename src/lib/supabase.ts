@@ -8,7 +8,8 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
  * guardando tudo só no navegador.
  */
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const chave = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+// aceita os dois nomes que o Supabase usa para a chave pública
+const chave = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
 export const supabase: SupabaseClient | null =
   url && chave ? createClient(url, chave, { auth: { persistSession: true, autoRefreshToken: true } }) : null;

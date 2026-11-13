@@ -52,7 +52,7 @@ Com o Supabase ligado, cada leitora tem conta (e-mail + senha) e o perfil inteir
 6. **Project Settings → API**: copie a *Project URL* e a chave *anon / publishable*.
 7. Na **Vercel → Settings → Environment Variables**, crie:
    - `NEXT_PUBLIC_SUPABASE_URL` = Project URL
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = chave anon
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` (ou `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`) = chave anon / publishable
    e faça um **Redeploy**. (Nunca use a chave `service_role` no app.)
 
 Para rodar no computador com a nuvem, copie `.env.example` para `.env.local` e preencha.
