@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { notFound, useParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { CapaLivro } from "@/components/CapaLivro";
 import { useHidratado } from "@/components/PerfilHidratacao";
+import { livroLembrado, sinopseDaObra } from "@/lib/catalogo";
 import { corDoLivro } from "@/lib/cores";
 import { estrelas, infoDoLivro, todasAsEstantes } from "@/lib/estantes";
 import { usePerfil, type StatusLivro } from "@/lib/perfil-store";
@@ -22,13 +24,23 @@ export default function LivroPage() {
   const proprias = usePerfil((s) => s.estantesProprias);
   const editarLivro = usePerfil((s) => s.editarLivro);
   const removerLivro = usePerfil((s) => s.removerLivro);
+  const [sinopseOL, setSinopseOL] = useState<string>();
+
+  useEffect(() => {
+    const c = new AbortController();
+    sinopseDaObra(id, c.signal)
+      .then(setSinopseOL)
+      .catch(() => {});
+    return () => c.abort();
+  }, [id]);
 
   if (!hidratado) return <AppShell aba="estantes">{null}</AppShell>;
-  const livro = infoDoLivro(id, livros);
-  if (!livro) notFound();
+  const encontrado = infoDoLivro(id, livros, livroLembrado(id));
+  if (!encontrado) notFound();
+  const livro = { ...encontrado, sinopse: encontrado.sinopse ?? sinopseOL };
   const salvo = livros.some((l) => l.id === id);
   const status = salvo ? (livro.status ?? "lendo") : null;
-  const base = { id: livro.id, titulo: livro.titulo, autor: livro.autor };
+  const base = { id: livro.id, titulo: livro.titulo, autor: livro.autor, capa: livro.capa };
   const estantesProprias = todasAsEstantes(proprias ?? []).filter((e) => e.propria);
   const progresso = livro.paginas && livro.paginaAtual ? Math.round((livro.paginaAtual / livro.paginas) * 100) : null;
   const voltar = status === "lido" ? { href: "/estantes/lidos", r: "lidos" } : status === "quero" ? { href: "/estantes/quero-ler", r: "quero ler" } : status === "lendo" ? { href: "/estantes/lendo", r: "lendo" } : { href: "/estantes", r: "estantes" };
@@ -67,7 +79,7 @@ export default function LivroPage() {
         {/* topo: capa + dados */}
         <div className="flex animate-subir gap-[18px] px-6 pt-2 lg:gap-11 lg:border-b lg:border-fio lg:bg-[#F3ECDF] lg:px-14 lg:py-12">
           <CapaLivro
-            titulo={livro.titulo}
+            titulo={livro.titulo} capa={livro.capa}
             cor={corDoLivro(livro.id)}
             className="w-[120px] [&>span:last-child]:text-sm lg:w-[200px] lg:shadow-[10px_10px_0_#C9A46A] lg:[&>span:last-child]:text-xl"
           />

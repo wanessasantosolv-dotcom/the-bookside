@@ -29,7 +29,7 @@ function Prateleira({ e, livros }: { e: EstanteInfo; livros: LivroSalvo[] }) {
       <Link href={`/estantes/${e.id}`} className="block">
         <div className="relative flex h-[126px] gap-3 px-0.5">
           {livros.slice(0, 4).map((l) => (
-            <CapaLivro key={l.id} titulo={l.titulo} cor={corDoLivro(l.id)} className="w-[74px] self-start" />
+            <CapaLivro key={l.id} titulo={l.titulo} capa={l.capa} cor={corDoLivro(l.id)} className="w-[74px] self-start" />
           ))}
           {livros.length === 0 ? (
             <span className="flex aspect-[2/3] w-[74px] items-center justify-center self-start rounded-[2px_5px_5px_2px] border border-dashed border-rosa-antigo text-xl text-rosa-antigo">
@@ -62,7 +62,7 @@ function Leque({ e, livros }: { e: EstanteInfo; livros: LivroSalvo[] }) {
         {livros.length ? (
           livros.slice(0, 3).map((l, i) => (
             <div key={l.id} className="-mx-1.5 mt-2 w-20" style={{ transform: `rotate(${giros[i]})`, marginTop: i === 1 ? 2 : 10 }}>
-              <CapaLivro titulo={l.titulo} cor={corDoLivro(l.id)} className="w-full" />
+              <CapaLivro titulo={l.titulo} capa={l.capa} cor={corDoLivro(l.id)} className="w-full" />
             </div>
           ))
         ) : (
@@ -133,7 +133,7 @@ function EstantesWeb({ estantes, livros, favoritos }: { estantes: EstanteInfo[];
               {linha.livros.slice(0, linha.id === "favoritos" ? 8 : 7).map((l) => (
                 <li key={l.id}>
                   <Link href={`/livro/${l.id}`} className="block">
-                    <CapaLivro titulo={l.titulo} cor={corDoLivro(l.id)} className="w-full [&>span:last-child]:text-[11px]" />
+                    <CapaLivro titulo={l.titulo} capa={l.capa} cor={corDoLivro(l.id)} className="w-full [&>span:last-child]:text-[11px]" />
                     <i className="mt-2 block text-center text-[11px] leading-[1.3] text-grafite not-italic">{l.titulo}</i>
                   </Link>
                 </li>

@@ -8,6 +8,7 @@ import { EstrelasInput } from "@/components/Estrelas";
 import { useHidratado } from "@/components/PerfilHidratacao";
 import { Botao } from "@/components/ui/Botao";
 import { Tela } from "@/components/ui/Tela";
+import { livroLembrado } from "@/lib/catalogo";
 import { corDoLivro } from "@/lib/cores";
 import { infoDoLivro } from "@/lib/estantes";
 import { usePerfil, type LivroSalvo, type NotasDetalhe } from "@/lib/perfil-store";
@@ -38,7 +39,7 @@ function Formulario({ livro }: { livro: LivroSalvo & { paginas?: number } }) {
       <div className="flex-1 px-6 pt-6 pb-6">
         <div className="relative animate-subir rounded-md border border-linha bg-creme-quente px-[18px] py-5 [animation-delay:.12s]">
           <div className="absolute top-[18px] right-[18px] w-[74px]">
-            <CapaLivro titulo={livro.titulo} cor={corDoLivro(livro.id)} className="w-full [&>span:last-child]:hidden" />
+            <CapaLivro titulo={livro.titulo} capa={livro.capa} cor={corDoLivro(livro.id)} className="w-full [&>span:last-child]:hidden" />
           </div>
           <div className="w-[190px]">
             <p className="eyebrow text-bordo">sua nota</p>
@@ -81,7 +82,7 @@ function Formulario({ livro }: { livro: LivroSalvo & { paginas?: number } }) {
           disabled={!nota}
           onClick={() => {
             editarLivro(
-              { id: livro.id, titulo: livro.titulo, autor: livro.autor },
+              { id: livro.id, titulo: livro.titulo, autor: livro.autor, capa: livro.capa },
               { status: "lido", lidoEm, nota, notas, resenha: resenha.trim() || undefined, paginas: livro.paginas, paginaAtual: livro.paginas },
             );
             router.push(`/livro/${livro.id}`);
@@ -99,7 +100,7 @@ export default function AvaliarPage() {
   const hidratado = useHidratado();
   const livros = usePerfil((s) => s.livros);
   if (!hidratado) return <Tela>{null}</Tela>;
-  const livro = infoDoLivro(id, livros);
+  const livro = infoDoLivro(id, livros, livroLembrado(id));
   if (!livro) notFound();
   return <Formulario livro={livro} />;
 }

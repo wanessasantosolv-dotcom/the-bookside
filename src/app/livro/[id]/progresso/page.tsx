@@ -7,6 +7,7 @@ import { CapaLivro } from "@/components/CapaLivro";
 import { useHidratado } from "@/components/PerfilHidratacao";
 import { Botao } from "@/components/ui/Botao";
 import { Tela } from "@/components/ui/Tela";
+import { livroLembrado } from "@/lib/catalogo";
 import { corDoLivro } from "@/lib/cores";
 import { infoDoLivro } from "@/lib/estantes";
 import { usePerfil, type LivroSalvo } from "@/lib/perfil-store";
@@ -23,7 +24,7 @@ function Progresso({ livro }: { livro: LivroSalvo }) {
   const iniciadoEm = livro.iniciadoEm ?? new Date().toISOString();
   const dias = Math.max(1, Math.ceil((Date.now() - new Date(iniciadoEm).getTime()) / 86_400_000));
   const pct = paginas ? Math.min(100, Math.round((atual / paginas) * 100)) : 0;
-  const base = { id: livro.id, titulo: livro.titulo, autor: livro.autor };
+  const base = { id: livro.id, titulo: livro.titulo, autor: livro.autor, capa: livro.capa };
   const mudar = (n: number) => setAtual(Math.max(0, paginas ? Math.min(paginas, n) : n));
 
   function salvar(terminou = false) {
@@ -56,7 +57,7 @@ function Progresso({ livro }: { livro: LivroSalvo }) {
       <div className="flex-1 px-6 pt-6 pb-6">
         <div className="animate-subir rounded-md border border-linha bg-creme-quente px-5 py-[22px] [animation-delay:.12s]">
           <div className="flex gap-4">
-            <CapaLivro titulo={livro.titulo} cor={corDoLivro(livro.id)} className="w-[74px] [&>span:last-child]:hidden" />
+            <CapaLivro titulo={livro.titulo} capa={livro.capa} cor={corDoLivro(livro.id)} className="w-[74px] [&>span:last-child]:hidden" />
             <div className="min-w-0 flex-1 self-center">
               <p className="font-display text-[19px] leading-[1.2] font-semibold italic">{livro.titulo}</p>
               <p className="mt-1 font-accent text-[13px] italic text-cinza">
@@ -111,7 +112,7 @@ export default function ProgressoPage() {
   const hidratado = useHidratado();
   const livros = usePerfil((s) => s.livros);
   if (!hidratado) return <Tela>{null}</Tela>;
-  const livro = infoDoLivro(id, livros);
+  const livro = infoDoLivro(id, livros, livroLembrado(id));
   if (!livro) notFound();
   return <Progresso livro={livro} />;
 }

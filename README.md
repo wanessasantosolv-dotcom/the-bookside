@@ -38,6 +38,10 @@ Abra http://localhost:3000 (o app é mobile: use o modo celular do navegador, 39
 
 A partir de 1024px de largura as telas do app ganham o menu fixo na lateral (`AppShell`) e o perfil usa o layout web "C · hero cheio" do canvas.
 
+## Catálogo de livros
+
+A busca usa a [Open Library](https://openlibrary.org/dev/docs/api/search) direto do navegador (gratuita, sem chave): título, autoria, ano, páginas, capa e sinopse. Sem termo, ou sem conexão, aparecem as sugestões locais de `src/lib/dados.ts`. Código em `src/lib/catalogo.ts`.
+
 ## Organização
 
 - `src/app/globals.css` — tokens do design system (cores, fontes, raios) e animações.
@@ -51,5 +55,4 @@ A partir de 1024px de largura as telas do app ganham o menu fixo na lateral (`Ap
 1. Supabase: login de verdade (`/entrar`), tabela `perfis` e upload de foto/capa no Storage
    (procure `TODO(supabase)`).
 2. Revisar os textos dos arquétipos marcados como rascunho em `src/lib/teste.ts`.
-3. Busca de livros com capas de catálogo autorizado (procure `TODO(catálogo)`).
 4. Feed, números e clubes.

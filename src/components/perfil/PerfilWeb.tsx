@@ -31,7 +31,7 @@ function Coluna({ titulo, href, livros, vazio }: { titulo: string; href: string;
           {livros.slice(0, 3).map((l) => (
             <li key={l.id} className="w-[84px]">
               <Link href={`/livro/${l.id}`} className="block">
-                <CapaLivro titulo={l.titulo} cor={corDoLivro(l.id)} className="w-full" />
+                <CapaLivro titulo={l.titulo} capa={l.capa} cor={corDoLivro(l.id)} className="w-full" />
               </Link>
             </li>
           ))}
@@ -166,7 +166,7 @@ export function PerfilWeb({
                 {favoritos.slice(0, 3).map((l) => (
                   <li key={l.id} className="w-[84px]">
                     <Link href={`/livro/${l.id}`} className="block">
-                      <CapaLivro titulo={l.titulo} cor={corDoLivro(l.id)} className="w-full" />
+                      <CapaLivro titulo={l.titulo} capa={l.capa} cor={corDoLivro(l.id)} className="w-full" />
                     </Link>
                   </li>
                 ))}
@@ -185,7 +185,7 @@ export function PerfilWeb({
             <ul className="grid grid-cols-2 gap-6">
               {lendo.map((l) => (
                 <li key={l.id} className="flex items-center gap-3 rounded-[4px] border border-fio p-4">
-                  <CapaLivro titulo={l.titulo} cor={corDoLivro(l.id)} className="w-11 [&>span:last-child]:hidden" />
+                  <CapaLivro titulo={l.titulo} capa={l.capa} cor={corDoLivro(l.id)} className="w-11 [&>span:last-child]:hidden" />
                   <div>
                     <h3 className="font-revista text-[15px] leading-[1.2] italic">{l.titulo}</h3>
                     <p className="mt-1 text-[11px] text-grafite">{l.autor} · lendo</p>

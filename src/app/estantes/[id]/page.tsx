@@ -129,7 +129,7 @@ export default function EstanteAbertaPage() {
               {lista.map((l) => (
                 <li key={l.id}>
                   <Link href={`/livro/${l.id}`} className="block">
-                    <CapaLivro titulo={l.titulo} cor={corDoLivro(l.id)} className="w-full [&>span:last-child]:text-[10px]" />
+                    <CapaLivro titulo={l.titulo} capa={l.capa} cor={corDoLivro(l.id)} className="w-full [&>span:last-child]:text-[10px]" />
                     <h3 className="mt-2 font-display text-sm leading-[1.2] font-semibold italic">{l.titulo}</h3>
                     <p className="mt-1 text-[9px] font-semibold tracking-[.08em] text-cinza uppercase">{meta(l)}</p>
                   </Link>
@@ -146,7 +146,7 @@ export default function EstanteAbertaPage() {
                     return (
                       <li key={l.id}>
                         <Link href={`/livro/${l.id}`} className={`flex items-start gap-3.5 py-3 ${i ? "border-t border-linha" : ""} lg:border-t lg:border-linha`}>
-                          <CapaLivro titulo={l.titulo} cor={corDoLivro(l.id)} className="w-[54px] [&>span:last-child]:hidden" />
+                          <CapaLivro titulo={l.titulo} capa={l.capa} cor={corDoLivro(l.id)} className="w-[54px] [&>span:last-child]:hidden" />
                           <span className="min-w-0">
                             <span className="block text-[9px] font-semibold tracking-[.12em] text-cinza uppercase">{meta(l)}</span>
                             <h3 className="mt-1.5 font-display text-base leading-[1.2] font-semibold italic">{l.titulo}</h3>

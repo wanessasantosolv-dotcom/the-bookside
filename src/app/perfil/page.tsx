@@ -165,7 +165,7 @@ export default function PerfilPage() {
                 <li key={l?.id ?? i}>
                   {l ? (
                     <Link href={`/livro/${l.id}`} className="block">
-                      <CapaLivro titulo={l.titulo} cor={corDoLivro(l.id)} className="w-full" />
+                      <CapaLivro titulo={l.titulo} capa={l.capa} cor={corDoLivro(l.id)} className="w-full" />
                     </Link>
                   ) : (
                     <Link
@@ -193,7 +193,7 @@ export default function PerfilPage() {
               <li key={e.nome}>
                 <Link href={`/estantes/${e.id}`} className="block rounded-md px-2 py-2.5 text-center" style={{ background: e.fundo }}>
                   {e.livro ? (
-                    <CapaLivro titulo={e.livro.titulo} cor={corDoLivro(e.livro.id)} className="mx-auto w-[38px] [&>span:last-child]:hidden" />
+                    <CapaLivro titulo={e.livro.titulo} capa={e.livro.capa} cor={corDoLivro(e.livro.id)} className="mx-auto w-[38px] [&>span:last-child]:hidden" />
                   ) : (
                     <span aria-hidden className="mx-auto block aspect-[2/3] w-[38px] rounded-[3px] border border-dashed opacity-60" style={{ borderColor: e.titulo }} />
                   )}

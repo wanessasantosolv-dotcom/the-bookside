@@ -53,7 +53,7 @@ function Escolha({ inicial }: { inicial: string[] }) {
                   }`}
                 >
                   <input type="checkbox" className="sr-only" checked={on} disabled={!on && cheio} onChange={() => alternar(l.id)} />
-                  <CapaLivro titulo={l.titulo} cor={corDoLivro(l.id)} className={`w-full ${on ? "ring-2 ring-bordo ring-offset-2 ring-offset-creme" : ""}`} />
+                  <CapaLivro titulo={l.titulo} capa={l.capa} cor={corDoLivro(l.id)} className={`w-full ${on ? "ring-2 ring-bordo ring-offset-2 ring-offset-creme" : ""}`} />
                   <span
                     aria-hidden
                     className={`absolute top-1.5 right-1.5 flex size-6 items-center justify-center rounded-full border-2 border-creme text-xs font-bold ${

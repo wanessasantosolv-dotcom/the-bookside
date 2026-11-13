@@ -38,11 +38,16 @@ export function livrosDaEstante(estante: EstanteInfo, livros: LivroSalvo[]) {
 }
 
 /** Junta o que a pessoa salvou com o que o catálogo sabe do livro. */
-export function infoDoLivro(id: string, livros: LivroSalvo[]): (Partial<LivroCatalogo> & LivroSalvo) | null {
+export function infoDoLivro(
+  id: string,
+  livros: LivroSalvo[],
+  /** livro visto na busca (Open Library), quando não está no catálogo local */
+  daBusca?: LivroCatalogo,
+): (Partial<LivroCatalogo> & LivroSalvo) | null {
   const salvo = livros.find((l) => l.id === id);
-  const catalogo = sugestoesDeLivros.find((l) => l.id === id);
+  const catalogo = sugestoesDeLivros.find((l) => l.id === id) ?? daBusca;
   if (!salvo && !catalogo) return null;
-  return { ...catalogo, ...(salvo ?? { id, titulo: catalogo!.titulo, autor: catalogo!.autor }), paginas: salvo?.paginas ?? catalogo?.paginas };
+  return { ...catalogo, ...(salvo ?? { id, titulo: catalogo!.titulo, autor: catalogo!.autor }), paginas: salvo?.paginas ?? catalogo?.paginas, capa: salvo?.capa ?? catalogo?.capa };
 }
 
 export function estrelas(nota?: number) {

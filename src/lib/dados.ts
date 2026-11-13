@@ -59,6 +59,8 @@ export type LivroCatalogo = {
   genero?: string;
   sinopse?: string;
   cor: string;
+  /** URL da capa (Open Library) */
+  capa?: string;
 };
 
 export const sugestoesDeLivros: LivroCatalogo[] = [

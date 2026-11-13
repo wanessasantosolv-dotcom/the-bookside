@@ -50,7 +50,7 @@ export default function DescobrirPage() {
             <span aria-hidden className="absolute top-2 left-7 text-[15px] text-ouro">✧</span>
             <span aria-hidden className="absolute top-20 right-6 text-[11px] text-rosa-antigo">✦</span>
             <CapaLivro
-              titulo={livro.titulo}
+              titulo={livro.titulo} capa={livro.capa}
               cor={livro.cor}
               className="w-[166px] rotate-[1.5deg] !rounded-[3px_7px_7px_3px] !p-3 shadow-[inset_7px_0_8px_-6px_rgba(43,20,32,.55),0_16px_28px_-12px_rgba(43,20,32,.5)] [&>span:last-child]:text-lg"
             />

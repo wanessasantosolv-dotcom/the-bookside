@@ -2,25 +2,20 @@
 
 import { useState } from "react";
 import { CapaLivro } from "@/components/CapaLivro";
-import { sugestoesDeLivros } from "@/lib/dados";
+import { EstadoBusca } from "@/components/EstadoBusca";
+import { useBuscaLivros } from "@/lib/catalogo";
 import { usePerfil, type StatusLivro } from "@/lib/perfil-store";
-
-function normalizar(t: string) {
-  return t.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
-}
 
 /**
  * Campo de busca + lista de livros com botão "+ estante".
- * TODO(catálogo): trocar a lista fixa por uma busca na Open Library / Google Books.
+ * Busca na Open Library; sem termo, mostra as sugestões locais.
  */
 export function BuscaLivros({ status, rotuloInicial = "sugestões para começar" }: { status: StatusLivro; rotuloInicial?: string }) {
   const livros = usePerfil((s) => s.livros);
   const alternarLivro = usePerfil((s) => s.alternarLivro);
   const [busca, setBusca] = useState("");
 
-  const resultados = sugestoesDeLivros.filter((l) =>
-    normalizar(`${l.titulo} ${l.autor}`).includes(normalizar(busca.trim())),
-  );
+  const { estado, resultados } = useBuscaLivros(busca);
 
   return (
     <>
@@ -49,13 +44,14 @@ export function BuscaLivros({ status, rotuloInicial = "sugestões para começar"
         />
       </label>
 
-      <p className="eyebrow mt-6 mb-1.5 !text-[10px] text-cinza">{busca ? "resultados" : rotuloInicial}</p>
+      <p className="eyebrow mt-6 mb-1.5 !text-[10px] text-cinza">{estado === "sugestoes" ? rotuloInicial : "resultados"}</p>
+      <EstadoBusca estado={estado} vazio={!resultados.length} />
       <ul>
-        {resultados.map((l) => {
+        {(estado === "carregando" ? [] : resultados).map((l) => {
           const naEstante = livros.some((x) => x.id === l.id);
           return (
             <li key={l.id} className="flex items-center gap-3.5 border-b border-linha py-3">
-              <CapaLivro titulo={l.titulo} cor={l.cor} className="w-12" />
+              <CapaLivro titulo={l.titulo} capa={l.capa} cor={l.cor} className="w-12" />
               <div className="min-w-0">
                 <h3 className="font-display text-[17px] leading-[1.2] font-semibold italic text-ameixa">{l.titulo}</h3>
                 <small className="mt-1 block text-xs text-cinza">
@@ -66,7 +62,7 @@ export function BuscaLivros({ status, rotuloInicial = "sugestões para começar"
               <button
                 type="button"
                 aria-pressed={naEstante}
-                onClick={() => alternarLivro({ id: l.id, titulo: l.titulo, autor: l.autor, status })}
+                onClick={() => alternarLivro({ id: l.id, titulo: l.titulo, autor: l.autor, capa: l.capa, paginas: l.paginas, status })}
                 className={`ml-auto flex h-11 flex-none items-center rounded-pill border px-3 text-[11px] font-semibold whitespace-nowrap transition-colors ${
                   naEstante ? "border-linha bg-[#F1E4DC] text-cinza" : "border-bordo text-bordo hover:bg-rosa-fundo"
                 }`}
@@ -76,11 +72,6 @@ export function BuscaLivros({ status, rotuloInicial = "sugestões para começar"
             </li>
           );
         })}
-        {resultados.length === 0 ? (
-          <li className="py-8 text-center font-accent text-[15px] italic text-cinza">
-            não achou? a busca completa chega em breve ✦
-          </li>
-        ) : null}
       </ul>
     </>
   );
