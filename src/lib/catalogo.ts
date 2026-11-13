@@ -76,7 +76,9 @@ export async function buscarLivros(termo: string, signal?: AbortSignal): Promise
 /** Sinopse de uma obra da Open Library (quando existe). */
 export async function sinopseDaObra(id: string, signal?: AbortSignal): Promise<string | undefined> {
   if (!id.startsWith("ol-")) return undefined;
-  const r = await fetch(`https://openlibrary.org/works/${id.slice(3)}.json`, { signal });
+  const r = await fetch(`https://openlibrary.org/works/${id.slice(3)}.json`, {
+    signal,
+  });
   if (!r.ok) return undefined;
   const d = (await r.json()) as { description?: string | { value: string } };
   const texto = typeof d.description === "string" ? d.description : d.description?.value;
@@ -88,25 +90,81 @@ export async function sinopseDaObra(id: string, signal?: AbortSignal): Promise<s
  * na Open Library pelo título + autoria e guardadas no navegador.
  * "" = procuramos e não há capa.
  */
-const useCapas = create<{ capas: Record<string, string>; definir: (id: string, url: string) => void }>()(
+const useCapas = create<{
+  capas: Record<string, string>;
+  definir: (id: string, url: string) => void;
+}>()(
   persist(
-    (set) => ({ capas: {}, definir: (id, url) => set((s) => ({ capas: { ...s.capas, [id]: url } })) }),
-    { name: "bookside-capas", storage: createJSONStorage(() => localStorage) },
+    (set) => ({
+      capas: {},
+      definir: (id, url) => set((s) => ({ capas: { ...s.capas, [id]: url } })),
+    }),
+    {
+      name: "bookside-capas-v2",
+      storage: createJSONStorage(() => localStorage),
+    },
   ),
 );
 
 let buscandoCapas = false;
 
-async function procurarCapa(titulo: string, autor: string): Promise<string> {
-  const semAutoria = !autor || autor.startsWith("autoria");
+/** Tira subtítulo e pontuação para a busca achar mais edições. */
+function tituloCurto(titulo: string) {
+  return titulo.split(/[:(\[]/)[0].trim();
+}
+
+async function capaNaOpenLibrary(titulo: string, autor?: string): Promise<string> {
   const url = `https://openlibrary.org/search.json?title=${encodeURIComponent(titulo)}${
-    semAutoria ? "" : `&author=${encodeURIComponent(autor)}`
+    autor ? `&author=${encodeURIComponent(autor)}` : ""
   }&limit=5&fields=cover_i`;
   const r = await fetch(url);
   if (!r.ok) throw new Error(String(r.status));
   const { docs } = (await r.json()) as { docs: { cover_i?: number }[] };
   const capa = docs.find((d) => d.cover_i)?.cover_i;
   return capa ? `https://covers.openlibrary.org/b/id/${capa}-M.jpg` : "";
+}
+
+/** Google Books: cobre bem as edições brasileiras (títulos em português). */
+async function capaNoGoogleBooks(titulo: string, autor?: string): Promise<string> {
+  const q = `intitle:${titulo}${autor ? ` inauthor:${autor}` : ""}`;
+  const r = await fetch(
+    `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=10&printType=books&fields=items(volumeInfo/imageLinks)`,
+  );
+  if (!r.ok) throw new Error(String(r.status));
+  const { items } = (await r.json()) as {
+    items?: {
+      volumeInfo?: {
+        imageLinks?: { thumbnail?: string; smallThumbnail?: string };
+      };
+    }[];
+  };
+  const link = items
+    ?.map((i) => i.volumeInfo?.imageLinks?.thumbnail ?? i.volumeInfo?.imageLinks?.smallThumbnail)
+    .find(Boolean);
+  return link ? link.replace(/^http:/, "https:").replace("&edge=curl", "") : "";
+}
+
+async function procurarCapa(tituloCompleto: string, autorCompleto: string): Promise<string> {
+  const titulo = tituloCurto(tituloCompleto);
+  const autor = !autorCompleto || autorCompleto.startsWith("autoria") ? undefined : autorCompleto;
+  let falhas = 0;
+  const tentativas = [
+    () => capaNaOpenLibrary(titulo, autor),
+    () => capaNoGoogleBooks(titulo, autor),
+    () => capaNoGoogleBooks(titulo),
+    () => capaNaOpenLibrary(titulo),
+  ];
+  for (const tentar of tentativas) {
+    try {
+      const capa = await tentar();
+      if (capa) return capa;
+    } catch {
+      falhas++;
+    }
+  }
+  // tudo falhou por rede: não guarda "sem capa", tenta outra hora
+  if (falhas === tentativas.length) throw new Error("sem conexão");
+  return "";
 }
 
 /**
@@ -120,9 +178,15 @@ export async function completarCapas() {
   try {
     await useCapas.persist.rehydrate();
     const pendentes = [
-      ...sugestoesDeLivros.map((l) => ({ id: l.id, titulo: l.titulo, autor: l.autor })),
+      ...sugestoesDeLivros.map((l) => ({
+        id: l.id,
+        titulo: l.titulo,
+        autor: l.autor,
+      })),
       ...usePerfil.getState().livros.filter((l) => !l.capa),
-    ].filter((l, i, todos) => todos.findIndex((x) => x.id === l.id) === i && useCapas.getState().capas[l.id] === undefined);
+    ].filter(
+      (l, i, todos) => todos.findIndex((x) => x.id === l.id) === i && useCapas.getState().capas[l.id] === undefined,
+    );
     for (const l of pendentes) {
       try {
         useCapas.getState().definir(l.id, await procurarCapa(l.titulo, l.autor));
@@ -136,7 +200,9 @@ export async function completarCapas() {
   const { capas } = useCapas.getState();
   const livros = usePerfil.getState().livros;
   if (livros.some((l) => !l.capa && capas[l.id])) {
-    usePerfil.setState({ livros: livros.map((l) => (!l.capa && capas[l.id] ? { ...l, capa: capas[l.id] } : l)) });
+    usePerfil.setState({
+      livros: livros.map((l) => (!l.capa && capas[l.id] ? { ...l, capa: capas[l.id] } : l)),
+    });
   }
 }
 
@@ -145,7 +211,8 @@ export function iniciarCapas() {
   void completarCapas();
   let espera: ReturnType<typeof setTimeout> | undefined;
   return usePerfil.subscribe((s, antes) => {
-    if (s.livros === antes.livros || !s.livros.some((l) => !l.capa && useCapas.getState().capas[l.id] === undefined)) return;
+    if (s.livros === antes.livros || !s.livros.some((l) => !l.capa && useCapas.getState().capas[l.id] === undefined))
+      return;
     clearTimeout(espera);
     espera = setTimeout(() => void completarCapas(), 800);
   });
@@ -199,5 +266,8 @@ export function useBuscaLivros(termo: string) {
     };
   }, [limpo]);
 
-  return { estado, resultados: estado === "sugestoes" ? sugestoes : resultados };
+  return {
+    estado,
+    resultados: estado === "sugestoes" ? sugestoes : resultados,
+  };
 }

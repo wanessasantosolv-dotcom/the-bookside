@@ -17,7 +17,17 @@ function escurecer(hex: string, fator = 0.45, alfa = 1) {
 
 const rotulo = "text-[9px] leading-[1.2] font-semibold tracking-[.14em] uppercase text-grafite";
 
-function Coluna({ titulo, href, livros, vazio }: { titulo: string; href: string; livros: LivroSalvo[]; vazio: string }) {
+function Coluna({
+  titulo,
+  href,
+  livros,
+  vazio,
+}: {
+  titulo: string;
+  href: string;
+  livros: LivroSalvo[];
+  vazio: string;
+}) {
   return (
     <section>
       <div className="mb-3.5 flex items-baseline justify-between border-b border-tinta pb-2">
@@ -95,10 +105,12 @@ export function PerfilWeb({
             : `linear-gradient(135deg, ${base}, ${escurecer(base)})`,
         }}
       >
-        <div
-          aria-hidden
-          className="absolute inset-0 bg-[repeating-linear-gradient(115deg,transparent,transparent_38px,rgba(255,255,255,.03)_38px,rgba(255,255,255,.03)_76px)]"
-        />
+        {p.capaImagem ? null : (
+          <div
+            aria-hidden
+            className="absolute inset-0 bg-[repeating-linear-gradient(115deg,transparent,transparent_38px,rgba(255,255,255,.03)_38px,rgba(255,255,255,.03)_76px)]"
+          />
+        )}
         <div className="relative flex w-full translate-y-14 items-end gap-7">
           <div className="size-32 flex-none overflow-hidden rounded-full border-[5px] border-jornal bg-rosa-fundo">
             {p.foto ? (
@@ -127,7 +139,9 @@ export function PerfilWeb({
 
       <div className="mx-auto max-w-[1200px] px-14 pt-[84px] pb-16">
         {p.frase ? (
-          <p className="mb-4 text-center font-revista text-xl leading-[1.4] italic text-[var(--acc-web)]">“{p.frase}”</p>
+          <p className="mb-4 text-center font-revista text-xl leading-[1.4] italic text-[var(--acc-web)]">
+            “{p.frase}”
+          </p>
         ) : null}
         <div className="mb-7 flex justify-center">
           <button
@@ -157,7 +171,10 @@ export function PerfilWeb({
           <section>
             <div className="mb-3.5 flex items-baseline justify-between border-b border-tinta pb-2">
               <h2 className="font-revista text-[19px] leading-none italic">favoritos</h2>
-              <Link href="/perfil/favoritos" className="text-[9px] font-bold tracking-[.1em] text-[var(--acc-web)] uppercase">
+              <Link
+                href="/perfil/favoritos"
+                className="text-[9px] font-bold tracking-[.1em] text-[var(--acc-web)] uppercase"
+              >
                 escolher →
               </Link>
             </div>
@@ -172,11 +189,23 @@ export function PerfilWeb({
                 ))}
               </ul>
             ) : (
-              <p className="font-revista text-[13px] leading-[1.4] italic text-grafite">escolha até 4 livros para ficarem em destaque.</p>
+              <p className="font-revista text-[13px] leading-[1.4] italic text-grafite">
+                escolha até 4 livros para ficarem em destaque.
+              </p>
             )}
           </section>
-          <Coluna titulo={`lidos · ${lidos.length}`} href="/estantes/lidos" livros={lidos} vazio="nenhum livro lido por aqui ainda." />
-          <Coluna titulo="quero ler" href="/estantes/quero-ler" livros={quero} vazio="sua lista de quero ler está vazia." />
+          <Coluna
+            titulo={`lidos · ${lidos.length}`}
+            href="/estantes/lidos"
+            livros={lidos}
+            vazio="nenhum livro lido por aqui ainda."
+          />
+          <Coluna
+            titulo="quero ler"
+            href="/estantes/quero-ler"
+            livros={quero}
+            vazio="sua lista de quero ler está vazia."
+          />
         </div>
 
         <section className="mt-9 border-t border-fio pt-7">
@@ -185,7 +214,12 @@ export function PerfilWeb({
             <ul className="grid grid-cols-2 gap-6">
               {lendo.map((l) => (
                 <li key={l.id} className="flex items-center gap-3 rounded-[4px] border border-fio p-4">
-                  <CapaLivro titulo={l.titulo} capa={l.capa} cor={corDoLivro(l.id)} className="w-11 [&>span:last-child]:hidden" />
+                  <CapaLivro
+                    titulo={l.titulo}
+                    capa={l.capa}
+                    cor={corDoLivro(l.id)}
+                    className="w-11 [&>span:last-child]:hidden"
+                  />
                   <div>
                     <h3 className="font-revista text-[15px] leading-[1.2] italic">{l.titulo}</h3>
                     <p className="mt-1 text-[11px] text-grafite">{l.autor} · lendo</p>
