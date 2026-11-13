@@ -1,52 +1,70 @@
 import type { Metadata, Viewport } from "next";
-import { DM_Serif_Display, Fraunces, Inter, Manrope, Playfair_Display, Space_Mono, Special_Elite } from "next/font/google";
+import localFont from "next/font/local";
 import { PerfilHidratacao } from "@/components/PerfilHidratacao";
 import "./globals.css";
 
-const playfair = Playfair_Display({
-  subsets: ["latin"],
-  weight: ["600", "700"],
-  style: ["normal", "italic"],
+/*
+ * Fontes guardadas no próprio projeto (src/fonts), para o build não depender
+ * de baixar nada do Google Fonts. Licenças em src/fonts/README.md.
+ */
+const playfair = localFont({
+  src: [
+    { path: "../fonts/playfair-display-latin-600-normal.woff2", weight: "600", style: "normal" },
+    { path: "../fonts/playfair-display-latin-600-italic.woff2", weight: "600", style: "italic" },
+    { path: "../fonts/playfair-display-latin-700-normal.woff2", weight: "700", style: "normal" },
+    { path: "../fonts/playfair-display-latin-700-italic.woff2", weight: "700", style: "italic" },
+  ],
   variable: "--font-playfair",
+  display: "swap",
 });
 
-const dmSerif = DM_Serif_Display({
-  subsets: ["latin"],
-  weight: "400",
-  style: ["normal", "italic"],
+const dmSerif = localFont({
+  src: [
+    { path: "../fonts/dm-serif-display-latin-400-normal.woff2", weight: "400", style: "normal" },
+    { path: "../fonts/dm-serif-display-latin-400-italic.woff2", weight: "400", style: "italic" },
+  ],
   variable: "--font-dm-serif",
+  display: "swap",
 });
 
-const inter = Inter({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+const inter = localFont({
+  src: "../fonts/inter-latin-wght-normal.woff2",
+  weight: "100 900",
   variable: "--font-inter",
+  display: "swap",
 });
 
-const specialElite = Special_Elite({
-  subsets: ["latin"],
+const specialElite = localFont({
+  src: "../fonts/special-elite-latin-400-normal.woff2",
   weight: "400",
   variable: "--font-special-elite",
+  display: "swap",
 });
 
 // estilo "revista" (teste e versão web)
-const fraunces = Fraunces({
-  subsets: ["latin"],
-  weight: ["400", "600"],
-  style: ["normal", "italic"],
+const fraunces = localFont({
+  src: [
+    { path: "../fonts/fraunces-latin-wght-normal.woff2", weight: "100 900", style: "normal" },
+    { path: "../fonts/fraunces-latin-wght-italic.woff2", weight: "100 900", style: "italic" },
+  ],
   variable: "--font-fraunces",
+  display: "swap",
 });
 
-const manrope = Manrope({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+const manrope = localFont({
+  src: "../fonts/manrope-latin-wght-normal.woff2",
+  weight: "200 800",
   variable: "--font-manrope",
+  display: "swap",
 });
 
-const spaceMono = Space_Mono({
-  subsets: ["latin"],
-  weight: ["400", "700"],
+const spaceMono = localFont({
+  src: [
+    { path: "../fonts/space-mono-latin-400-normal.woff2", weight: "400", style: "normal" },
+    { path: "../fonts/space-mono-latin-700-normal.woff2", weight: "700", style: "normal" },
+  ],
   variable: "--font-space-mono",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
