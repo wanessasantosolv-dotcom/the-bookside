@@ -48,7 +48,7 @@ export default function TemaPage() {
               {/* a capa da pessoa, tingida com a cor do tema */}
               <div
                 className={`absolute inset-x-0 top-0 h-10 bg-cover bg-[center_30%] ${capaImagem ? "" : `pat-${capa}`}`}
-                style={capaImagem ? { backgroundImage: `url(${capaImagem})` } : undefined}
+                style={capaImagem ? { backgroundImage: `url("${capaImagem}")` } : undefined}
               >
                 <div className="absolute inset-0 opacity-[.58]" style={{ background: t.destaque }} />
               </div>

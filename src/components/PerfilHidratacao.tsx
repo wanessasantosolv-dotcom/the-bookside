@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useSyncExternalStore } from "react";
+import { iniciarCapas } from "@/lib/catalogo";
 import { iniciarNuvem } from "@/lib/nuvem";
 import { usePerfil } from "@/lib/perfil-store";
 import { useTeste } from "@/lib/teste-store";
@@ -16,7 +17,13 @@ export function PerfilHidratacao() {
     void useTeste.persist.rehydrate();
     // primeiro o que está no navegador; depois a nuvem (se houver conta) por cima
     void Promise.resolve(usePerfil.persist.rehydrate()).then(() => {
-      if (ativo) parar = iniciarNuvem();
+      if (!ativo) return;
+      const pararNuvem = iniciarNuvem();
+      const pararCapas = iniciarCapas();
+      parar = () => {
+        pararNuvem();
+        pararCapas();
+      };
     });
     return () => {
       ativo = false;

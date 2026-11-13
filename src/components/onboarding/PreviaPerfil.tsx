@@ -12,7 +12,7 @@ export function PreviaPerfil() {
         className={`absolute inset-x-0 top-0 h-[120px] rounded-t-md border border-b-0 border-linha bg-cover bg-center ${
           capaImagem ? "" : `pat-${capa}`
         }`}
-        style={capaImagem ? { backgroundImage: `url(${capaImagem})` } : undefined}
+        style={capaImagem ? { backgroundImage: `url("${capaImagem}")` } : undefined}
       />
       <div className="absolute inset-x-0 top-[92px] bottom-0 rounded-[28px_28px_12px_12px] border border-linha bg-creme" />
       <div className="absolute top-[70px] left-1/2 size-[68px] -translate-x-1/2 overflow-hidden rounded-full border-[3px] border-creme bg-linha">

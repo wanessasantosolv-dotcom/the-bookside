@@ -9,10 +9,10 @@ import type { LivroSalvo, Perfil } from "@/lib/perfil-store";
 import type { Arquetipo } from "@/lib/teste";
 
 /** Escurece uma cor hex (para o degradê do topo). */
-function escurecer(hex: string, fator = 0.45) {
+function escurecer(hex: string, fator = 0.45, alfa = 1) {
   const n = parseInt(hex.slice(1), 16);
   const c = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => Math.round(v * fator));
-  return `rgb(${c.join(",")})`;
+  return `rgba(${c.join(",")},${alfa})`;
 }
 
 const rotulo = "text-[9px] leading-[1.2] font-semibold tracking-[.14em] uppercase text-grafite";
@@ -91,7 +91,7 @@ export function PerfilWeb({
         className="relative flex h-[280px] items-end bg-cover bg-center px-14"
         style={{
           backgroundImage: p.capaImagem
-            ? `linear-gradient(135deg, ${base}d9, ${escurecer(base)}e6), url(${p.capaImagem})`
+            ? `linear-gradient(135deg, ${escurecer(base, 1, 0.55)}, ${escurecer(base, 0.45, 0.8)}), url("${p.capaImagem}")`
             : `linear-gradient(135deg, ${base}, ${escurecer(base)})`,
         }}
       >

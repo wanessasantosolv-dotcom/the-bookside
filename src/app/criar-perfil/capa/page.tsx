@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
+import { AjustarFoto } from "@/components/AjustarFoto";
 import { Passo } from "@/components/onboarding/Passo";
 import { PreviaPerfil } from "@/components/onboarding/PreviaPerfil";
 import { Botao, BotaoLink } from "@/components/ui/Botao";
@@ -14,6 +15,7 @@ export default function CapaPage() {
   const capaImagem = usePerfil((s) => s.capaImagem);
   const atualizar = usePerfil((s) => s.atualizar);
   const galeria = useRef<HTMLInputElement>(null);
+  const [paraAjustar, setParaAjustar] = useState<string | null>(null);
 
   return (
     <Passo
@@ -58,10 +60,27 @@ export default function CapaPage() {
         hidden
         onChange={async (e) => {
           const arquivo = e.target.files?.[0];
-          if (arquivo) atualizar({ capaImagem: await reduzirImagem(arquivo, 900, 0.78) });
+          e.target.value = "";
+          if (arquivo) setParaAjustar(await reduzirImagem(arquivo, 2000, 0.9));
         }}
       />
-      <Botao variante="contorno" className="mt-5 !h-12" onClick={() => galeria.current?.click()}>
+      {paraAjustar ? (
+        <AjustarFoto
+          src={paraAjustar}
+          formato="capa"
+          onCancelar={() => setParaAjustar(null)}
+          onPronto={(dataUrl) => {
+            atualizar({ capaImagem: dataUrl });
+            setParaAjustar(null);
+          }}
+        />
+      ) : null}
+      {capaImagem ? (
+        <Botao variante="contorno" className="mt-5 !h-12" onClick={() => setParaAjustar(capaImagem)}>
+          ajustar capa
+        </Botao>
+      ) : null}
+      <Botao variante="contorno" className={`${capaImagem ? "mt-3" : "mt-5"} !h-12`} onClick={() => galeria.current?.click()}>
         {capaImagem ? "trocar imagem da galeria" : "+ escolher da galeria"}
       </Botao>
     </Passo>

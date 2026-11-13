@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
+import { usePerfil } from "@/lib/perfil-store";
 import { sugestoesDeLivros, type LivroCatalogo } from "@/lib/dados";
 
 /**
@@ -80,6 +83,80 @@ export async function sinopseDaObra(id: string, signal?: AbortSignal): Promise<s
   return texto?.split(/\n-{3,}|\r?\n\r?\n\(/)[0]?.trim();
 }
 
+/*
+ * Capas das sugestões locais (que não têm capa no código): buscadas uma vez
+ * na Open Library pelo título + autoria e guardadas no navegador.
+ * "" = procuramos e não há capa.
+ */
+const useCapas = create<{ capas: Record<string, string>; definir: (id: string, url: string) => void }>()(
+  persist(
+    (set) => ({ capas: {}, definir: (id, url) => set((s) => ({ capas: { ...s.capas, [id]: url } })) }),
+    { name: "bookside-capas", storage: createJSONStorage(() => localStorage) },
+  ),
+);
+
+let buscandoCapas = false;
+
+async function procurarCapa(titulo: string, autor: string): Promise<string> {
+  const semAutoria = !autor || autor.startsWith("autoria");
+  const url = `https://openlibrary.org/search.json?title=${encodeURIComponent(titulo)}${
+    semAutoria ? "" : `&author=${encodeURIComponent(autor)}`
+  }&limit=5&fields=cover_i`;
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(String(r.status));
+  const { docs } = (await r.json()) as { docs: { cover_i?: number }[] };
+  const capa = docs.find((d) => d.cover_i)?.cover_i;
+  return capa ? `https://covers.openlibrary.org/b/id/${capa}-M.jpg` : "";
+}
+
+/**
+ * Procura na Open Library a capa de todo livro que ainda não tem uma
+ * (sugestões locais e livros da estante que entraram pelo teste, por exemplo)
+ * e completa os livros guardados na estante.
+ */
+export async function completarCapas() {
+  if (buscandoCapas) return;
+  buscandoCapas = true;
+  try {
+    await useCapas.persist.rehydrate();
+    const pendentes = [
+      ...sugestoesDeLivros.map((l) => ({ id: l.id, titulo: l.titulo, autor: l.autor })),
+      ...usePerfil.getState().livros.filter((l) => !l.capa),
+    ].filter((l, i, todos) => todos.findIndex((x) => x.id === l.id) === i && useCapas.getState().capas[l.id] === undefined);
+    for (const l of pendentes) {
+      try {
+        useCapas.getState().definir(l.id, await procurarCapa(l.titulo, l.autor));
+      } catch {
+        break; // sem internet: tenta de novo outra hora
+      }
+    }
+  } finally {
+    buscandoCapas = false;
+  }
+  const { capas } = useCapas.getState();
+  const livros = usePerfil.getState().livros;
+  if (livros.some((l) => !l.capa && capas[l.id])) {
+    usePerfil.setState({ livros: livros.map((l) => (!l.capa && capas[l.id] ? { ...l, capa: capas[l.id] } : l)) });
+  }
+}
+
+/** Liga a busca de capas: agora e sempre que entrar um livro novo sem capa. */
+export function iniciarCapas() {
+  void completarCapas();
+  let espera: ReturnType<typeof setTimeout> | undefined;
+  return usePerfil.subscribe((s, antes) => {
+    if (s.livros === antes.livros || !s.livros.some((l) => !l.capa && useCapas.getState().capas[l.id] === undefined)) return;
+    clearTimeout(espera);
+    espera = setTimeout(() => void completarCapas(), 800);
+  });
+}
+
+/** Sugestões locais com as capas já encontradas. */
+export function useSugestoes(): LivroBusca[] {
+  const capas = useCapas((s) => s.capas);
+  return sugestoesDeLivros.map((l) => (capas[l.id] ? { ...l, capa: capas[l.id] } : l));
+}
+
 type Estado = "sugestoes" | "carregando" | "pronto" | "erro";
 
 /**
@@ -87,6 +164,7 @@ type Estado = "sugestoes" | "carregando" | "pronto" | "erro";
  * e, sem termo (ou sem internet), mostra as sugestões locais.
  */
 export function useBuscaLivros(termo: string) {
+  const sugestoes = useSugestoes();
   const [estado, setEstado] = useState<Estado>("sugestoes");
   const [resultados, setResultados] = useState<LivroBusca[]>(sugestoesDeLivros);
   const limpo = termo.trim();
@@ -94,7 +172,6 @@ export function useBuscaLivros(termo: string) {
   useEffect(() => {
     if (limpo.length < 2) {
       setEstado("sugestoes");
-      setResultados(sugestoesDeLivros);
       return;
     }
     const controle = new AbortController();
@@ -122,5 +199,5 @@ export function useBuscaLivros(termo: string) {
     };
   }, [limpo]);
 
-  return { estado, resultados };
+  return { estado, resultados: estado === "sugestoes" ? sugestoes : resultados };
 }

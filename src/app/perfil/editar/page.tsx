@@ -25,6 +25,7 @@ function Formulario({ inicial }: { inicial: Rascunho }) {
   const [r, setR] = useState<Rascunho>(inicial);
   const fotoRef = useRef<HTMLInputElement>(null);
   const [fotoParaAjustar, setFotoParaAjustar] = useState<string | null>(null);
+  const [capaParaAjustar, setCapaParaAjustar] = useState<string | null>(null);
   const capaRef = useRef<HTMLInputElement>(null);
   const mudar = (d: Partial<Rascunho>) => setR((x) => ({ ...x, ...d }));
   const valido = r.nome.trim() && r.usuario.trim();
@@ -59,14 +60,19 @@ function Formulario({ inicial }: { inicial: Rascunho }) {
 
       {/* capa */}
       <div
-        className={`relative mt-1 h-[104px] bg-cover bg-[50%_40%] ${r.capaImagem ? "" : `pat-${r.capa}`}`}
-        style={r.capaImagem ? { backgroundImage: `url(${r.capaImagem})` } : undefined}
+        className={`relative mt-1 h-[104px] bg-cover bg-center ${r.capaImagem ? "" : `pat-${r.capa}`}`}
+        style={r.capaImagem ? { backgroundImage: `url("${r.capaImagem}")` } : undefined}
       >
         <div aria-hidden className="absolute inset-0 bg-gradient-to-b from-transparent from-45% to-ameixa/45" />
         <div className="absolute right-4 bottom-3 flex gap-2">
           <button type="button" onClick={trocarPadrao} className="h-[30px] rounded-pill bg-creme/90 px-3 text-xs font-semibold text-bordo">
             padrão: {r.capaImagem ? "foto" : r.capa}
           </button>
+          {r.capaImagem ? (
+            <button type="button" onClick={() => setCapaParaAjustar(r.capaImagem)} className="h-[30px] rounded-pill bg-creme/90 px-3 text-xs font-semibold text-bordo">
+              ajustar
+            </button>
+          ) : null}
           <button type="button" onClick={() => capaRef.current?.click()} className="h-[30px] rounded-pill bg-creme px-3 text-xs font-semibold text-bordo">
             trocar capa
           </button>
@@ -78,10 +84,22 @@ function Formulario({ inicial }: { inicial: Rascunho }) {
           hidden
           onChange={async (e) => {
             const f = e.target.files?.[0];
-            if (f) mudar({ capaImagem: await reduzirImagem(f, 900, 0.78) });
+            e.target.value = "";
+            if (f) setCapaParaAjustar(await reduzirImagem(f, 2000, 0.9));
           }}
         />
       </div>
+      {capaParaAjustar ? (
+        <AjustarFoto
+          src={capaParaAjustar}
+          formato="capa"
+          onCancelar={() => setCapaParaAjustar(null)}
+          onPronto={(dataUrl) => {
+            mudar({ capaImagem: dataUrl });
+            setCapaParaAjustar(null);
+          }}
+        />
+      ) : null}
 
       {/* foto */}
       <div className="relative -mt-10 ml-6 size-[78px]">

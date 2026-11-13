@@ -89,8 +89,8 @@ export default function PerfilPage() {
 
         {/* capa */}
         <div
-          className={`relative h-[198px] bg-cover bg-[50%_40%] ${p.capaImagem ? "" : `pat-${p.capa}`}`}
-          style={p.capaImagem ? { backgroundImage: `url(${p.capaImagem})` } : undefined}
+          className={`relative h-[198px] bg-cover bg-center ${p.capaImagem ? "" : `pat-${p.capa}`}`}
+          style={p.capaImagem ? { backgroundImage: `url("${p.capaImagem}")` } : undefined}
         />
 
         <section className="relative -mt-8 rounded-t-[34px] bg-[var(--papel)] px-6 pb-8">

@@ -5,7 +5,7 @@ import { useState } from "react";
 import { CapaLivro } from "@/components/CapaLivro";
 import { BotaoLink } from "@/components/ui/Botao";
 import { Tela } from "@/components/ui/Tela";
-import { sugestoesDeLivros } from "@/lib/dados";
+import { useSugestoes } from "@/lib/catalogo";
 import { usePerfil, type StatusLivro } from "@/lib/perfil-store";
 
 /** "guardei esta pra você": um livro por vez — passar, quero ler ou já li. */
@@ -13,13 +13,14 @@ export default function DescobrirPage() {
   const guardarLivro = usePerfil((s) => s.guardarLivro);
   const livros = usePerfil((s) => s.livros);
   // começa pelo livro com sinopse (o destaque do design)
-  const fila = [...sugestoesDeLivros].sort((a, b) => Number(!!b.sinopse) - Number(!!a.sinopse));
+  const sugestoes = useSugestoes();
+  const fila = [...sugestoes].sort((a, b) => Number(!!b.sinopse) - Number(!!a.sinopse));
   const [indice, setIndice] = useState(0);
   const livro = fila[indice];
   const queroLer = livros.filter((l) => l.status === "quero").length;
 
   function responder(status: StatusLivro | null) {
-    if (status) guardarLivro({ id: livro.id, titulo: livro.titulo, autor: livro.autor, status });
+    if (status) guardarLivro({ id: livro.id, titulo: livro.titulo, autor: livro.autor, capa: livro.capa, status });
     setIndice((i) => i + 1);
   }
 

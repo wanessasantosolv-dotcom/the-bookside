@@ -85,7 +85,7 @@ export const perfilInicial: Perfil = {
   meta: 40,
   tema: "biblioteca-classica",
   estante: "lendo",
-  gostos: ["romance", "suspense", "fantasia"],
+  gostos: [],
   livros: [],
   favoritos: [],
   estantesProprias: [],
