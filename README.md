@@ -27,7 +27,12 @@ Abra http://localhost:3000 (o app é mobile: use o modo celular do navegador, 39
 | `/criar-perfil/estante/buscar`, `/descobrir` | buscar livro · descobrir (passar / quero ler / já li) |
 | `/teste` … `/teste/salvar` | teste "what's your bookside" em estilo revista — agora fora do onboarding, aberto pelo início |
 | `/perfil`, `/perfil/editar`, `/perfil/favoritos`, `/perfil/configuracoes` | meu perfil (no computador: layout web C) · editar · escolher favoritos · configurações |
-| `/inicio`, `/estantes`, `/clubes`, `/numeros`, `/em-breve` | provisórias (com o menu inferior) |
+| `/estantes` | minhas estantes · prateleiras ou leque (no computador: layout web) |
+| `/estantes/[id]` | estante aberta (lidos, lendo, quero-ler ou criada) · lista ou grade |
+| `/estantes/nova` | criar nova estante |
+| `/buscar?estante=…` | buscar livro e adicionar na estante |
+| `/livro/[id]`, `/livro/[id]/progresso`, `/livro/[id]/avaliar` | página do livro · lendo agora / progresso · avaliar |
+| `/inicio`, `/clubes`, `/numeros`, `/em-breve` | provisórias (com o menu do app) |
 
 ## Versão web
 
@@ -47,4 +52,4 @@ A partir de 1024px de largura as telas do app ganham o menu fixo na lateral (`Ap
    (procure `TODO(supabase)`).
 2. Revisar os textos dos arquétipos marcados como rascunho em `src/lib/teste.ts`.
 3. Busca de livros com capas de catálogo autorizado (procure `TODO(catálogo)`).
-4. Feed, estantes, perfil e clubes.
+4. Feed, números e clubes.

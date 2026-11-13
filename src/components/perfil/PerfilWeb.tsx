@@ -30,7 +30,9 @@ function Coluna({ titulo, href, livros, vazio }: { titulo: string; href: string;
         <ul className="flex gap-2.5">
           {livros.slice(0, 3).map((l) => (
             <li key={l.id} className="w-[84px]">
-              <CapaLivro titulo={l.titulo} cor={corDoLivro(l.id)} className="w-full" />
+              <Link href={`/livro/${l.id}`} className="block">
+                <CapaLivro titulo={l.titulo} cor={corDoLivro(l.id)} className="w-full" />
+              </Link>
             </li>
           ))}
         </ul>
@@ -163,7 +165,9 @@ export function PerfilWeb({
               <ul className="flex gap-2.5">
                 {favoritos.slice(0, 3).map((l) => (
                   <li key={l.id} className="w-[84px]">
-                    <CapaLivro titulo={l.titulo} cor={corDoLivro(l.id)} className="w-full" />
+                    <Link href={`/livro/${l.id}`} className="block">
+                      <CapaLivro titulo={l.titulo} cor={corDoLivro(l.id)} className="w-full" />
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -171,8 +175,8 @@ export function PerfilWeb({
               <p className="font-revista text-[13px] leading-[1.4] italic text-grafite">escolha até 4 livros para ficarem em destaque.</p>
             )}
           </section>
-          <Coluna titulo={`lidos · ${lidos.length}`} href="/estantes" livros={lidos} vazio="nenhum livro lido por aqui ainda." />
-          <Coluna titulo="quero ler" href="/estantes" livros={quero} vazio="sua lista de quero ler está vazia." />
+          <Coluna titulo={`lidos · ${lidos.length}`} href="/estantes/lidos" livros={lidos} vazio="nenhum livro lido por aqui ainda." />
+          <Coluna titulo="quero ler" href="/estantes/quero-ler" livros={quero} vazio="sua lista de quero ler está vazia." />
         </div>
 
         <section className="mt-9 border-t border-fio pt-7">

@@ -55,13 +55,24 @@ export type LivroCatalogo = {
   titulo: string;
   autor: string;
   ano?: number;
+  paginas?: number;
   genero?: string;
   sinopse?: string;
   cor: string;
 };
 
 export const sugestoesDeLivros: LivroCatalogo[] = [
-  { id: "recursao", titulo: "Recursão", autor: "blake crouch", ano: 2019, cor: "#2B1420" },
+  {
+    id: "recursao",
+    titulo: "Recursão",
+    autor: "blake crouch",
+    ano: 2019,
+    paginas: 336,
+    genero: "ficção científica",
+    sinopse:
+      "Um estranho problema de memória começa a se espalhar por Nova York. Quem esquece o passado, tudo o que é, deixa de existir.",
+    cor: "#2B1420",
+  },
   {
     id: "10-minutos",
     titulo: "10 minutos e 38 segundos",
@@ -74,7 +85,17 @@ export const sugestoesDeLivros: LivroCatalogo[] = [
   },
   { id: "aguas-frescas", titulo: "Águas frescas para as flores", autor: "valérie perrin", ano: 2025, cor: "#6B7A5E" },
   { id: "daisy-jones", titulo: "Daisy Jones & the Six", autor: "taylor jenkins reid", ano: 2019, cor: "#B75A6B" },
-  { id: "torto-arado", titulo: "Torto arado", autor: "itamar vieira junior", ano: 2019, cor: "#4B0D1B" },
+  {
+    id: "torto-arado",
+    titulo: "Torto arado",
+    autor: "itamar vieira junior",
+    ano: 2019,
+    paginas: 274,
+    genero: "romance",
+    sinopse:
+      "Entre o sertão e as plantações de cacau da Bahia, duas irmãs guardam um segredo que atravessa gerações — uma faca enterrada, um silêncio herdado e a força de mulheres que resistem.",
+    cor: "#4B0D1B",
+  },
 ];
 
 export const PASSOS_PERFIL = 8;

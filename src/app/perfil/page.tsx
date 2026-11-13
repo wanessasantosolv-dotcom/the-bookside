@@ -48,9 +48,9 @@ export default function PerfilPage() {
   } as CSSProperties;
 
   const estantes = [
-    { nome: "lidos", qtd: lidos.length, fundo: "#D8C3AA", titulo: "#2B1420", num: "#6B0D24", livro: lidos[0] },
-    { nome: "quero ler", qtd: quero.length, fundo: "#6B0D24", titulo: "#F9F5EE", num: "#E8B4BF", livro: quero[0] },
-    { nome: "lendo", qtd: lendo.length, fundo: "#E8B4BF", titulo: "#6B0D24", num: "#6B0D24", livro: lendo[0] },
+    { id: "lidos", nome: "lidos", qtd: lidos.length, fundo: "#D8C3AA", titulo: "#2B1420", num: "#6B0D24", livro: lidos[0] },
+    { id: "quero-ler", nome: "quero ler", qtd: quero.length, fundo: "#6B0D24", titulo: "#F9F5EE", num: "#E8B4BF", livro: quero[0] },
+    { id: "lendo", nome: "lendo", qtd: lendo.length, fundo: "#E8B4BF", titulo: "#6B0D24", num: "#6B0D24", livro: lendo[0] },
   ];
 
   return (
@@ -164,7 +164,9 @@ export default function PerfilPage() {
               return (
                 <li key={l?.id ?? i}>
                   {l ? (
-                    <CapaLivro titulo={l.titulo} cor={corDoLivro(l.id)} className="w-full" />
+                    <Link href={`/livro/${l.id}`} className="block">
+                      <CapaLivro titulo={l.titulo} cor={corDoLivro(l.id)} className="w-full" />
+                    </Link>
                   ) : (
                     <Link
                       href="/estantes"
@@ -189,7 +191,7 @@ export default function PerfilPage() {
           <ul className="mt-2 grid grid-cols-3 gap-[9px]">
             {estantes.map((e) => (
               <li key={e.nome}>
-                <Link href="/estantes" className="block rounded-md px-2 py-2.5 text-center" style={{ background: e.fundo }}>
+                <Link href={`/estantes/${e.id}`} className="block rounded-md px-2 py-2.5 text-center" style={{ background: e.fundo }}>
                   {e.livro ? (
                     <CapaLivro titulo={e.livro.titulo} cor={corDoLivro(e.livro.id)} className="mx-auto w-[38px] [&>span:last-child]:hidden" />
                   ) : (
