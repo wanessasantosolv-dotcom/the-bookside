@@ -20,6 +20,9 @@ type Linha = {
   lidoEm: string;
   nota: number;
   incluir: boolean;
+  /** busca manual aberta nesta linha */
+  termo?: string;
+  buscando?: boolean;
 };
 
 const notas = [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5];
@@ -27,6 +30,30 @@ const rotuloNota = (n: number) =>
   n ? `${"★".repeat(Math.floor(n))}${n % 1 ? "½" : ""} (${String(n).replace(".", ",")})` : "sem nota";
 const hoje = () => new Date().toISOString().slice(0, 10);
 const espera = (ms: number) => new Promise((ok) => setTimeout(ok, ms));
+
+/** Busca com variações (título + autoria, só título, sem hífens) e uma nova tentativa se a busca falhar. */
+async function acharOpcoes(item: ItemImport, termo?: string): Promise<LivroBusca[]> {
+  const tentativas = termo
+    ? [termo]
+    : [`${item.titulo} ${item.autor ?? ""}`.trim(), item.titulo, item.titulo.replace(/[-–]/g, " ")].filter(
+        (t, i, todas) => todas.indexOf(t) === i,
+      );
+  for (const q of tentativas) {
+    for (let vez = 0; vez < 2; vez++) {
+      try {
+        const achados = await buscarLivros(q);
+        if (achados.length) {
+          const melhor = melhorResultado(item, achados);
+          return melhor ? [melhor, ...achados.filter((l) => l.id !== melhor.id)].slice(0, 8) : achados.slice(0, 8);
+        }
+        break; // a busca funcionou mas não achou: tenta a próxima variação
+      } catch {
+        await espera(1500); // muitas buscas seguidas: espera e tenta de novo
+      }
+    }
+  }
+  return [];
+}
 
 export default function ImportarPage() {
   const router = useRouter();
@@ -44,14 +71,7 @@ export default function ImportarPage() {
     setProgresso({ feito: 0, total: itens.length });
     const resultado: Linha[] = [];
     for (const [i, item] of itens.entries()) {
-      let opcoes: LivroBusca[] = [];
-      try {
-        const achados = await buscarLivros(`${item.titulo} ${item.autor ?? ""}`.trim());
-        const melhor = melhorResultado(item, achados);
-        opcoes = melhor ? [melhor, ...achados.filter((l) => l.id !== melhor.id)].slice(0, 6) : [];
-      } catch {
-        /* sem internet: fica só o título digitado */
-      }
+      const opcoes = await acharOpcoes(item);
       resultado.push({
         item,
         opcoes,
@@ -61,7 +81,7 @@ export default function ImportarPage() {
         incluir: true,
       });
       setProgresso({ feito: i + 1, total: itens.length });
-      await espera(120);
+      await espera(350);
     }
     setProgresso(null);
     setLinhas(resultado);
@@ -83,6 +103,13 @@ export default function ImportarPage() {
 
   function mudar(i: number, dados: Partial<Linha>) {
     setLinhas((ls) => ls!.map((l, k) => (k === i ? { ...l, ...dados } : l)));
+  }
+
+  async function procurarDeNovo(i: number, termo: string) {
+    if (!linhas || termo.trim().length < 2) return;
+    mudar(i, { buscando: true });
+    const opcoes = await acharOpcoes(linhas[i].item, termo.trim());
+    mudar(i, { opcoes, escolhido: opcoes.length ? 0 : -1, buscando: false, termo: opcoes.length ? undefined : termo });
   }
 
   function salvar() {
@@ -265,6 +292,44 @@ export default function ImportarPage() {
                             <option value={-1}>usar só o que escrevi, sem capa</option>
                           </select>
                         </label>
+                        {l.termo === undefined ? (
+                          <button
+                            type="button"
+                            onClick={() => mudar(i, { termo: l.item.titulo })}
+                            className="min-h-9 text-xs font-semibold text-bordo underline underline-offset-4"
+                          >
+                            {l.opcoes.length ? "não é esse? procurar de novo" : "nada encontrado · procurar de novo"}
+                          </button>
+                        ) : (
+                          <form
+                            onSubmit={(e) => {
+                              e.preventDefault();
+                              void procurarDeNovo(i, l.termo ?? "");
+                            }}
+                            className="flex gap-2"
+                          >
+                            <label className="min-w-0 flex-1">
+                              <span className="sr-only">buscar por título ou autoria</span>
+                              <input
+                                type="search"
+                                value={l.termo}
+                                onChange={(e) => mudar(i, { termo: e.target.value })}
+                                placeholder="título ou autoria"
+                                className="min-h-10 w-full rounded-md border border-linha bg-creme-quente px-3 text-sm outline-none focus:border-bordo"
+                              />
+                            </label>
+                            <button
+                              type="submit"
+                              disabled={l.buscando}
+                              className="min-h-10 rounded-pill bg-bordo px-4 text-xs font-semibold text-creme disabled:opacity-60"
+                            >
+                              {l.buscando ? "procurando…" : "procurar"}
+                            </button>
+                          </form>
+                        )}
+                        {l.termo !== undefined && !l.buscando && !l.opcoes.length ? (
+                          <p className="text-xs text-cinza">tente só o título, ou o título em inglês.</p>
+                        ) : null}
                         <div className="flex flex-wrap gap-2">
                           <label className="flex items-center gap-2 text-xs text-cinza">
                             terminei em
