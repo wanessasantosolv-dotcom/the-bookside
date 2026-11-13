@@ -75,4 +75,4 @@ A busca usa a [Open Library](https://openlibrary.org/dev/docs/api/search) direto
 
 1. Supabase Storage para foto e capa (hoje vão dentro do perfil, como imagem reduzida).
 2. Revisar os textos dos arquétipos marcados como rascunho em `src/lib/teste.ts`.
-4. Feed e clubes.
+3. Feed e clubes.
