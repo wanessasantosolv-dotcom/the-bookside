@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { campoConta, ContaShell, rotuloConta } from "@/components/conta/ContaShell";
+import { mensagemDeErro, supabase } from "@/lib/supabase";
 import { Botao } from "@/components/ui/Botao";
 
 export default function EsqueciSenhaPage() {
@@ -10,11 +11,14 @@ export default function EsqueciSenhaPage() {
   const [erro, setErro] = useState<string | null>(null);
   const [enviado, setEnviado] = useState(false);
 
-  function enviar(e: FormEvent) {
+  async function enviar(e: FormEvent) {
     e.preventDefault();
     if (!/^\S+@\S+\.\S+$/.test(email)) return setErro("confira o e-mail.");
     setErro(null);
-    // TODO(supabase): supabase.auth.resetPasswordForEmail(email)
+    if (supabase) {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/nova-senha` });
+      if (error) return setErro(mensagemDeErro(error));
+    }
     setEnviado(true);
   }
 

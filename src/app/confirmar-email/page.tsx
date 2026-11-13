@@ -5,6 +5,8 @@ import { useRef, useState } from "react";
 import { ContaShell } from "@/components/conta/ContaShell";
 import { Botao } from "@/components/ui/Botao";
 import { usePerfil } from "@/lib/perfil-store";
+import { mensagemDeErro, supabase } from "@/lib/supabase";
+import { carregarPerfil } from "@/lib/nuvem";
 
 const DIGITOS = 6;
 
@@ -67,7 +69,13 @@ export default function ConfirmarEmailPage() {
       </fieldset>
       <p className="mt-4 text-center text-[13px] font-medium text-cinza">
         não chegou?{" "}
-        <button type="button" onClick={() => setAviso("enviamos um novo código ✦")} className="py-2 font-bold text-bordo">
+        <button type="button" onClick={async () => {
+            if (supabase && email) {
+              const { error } = await supabase.auth.resend({ type: "signup", email });
+              if (error) return setAviso(mensagemDeErro(error));
+            }
+            setAviso("enviamos um novo código ✦");
+          }} className="py-2 font-bold text-bordo">
           reenviar código
         </button>
       </p>
@@ -77,8 +85,12 @@ export default function ConfirmarEmailPage() {
       <Botao
         className="mt-3"
         disabled={!completo}
-        onClick={() => {
-          // TODO(supabase): supabase.auth.verifyOtp({ email, token: codigo.join(""), type: "signup" })
+        onClick={async () => {
+          if (supabase && email) {
+            const { data, error } = await supabase.auth.verifyOtp({ email, token: codigo.join(""), type: "email" });
+            if (error || !data.user) return setAviso(mensagemDeErro(error));
+            await carregarPerfil(data.user);
+          }
           router.push("/criar-perfil/nome");
         }}
       >

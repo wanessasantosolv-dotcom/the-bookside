@@ -5,12 +5,14 @@ import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { Botao } from "@/components/ui/Botao";
 import { usePerfil } from "@/lib/perfil-store";
+import { sairDaConta, useNuvem } from "@/lib/nuvem";
 import { useTeste } from "@/lib/teste-store";
 
 export default function ConfiguracoesPage() {
   const router = useRouter();
   const email = usePerfil((s) => s.email);
-  const sair = usePerfil((s) => s.sair);
+  const nuvem = useNuvem((s) => s.estado);
+  const erroNuvem = useNuvem((s) => s.erro);
 
   return (
     <AppShell aba="perfil">
@@ -24,6 +26,12 @@ export default function ConfiguracoesPage() {
       <div className="flex-1 px-6 pt-6 lg:max-w-[560px] lg:px-12">
         <dl className="border-t border-linha">
           <div className="flex items-center justify-between border-b border-linha py-3.5">
+            <dt className="text-sm font-semibold">seus dados</dt>
+            <dd className={`text-[13px] ${nuvem === "erro" ? "text-bordo-suave" : "text-cinza"}`}>
+              {{ desligada: "só neste navegador", "sem-conta": "só neste navegador", carregando: "abrindo…", salvando: "salvando…", salvo: "salvos na nuvem ✓", erro: erroNuvem ?? "erro ao salvar" }[nuvem]}
+            </dd>
+          </div>
+          <div className="flex items-center justify-between border-b border-linha py-3.5">
             <dt className="text-sm font-semibold">conta</dt>
             <dd className="text-[13px] text-cinza">{email ?? "não conectada"}</dd>
           </div>
@@ -35,16 +43,17 @@ export default function ConfiguracoesPage() {
         <Botao
           variante="contorno"
           className="mt-8"
-          onClick={() => {
-            // TODO(supabase): supabase.auth.signOut()
-            sair();
+          onClick={async () => {
+            await sairDaConta();
             useTeste.getState().recomecar();
             router.push("/entrar");
           }}
         >
           sair da conta
         </Botao>
-        <p className="mt-2 text-center text-[11px] text-cinza">por enquanto, sair apaga o perfil salvo neste navegador.</p>
+        <p className="mt-2 text-center text-[11px] text-cinza">
+          {nuvem === "desligada" ? "sem conta na nuvem, sair apaga o perfil salvo neste navegador." : "seus dados continuam guardados na sua conta."}
+        </p>
       </div>
 
     </AppShell>

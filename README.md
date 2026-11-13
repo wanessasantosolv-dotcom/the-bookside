@@ -39,6 +39,26 @@ Abra http://localhost:3000 (o app é mobile: use o modo celular do navegador, 39
 
 A partir de 1024px de largura as telas do app ganham o menu fixo na lateral (`AppShell`) e o perfil usa o layout web "C · hero cheio" do canvas.
 
+## Conta e nuvem (Supabase)
+
+Sem configuração, o app roda no **modo local**: tudo fica só no navegador.
+Com o Supabase ligado, cada leitora tem conta (e-mail + senha) e o perfil inteiro é salvo na nuvem.
+
+1. Crie um projeto em https://supabase.com (região São Paulo).
+2. **SQL Editor → New query**: cole o conteúdo de `supabase/schema.sql` e clique em **Run**.
+3. **Authentication → Sign In / Providers → Email**: deixe "Confirm email" ligado.
+4. **Authentication → Emails → Confirm signup**: troque o texto do e-mail para mandar o código de 6 dígitos, usando `{{ .Token }}`. Ex.: `seu código do the bookside é {{ .Token }}`.
+5. **Authentication → URL Configuration**: em *Site URL* coloque o endereço da Vercel (ex.: `https://the-bookside.vercel.app`) e em *Redirect URLs* adicione `https://the-bookside.vercel.app/**`.
+6. **Project Settings → API**: copie a *Project URL* e a chave *anon / publishable*.
+7. Na **Vercel → Settings → Environment Variables**, crie:
+   - `NEXT_PUBLIC_SUPABASE_URL` = Project URL
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = chave anon
+   e faça um **Redeploy**. (Nunca use a chave `service_role` no app.)
+
+Para rodar no computador com a nuvem, copie `.env.example` para `.env.local` e preencha.
+
+Código: `src/lib/supabase.ts` (cliente), `src/lib/nuvem.ts` (sincronização), telas em `src/app/entrar`, `criar-conta`, `confirmar-email`, `esqueci-senha` e `nova-senha`.
+
 ## Catálogo de livros
 
 A busca usa a [Open Library](https://openlibrary.org/dev/docs/api/search) direto do navegador (gratuita, sem chave): título, autoria, ano, páginas, capa e sinopse. Sem termo, ou sem conexão, aparecem as sugestões locais de `src/lib/dados.ts`. Código em `src/lib/catalogo.ts`.
@@ -53,7 +73,6 @@ A busca usa a [Open Library](https://openlibrary.org/dev/docs/api/search) direto
 
 ## Próximos passos
 
-1. Supabase: login de verdade (`/entrar`), tabela `perfis` e upload de foto/capa no Storage
-   (procure `TODO(supabase)`).
+1. Supabase Storage para foto e capa (hoje vão dentro do perfil, como imagem reduzida).
 2. Revisar os textos dos arquétipos marcados como rascunho em `src/lib/teste.ts`.
 4. Feed e clubes.

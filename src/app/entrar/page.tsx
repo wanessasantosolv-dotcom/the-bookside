@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { Botao } from "@/components/ui/Botao";
 import { usePerfil } from "@/lib/perfil-store";
+import { mensagemDeErro, supabase } from "@/lib/supabase";
+import { carregarPerfil } from "@/lib/nuvem";
 
 const estrelas = [
   { src: "/brand/logo-estrela-1.png", origem: "10.07% 14.07%", atraso: "0s" },
@@ -50,13 +52,22 @@ export default function EntrarPage() {
   const [erro, setErro] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
 
-  function entrar(e: FormEvent) {
+  async function entrar(e: FormEvent) {
     e.preventDefault();
     if (!/^\S+@\S+\.\S+$/.test(email)) return setErro("confira o e-mail.");
     if (senha.length < 6) return setErro("a senha tem pelo menos 6 caracteres.");
     setErro(null);
     setEnviando(true);
-    // TODO(supabase): trocar por supabase.auth.signInWithPassword({ email, password: senha })
+    if (supabase) {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password: senha });
+      if (error || !data.user) {
+        setEnviando(false);
+        return setErro(mensagemDeErro(error));
+      }
+      const perfil = await carregarPerfil(data.user);
+      return router.push(perfil.onboardingConcluido ? "/inicio" : "/criar-perfil/nome");
+    }
+    // modo local (sem Supabase configurado)
     atualizar({ email });
     const concluido = usePerfil.getState().onboardingConcluido;
     router.push(concluido ? "/inicio" : "/criar-perfil/nome");

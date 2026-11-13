@@ -6,6 +6,8 @@ import { useState, type FormEvent } from "react";
 import { campoConta, ContaShell, rotuloConta } from "@/components/conta/ContaShell";
 import { Botao } from "@/components/ui/Botao";
 import { usePerfil } from "@/lib/perfil-store";
+import { mensagemDeErro, supabase } from "@/lib/supabase";
+import { carregarPerfil } from "@/lib/nuvem";
 
 export default function CriarContaPage() {
   const router = useRouter();
@@ -16,13 +18,32 @@ export default function CriarContaPage() {
   const [aceito, setAceito] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
 
-  function criar(e: FormEvent) {
+  const [enviando, setEnviando] = useState(false);
+
+  async function criar(e: FormEvent) {
     e.preventDefault();
     if (!/^\S+@\S+\.\S+$/.test(email)) return setErro("confira o e-mail.");
     if (senha.length < 8) return setErro("a senha precisa ter pelo menos 8 caracteres.");
     if (senha !== confirmar) return setErro("as senhas não são iguais.");
     if (!aceito) return setErro("é preciso aceitar os termos para continuar.");
-    // TODO(supabase): supabase.auth.signUp({ email, password: senha })
+    setErro(null);
+    if (supabase) {
+      setEnviando(true);
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password: senha,
+        options: { emailRedirectTo: `${window.location.origin}/criar-perfil/nome` },
+      });
+      setEnviando(false);
+      if (error) return setErro(mensagemDeErro(error));
+      atualizar({ email, onboardingConcluido: false });
+      // sem confirmação de e-mail ligada no Supabase, a sessão já vem pronta
+      if (data.session) {
+        await carregarPerfil(data.session.user);
+        return router.push("/criar-perfil/nome");
+      }
+      return router.push("/confirmar-email");
+    }
     atualizar({ email, onboardingConcluido: false });
     router.push("/confirmar-email");
   }
@@ -66,8 +87,8 @@ export default function CriarContaPage() {
         <p role="alert" className="mt-3 min-h-4 text-xs font-medium text-bordo-suave">
           {erro}
         </p>
-        <Botao type="submit" className="mt-2">
-          criar conta
+        <Botao type="submit" className="mt-2" disabled={enviando}>
+          {enviando ? "criando…" : "criar conta"}
         </Botao>
       </form>
       <p className="mt-4 text-center text-[13px] font-medium">

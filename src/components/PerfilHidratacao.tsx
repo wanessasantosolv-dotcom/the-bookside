@@ -1,17 +1,27 @@
 "use client";
 
 import { useEffect, useSyncExternalStore } from "react";
+import { iniciarNuvem } from "@/lib/nuvem";
 import { usePerfil } from "@/lib/perfil-store";
 import { useTeste } from "@/lib/teste-store";
 
 /**
- * O perfil fica salvo no navegador. Ele só é lido depois que a página monta,
+ * O perfil fica salvo no navegador (e, com conta, também no Supabase). Ele só é lido depois que a página monta,
  * para o HTML do servidor e o do navegador começarem iguais.
  */
 export function PerfilHidratacao() {
   useEffect(() => {
-    void usePerfil.persist.rehydrate();
+    let parar = () => {};
+    let ativo = true;
     void useTeste.persist.rehydrate();
+    // primeiro o que está no navegador; depois a nuvem (se houver conta) por cima
+    void Promise.resolve(usePerfil.persist.rehydrate()).then(() => {
+      if (ativo) parar = iniciarNuvem();
+    });
+    return () => {
+      ativo = false;
+      parar();
+    };
   }, []);
   return null;
 }
