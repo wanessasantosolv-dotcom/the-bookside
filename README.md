@@ -47,7 +47,7 @@ Com o Supabase ligado, cada leitora tem conta (e-mail + senha) e o perfil inteir
 1. Crie um projeto em https://supabase.com (região São Paulo).
 2. **SQL Editor → New query**: cole o conteúdo de `supabase/schema.sql` e clique em **Run**.
 3. **Authentication → Sign In / Providers → Email**: deixe "Confirm email" ligado.
-4. **Authentication → Emails → Confirm signup**: troque o texto do e-mail para mandar o código de 6 dígitos, usando `{{ .Token }}`. Ex.: `seu código do the bookside é {{ .Token }}`.
+4. (opcional) **Authentication → Emails → Confirm signup**: para mandar um código de 6 dígitos em vez do link, use `{{ .Token }}` no texto. Sem isso, o e-mail chega com um link — tocar nele já entra no app.
 5. **Authentication → URL Configuration**: em *Site URL* coloque o endereço da Vercel (ex.: `https://the-bookside.vercel.app`) e em *Redirect URLs* adicione `https://the-bookside.vercel.app/**`.
 6. **Project Settings → API**: copie a *Project URL* e a chave *anon / publishable*.
 7. Na **Vercel → Settings → Environment Variables**, crie:

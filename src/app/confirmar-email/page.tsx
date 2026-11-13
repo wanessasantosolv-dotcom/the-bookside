@@ -41,7 +41,8 @@ export default function ConfirmarEmailPage() {
       titulo="confirme seu e-mail"
       descricao={
         <>
-          enviamos um código de 6 dígitos para <b className="text-ameixa">{email ?? "seu@email.com"}</b>.
+          enviamos um e-mail para <b className="text-ameixa">{email ?? "seu@email.com"}</b>. toque no link de confirmação — ou, se
+          vier um código de 6 dígitos, digite aqui.
         </>
       }
     >
