@@ -7,9 +7,9 @@ import { AppShell } from "@/components/AppShell";
 import { Animacao } from "@/components/Animacao";
 import { CapaLivro } from "@/components/CapaLivro";
 import { botaoPrincipal, campo, rotuloCampo } from "@/components/clube/Pecas";
-import { buscarLivros, type LivroBusca } from "@/lib/catalogo";
+import type { LivroBusca } from "@/lib/catalogo";
 import { corDoLivro } from "@/lib/cores";
-import { lerArquivo, lerLista, melhorResultado, normalizar, type ItemImport } from "@/lib/importar";
+import { acharLivro, lerArquivo, lerLista, normalizar, type ItemImport } from "@/lib/importar";
 import { usePerfil, type LivroSalvo } from "@/lib/perfil-store";
 import { semPublicar } from "@/lib/social";
 
@@ -31,28 +31,9 @@ const rotuloNota = (n: number) =>
 const hoje = () => new Date().toISOString().slice(0, 10);
 const espera = (ms: number) => new Promise((ok) => setTimeout(ok, ms));
 
-/** Busca com variações (título + autoria, só título, sem hífens) e uma nova tentativa se a busca falhar. */
-async function acharOpcoes(item: ItemImport, termo?: string): Promise<LivroBusca[]> {
-  const tentativas = termo
-    ? [termo]
-    : [`${item.titulo} ${item.autor ?? ""}`.trim(), item.titulo, item.titulo.replace(/[-–]/g, " ")].filter(
-        (t, i, todas) => todas.indexOf(t) === i,
-      );
-  for (const q of tentativas) {
-    for (let vez = 0; vez < 2; vez++) {
-      try {
-        const achados = await buscarLivros(q);
-        if (achados.length) {
-          const melhor = melhorResultado(item, achados);
-          return melhor ? [melhor, ...achados.filter((l) => l.id !== melhor.id)].slice(0, 8) : achados.slice(0, 8);
-        }
-        break; // a busca funcionou mas não achou: tenta a próxima variação
-      } catch {
-        await espera(1500); // muitas buscas seguidas: espera e tenta de novo
-      }
-    }
-  }
-  return [];
+/** Busca esperta (título, autoria e tradução do título); com termo, procura o que a pessoa digitou. */
+function acharOpcoes(item: ItemImport, termo?: string): Promise<LivroBusca[]> {
+  return acharLivro(termo ? { titulo: termo } : item);
 }
 
 export default function ImportarPage() {

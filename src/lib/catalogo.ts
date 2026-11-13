@@ -166,6 +166,76 @@ export async function buscarLivros(termo: string, signal?: AbortSignal): Promise
   return livros;
 }
 
+/** Todos os livros de uma autora nas duas fontes (para achar o título certo entre eles). */
+export async function buscarPorAutoria(autor: string, signal?: AbortSignal): Promise<LivroBusca[]> {
+  const [google, openLibrary] = await Promise.allSettled([
+    buscarNoGoogle(`inauthor:"${autor}"`, signal),
+    fetch(`https://openlibrary.org/search.json?author=${encodeURIComponent(autor)}&limit=40&fields=${CAMPOS}`, { signal })
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+      .then((d: { docs: DocOL[] }) => d.docs.filter((x) => x.title).map(paraLivro)),
+  ]);
+  if (google.status === "rejected" && openLibrary.status === "rejected") throw google.reason;
+  const livros = [
+    ...(google.status === "fulfilled" ? google.value : []),
+    ...(openLibrary.status === "fulfilled" ? openLibrary.value : []),
+  ];
+  lembrar(livros);
+  return livros;
+}
+
+type EntidadeWD = {
+  labels?: Record<string, { value: string }>;
+  claims?: Record<string, { mainsnak?: { datavalue?: { value?: { id?: string; text?: string } } } }[]>;
+};
+
+/**
+ * Traduções de um título pelo Wikidata (gratuito, sem chave): acha a obra pelo
+ * título em português e devolve o título original/em inglês e a autoria.
+ * Ex.: "a biblioteca da meia-noite" → "The Midnight Library", Matt Haig.
+ */
+export async function traducoesDoTitulo(titulo: string, signal?: AbortSignal): Promise<{ titulo: string; autor?: string }[]> {
+  const base = "https://www.wikidata.org/w/api.php?format=json&origin=*";
+  const busca = (await fetch(
+    `${base}&action=wbsearchentities&type=item&limit=7&language=pt&uselang=pt&search=${encodeURIComponent(titulo)}`,
+    { signal },
+  ).then((r) => r.json())) as { search?: { id: string }[] };
+  const ids = (busca.search ?? []).map((x) => x.id);
+  if (!ids.length) return [];
+  const { entities } = (await fetch(
+    `${base}&action=wbgetentities&props=labels|claims&languages=en|pt&ids=${ids.join("|")}`,
+    { signal },
+  ).then((r) => r.json())) as { entities: Record<string, EntidadeWD> };
+  // só obras com autoria (P50) ou título (P1476): livros, não pessoas ou lugares
+  const obras = ids.map((id) => entities[id]).filter((e) => e?.claims?.P50 || e?.claims?.P1476);
+  const idsAutoria = [
+    ...new Set(obras.map((e) => e.claims?.P50?.[0]?.mainsnak?.datavalue?.value?.id).filter((x): x is string => !!x)),
+  ];
+  const autorias: Record<string, EntidadeWD> = idsAutoria.length
+    ? ((
+        (await fetch(`${base}&action=wbgetentities&props=labels&languages=en|pt&ids=${idsAutoria.join("|")}`, {
+          signal,
+        }).then((r) => r.json())) as { entities: Record<string, EntidadeWD> }
+      ).entities ?? {})
+    : {};
+  const vistos = new Set<string>();
+  return obras
+    .flatMap((e) => {
+      const idAutor = e.claims?.P50?.[0]?.mainsnak?.datavalue?.value?.id;
+      const autor = idAutor ? (autorias[idAutor]?.labels?.en?.value ?? autorias[idAutor]?.labels?.pt?.value) : undefined;
+      const original = e.claims?.P1476?.[0]?.mainsnak?.datavalue?.value?.text;
+      return [e.labels?.en?.value, original, e.labels?.pt?.value]
+        .filter((t): t is string => !!t)
+        .map((t) => ({ titulo: t, autor }));
+    })
+    .filter((t) => {
+      const k = `${t.titulo}|${t.autor}`.toLowerCase();
+      if (vistos.has(k) || t.titulo.toLowerCase() === titulo.toLowerCase()) return false;
+      vistos.add(k);
+      return true;
+    })
+    .slice(0, 4);
+}
+
 /** Sinopse de uma obra (Open Library ou Google Books), quando existe. */
 export async function sinopseDaObra(id: string, signal?: AbortSignal): Promise<string | undefined> {
   if (id.startsWith("gb-")) {
@@ -450,7 +520,20 @@ export function useBuscaLivros(termo: string) {
     setEstado("carregando");
     const espera = setTimeout(() => {
       buscarLivros(limpo, controle.signal)
-        .then((livros) => {
+        .then(async (livros) => {
+          // poucos resultados: procura pelo título original (Wikidata) também
+          if (livros.length < 3) {
+            try {
+              const [t] = await traducoesDoTitulo(limpo, controle.signal);
+              if (t) {
+                const mais = await buscarLivros(`${t.titulo} ${t.autor ?? ""}`.trim(), controle.signal);
+                livros = [...livros, ...mais.filter((m) => !livros.some((l) => l.id === m.id))];
+              }
+            } catch {
+              /* sem tradução: fica o que achou */
+            }
+          }
+          if (controle.signal.aborted) return;
           setResultados(livros);
           setEstado("pronto");
         })

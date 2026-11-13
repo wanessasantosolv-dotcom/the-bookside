@@ -1,4 +1,4 @@
-import type { LivroBusca } from "@/lib/catalogo";
+import { buscarLivros, buscarPorAutoria, traducoesDoTitulo, type LivroBusca } from "@/lib/catalogo";
 import type { NotasDetalhe } from "@/lib/perfil-store";
 
 /**
@@ -127,6 +127,77 @@ export function lerArquivo(conteudo: string): ItemImport[] {
       };
     })
     .filter((x) => x !== null);
+}
+
+/** Quanto um resultado parece o livro pedido (título e autoria; aceita títulos traduzidos). */
+export function pontuar(item: ItemImport, l: LivroBusca, outrosTitulos: string[] = [], outraAutoria?: string) {
+  const t = normalizar(l.titulo);
+  let melhor = 0;
+  for (const titulo of [item.titulo, ...outrosTitulos]) {
+    const alvo = normalizar(titulo);
+    if (!alvo) continue;
+    let p = 0;
+    if (t === alvo) p = 10;
+    else if (t.startsWith(alvo) || alvo.startsWith(t)) p = 7;
+    else if (t.includes(alvo) || alvo.includes(t)) p = 5;
+    else {
+      const palavras = alvo.split(" ").filter((w) => w.length > 2);
+      p = palavras.length ? (palavras.filter((w) => t.includes(w)).length / palavras.length) * 4 : 0;
+    }
+    melhor = Math.max(melhor, p);
+  }
+  const autorias = [item.autor, outraAutoria].filter((a): a is string => !!a).map((a) => normalizar(a).split(" ").pop()!);
+  if (autorias.some((a) => a && normalizar(l.autor).includes(a))) melhor += 5;
+  if (l.capa) melhor += 0.5;
+  return melhor;
+}
+
+const pausa = (ms: number) => new Promise((ok) => setTimeout(ok, ms));
+
+/** Faz a busca de novo uma vez se ela falhar (muitos pedidos seguidos). */
+async function comNovaTentativa<T>(fazer: () => Promise<T>, vazio: T): Promise<T> {
+  for (let vez = 0; vez < 2; vez++) {
+    try {
+      return await fazer();
+    } catch {
+      await pausa(1500);
+    }
+  }
+  return vazio;
+}
+
+/**
+ * Busca esperta para achar um livro específico:
+ * 1. título + autoria; 2. só o título; 3. todos os livros da autoria;
+ * 4. o título traduzido/original pelo Wikidata (ex.: em inglês).
+ * Junta tudo e ordena pelo que mais parece o livro pedido.
+ */
+export async function acharLivro(item: ItemImport): Promise<LivroBusca[]> {
+  const achados = new Map<string, LivroBusca>();
+  const juntar = (ls: LivroBusca[]) => ls.forEach((l) => !achados.has(l.id) && achados.set(l.id, l));
+  const outros: string[] = [];
+  let outraAutoria: string | undefined;
+  const melhorNota = () => Math.max(0, ...[...achados.values()].map((l) => pontuar(item, l, outros, outraAutoria)));
+  const bomBastante = () => melhorNota() >= (item.autor ? 15 : 10);
+
+  juntar(await comNovaTentativa(() => buscarLivros(`${item.titulo} ${item.autor ?? ""}`.trim()), []));
+  if (!bomBastante() && item.autor) juntar(await comNovaTentativa(() => buscarPorAutoria(item.autor!), []));
+  if (!bomBastante()) juntar(await comNovaTentativa(() => buscarLivros(item.titulo), []));
+  if (!bomBastante()) {
+    const traducoes = await comNovaTentativa(() => traducoesDoTitulo(item.titulo), []);
+    for (const t of traducoes.slice(0, 2)) {
+      outros.push(t.titulo);
+      outraAutoria ??= t.autor;
+      juntar(await comNovaTentativa(() => buscarLivros(`${t.titulo} ${t.autor ?? item.autor ?? ""}`.trim()), []));
+      if (bomBastante()) break;
+    }
+  }
+  return [...achados.values()]
+    .map((l) => ({ l, p: pontuar(item, l, outros, outraAutoria) }))
+    .filter((x) => x.p > 1)
+    .sort((a, b) => b.p - a.p)
+    .slice(0, 8)
+    .map((x) => x.l);
 }
 
 /** O resultado da busca que mais parece o livro pedido. */
