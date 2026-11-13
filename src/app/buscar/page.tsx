@@ -105,7 +105,7 @@ function Busca() {
           );
         })}
       </ul>
-      <p className="mt-6 text-center text-[11px] text-cinza">busca e capas: Open Library</p>
+      <p className="mt-6 text-center text-[11px] text-cinza">busca e capas: Google Books e Open Library</p>
     </div>
   );
 }

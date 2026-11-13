@@ -7,8 +7,8 @@ import { usePerfil, type LivroSalvo } from "@/lib/perfil-store";
 import { sugestoesDeLivros, type LivroCatalogo } from "@/lib/dados";
 
 /**
- * Busca de livros na Open Library (gratuita, sem chave).
- * https://openlibrary.org/dev/docs/api/search
+ * Busca de livros no Google Books e na Open Library (gratuitas, sem chave).
+ * https://developers.google.com/books · https://openlibrary.org/dev/docs/api/search
  * Roda no navegador de quem usa o app.
  */
 
@@ -63,22 +63,115 @@ export function livroLembrado(id: string): LivroBusca | undefined {
   }
 }
 
-export async function buscarLivros(termo: string, signal?: AbortSignal): Promise<LivroBusca[]> {
+type VolumeGB = {
+  id: string;
+  volumeInfo?: {
+    title?: string;
+    subtitle?: string;
+    authors?: string[];
+    publishedDate?: string;
+    pageCount?: number;
+    categories?: string[];
+    description?: string;
+    imageLinks?: { thumbnail?: string };
+  };
+};
+
+/** Tira as marcações HTML que o Google Books manda nas sinopses. */
+function textoLimpo(html?: string) {
+  return html
+    ?.replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&quot;/g, '"')
+    .replace(/&amp;/g, "&")
+    .replace(/&#39;/g, "'")
+    .trim();
+}
+
+function doGoogle(v: VolumeGB, i: number): LivroBusca | null {
+  const info = v.volumeInfo;
+  if (!info?.title) return null;
+  const capa = info.imageLinks?.thumbnail?.replace(/^http:/, "https:").replace("&edge=curl", "");
+  const ano = Number(info.publishedDate?.slice(0, 4));
+  return {
+    id: `gb-${v.id}`,
+    titulo: info.title,
+    autor: (info.authors?.[0] ?? "autoria desconhecida").toLowerCase(),
+    ano: Number.isFinite(ano) && ano > 0 ? ano : undefined,
+    paginas: info.pageCount || undefined,
+    genero: info.categories?.[0]?.toLowerCase(),
+    sinopse: textoLimpo(info.description),
+    cor: paleta[i % paleta.length],
+    capa,
+    capaGrande: capa?.replace("zoom=1", "zoom=2"),
+  };
+}
+
+/** Google Books: bom em títulos em português e em palavras ainda incompletas. */
+async function buscarNoGoogle(termo: string, signal?: AbortSignal): Promise<LivroBusca[]> {
+  const r = await fetch(
+    `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(termo)}&maxResults=20&printType=books&fields=items(id,volumeInfo(title,subtitle,authors,publishedDate,pageCount,categories,description,imageLinks/thumbnail))`,
+    { signal },
+  );
+  if (!r.ok) throw new Error(`busca falhou (${r.status})`);
+  const { items } = (await r.json()) as { items?: VolumeGB[] };
+  return (items ?? []).map(doGoogle).filter((l): l is LivroBusca => !!l);
+}
+
+async function buscarNaOpenLibrary(termo: string, signal?: AbortSignal): Promise<LivroBusca[]> {
   const url = `https://openlibrary.org/search.json?q=${encodeURIComponent(termo)}&limit=20&fields=${CAMPOS}`;
   const r = await fetch(url, { signal });
   if (!r.ok) throw new Error(`busca falhou (${r.status})`);
   const dados = (await r.json()) as { docs: DocOL[] };
-  const livros = dados.docs.filter((d) => d.title).map(paraLivro);
+  return dados.docs.filter((d) => d.title).map(paraLivro);
+}
+
+const chave = (l: LivroBusca) =>
+  `${l.titulo} ${l.autor.split(" ").pop()}`
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+
+/**
+ * Busca nas duas fontes ao mesmo tempo. O Google Books vem primeiro (edições
+ * em português); da Open Library entram os livros que ainda não apareceram.
+ * Se uma fonte falhar, a outra basta.
+ */
+export async function buscarLivros(termo: string, signal?: AbortSignal): Promise<LivroBusca[]> {
+  const [google, openLibrary] = await Promise.allSettled([
+    buscarNoGoogle(termo, signal),
+    buscarNaOpenLibrary(termo, signal),
+  ]);
+  if (google.status === "rejected" && openLibrary.status === "rejected") throw google.reason;
+  const todos = [
+    ...(google.status === "fulfilled" ? google.value : []),
+    ...(openLibrary.status === "fulfilled" ? openLibrary.value : []),
+  ];
+  const vistos = new Set<string>();
+  const livros = todos.filter((l) => {
+    const k = chave(l);
+    if (vistos.has(k)) return false;
+    vistos.add(k);
+    return true;
+  });
   lembrar(livros);
   return livros;
 }
 
-/** Sinopse de uma obra da Open Library (quando existe). */
+/** Sinopse de uma obra (Open Library ou Google Books), quando existe. */
 export async function sinopseDaObra(id: string, signal?: AbortSignal): Promise<string | undefined> {
+  if (id.startsWith("gb-")) {
+    const r = await fetch(`https://www.googleapis.com/books/v1/volumes/${id.slice(3)}?fields=volumeInfo/description`, {
+      signal,
+    });
+    if (!r.ok) return undefined;
+    const d = (await r.json()) as VolumeGB;
+    return textoLimpo(d.volumeInfo?.description);
+  }
   if (!id.startsWith("ol-")) return undefined;
-  const r = await fetch(`https://openlibrary.org/works/${id.slice(3)}.json`, {
-    signal,
-  });
+  const r = await fetch(`https://openlibrary.org/works/${id.slice(3)}.json`, { signal });
   if (!r.ok) return undefined;
   const d = (await r.json()) as { description?: string | { value: string } };
   const texto = typeof d.description === "string" ? d.description : d.description?.value;

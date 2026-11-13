@@ -8,7 +8,7 @@ import { usePerfil, type StatusLivro } from "@/lib/perfil-store";
 
 /**
  * Campo de busca + lista de livros com botão "+ estante".
- * Busca na Open Library; sem termo, mostra as sugestões locais.
+ * Busca no Google Books e na Open Library; sem termo, mostra as sugestões locais.
  */
 export function BuscaLivros({ status, rotuloInicial = "sugestões para começar" }: { status: StatusLivro; rotuloInicial?: string }) {
   const livros = usePerfil((s) => s.livros);

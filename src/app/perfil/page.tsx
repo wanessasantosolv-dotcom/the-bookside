@@ -27,8 +27,11 @@ export default function PerfilPage() {
   const lidos = p.livros.filter((l) => l.status === "lido");
   const lendo = p.livros.filter((l) => !l.status || l.status === "lendo");
   const quero = p.livros.filter((l) => l.status === "quero");
-  const escolhidos = p.favoritos.map((id) => p.livros.find((l) => l.id === id)).filter((l) => l !== undefined);
-  const favoritos = (escolhidos.length ? escolhidos : [...lidos, ...lendo, ...quero]).slice(0, 4);
+  // só os livros que a pessoa escolheu como favoritos (nada é preenchido sozinho)
+  const favoritos = p.favoritos
+    .map((id) => p.livros.find((l) => l.id === id))
+    .filter((l) => l !== undefined)
+    .slice(0, 4);
   const arquetipo = p.bookside ? arquetipos[p.bookside.principal as ArquetipoId] : null;
 
   function abrirResultado() {
@@ -154,8 +157,8 @@ export default function PerfilPage() {
           {/* favoritos */}
           <div className="mt-6 flex items-baseline justify-between">
             <h2 className="font-display text-[22px] leading-[1.15] font-semibold italic text-[var(--acc)]">favoritos</h2>
-            <Link href="/estantes" className="py-2 text-[10px] font-semibold tracking-[.12em] text-[var(--acc)] uppercase">
-              ver todos →
+            <Link href="/perfil/favoritos" className="py-2 text-[10px] font-semibold tracking-[.12em] text-[var(--acc)] uppercase">
+              escolher →
             </Link>
           </div>
           <ul className="mt-2 grid grid-cols-4 gap-2">
@@ -169,8 +172,8 @@ export default function PerfilPage() {
                     </Link>
                   ) : (
                     <Link
-                      href="/estantes"
-                      aria-label="adicionar favorito"
+                      href="/perfil/favoritos"
+                      aria-label="escolher favorito"
                       className="flex aspect-[2/3] items-center justify-center rounded-[2px_5px_5px_2px] border border-dashed border-rosa-antigo text-xl text-rosa-antigo"
                     >
                       +
