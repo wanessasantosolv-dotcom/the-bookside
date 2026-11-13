@@ -86,17 +86,19 @@ export default function ClubeInicioPage() {
               <p className="mt-1 text-[13px] text-cinza">
                 {sugestoes.length
                   ? `${sugestoes.length} ${sugestoes.length === 1 ? "sugestão esperando" : "sugestões esperando"} a votação.`
-                  : "sugira um livro para começar a primeira rodada."}
+                  : papel === "moderadora"
+                    ? "escolha qualquer livro para começar a primeira rodada."
+                    : "sugira um livro para começar a primeira rodada."}
               </p>
               <Link
-                href={`/clubes/${clube.id}/${sugestoes.length ? "sugestoes" : "sugerir"}`}
+                href={`/clubes/${clube.id}/${papel === "moderadora" ? "escolher" : sugestoes.length ? "sugestoes" : "sugerir"}`}
                 className="mt-3 inline-flex min-h-11 items-center rounded-pill bg-bordo px-5 text-[13px] font-semibold text-creme"
               >
-                {sugestoes.length
-                  ? papel === "moderadora"
-                    ? "escolher a leitura"
-                    : "ver e votar"
-                  : "sugerir um livro"}
+                {papel === "moderadora"
+                  ? "escolher o livro da vez"
+                  : sugestoes.length
+                    ? "ver e votar"
+                    : "sugerir um livro"}
               </Link>
             </div>
           )}

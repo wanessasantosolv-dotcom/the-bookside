@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { useClube } from "@/components/clube/ClubeContexto";
-import { botaoContorno, Rodape, TopoForm } from "@/components/clube/Pecas";
+import { botaoContorno, botaoPrincipal, Rodape, TopoForm } from "@/components/clube/Pecas";
 import { Avatar } from "@/components/social/Pessoas";
 import { conviteVencido, linkDeConvite, novoCodigo, tirarMembro } from "@/lib/clubes";
 import { nomeDe, useMeuId } from "@/lib/social";
@@ -160,9 +160,20 @@ function Convite() {
         </section>
       </div>
       <Rodape>
-        <Link href="/clubes/entrar" className={`${botaoContorno} flex-1 lg:max-w-[640px]`}>
-          entrar com um convite
-        </Link>
+        {novo && papel === "moderadora" ? (
+          <>
+            <Link href={`/clubes/${clube.id}/escolher`} className={`${botaoPrincipal} lg:max-w-[360px]`}>
+              escolher o primeiro livro →
+            </Link>
+            <Link href={`/clubes/${clube.id}`} className={botaoContorno}>
+              depois
+            </Link>
+          </>
+        ) : (
+          <Link href="/clubes/entrar" className={`${botaoContorno} flex-1 lg:max-w-[640px]`}>
+            entrar com um convite
+          </Link>
+        )}
       </Rodape>
     </div>
   );

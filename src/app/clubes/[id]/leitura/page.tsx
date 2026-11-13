@@ -2,130 +2,20 @@
 
 import { Animacao } from "@/components/Animacao";
 import Link from "next/link";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { CapaLivro } from "@/components/CapaLivro";
 import { useClube } from "@/components/clube/ClubeContexto";
-import { botaoContorno, botaoPrincipal, campo, rotuloCampo } from "@/components/clube/Pecas";
+import { botaoContorno, botaoPrincipal } from "@/components/clube/Pecas";
 import { ErroOuFalta, Vazio } from "@/components/social/Estados";
 import { Avatar } from "@/components/social/Pessoas";
-import { andamento, comecarLeitura, encerrarLeitura, fichasDe, livrosDoClube, type LivroDoClube } from "@/lib/clubes";
+import { andamento, encerrarLeitura, fichasDe, livrosDoClube } from "@/lib/clubes";
 import { corDoLivro } from "@/lib/cores";
 import { nomeDe, useConsulta, useMeuId } from "@/lib/social";
-
-function emDias(n: number) {
-  const d = new Date(Date.now() + n * 864e5);
-  return d.toISOString().slice(0, 10);
-}
-
-/** Moderadora escolhe (ou sorteia) a próxima leitura e o prazo. */
-function Escolher({
-  sugestoes,
-  aoComecar,
-  temAtual,
-}: {
-  sugestoes: LivroDoClube[];
-  aoComecar: () => void;
-  temAtual: boolean;
-}) {
-  const { clube } = useClube();
-  const [escolhido, setEscolhido] = useState(sugestoes[0]?.id ?? "");
-  const [prazo, setPrazo] = useState(emDias(20));
-  const [ocupado, setOcupado] = useState(false);
-  const [erro, setErro] = useState<string | null>(null);
-
-  async function comecar(id: string) {
-    if (temAtual && !confirm("isso encerra a leitura atual e começa a próxima. continuar?")) return;
-    setOcupado(true);
-    setErro(null);
-    try {
-      await comecarLeitura(clube.id, id, prazo);
-      aoComecar();
-    } catch {
-      setErro("não deu para começar. tente de novo.");
-      setOcupado(false);
-    }
-  }
-
-  function sortear() {
-    // cada voto é um bilhete a mais no sorteio
-    const bilhetes = sugestoes.flatMap((s) => Array(1 + s.votos.length).fill(s.id) as string[]);
-    void comecar(bilhetes[Math.floor(Math.random() * bilhetes.length)]);
-  }
-
-  if (!sugestoes.length)
-    return (
-      <Vazio
-        className="mt-5"
-        titulo="não tem sugestão para escolher"
-        texto="peça para o clube sugerir livros. o mais votado vira a próxima leitura."
-        acao={{ href: `/clubes/${clube.id}/sugerir`, rotulo: "sugerir um livro" }}
-      />
-    );
-
-  return (
-    <div className="mt-5 rounded-xl border border-linha bg-creme-quente p-4 lg:rounded-[4px] lg:border-fio lg:bg-transparent lg:p-5">
-      <p className={rotuloCampo}>{temAtual ? "próxima leitura" : "escolher a leitura"}</p>
-      <ul className="mt-3 space-y-2">
-        {sugestoes.map((s) => (
-          <li key={s.id}>
-            <label
-              className={`flex cursor-pointer items-center gap-3 rounded-md border p-2.5 ${escolhido === s.id ? "border-bordo bg-rosa-fundo/50" : "border-linha"}`}
-            >
-              <input
-                type="radio"
-                name="proxima"
-                checked={escolhido === s.id}
-                onChange={() => setEscolhido(s.id)}
-                className="accent-bordo"
-              />
-              <CapaLivro
-                titulo={s.livro.titulo}
-                capa={s.livro.capa}
-                cor={corDoLivro(s.livro.id)}
-                className="w-8 [&>span:last-child]:hidden"
-              />
-              <span className="min-w-0 flex-1">
-                <span className="block truncate font-display text-[15px] font-semibold italic lg:font-revista lg:font-normal">
-                  {s.livro.titulo}
-                </span>
-                <span className="block text-xs text-cinza">
-                  {s.votos.length} {s.votos.length === 1 ? "voto" : "votos"}
-                </span>
-              </span>
-            </label>
-          </li>
-        ))}
-      </ul>
-      <label className="mt-4 block">
-        <span className={rotuloCampo}>prazo da leitura</span>
-        <input type="date" value={prazo} min={emDias(1)} onChange={(e) => setPrazo(e.target.value)} className={campo} />
-      </label>
-      {erro ? (
-        <p role="alert" className="mt-3 text-[13px] text-bordo">
-          {erro}
-        </p>
-      ) : null}
-      <div className="mt-4 flex gap-2.5">
-        <button
-          type="button"
-          disabled={ocupado || !escolhido}
-          onClick={() => comecar(escolhido)}
-          className={botaoPrincipal}
-        >
-          começar leitura
-        </button>
-        <button type="button" disabled={ocupado} onClick={sortear} className={botaoContorno}>
-          sortear
-        </button>
-      </div>
-    </div>
-  );
-}
 
 export default function LeituraPage() {
   const { clube, membros, papel } = useClube();
   const eu = useMeuId();
-  const [escolhendo, setEscolhendo] = useState(false);
+  const router = useRouter();
   const consulta = useConsulta(async () => {
     const livros = await livrosDoClube(clube.id);
     const lendo = livros.find((l) => l.estado === "lendo") ?? null;
@@ -139,10 +29,6 @@ export default function LeituraPage() {
   const { livros, lendo, fichas } = consulta.dados!;
   const sugestoes = livros.filter((l) => l.estado === "sugerido").sort((a, b) => b.votos.length - a.votos.length);
   const moderadora = papel === "moderadora";
-  const recarregar = () => {
-    setEscolhendo(false);
-    consulta.recarregar();
-  };
 
   if (!lendo)
     return (
@@ -151,7 +37,16 @@ export default function LeituraPage() {
           nenhuma leitura rolando
         </h2>
         {moderadora ? (
-          <Escolher sugestoes={sugestoes} aoComecar={recarregar} temAtual={false} />
+          <Vazio
+            className="mt-5"
+            titulo="escolha o livro da vez"
+            texto={
+              sugestoes.length
+                ? `pegue uma das ${sugestoes.length} sugestões do clube, sorteie, ou busque qualquer livro.`
+                : "busque qualquer livro e marque o prazo. ninguém precisa sugerir antes."
+            }
+            acao={{ href: `/clubes/${clube.id}/escolher`, rotulo: "escolher o livro" }}
+          />
         ) : (
           <Vazio
             className="mt-5"
@@ -270,16 +165,14 @@ export default function LeituraPage() {
           </p>
         </section>
 
-        {moderadora && escolhendo ? <Escolher sugestoes={sugestoes} aoComecar={recarregar} temAtual /> : null}
-
         <div className="mt-7 flex gap-2.5 lg:max-w-[520px]">
           <Link href={`/clubes/${clube.id}/ficha/${lendo.id}`} className={botaoPrincipal}>
             {minha ? "editar minha ficha ✎" : "escrever ficha ✎"}
           </Link>
-          {moderadora && !escolhendo ? (
-            <button type="button" onClick={() => setEscolhendo(true)} className={botaoContorno}>
-              sortear
-            </button>
+          {moderadora ? (
+            <Link href={`/clubes/${clube.id}/escolher`} className={botaoContorno}>
+              trocar livro
+            </Link>
           ) : null}
         </div>
         {moderadora ? (
@@ -288,7 +181,7 @@ export default function LeituraPage() {
             onClick={async () => {
               if (!confirm(`encerrar a leitura de ${lendo.livro.titulo}? ela vai para os lidos do clube.`)) return;
               await encerrarLeitura(lendo.id);
-              consulta.recarregar();
+              router.push(`/clubes/${clube.id}/escolher?depois=encerrar`);
             }}
             className="mt-3 min-h-11 text-xs font-semibold text-cinza underline underline-offset-4 hover:text-bordo"
           >

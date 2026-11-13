@@ -216,6 +216,18 @@ export async function sugerir(clubeId: string, livro: LivroDoClube["livro"], mot
   if (error) throw error;
 }
 
+/** Moderadora escolhe um livro direto (sem passar pela votação) e já começa a leitura. */
+export async function escolherLivroDaVez(clubeId: string, livro: LivroDoClube["livro"], prazo: string) {
+  const eu = meuId();
+  const { data, error } = await db()
+    .from("clube_livros")
+    .insert({ clube_id: clubeId, livro, sugerido_por: eu, estado: "sugerido", motivo: null })
+    .select("id")
+    .single();
+  if (error) throw error;
+  await comecarLeitura(clubeId, data.id as string, prazo);
+}
+
 export async function apagarSugestao(id: string) {
   const { error } = await db().from("clube_livros").delete().eq("id", id);
   if (error) throw error;

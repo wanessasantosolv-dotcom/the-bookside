@@ -17,6 +17,9 @@ export function useClube() {
   return c;
 }
 
+/** largura do clube no computador: capa, título e conteúdo alinhados na mesma coluna */
+const largura = "lg:mx-auto lg:w-full lg:max-w-[1100px] lg:px-12";
+
 const abas = [
   { id: "", r: "início" },
   { id: "feed", r: "feed" },
@@ -86,24 +89,6 @@ function Menu({ c, papel }: { c: Clube; papel: Papel | null }) {
   );
 }
 
-function Selo({ c, grande }: { c: Clube; grande?: boolean }) {
-  return (
-    <span
-      aria-hidden
-      className={`flex flex-none items-center justify-center bg-vinho bg-cover bg-center font-revista text-jornal italic ${
-        grande ? "size-20 rounded-[12px] border-4 border-jornal text-[34px]" : "size-10 rounded-[8px] text-base"
-      }`}
-      style={
-        c.capa
-          ? { backgroundImage: `linear-gradient(rgba(43,20,32,.45),rgba(43,20,32,.45)), url("${c.capa}")` }
-          : undefined
-      }
-    >
-      {c.nome.slice(0, 1).toUpperCase()}
-    </span>
-  );
-}
-
 function Abas({ base, sublinhadas }: { base: string; sublinhadas?: boolean }) {
   const pathname = usePathname();
   return (
@@ -151,20 +136,21 @@ function Cabecalho({ c, papel, rodada }: { c: Clube; papel: Papel | null; rodada
   return (
     <>
       {!inicio ? (
-        <div className="hidden items-center justify-between gap-6 border-b border-fio px-12 py-4 lg:flex">
-          <Link href={base} className="flex items-center gap-3.5">
-            <Selo c={c} />
-            <span>
-              <span className="block font-revista text-xl leading-none italic">{c.nome}</span>
-              <span className="mt-1 block text-[11px] text-grafite">{rodada ?? "clube de leitura"}</span>
-            </span>
-          </Link>
-          <Abas base={base} sublinhadas />
+        <div className="hidden border-b border-fio lg:block">
+          <div className={`${largura} flex items-center justify-between gap-6 py-4`}>
+            <Link href={base} className="flex items-center gap-3.5">
+              <span>
+                <span className="block font-revista text-xl leading-none italic">{c.nome}</span>
+                <span className="mt-1 block text-[11px] text-grafite">{rodada ?? "clube de leitura"}</span>
+              </span>
+            </Link>
+            <Abas base={base} sublinhadas />
+          </div>
         </div>
       ) : null}
 
       <div className={inicio ? "" : "lg:hidden"}>
-        <div className="relative lg:mx-12 lg:mt-6 lg:max-w-[960px]">
+        <div className={`relative lg:mt-6 ${largura}`}>
           <div
             className={`aspect-[3/1] w-full bg-cover bg-center lg:rounded-[4px] ${c.capa ? "" : "pat-estrelas"}`}
             style={
@@ -173,7 +159,7 @@ function Cabecalho({ c, papel, rodada }: { c: Clube; papel: Papel | null; rodada
                 : undefined
             }
           />
-          <div className="absolute inset-x-0 top-0 flex items-center justify-between px-4 pt-2 lg:px-3 lg:pt-3">
+          <div className="absolute inset-x-0 top-0 flex items-center justify-between px-4 pt-2 lg:px-15 lg:pt-3">
             <Link
               href="/clubes"
               className="flex min-h-11 items-center rounded-pill bg-creme/85 px-3 text-[11px] font-semibold tracking-[.14em] text-bordo uppercase"
@@ -185,11 +171,8 @@ function Cabecalho({ c, papel, rodada }: { c: Clube; papel: Papel | null; rodada
             </span>
           </div>
         </div>
-        <div className="relative bg-creme px-6 pt-5 text-center lg:mx-12 lg:max-w-[960px] lg:bg-jornal lg:px-0 lg:text-left">
+        <div className={`relative bg-creme px-6 pt-5 text-center lg:bg-jornal lg:text-left ${largura}`}>
           <div className="lg:flex lg:items-end lg:gap-5">
-            <span className="hidden lg:-mt-14 lg:block">
-              <Selo c={c} grande />
-            </span>
             <div className="min-w-0 flex-1">
               {rodada ? (
                 <p className="text-[10px] font-semibold tracking-[.16em] text-cinza uppercase">{rodada}</p>
@@ -258,7 +241,7 @@ export function ClubeProvedor({ id, children }: { id: string; children: ReactNod
   return (
     <Contexto.Provider value={{ clube: c, membros, papel, recarregar: consulta.recarregar }}>
       {comAbas ? <Cabecalho c={c} papel={papel} rodada={null} /> : null}
-      <div className={comAbas ? "lg:px-12" : "lg:px-12 lg:py-8"}>{children}</div>
+      <div className={comAbas ? largura : `${largura} lg:py-8`}>{children}</div>
     </Contexto.Provider>
   );
 }
