@@ -34,6 +34,7 @@ create table if not exists public.clubes (
   nome text not null check (char_length(nome) between 1 and 60),
   descricao text check (char_length(descricao) <= 280),
   codigo text not null unique,
+  capa text,
   criado_por uuid not null references auth.users (id) on delete cascade,
   criado_em timestamptz not null default now()
 );
@@ -164,6 +165,7 @@ create table if not exists public.fichas (
   personagem text check (char_length(personagem) <= 80),
   citacao text check (char_length(citacao) <= 400),
   texto text check (char_length(texto) <= 4000),
+  spoiler boolean not null default false,
   criado_em timestamptz not null default now(),
   unique (clube_livro_id, autor)
 );
@@ -199,6 +201,9 @@ create policy "membros marcam encontros" on public.encontros for insert to authe
 drop policy if exists "desmarcar encontro" on public.encontros;
 create policy "desmarcar encontro" on public.encontros for delete to authenticated
   using (criado_por = auth.uid() or public.e_moderadora(clube_id));
+
+alter table public.clubes add column if not exists capa text;
+alter table public.fichas add column if not exists spoiler boolean not null default false;
 
 -- ───────────────────────── feed ─────────────────────────
 -- o que aparece no feed: começou, terminou, avaliou, quer ler, ficha do clube

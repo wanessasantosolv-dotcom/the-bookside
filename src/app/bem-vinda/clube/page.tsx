@@ -20,7 +20,7 @@ export default function ClubePage() {
     >
       <div className="flex flex-col gap-4">
         <Link
-          href="/em-breve?tela=entrar-no-clube"
+          href="/clubes/entrar"
           className="block rounded-md border border-linha bg-creme-quente p-5 transition-colors hover:border-bordo"
         >
           <span className={`${pill} border border-bordo text-bordo`}>tenho um convite</span>
@@ -29,7 +29,7 @@ export default function ClubePage() {
         </Link>
 
         <Link
-          href="/em-breve?tela=criar-clube"
+          href="/clubes/novo"
           className="block rounded-md bg-bordo p-5 text-creme transition-colors hover:bg-bordo-suave"
         >
           <span className={`${pill} bg-creme text-bordo`}>começar do zero</span>
