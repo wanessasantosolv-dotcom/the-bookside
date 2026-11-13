@@ -19,6 +19,7 @@ export default function NomePage() {
       voltar={{ href: "/entrar", rotulo: "entrar" }}
       passo={1}
       eyebrow="primeira página da sua ficha"
+      frase="ficha de leitora nº 0001"
       titulo={
         <>
           como você

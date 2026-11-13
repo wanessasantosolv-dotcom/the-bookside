@@ -40,12 +40,14 @@ export default function PerguntaPage() {
       }
       barra={numero / total}
     >
-      <p className="aparece mt-8 font-revista text-sm leading-[1.3] italic text-vinho">{pergunta.selo}</p>
-      <h1 className="mt-3 animate-subir font-revista text-[30px] leading-[1.12] tracking-[-.01em] italic [animation-delay:.1s]">
+      <p className="aparece mt-8 font-revista text-sm leading-[1.3] italic text-vinho lg:mt-0 lg:text-center">
+        {pergunta.selo}
+      </p>
+      <h1 className="mt-3 animate-subir font-revista text-[30px] leading-[1.12] tracking-[-.01em] italic [animation-delay:.1s] lg:mx-auto lg:max-w-[560px] lg:text-center lg:text-[36px]">
         {pergunta.titulo}
       </h1>
 
-      <fieldset className="mt-10">
+      <fieldset className="mt-10 lg:mx-auto lg:grid lg:max-w-[600px] lg:grid-cols-2 lg:gap-4">
         <legend className="sr-only">{pergunta.titulo}</legend>
         {pergunta.opcoes.map((o, i) => (
           <button
@@ -54,7 +56,7 @@ export default function PerguntaPage() {
             aria-pressed={atual === i}
             disabled={escolhida !== null}
             onClick={() => escolher(i)}
-            className={`aparece flex w-full items-center gap-3.5 border-t border-tinta px-1 py-[17px] text-left transition-colors hover:bg-vinho/5 ${
+            className={`aparece flex w-full items-center gap-3.5 border-t border-tinta px-1 py-[17px] text-left transition-colors hover:bg-vinho/5 lg:items-start lg:rounded-[6px] lg:border lg:border-fio lg:px-4 lg:py-4 lg:hover:border-vinho ${
               atual === i ? "bg-vinho/10" : ""
             }`}
             style={{ animationDelay: `${0.1 + i * 0.07}s` }}

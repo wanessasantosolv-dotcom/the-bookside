@@ -22,9 +22,9 @@ export function PaginaRevista({
   const classeVoltar =
     "-ml-2 flex min-h-11 items-center px-2 text-[9px] font-bold tracking-[.18em] text-tinta uppercase";
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-[430px] flex-col bg-jornal px-6 pb-[max(24px,env(safe-area-inset-bottom))] font-texto text-tinta sm:shadow-[0_0_60px_-30px_rgba(43,20,32,.35)]">
-      <header className="pt-2.5">
-        <div className="flex items-center justify-between">
+    <main className="mx-auto flex min-h-dvh w-full max-w-[430px] flex-col bg-jornal px-6 pb-[max(24px,env(safe-area-inset-bottom))] font-texto text-tinta sm:shadow-[0_0_60px_-30px_rgba(43,20,32,.35)] lg:max-w-none lg:px-10 lg:shadow-none">
+      <header className="pt-2.5 lg:pt-5">
+        <div className="flex items-center justify-between lg:grid lg:grid-cols-[1fr_auto_1fr]">
           {"href" in voltar ? (
             <Link href={voltar.href} className={classeVoltar}>
               ‹ {voltar.rotulo}
@@ -34,13 +34,25 @@ export function PaginaRevista({
               ‹ {voltar.rotulo}
             </button>
           )}
-          <span className="text-[9px] font-bold tracking-[.18em] text-tinta uppercase">{rotulo}</span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/brand/logo-bordo.png" alt="the bookside" className="hidden w-[92px] lg:block" />
+          <span className="text-[9px] font-bold tracking-[.18em] text-tinta uppercase lg:flex lg:items-center lg:justify-end lg:gap-3">
+            {barra !== undefined ? (
+              <span aria-hidden className="hidden h-[3px] w-[180px] overflow-hidden bg-fio lg:block">
+                <i
+                  className="block h-full bg-vinho transition-[width] duration-500"
+                  style={{ width: `${barra * 100}%` }}
+                />
+              </span>
+            ) : null}
+            {rotulo}
+          </span>
         </div>
         {barra === undefined ? (
-          <div className="mt-2 h-px bg-tinta" />
+          <div className="mt-2 h-px bg-tinta lg:hidden" />
         ) : (
           <div
-            className="mt-2 h-[3px] overflow-hidden bg-fio"
+            className="mt-2 h-[3px] overflow-hidden bg-fio lg:hidden"
             role="progressbar"
             aria-label="progresso do teste"
             aria-valuemin={0}
@@ -51,8 +63,10 @@ export function PaginaRevista({
           </div>
         )}
       </header>
-      <div className="flex flex-1 flex-col">{children}</div>
-      {rodape ? <footer className="pt-6">{rodape}</footer> : null}
+      <div className="flex flex-1 flex-col lg:mx-auto lg:w-full lg:max-w-[640px] lg:flex-none lg:pt-12 lg:text-center">
+        {children}
+      </div>
+      {rodape ? <footer className="pt-6 lg:mx-auto lg:w-full lg:max-w-[420px]">{rodape}</footer> : null}
     </main>
   );
 }
@@ -70,9 +84,19 @@ export function BarraBotao(props: ComponentProps<"button">) {
 }
 
 /** Rótulo pequeno em caixa alta (8–9px). */
-export function Rotulo({ children, vinho, className = "" }: { children: ReactNode; vinho?: boolean; className?: string }) {
+export function Rotulo({
+  children,
+  vinho,
+  className = "",
+}: {
+  children: ReactNode;
+  vinho?: boolean;
+  className?: string;
+}) {
   return (
-    <p className={`text-[9px] leading-[1.2] font-semibold tracking-[.16em] uppercase ${vinho ? "text-vinho" : "text-grafite"} ${className}`}>
+    <p
+      className={`text-[9px] leading-[1.2] font-semibold tracking-[.16em] uppercase ${vinho ? "text-vinho" : "text-grafite"} ${className}`}
+    >
       {children}
     </p>
   );

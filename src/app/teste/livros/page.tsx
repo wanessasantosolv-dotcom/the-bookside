@@ -30,7 +30,7 @@ export default function LivrosPage() {
       <h1 className="mt-3 animate-subir font-revista text-[32px] leading-[1.1] italic [animation-delay:.1s]">sua próxima estante</h1>
       <p className="mt-2 text-[13px] leading-normal text-grafite">escolhemos estes três pra você ✦</p>
 
-      <ul className="mt-6">
+      <ul className="mt-6 lg:grid lg:grid-cols-3 lg:gap-6 lg:text-left">
         {resultado.principal.livros.map((l, i) => {
           const id = idDoLivro(l.titulo);
           const guardado = livros.some((x) => x.id === id);

@@ -17,6 +17,7 @@ export default function GostosPage() {
       voltar={{ href: "/criar-perfil/estante", rotulo: "estante" }}
       passo={8}
       eyebrow="o que você lê"
+      frase="escolha pelo menos três livros da pilha"
       titulo="do que você gosta?"
       descricao="escolha pelo menos três livros da pilha. isso ajuda a sugerir leituras, dá para mudar depois."
       rodape={

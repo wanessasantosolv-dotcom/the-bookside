@@ -8,6 +8,7 @@ export default function BuscarLivroPage() {
       voltar={{ href: "/criar-perfil/estante", rotulo: "estante" }}
       passo={7}
       eyebrow="estou lendo um"
+      frase="o livro na cabeceira"
       titulo="buscar livro"
       descricao="encontre o livro que você já começou e coloque na estante."
       rodape={<BotaoLink href="/criar-perfil/gostos">continuar</BotaoLink>}

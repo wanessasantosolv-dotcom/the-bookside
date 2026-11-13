@@ -34,6 +34,7 @@ export default function FotoPage() {
       voltar={{ href: "/criar-perfil/nome", rotulo: "nome" }}
       passo={2}
       eyebrow="um rosto para a ficha"
+      frase="uma foto sua"
       titulo="uma foto sua"
       descricao="escolha uma imagem da galeria. dá para trocar quando quiser."
       rodape={

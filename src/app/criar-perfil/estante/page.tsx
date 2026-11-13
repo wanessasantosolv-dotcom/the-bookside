@@ -50,6 +50,7 @@ export default function EstantePage() {
       voltar={{ href: "/criar-perfil/tema", rotulo: "tema" }}
       passo={7}
       eyebrow="sua estante"
+      frase="ela começa vazia, e tudo bem"
       titulo={<span className="text-[30px]">o que você está lendo?</span>}
       descricao="a gente monta sua estante a partir disso. ela começa vazia, e tudo bem."
     >

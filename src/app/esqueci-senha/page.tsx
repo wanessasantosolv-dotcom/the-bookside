@@ -23,7 +23,7 @@ export default function EsqueciSenhaPage() {
   }
 
   return (
-    <ContaShell
+    <ContaShell eyebrow="sem problema"
       voltar={{ href: "/entrar", rotulo: "entrar" }}
       titulo={enviado ? "confira seu e-mail" : "esqueceu a senha?"}
       descricao={

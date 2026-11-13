@@ -1,13 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { TelaApp } from "@/components/AppShell";
 import { notFound, useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { CapaLivro } from "@/components/CapaLivro";
 import { EstrelasInput } from "@/components/Estrelas";
 import { useHidratado } from "@/components/PerfilHidratacao";
 import { Botao } from "@/components/ui/Botao";
-import { Tela } from "@/components/ui/Tela";
 import { livroLembrado } from "@/lib/catalogo";
 import { corDoLivro } from "@/lib/cores";
 import { infoDoLivro } from "@/lib/estantes";
@@ -24,7 +24,7 @@ function Formulario({ livro }: { livro: LivroSalvo & { paginas?: number } }) {
   const lidoEm = livro.lidoEm ?? new Date().toISOString();
 
   return (
-    <Tela>
+    <TelaApp aba="estantes">
       <header className="flex items-center justify-between px-6 pt-2">
         <Link href={`/livro/${livro.id}`} className="-ml-2 flex min-h-11 max-w-[70%] items-center truncate px-2 text-[13px] font-semibold text-bordo">
           ‹ {livro.titulo.toLowerCase()}
@@ -91,7 +91,7 @@ function Formulario({ livro }: { livro: LivroSalvo & { paginas?: number } }) {
           salvar avaliação
         </Botao>
       </footer>
-    </Tela>
+    </TelaApp>
   );
 }
 
@@ -99,7 +99,7 @@ export default function AvaliarPage() {
   const { id } = useParams<{ id: string }>();
   const hidratado = useHidratado();
   const livros = usePerfil((s) => s.livros);
-  if (!hidratado) return <Tela>{null}</Tela>;
+  if (!hidratado) return <TelaApp aba="estantes">{null}</TelaApp>;
   const livro = infoDoLivro(id, livros, livroLembrado(id));
   if (!livro) notFound();
   return <Formulario livro={livro} />;

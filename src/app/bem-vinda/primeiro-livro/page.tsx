@@ -9,6 +9,7 @@ export default function PrimeiroLivroPage() {
       voltar={{ href: "/bem-vinda/clube", rotulo: "clube" }}
       rotuloTopo="opcional"
       eyebrow="sua estante"
+      frase="sua estante"
       titulo="adicione seu primeiro livro"
       descricao="busque o que você está lendo ou escolha uma sugestão."
       rodape={

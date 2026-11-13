@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { TelaApp } from "@/components/AppShell";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { AjustarFoto } from "@/components/AjustarFoto";
 import { useHidratado } from "@/components/PerfilHidratacao";
-import { Tela } from "@/components/ui/Tela";
 import { metas, temas } from "@/lib/dados";
 import { reduzirImagem } from "@/lib/imagem";
 import { sugerirUsuario, usePerfil, type PadraoCapa, type Perfil } from "@/lib/perfil-store";
@@ -42,7 +42,7 @@ function Formulario({ inicial }: { inicial: Rascunho }) {
   }
 
   return (
-    <Tela>
+    <TelaApp aba="perfil">
       <header className="flex items-center justify-between px-6 pt-2">
         <Link href="/perfil" className="-ml-2 flex min-h-11 items-center px-2 text-[13px] font-semibold text-bordo">
           ‹ perfil
@@ -272,14 +272,14 @@ function Formulario({ inicial }: { inicial: Rascunho }) {
           </button>
         </div>
       </div>
-    </Tela>
+    </TelaApp>
   );
 }
 
 export default function EditarPerfilPage() {
   const hidratado = useHidratado();
   const p = usePerfil();
-  if (!hidratado) return <Tela>{null}</Tela>;
+  if (!hidratado) return <TelaApp aba="perfil">{null}</TelaApp>;
   return (
     <Formulario
       inicial={{

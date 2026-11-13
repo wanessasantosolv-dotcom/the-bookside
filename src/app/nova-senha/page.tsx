@@ -27,7 +27,7 @@ export default function NovaSenhaPage() {
   }
 
   return (
-    <ContaShell voltar={{ href: "/entrar", rotulo: "entrar" }} titulo="crie uma nova senha" descricao="escolha uma senha nova para a sua conta.">
+    <ContaShell eyebrow="sem problema" voltar={{ href: "/entrar", rotulo: "entrar" }} titulo="crie uma nova senha" descricao="escolha uma senha nova para a sua conta.">
       <form onSubmit={salvar} noValidate>
         <label className="mt-[22px] block">
           <span className={rotuloConta}>nova senha</span>

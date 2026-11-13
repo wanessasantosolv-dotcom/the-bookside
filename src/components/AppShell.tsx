@@ -13,8 +13,11 @@ export function AppShell({
   children,
   className = "",
   style,
+  menuCelular = true,
 }: {
   aba: Aba;
+  /** false: telas com botão fixo embaixo não mostram o menu inferior no celular */
+  menuCelular?: boolean;
   children: ReactNode;
   className?: string;
   style?: CSSProperties;
@@ -47,11 +50,27 @@ export function AppShell({
 
       <main className="relative mx-auto flex min-h-dvh w-full max-w-[430px] flex-col bg-creme text-ameixa sm:shadow-[0_0_60px_-30px_rgba(43,20,32,.35)] lg:mx-0 lg:max-w-none lg:min-w-0 lg:flex-1 lg:shadow-none">
         <div className="flex flex-1 flex-col">{children}</div>
-        <div className="lg:hidden">
-          <NavInferior ativa={aba} />
-        </div>
+        {menuCelular ? (
+          <div className="lg:hidden">
+            <NavInferior ativa={aba} />
+          </div>
+        ) : null}
       </main>
     </div>
   );
 }
 
+/**
+ * Telas de formulário do app (avaliar, progresso, editar perfil…): no celular,
+ * a coluna de sempre sem o menu inferior; no computador, menu lateral e uma
+ * coluna central de 640px, como no canvas.
+ */
+export function TelaApp({ aba, children }: { aba: Aba; children: ReactNode }) {
+  return (
+    <AppShell aba={aba} menuCelular={false}>
+      <div className="flex flex-1 flex-col lg:bg-jornal lg:py-10">
+        <div className="flex flex-1 flex-col lg:mx-auto lg:w-full lg:max-w-[640px] lg:flex-none">{children}</div>
+      </div>
+    </AppShell>
+  );
+}

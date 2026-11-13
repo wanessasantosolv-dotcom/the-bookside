@@ -18,6 +18,7 @@ export default function FrasePage() {
       voltar={{ href: "/criar-perfil/capa", rotulo: "capa" }}
       passo={4}
       eyebrow="o que vai na sua ficha"
+      frase="uma frase sobre você"
       titulo="uma frase sobre você"
       descricao="escolha uma sugestão ou deixe a sua. ela aparece logo abaixo do nome."
       rodape={

@@ -36,7 +36,7 @@ export default function ConfirmarEmailPage() {
   }
 
   return (
-    <ContaShell
+    <ContaShell eyebrow="quase lá"
       voltar={{ href: "/criar-conta", rotulo: "criar conta" }}
       titulo="confirme seu e-mail"
       descricao={

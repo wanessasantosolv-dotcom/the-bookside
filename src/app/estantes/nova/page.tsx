@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { TelaApp } from "@/components/AppShell";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Botao } from "@/components/ui/Botao";
-import { Tela } from "@/components/ui/Tela";
 import { usePerfil } from "@/lib/perfil-store";
 
 const cores = [
@@ -24,7 +24,7 @@ export default function NovaEstantePage() {
   const [publica, setPublica] = useState(false);
 
   return (
-    <Tela>
+    <TelaApp aba="estantes">
       <header className="flex items-center justify-between px-6 pt-2">
         <Link href="/estantes" className="-ml-2 flex min-h-11 items-center px-2 text-[13px] font-semibold text-bordo">
           ‹ estantes
@@ -101,6 +101,6 @@ export default function NovaEstantePage() {
           criar estante
         </Botao>
       </footer>
-    </Tela>
+    </TelaApp>
   );
 }

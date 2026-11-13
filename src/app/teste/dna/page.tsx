@@ -20,7 +20,7 @@ export default function DnaPage() {
       <h1 className="mt-3 animate-subir font-revista text-[32px] leading-[1.1] italic [animation-delay:.1s]">seu DNA literário</h1>
       <p className="mt-2 text-[13px] leading-normal text-grafite">o quanto de cada arquétipo mora em você.</p>
 
-      <ul className="mt-5">
+      <ul className="mt-5 lg:mx-auto lg:max-w-[460px] lg:text-left">
         {dna.slice(0, 4).map(({ arquetipo, afinidade }, i) => (
           <li key={arquetipo.id} className="mt-4 animate-subir" style={{ animationDelay: `${0.14 + i * 0.08}s` }}>
             <div className="flex items-baseline justify-between">

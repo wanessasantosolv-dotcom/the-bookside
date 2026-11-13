@@ -22,6 +22,7 @@ export default function TemaPage() {
       faixa={atual.destaque}
       escuro={escuro}
       eyebrow="a última camada"
+      frase="o tema do seu perfil"
       titulo="o tema do seu perfil"
       descricao="escolha um tema. ele define a cor de destaque e o papel do seu perfil."
       rodape={<BotaoLink href="/criar-perfil/estante">concluir perfil</BotaoLink>}

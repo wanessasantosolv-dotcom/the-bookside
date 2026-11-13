@@ -10,6 +10,7 @@ export default function ClubePage() {
       voltar={{ href: "/criar-perfil/gostos", rotulo: "gostos" }}
       rotuloTopo="opcional"
       eyebrow="clube de leitura"
+      frase="quer ler com alguém?"
       titulo="quer ler com alguém?"
       descricao="dá para entrar em um clube, criar o seu ou deixar para depois."
       rodape={

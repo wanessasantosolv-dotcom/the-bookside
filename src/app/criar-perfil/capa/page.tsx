@@ -22,6 +22,7 @@ export default function CapaPage() {
       voltar={{ href: "/criar-perfil/foto", rotulo: "foto" }}
       passo={3}
       eyebrow="o cenário da ficha"
+      frase="a capa do seu perfil"
       titulo="a capa do seu perfil"
       descricao="um padrão do app ou uma imagem da sua galeria."
       rodape={<BotaoLink href="/criar-perfil/frase">continuar</BotaoLink>}

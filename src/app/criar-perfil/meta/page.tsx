@@ -20,6 +20,7 @@ export default function MetaPage() {
       voltar={{ href: "/criar-perfil/frase", rotulo: "frase" }}
       passo={5}
       eyebrow="o ano que começa"
+      frase="quantos livros neste ano?"
       titulo="quantos livros neste ano?"
       descricao="sua meta aparece no perfil. dá para mudar quando quiser."
       rodape={<BotaoLink href="/criar-perfil/tema">continuar</BotaoLink>}

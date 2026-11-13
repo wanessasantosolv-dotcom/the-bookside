@@ -1,12 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { TelaApp } from "@/components/AppShell";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { CapaLivro } from "@/components/CapaLivro";
 import { useHidratado } from "@/components/PerfilHidratacao";
 import { Botao, BotaoLink } from "@/components/ui/Botao";
-import { Tela } from "@/components/ui/Tela";
 import { corDoLivro } from "@/lib/cores";
 import { usePerfil } from "@/lib/perfil-store";
 
@@ -24,7 +24,7 @@ function Escolha({ inicial }: { inicial: string[] }) {
   }
 
   return (
-    <Tela>
+    <TelaApp aba="perfil">
       <header className="flex items-center justify-between px-6 pt-2">
         <Link href="/perfil/editar" className="-ml-2 flex min-h-11 items-center px-2 text-[13px] font-semibold text-bordo">
           ‹ editar perfil
@@ -87,13 +87,13 @@ function Escolha({ inicial }: { inicial: string[] }) {
           salvar favoritos
         </Botao>
       </footer>
-    </Tela>
+    </TelaApp>
   );
 }
 
 export default function FavoritosPage() {
   const hidratado = useHidratado();
   const favoritos = usePerfil((s) => s.favoritos);
-  if (!hidratado) return <Tela>{null}</Tela>;
+  if (!hidratado) return <TelaApp aba="perfil">{null}</TelaApp>;
   return <Escolha inicial={favoritos ?? []} />;
 }
