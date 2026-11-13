@@ -1,32 +1,32 @@
 "use client";
 
-import { Carta } from "@/components/teste/Carta";
+import { BarraLink, Filete, PaginaRevista, Rotulo } from "@/components/teste/Revista";
 import { useResultado } from "@/components/teste/useResultado";
-import { BotaoLink } from "@/components/ui/Botao";
 
 export default function FrasePage() {
   const { pronto, resultado } = useResultado();
-  if (!pronto) return <main className="envelope min-h-dvh" />;
+  if (!pronto) return <main className="min-h-dvh bg-jornal" />;
   const { frase } = resultado.principal;
 
   return (
-    <Carta
+    <PaginaRevista
       voltar={{ href: "/teste/livros", rotulo: "estante" }}
       rotulo="sua frase"
-      rodape={<BotaoLink href="/teste/salvar">continuar ✧</BotaoLink>}
+      rodape={<BarraLink href="/teste/salvar">continuar →</BarraLink>}
     >
-      <p className="rotulo-carta">anexo iii · escrito nas estrelas</p>
-      <figure className="flex min-h-[380px] flex-col items-center justify-center px-0.5 text-center">
-        <p aria-hidden className="font-accent text-[64px] leading-none italic text-[#E8D5CC]">
+      <figure className="flex flex-1 animate-subir flex-col items-center justify-center px-1.5 text-center [animation-delay:.1s]">
+        <p aria-hidden className="font-revista text-[64px] leading-none italic text-[#D8C4B4]">
           “
         </p>
-        <blockquote className="-mt-2.5 font-display text-[27px] leading-[1.3] font-bold italic">{frase.texto}</blockquote>
-        <span aria-hidden className="mt-6 block h-px w-[54px] bg-bege" />
+        <blockquote className="-mt-3.5 font-revista text-[26px] leading-[1.3] font-semibold italic">{frase.texto}</blockquote>
+        <Filete className="mt-[26px] w-12" />
         <figcaption>
-          <p className="mt-[22px] text-[10px] font-semibold tracking-[.2em] text-bordo uppercase">{frase.autor}</p>
-          <p className="mt-2 font-accent text-[15px] leading-tight italic text-cinza">{frase.obra}</p>
+          <Rotulo vinho className="mt-3.5 !tracking-[.3em]">
+            {frase.autor}
+          </Rotulo>
+          <p className="mt-2 font-revista text-[15px] leading-[1.2] italic text-grafite">{frase.obra}</p>
         </figcaption>
       </figure>
-    </Carta>
+    </PaginaRevista>
   );
 }

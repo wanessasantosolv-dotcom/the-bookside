@@ -1,8 +1,7 @@
 "use client";
 
-import { Carta, TituloCarta } from "@/components/teste/Carta";
+import { BarraLink, Filete, PaginaRevista, Rotulo } from "@/components/teste/Revista";
 import { useResultado } from "@/components/teste/useResultado";
-import { BotaoLink } from "@/components/ui/Botao";
 import { usePerfil } from "@/lib/perfil-store";
 
 function idDoLivro(titulo: string) {
@@ -17,48 +16,42 @@ export default function LivrosPage() {
   const { pronto, resultado } = useResultado();
   const livros = usePerfil((s) => s.livros);
   const alternarLivro = usePerfil((s) => s.alternarLivro);
-  if (!pronto) return <main className="envelope min-h-dvh" />;
+  if (!pronto) return <main className="min-h-dvh bg-jornal" />;
 
   return (
-    <Carta
+    <PaginaRevista
       voltar={{ href: "/teste/dna", rotulo: "dna" }}
       rotulo="sua estante"
-      rodape={<BotaoLink href="/teste/frase">continuar ✧</BotaoLink>}
+      rodape={<BarraLink href="/teste/frase">continuar →</BarraLink>}
     >
-      <p className="rotulo-carta">anexo ii · indicações</p>
-      <TituloCarta>sua próxima estante</TituloCarta>
-      <p className="manuscrito mt-3 mb-[18px]">escolhemos estes três pra você ✦</p>
+      <Rotulo vinho className="aparece mt-8 !tracking-[.3em]">
+        anexo ii · indicações
+      </Rotulo>
+      <h1 className="mt-3 animate-subir font-revista text-[32px] leading-[1.1] italic [animation-delay:.1s]">sua próxima estante</h1>
+      <p className="mt-2 text-[13px] leading-normal text-grafite">escolhemos estes três pra você ✦</p>
 
-      <ul>
+      <ul className="mt-6">
         {resultado.principal.livros.map((l, i) => {
           const id = idDoLivro(l.titulo);
           const guardado = livros.some((x) => x.id === id);
           return (
             <li
               key={l.titulo}
-              className="flex animate-subir items-center gap-3.5 border-t border-[#EFE4D8] py-3.5 first:border-t-0"
-              style={{ animationDelay: `${0.2 + i * 0.1}s` }}
+              className="aparece flex items-start gap-3.5 border-t border-tinta py-4"
+              style={{ animationDelay: `${0.1 + i * 0.07}s` }}
             >
-              <span
-                aria-hidden
-                className="flex h-16 w-11 flex-none items-center justify-center rounded-[2px_4px_4px_2px] text-sm text-creme shadow-[inset_5px_0_0_rgba(0,0,0,.16),2px_3px_7px_-2px_rgba(43,20,32,.45)]"
-                style={{ background: l.cor }}
-              >
-                ✦
-              </span>
+              <span className="w-[26px] flex-none pt-[3px] font-mono text-[11px] font-bold text-vinho">{String(i + 1).padStart(2, "0")}—</span>
               <span className="min-w-0 flex-1">
-                <b className="block font-display text-lg leading-[1.15] font-semibold italic">{l.titulo}</b>
-                <span className="mt-0.5 block text-xs text-cinza">{l.autor}</span>
-                <em className="mt-1 block font-accent text-[13px] leading-tight italic text-bordo">{l.porque}</em>
+                <b className="block font-revista text-lg leading-[1.2] font-semibold italic">{l.titulo}</b>
+                <span className="mt-1 block text-[9px] font-semibold tracking-[.14em] text-grafite uppercase">{l.autor}</span>
+                <em className="mt-1.5 block font-revista text-[13px] leading-[1.3] italic text-vinho">{l.porque}</em>
               </span>
               <button
                 type="button"
                 aria-pressed={guardado}
                 aria-label={guardado ? `tirar ${l.titulo} do quero ler` : `guardar ${l.titulo} no quero ler`}
                 onClick={() => alternarLivro({ id, titulo: l.titulo, autor: l.autor, status: "quero" })}
-                className={`flex size-11 flex-none items-center justify-center rounded-full border border-bordo text-sm transition-colors ${
-                  guardado ? "bg-bordo text-creme" : "text-bordo hover:bg-rosa-fundo"
-                }`}
+                className={`-mt-2.5 -mr-2 flex size-11 flex-none items-center justify-center text-lg ${guardado ? "text-vinho" : "text-grafite hover:text-vinho"}`}
               >
                 {guardado ? "♥" : "♡"}
               </button>
@@ -66,6 +59,7 @@ export default function LivrosPage() {
           );
         })}
       </ul>
-    </Carta>
+      <Filete />
+    </PaginaRevista>
   );
 }

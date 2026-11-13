@@ -1,9 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Carta } from "@/components/teste/Carta";
+import { BarraLink, Filete, PaginaRevista, Rotulo } from "@/components/teste/Revista";
 import { useResultado } from "@/components/teste/useResultado";
-import { BotaoLink } from "@/components/ui/Botao";
 import { useTeste } from "@/lib/teste-store";
 
 function hoje() {
@@ -16,64 +15,42 @@ export default function ResultadoPage() {
   const { pronto, resultado, respondidas } = useResultado();
   const { principal, secundario } = resultado;
 
-  if (!pronto) return <main className="envelope min-h-dvh" />;
+  if (!pronto) return <main className="min-h-dvh bg-jornal" />;
   if (respondidas === 0) {
     return (
-      <Carta
-        voltar={{ href: "/teste", rotulo: "teste" }}
-        rotulo="uma carta pra você"
-        rodape={<BotaoLink href="/teste">fazer o teste ✧</BotaoLink>}
-      >
-        <p className="manuscrito">querida leitora, ainda não recebemos suas respostas.</p>
-      </Carta>
+      <PaginaRevista voltar={{ href: "/inicio", rotulo: "início" }} rotulo="resultado" rodape={<BarraLink href="/teste">fazer o teste →</BarraLink>}>
+        <p className="mt-10 font-revista text-xl italic">ainda não recebemos suas respostas.</p>
+      </PaginaRevista>
     );
   }
 
   return (
-    <Carta
-      voltar={{ href: "/teste/revelacao", rotulo: "voltar" }}
-      rotulo="uma carta pra você"
-      rodape={
-        <>
-          <BotaoLink href="/teste/dna" className="!bg-ameixa !text-creme hover:!bg-bordo-escuro">
-            ver meu DNA literário ✧
-          </BotaoLink>
-          <p className="mt-2 text-center">
-            <button
-              type="button"
-              onClick={() => {
-                recomecar();
-                router.push("/teste/pergunta/1");
-              }}
-              className="inline-block py-2 text-xs font-semibold text-[#FFF1F3] underline underline-offset-4"
-            >
-              refazer o teste
-            </button>
-          </p>
-        </>
-      }
+    <PaginaRevista
+      voltar={{
+        rotulo: "refazer",
+        onClick: () => {
+          recomecar();
+          router.push("/teste/pergunta/1");
+        },
+      }}
+      rotulo="resultado"
+      rodape={<BarraLink href="/teste/dna">ver meu DNA literário →</BarraLink>}
     >
-      <p className="rotulo-carta mt-2">the bookside · {hoje()}</p>
-      <p className="manuscrito mt-[18px]">querida leitora,</p>
-      <p className="manuscrito mt-3.5">lemos suas quinze respostas com atenção. não há mais dúvida:</p>
-
-      <div className="-mx-1.5 mt-3.5 px-2.5 pt-3 pb-2 text-center">
-        <span aria-hidden className="mx-auto block h-px w-[54px] bg-bege" />
-        <p className="mt-[11px] text-[9px] font-semibold tracking-[.3em] text-cinza uppercase">você é</p>
-        <h1 className="mt-2 font-display text-[40px] leading-[1.02] font-bold italic text-bordo">{principal.nome}</h1>
-        <p className="mt-2 mb-3 font-accent text-[15px] leading-tight italic text-rosa-antigo">{principal.clube}</p>
-        <span aria-hidden className="mx-auto block h-px w-[54px] bg-bege" />
+      <p className="aparece mt-8 font-revista text-sm italic text-vinho">the bookside · {hoje()}</p>
+      <div className="mt-6 animate-subir [animation-delay:.1s]">
+        <Rotulo vinho className="!tracking-[.3em]">
+          você é
+        </Rotulo>
+        <h1 className="mt-3 font-revista text-[46px] leading-[1.02] font-semibold tracking-[-.02em] italic">{principal.nome}</h1>
+        <p className="mt-2.5 font-revista text-base leading-tight italic text-vinho">{principal.clube}</p>
       </div>
-
-      <p className="manuscrito mt-4">{principal.descricao}</p>
-      <p className="manuscrito mt-4">
-        guardamos também um pouco de <b className="font-normal text-bordo">{secundario.nome.replace(/^a /, "")}</b> em você.
-      </p>
-      <p className="manuscrito mt-[18px] text-right">
-        com carinho,
-        <br />
-        <span className="text-[17px] text-bordo">the bookside ✦</span>
-      </p>
-    </Carta>
+      <Filete className="mt-8" />
+      <div className="mt-5 animate-subir text-sm leading-[1.6] text-tinta-suave [animation-delay:.2s]">
+        <p>{principal.descricao.charAt(0).toLowerCase() + principal.descricao.slice(1)}</p>
+        <p className="mt-4">
+          guardamos também um pouco de <i className="font-revista text-vinho italic">{secundario.nome.replace(/^a /, "")}</i> em você.
+        </p>
+      </div>
+    </PaginaRevista>
   );
 }

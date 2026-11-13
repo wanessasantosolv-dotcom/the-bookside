@@ -1,13 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { notFound, useParams, useRouter } from "next/navigation";
 import { useState } from "react";
+import { Filete, PaginaRevista, Rotulo } from "@/components/teste/Revista";
 import { perguntas } from "@/lib/teste";
 import { useTeste } from "@/lib/teste-store";
 
-const giros = ["-0.6deg", "0.5deg", "-0.3deg", "0.7deg"];
-const giroSelo = ["-2deg", "1.5deg"];
+const dois = (n: number) => String(n).padStart(2, "0");
 
 export default function PerguntaPage() {
   const { n } = useParams<{ n: string }>();
@@ -31,84 +30,54 @@ export default function PerguntaPage() {
   }
 
   return (
-    <main
+    <PaginaRevista
       key={numero}
-      className="papel-teste relative mx-auto flex min-h-dvh w-full max-w-[430px] flex-col overflow-hidden px-6 pb-[max(24px,env(safe-area-inset-bottom))] text-ameixa"
+      voltar={{ href: numero === 1 ? "/teste" : `/teste/pergunta/${numero - 1}`, rotulo: "voltar" }}
+      rotulo={
+        <span className="font-semibold tracking-[.16em] text-grafite">
+          pergunta {dois(numero)}/{total}
+        </span>
+      }
+      barra={numero / total}
     >
-      <header className="pt-[18px]">
-        <div className="flex items-center justify-between">
-          <Link
-            href={numero === 1 ? "/teste" : `/teste/pergunta/${numero - 1}`}
-            className="-ml-2 flex min-h-11 items-center px-2 text-[13px] font-semibold text-bordo"
-          >
-            ‹ voltar
-          </Link>
-          <span className="eyebrow !text-[10px] text-cinza">
-            pergunta {String(numero).padStart(2, "0")}/{total}
-          </span>
-        </div>
-        <div
-          className="mt-1 h-1.5 overflow-hidden rounded-full bg-linha"
-          role="progressbar"
-          aria-valuemin={1}
-          aria-valuemax={total}
-          aria-valuenow={numero}
-          aria-label="progresso do teste"
-        >
-          <i
-            className="block h-full rounded-full bg-gradient-to-r from-bordo to-rosa-antigo transition-[width] duration-500"
-            style={{ width: `${Math.round((numero / total) * 100)}%` }}
-          />
-        </div>
-      </header>
-
-      <span
-        className="washi aparece mt-9 self-start"
-        style={{ transform: `rotate(${giroSelo[indice % 2]})` }}
-      >
-        {pergunta.selo}
-      </span>
-      <span aria-hidden className="estrela-pisca absolute top-[140px] right-[34px] text-base text-ouro">
-        ✧
-      </span>
-
-      <h1 className="mt-6 animate-subir font-display text-[27px] leading-[1.16] font-semibold italic text-ameixa [animation-delay:.15s]">
+      <p className="aparece mt-8 font-revista text-sm leading-[1.3] italic text-vinho">{pergunta.selo}</p>
+      <h1 className="mt-3 animate-subir font-revista text-[30px] leading-[1.12] tracking-[-.01em] italic [animation-delay:.1s]">
         {pergunta.titulo}
       </h1>
 
-      <fieldset className="mt-8 flex flex-col gap-3.5">
+      <fieldset className="mt-10">
         <legend className="sr-only">{pergunta.titulo}</legend>
         {pergunta.opcoes.map((o, i) => (
           <button
             key={o.texto}
             type="button"
-            className="opcao-teste"
-            data-escolhida={atual === i}
             aria-pressed={atual === i}
             disabled={escolhida !== null}
             onClick={() => escolher(i)}
-            style={{ transform: `rotate(${giros[i]})`, animationDelay: `${0.12 + i * 0.08}s` }}
+            className={`aparece flex w-full items-center gap-3.5 border-t border-tinta px-1 py-[17px] text-left transition-colors hover:bg-vinho/5 ${
+              atual === i ? "bg-vinho/10" : ""
+            }`}
+            style={{ animationDelay: `${0.1 + i * 0.07}s` }}
           >
-            <span className="flex size-[26px] flex-none items-center justify-center rounded-full bg-bordo text-xs font-semibold text-creme">
-              {"ABCD"[i]}
-            </span>
-            <span className="flex-1">{o.texto}</span>
-            <span aria-hidden className="text-lg font-semibold text-bordo">
-              ›
+            <span className="w-[22px] flex-none font-mono text-[11px] font-bold text-vinho">{"ABCD"[i]}—</span>
+            <span className="flex-1 text-[15px] leading-[1.35]">{o.texto}</span>
+            <span aria-hidden className="flex-none text-base text-grafite">
+              →
             </span>
           </button>
         ))}
+        <Filete />
       </fieldset>
 
-      {/* lombadas: uma por pergunta */}
-      <div aria-hidden className="mt-auto flex justify-center gap-1 pt-10 pb-2">
-        {perguntas.map((_, i) => (
-          <i
-            key={i}
-            className={`block w-[9px] rounded-[1px] ${i % 2 ? "h-[18px]" : "h-6"} ${i <= indice ? "bg-bordo" : "bg-linha"}`}
-          />
-        ))}
+      <div className="mt-auto pt-10">
+        <Filete />
+        <div className="mt-3.5 flex justify-between">
+          <Rotulo>the bookside · teste de leitora</Rotulo>
+          <Rotulo vinho>
+            {dois(numero)} / {total}
+          </Rotulo>
+        </div>
       </div>
-    </main>
+    </PaginaRevista>
   );
 }

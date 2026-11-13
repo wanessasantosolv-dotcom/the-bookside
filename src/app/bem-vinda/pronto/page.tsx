@@ -65,16 +65,36 @@ export default function ProntoPage() {
             <span className="absolute inset-y-0 left-0 w-4 bg-[linear-gradient(90deg,#4B0D1B,#8E1D3D_58%,#3E0A16)]" />
             <span className="absolute inset-y-0 left-[17px] w-px bg-ouro/65" />
             <span className="absolute top-10 right-6 left-10 h-px bg-ouro/75" />
-            <span className="absolute top-[258px] right-6 left-10 h-px bg-ouro/75" />
-            <p className="eyebrow absolute top-[52px] right-6 left-10 text-center !text-[8px] text-rosa-claro">a leitora</p>
-            <div className="absolute top-[92px] right-6 left-10 text-center">
-              <p className="font-accent text-[30px] leading-none italic text-ouro">✦</p>
-              <p className="mt-3.5 font-display text-[29px] leading-[1.05] font-bold break-words italic text-creme">
-                {nome || "seu nome"}
-              </p>
-              <p className="mt-2 text-[11px] leading-[1.3] text-rosa-claro">@{usuario || "seu.nome"}</p>
+            <span className="absolute top-[236px] right-6 left-10 h-px bg-ouro/75" />
+            <p className="eyebrow absolute top-[52px] right-6 left-10 text-center !text-[8px] text-rosa-claro">
+              volume I ‧ {new Date().getFullYear()}
+            </p>
+            {/* selo: dois anéis dourados com o nome no meio */}
+            <div className="absolute inset-x-0 top-20 flex justify-center pl-4">
+              <div className="relative size-[148px]">
+                <svg width="148" height="148" viewBox="0 0 148 148" aria-hidden className="absolute inset-0">
+                  <circle cx="74" cy="74" r="66" fill="none" stroke="#C9A46A" strokeWidth="1.3" />
+                  <circle cx="74" cy="74" r="58" fill="none" stroke="#C9A46A" strokeWidth=".7" strokeDasharray="1.5 5" />
+                </svg>
+                <span aria-hidden className="absolute top-[-5px] left-1/2 -translate-x-1/2 -translate-y-1/2 text-[13px] text-ouro">✦</span>
+                <span aria-hidden className="absolute top-[153px] left-1/2 -translate-x-1/2 -translate-y-1/2 text-[13px] text-ouro">✦</span>
+                <span aria-hidden className="absolute top-1/2 left-[-5px] -translate-x-1/2 -translate-y-1/2 text-[11px] text-ouro">✧</span>
+                <span aria-hidden className="absolute top-1/2 left-[153px] -translate-x-1/2 -translate-y-1/2 text-[11px] text-ouro">✧</span>
+                <div className="absolute inset-0 flex flex-col items-center justify-center px-4 text-center">
+                  <p className="font-display text-[25px] leading-[1.18] font-bold break-words italic text-creme">
+                    {nome || (
+                      <>
+                        seu
+                        <br />
+                        nome
+                      </>
+                    )}
+                  </p>
+                  {usuario ? <p className="mt-1 text-[10px] text-rosa-claro">@{usuario}</p> : null}
+                </div>
+              </div>
             </div>
-            <div className="absolute inset-x-0 top-[272px] pl-4 text-center">
+            <div className="absolute inset-x-0 top-[252px] pl-4 text-center">
               <span className="inline-flex h-6 items-center rounded-pill border border-ouro px-3 text-[9px] font-semibold tracking-[.14em] text-ouro uppercase">
                 ♡ {nomeTema}
               </span>

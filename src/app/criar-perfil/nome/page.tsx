@@ -37,7 +37,7 @@ export default function NomePage() {
         </BotaoLink>
       }
     >
-      <div className="relative rounded-md border border-linha bg-creme-quente p-5 pb-16">
+      <div className="relative rounded-md border border-linha bg-creme-quente p-5">
         <div className="flex justify-between">
           <span className="eyebrow !text-[10px] text-bordo">ficha de leitora</span>
           <span className="eyebrow !text-[10px] text-cinza">nº 0001</span>
@@ -75,10 +75,6 @@ export default function NomePage() {
             />
           </span>
         </label>
-
-        <span className="absolute right-[18px] bottom-[18px] flex h-7 items-center rounded-pill bg-bordo px-3.5 text-[10px] font-semibold tracking-[.12em] text-creme uppercase">
-          nova leitora
-        </span>
       </div>
     </Passo>
   );

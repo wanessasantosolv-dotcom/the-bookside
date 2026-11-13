@@ -28,6 +28,8 @@ export type Perfil = {
   estante: EscolhaEstante;
   gostos: string[];
   livros: LivroSalvo[];
+  /** ids dos até 4 livros em destaque no perfil */
+  favoritos: string[];
   /** resultado do teste, salvo só com consentimento */
   bookside: { principal: string; secundario: string; respostas: (number | null)[]; livros: string[]; salvoEm: string } | null;
   onboardingConcluido: boolean;
@@ -54,6 +56,7 @@ export const perfilInicial: Perfil = {
   estante: "lendo",
   gostos: ["romance", "suspense", "fantasia"],
   livros: [],
+  favoritos: [],
   bookside: null,
   onboardingConcluido: false,
 };

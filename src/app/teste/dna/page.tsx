@@ -1,51 +1,55 @@
 "use client";
 
-import { Carta, TituloCarta } from "@/components/teste/Carta";
+import { BarraLink, Filete, PaginaRevista, Rotulo } from "@/components/teste/Revista";
 import { useResultado } from "@/components/teste/useResultado";
-import { BotaoLink } from "@/components/ui/Botao";
 
 export default function DnaPage() {
   const { pronto, resultado } = useResultado();
-  if (!pronto) return <main className="envelope min-h-dvh" />;
+  if (!pronto) return <main className="min-h-dvh bg-jornal" />;
   const { principal, dna } = resultado;
 
   return (
-    <Carta
+    <PaginaRevista
       voltar={{ href: "/teste/resultado", rotulo: "resultado" }}
       rotulo="seu dna"
-      rodape={<BotaoLink href="/teste/livros">ver meus livros ✧</BotaoLink>}
+      rodape={<BarraLink href="/teste/livros">ver meus livros →</BarraLink>}
     >
-      <p className="rotulo-carta">anexo i · afinidades</p>
-      <TituloCarta>seu DNA literário</TituloCarta>
-      <p className="manuscrito mt-3 !text-sm !text-cinza">o quanto de cada arquétipo mora em você.</p>
+      <Rotulo vinho className="aparece mt-8 !tracking-[.3em]">
+        anexo i · afinidades
+      </Rotulo>
+      <h1 className="mt-3 animate-subir font-revista text-[32px] leading-[1.1] italic [animation-delay:.1s]">seu DNA literário</h1>
+      <p className="mt-2 text-[13px] leading-normal text-grafite">o quanto de cada arquétipo mora em você.</p>
 
-      <ul className="mt-1">
+      <ul className="mt-5">
         {dna.slice(0, 4).map(({ arquetipo, afinidade }, i) => (
-          <li key={arquetipo.id} className="mt-[18px] animate-subir" style={{ animationDelay: `${0.2 + i * 0.1}s` }}>
+          <li key={arquetipo.id} className="mt-4 animate-subir" style={{ animationDelay: `${0.14 + i * 0.08}s` }}>
             <div className="flex items-baseline justify-between">
-              <span className="font-accent text-[15px] leading-tight italic">{arquetipo.nome}</span>
-              <b className="text-xs font-semibold text-bordo">{afinidade}%</b>
+              <span className="font-revista text-base leading-[1.2] italic">{arquetipo.nome}</span>
+              <span className="font-mono text-xs font-bold text-vinho">{afinidade}%</span>
             </div>
             <div
-              className="mt-2 h-[7px] overflow-hidden rounded-full bg-[#F0E6DC]"
+              className="mt-[7px] h-[3px] overflow-hidden bg-fio"
               role="meter"
               aria-label={arquetipo.nome}
               aria-valuemin={0}
               aria-valuemax={100}
               aria-valuenow={afinidade}
             >
-              <i className="block h-full rounded-full bg-gradient-to-r from-bordo to-rosa-antigo" style={{ width: `${afinidade}%` }} />
+              <i className="block h-full bg-vinho" style={{ width: `${afinidade}%` }} />
             </div>
           </li>
         ))}
       </ul>
 
-      <div className="mt-[22px] border-t border-[#EFE4D8] pt-3.5">
-        <p className="rotulo-carta">o que isso revela</p>
-        <p className="manuscrito mt-2">{principal.revela}</p>
-        <p className="rotulo-carta mt-4">o que vale explorar</p>
-        <p className="manuscrito mt-2">{principal.explorar}</p>
+      <Filete className="mt-8" />
+      <div className="mt-5 animate-subir [animation-delay:.3s]">
+        <Rotulo vinho>o que isso revela</Rotulo>
+        <p className="mt-2 text-sm leading-[1.55] text-tinta-suave">{principal.revela.charAt(0).toLowerCase() + principal.revela.slice(1)}</p>
+        <Rotulo vinho className="mt-[18px]">
+          o que vale explorar
+        </Rotulo>
+        <p className="mt-2 text-sm leading-[1.55] text-tinta-suave">{principal.explorar.charAt(0).toLowerCase() + principal.explorar.slice(1)}</p>
       </div>
-    </Carta>
+    </PaginaRevista>
   );
 }

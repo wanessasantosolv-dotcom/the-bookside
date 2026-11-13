@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { DM_Serif_Display, Inter, Playfair_Display, Special_Elite } from "next/font/google";
+import { DM_Serif_Display, Fraunces, Inter, Manrope, Playfair_Display, Space_Mono, Special_Elite } from "next/font/google";
 import { PerfilHidratacao } from "@/components/PerfilHidratacao";
 import "./globals.css";
 
@@ -29,6 +29,26 @@ const specialElite = Special_Elite({
   variable: "--font-special-elite",
 });
 
+// estilo "revista" (teste e versão web)
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  weight: ["400", "600"],
+  style: ["normal", "italic"],
+  variable: "--font-fraunces",
+});
+
+const manrope = Manrope({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-manrope",
+});
+
+const spaceMono = Space_Mono({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  variable: "--font-space-mono",
+});
+
 export const metadata: Metadata = {
   title: "the bookside",
   description: "read ✦ track ✦ belong — sua estante, suas leituras e seus clubes.",
@@ -44,7 +64,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html
       lang="pt-BR"
-      className={`${playfair.variable} ${dmSerif.variable} ${inter.variable} ${specialElite.variable}`}
+      className={`${playfair.variable} ${dmSerif.variable} ${inter.variable} ${specialElite.variable} ${fraunces.variable} ${manrope.variable} ${spaceMono.variable}`}
     >
       <body>
         <PerfilHidratacao />

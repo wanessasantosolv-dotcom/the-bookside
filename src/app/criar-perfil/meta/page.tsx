@@ -8,7 +8,11 @@ import { usePerfil } from "@/lib/perfil-store";
 export default function MetaPage() {
   const meta = usePerfil((s) => s.meta);
   const atualizar = usePerfil((s) => s.atualizar);
-  const atual = metas.find((m) => m.valor === meta) ?? metas[2];
+  const indice = Math.max(0, metas.findIndex((m) => m.valor === meta));
+  const atual = metas[indice] ?? metas[2];
+  const passo = (d: number) => atualizar({ meta: metas[Math.min(metas.length - 1, Math.max(0, indice + d))].valor });
+  const botaoPasso =
+    "absolute top-[58px] flex size-11 items-center justify-center rounded-full border text-lg font-semibold disabled:cursor-default";
   const ano = new Date().getFullYear();
 
   return (
@@ -20,7 +24,25 @@ export default function MetaPage() {
       descricao="sua meta aparece no perfil. dá para mudar quando quiser."
       rodape={<BotaoLink href="/criar-perfil/tema">continuar</BotaoLink>}
     >
-      <div className="rounded-md border border-linha bg-creme-quente px-5 pt-5 pb-6 text-center" aria-live="polite">
+      <div className="relative rounded-md border border-linha bg-creme-quente px-5 pt-5 pb-6 text-center" aria-live="polite">
+        <button
+          type="button"
+          aria-label="diminuir meta"
+          disabled={indice === 0}
+          onClick={() => passo(-1)}
+          className={`${botaoPasso} left-5 ${indice === 0 ? "border-linha text-bege" : "border-bege bg-creme-quente text-bordo"}`}
+        >
+          –
+        </button>
+        <button
+          type="button"
+          aria-label="aumentar meta"
+          disabled={indice === metas.length - 1}
+          onClick={() => passo(1)}
+          className={`${botaoPasso} right-5 ${indice === metas.length - 1 ? "border-linha text-bege" : "border-bege bg-creme-quente text-bordo"}`}
+        >
+          +
+        </button>
         <p className="eyebrow !text-[10px] text-cinza">livros · {ano}</p>
         <p className="mt-1 font-display text-[88px] leading-none font-semibold italic text-bordo">{atual.valor ?? "—"}</p>
         <p className="mt-3 font-accent text-[17px] leading-[1.3] italic text-cinza">{atual.legenda}</p>

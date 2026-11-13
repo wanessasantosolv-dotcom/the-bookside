@@ -48,12 +48,10 @@ export default function EntrarPage() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState<string | null>(null);
-  const [aviso, setAviso] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
 
   function entrar(e: FormEvent) {
     e.preventDefault();
-    setAviso(null);
     if (!/^\S+@\S+\.\S+$/.test(email)) return setErro("confira o e-mail.");
     if (senha.length < 6) return setErro("a senha tem pelo menos 6 caracteres.");
     setErro(null);
@@ -102,18 +100,11 @@ export default function EntrarPage() {
           </label>
           <div className="mt-1 flex min-h-11 items-center justify-between gap-3">
             <p role="alert" className="text-xs font-medium text-bordo-suave">
-              {erro ?? aviso}
+              {erro}
             </p>
-            <button
-              type="button"
-              onClick={() => {
-                setErro(null);
-                setAviso("a recuperação de senha chega em breve.");
-              }}
-              className="shrink-0 text-xs font-semibold text-bordo"
-            >
+            <Link href="/esqueci-senha" className="shrink-0 py-2 text-xs font-semibold text-bordo">
               esqueci a senha
-            </button>
+            </Link>
           </div>
           <Botao type="submit" className="mt-2" disabled={enviando}>
             {enviando ? "entrando…" : "entrar"}
@@ -122,7 +113,7 @@ export default function EntrarPage() {
 
         <p className="mt-4 text-center text-[13px] font-medium text-ameixa">
           ainda não tem conta?{" "}
-          <Link href="/criar-perfil/nome" className="inline-block py-2 font-bold text-bordo">
+          <Link href="/criar-conta" className="inline-block py-2 font-bold text-bordo">
             criar conta
           </Link>
         </p>

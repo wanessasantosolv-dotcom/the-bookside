@@ -19,14 +19,19 @@ Abra http://localhost:3000 (o app é mobile: use o modo celular do navegador, 39
 | Rota | Tela do canvas |
 | --- | --- |
 | `/entrar` | ONB 1 · entrar (logo animada) |
+| `/criar-conta`, `/confirmar-email`, `/esqueci-senha` | ONB 1b, 1c, 1d · conta |
 | `/criar-perfil/nome` … `/gostos` | ONB 2 a 4 · os 8 passos de criar perfil |
 | `/bem-vinda/clube` | ONB 5 · clube (entrar, criar ou depois) |
 | `/bem-vinda/primeiro-livro` | ONB 6 · primeiro livro |
 | `/bem-vinda/pronto` | ONB 7 · perfil pronto (o livro que abre) |
 | `/criar-perfil/estante/buscar`, `/descobrir` | buscar livro · descobrir (passar / quero ler / já li) |
-| `/teste` … `/teste/salvar` | teste "what's your bookside" (15 perguntas, resultado, DNA, livros, frase, salvar) |
-| `/perfil`, `/perfil/editar`, `/perfil/configuracoes` | meu perfil · editar perfil · configurações |
+| `/teste` … `/teste/salvar` | teste "what's your bookside" em estilo revista — agora fora do onboarding, aberto pelo início |
+| `/perfil`, `/perfil/editar`, `/perfil/favoritos`, `/perfil/configuracoes` | meu perfil (no computador: layout web C) · editar · escolher favoritos · configurações |
 | `/inicio`, `/estantes`, `/clubes`, `/numeros`, `/em-breve` | provisórias (com o menu inferior) |
+
+## Versão web
+
+A partir de 1024px de largura as telas do app ganham o menu fixo na lateral (`AppShell`) e o perfil usa o layout web "C · hero cheio" do canvas.
 
 ## Organização
 

@@ -7,7 +7,7 @@ const pill = "inline-flex h-[22px] items-center rounded-pill px-2.5 text-[10px] 
 export default function ClubePage() {
   return (
     <Passo
-      voltar={{ href: "/teste", rotulo: "teste" }}
+      voltar={{ href: "/criar-perfil/gostos", rotulo: "gostos" }}
       rotuloTopo="opcional"
       eyebrow="clube de leitura"
       titulo="quer ler com alguém?"

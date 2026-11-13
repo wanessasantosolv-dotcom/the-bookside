@@ -20,7 +20,7 @@ export default function GostosPage() {
       titulo="do que você gosta?"
       descricao="escolha pelo menos três livros da pilha. isso ajuda a sugerir leituras, dá para mudar depois."
       rodape={
-        <BotaoLink href="/teste" desabilitado={total < MINIMO}>
+        <BotaoLink href="/bem-vinda/clube" desabilitado={total < MINIMO}>
           continuar
         </BotaoLink>
       }

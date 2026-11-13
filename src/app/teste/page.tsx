@@ -2,61 +2,70 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Botao } from "@/components/ui/Botao";
+import { BarraBotao, Filete, PaginaRevista, Rotulo } from "@/components/teste/Revista";
 import { useTeste } from "@/lib/teste-store";
-
-const estrelas = [
-  { c: "left-11 top-[110px] text-ouro text-xs", d: "0s", t: "✦" },
-  { c: "right-[52px] top-[140px] text-rosa-claro text-[15px]", d: "1.1s", t: "✧" },
-  { c: "left-[70px] bottom-[240px] text-ouro text-[9px]", d: "2s", t: "✦" },
-  { c: "right-10 bottom-[260px] text-rosa-claro text-xs", d: "0s", t: "✧" },
-  { c: "right-[90px] top-[250px] text-ouro text-[9px]", d: "1.1s", t: "✦" },
-];
 
 export default function TesteIntroPage() {
   const router = useRouter();
   const recomecar = useTeste((s) => s.recomecar);
 
   return (
-    <main className="papel-noite relative mx-auto flex min-h-dvh w-full max-w-[430px] flex-col overflow-hidden px-6 pb-[max(24px,env(safe-area-inset-bottom))] text-creme">
-      <header className="pt-[18px]">
-        <Link href="/criar-perfil/gostos" className="-ml-2 flex min-h-11 w-fit items-center px-2 text-[13px] font-semibold text-rosa-claro">
-          ‹ gostos
-        </Link>
-      </header>
-      {estrelas.map((e, i) => (
-        <span key={i} aria-hidden className={`estrela-pisca absolute ${e.c}`} style={{ animationDelay: e.d }}>
-          {e.t}
-        </span>
-      ))}
-
-      <section className="flex flex-1 flex-col items-center justify-center text-center">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/brand/logo-base.png" alt="the bookside" className="w-[200px]" style={{ filter: "brightness(0) invert(1)" }} />
-        <h1 className="aparece mt-10 font-accent text-[38px] leading-[1.05] italic text-rosa-claro">what&apos;s your bookside?</h1>
-        <p className="aparece mx-5 mt-4 text-sm leading-normal text-bege [animation-delay:.15s]">
-          15 perguntas, 8 arquétipos e um universo literário que é só seu.
-        </p>
-        <span className="washi aparece mt-9 -rotate-2 [animation-delay:.3s]">✧ 2 minutos · sem respostas erradas ✧</span>
+    <PaginaRevista
+      voltar={{ href: "/inicio", rotulo: "início" }}
+      rotulo={<span className="font-semibold tracking-[.16em] text-grafite">edição especial</span>}
+      rodape={
+        <>
+          <p className="mb-6 text-center">
+            <Link href="/inicio" className="inline-block py-2 font-revista text-sm italic text-grafite underline underline-offset-4">
+              deixar para depois
+            </Link>
+          </p>
+          <BarraBotao
+            onClick={() => {
+              recomecar();
+              router.push("/teste/pergunta/1");
+            }}
+          >
+            descobrir meu bookside →
+          </BarraBotao>
+        </>
+      }
+    >
+      <section className="aparece pt-11 text-center">
+        <Rotulo className="!tracking-[.3em]">the bookside apresenta</Rotulo>
+        <h1 className="mt-3.5 font-revista text-[54px] leading-[.92] font-semibold tracking-[-.02em] italic">
+          what&apos;s your
+          <br />
+          bookside?
+        </h1>
       </section>
 
-      <p className="mb-6 text-center">
-        <Link
-          href="/bem-vinda/clube"
-          className="inline-block py-2 font-accent text-[15px] italic text-bege underline decoration-bege underline-offset-4"
-        >
-          deixar para depois
-        </Link>
+      <Filete className="mt-10" />
+
+      <p className="mt-6 animate-subir text-center text-sm leading-[1.6] text-tinta-suave [animation-delay:.1s]">
+        15 perguntas, 8 arquétipos e um universo
+        <br />
+        literário que é só seu.
       </p>
-      <Botao
-        variante="creme"
-        onClick={() => {
-          recomecar();
-          router.push("/teste/pergunta/1");
-        }}
-      >
-        descobrir meu bookside ✧
-      </Botao>
-    </main>
+
+      <dl className="mt-7 flex animate-subir justify-center gap-7 border-y border-tinta py-[18px] [animation-delay:.2s]">
+        {[
+          ["15", "perguntas"],
+          ["08", "arquétipos"],
+          ["02", "minutos"],
+        ].map(([n, r]) => (
+          <div key={r} className="flex flex-col-reverse items-center text-center">
+            <dt>
+              <Rotulo className="mt-1.5">{r}</Rotulo>
+            </dt>
+            <dd className="font-mono text-[26px] leading-none font-bold text-vinho">{n}</dd>
+          </div>
+        ))}
+      </dl>
+
+      <p className="mt-8 animate-subir text-center font-revista text-[15px] leading-[1.4] italic text-grafite [animation-delay:.3s]">
+        “sem respostas erradas — só descobertas”
+      </p>
+    </PaginaRevista>
   );
 }

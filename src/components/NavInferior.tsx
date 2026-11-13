@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-const abas = [
+export const abas = [
   {
     id: "inicio",
     href: "/inicio",

@@ -8,12 +8,19 @@ import { usePerfil } from "@/lib/perfil-store";
 export default function TemaPage() {
   const tema = usePerfil((s) => s.tema);
   const foto = usePerfil((s) => s.foto);
+  const capa = usePerfil((s) => s.capa);
+  const capaImagem = usePerfil((s) => s.capaImagem);
+  const atual = temas.find((t) => t.id === tema) ?? temas[0];
+  const escuro = "escuro" in atual;
   const atualizar = usePerfil((s) => s.atualizar);
 
   return (
     <Passo
       voltar={{ href: "/criar-perfil/meta", rotulo: "meta" }}
       passo={6}
+      fundo={atual.fundo}
+      faixa={atual.destaque}
+      escuro={escuro}
       eyebrow="a última camada"
       titulo="o tema do seu perfil"
       descricao="escolha um tema. ele define a cor de destaque e o papel do seu perfil."
@@ -26,8 +33,8 @@ export default function TemaPage() {
           return (
             <label
               key={t.id}
-              className={`relative block h-[104px] cursor-pointer overflow-hidden rounded-md has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-bordo ${
-                marcado ? "border-2 shadow-[0_6px_14px_-8px_rgba(105,37,54,.55)]" : "border border-[#D8C4B4]"
+              className={`relative block h-[104px] cursor-pointer overflow-hidden rounded-md transition-transform duration-200 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-bordo ${
+                marcado ? "-translate-y-0.5 border-2 shadow-[0_10px_22px_-10px_rgba(105,37,54,.6)]" : "border border-[#D8C4B4]"
               }`}
               style={{ background: t.papel, borderColor: marcado ? t.destaque : undefined }}
             >
@@ -38,12 +45,13 @@ export default function TemaPage() {
                 checked={marcado}
                 onChange={() => atualizar({ tema: t.id })}
               />
+              {/* a capa da pessoa, tingida com a cor do tema */}
               <div
-                className="absolute inset-x-0 top-0 h-10"
-                style={{
-                  background: `repeating-linear-gradient(90deg,${t.destaque} 0 2px,transparent 2px 12px)`,
-                }}
-              />
+                className={`absolute inset-x-0 top-0 h-10 bg-cover bg-[center_30%] ${capaImagem ? "" : `pat-${capa}`}`}
+                style={capaImagem ? { backgroundImage: `url(${capaImagem})` } : undefined}
+              >
+                <div className="absolute inset-0 opacity-[.58]" style={{ background: t.destaque }} />
+              </div>
               <div className="absolute inset-x-0 top-[30px] bottom-0 rounded-t-[18px]" style={{ background: t.papel }} />
               <div className="absolute top-5 left-1/2 size-7 -translate-x-1/2 overflow-hidden rounded-full border-2 border-creme-quente bg-[#D8C4B4]">
                 {foto ? (

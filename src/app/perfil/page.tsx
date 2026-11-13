@@ -4,9 +4,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { CSSProperties } from "react";
 import { CapaLivro } from "@/components/CapaLivro";
-import { NavInferior } from "@/components/NavInferior";
+import { AppShell } from "@/components/AppShell";
+import { PerfilWeb } from "@/components/perfil/PerfilWeb";
 import { useHidratado } from "@/components/PerfilHidratacao";
-import { Tela } from "@/components/ui/Tela";
 import { corDoLivro } from "@/lib/cores";
 import { temas } from "@/lib/dados";
 import { usePerfil } from "@/lib/perfil-store";
@@ -22,12 +22,13 @@ export default function PerfilPage() {
   const tema = temas.find((t) => t.id === p.tema) ?? temas[0];
   const escuro = "escuro" in tema;
 
-  if (!hidratado) return <Tela>{null}</Tela>;
+  if (!hidratado) return <AppShell aba="perfil">{null}</AppShell>;
 
   const lidos = p.livros.filter((l) => l.status === "lido");
   const lendo = p.livros.filter((l) => !l.status || l.status === "lendo");
   const quero = p.livros.filter((l) => l.status === "quero");
-  const favoritos = [...lidos, ...lendo, ...quero].slice(0, 4);
+  const escolhidos = p.favoritos.map((id) => p.livros.find((l) => l.id === id)).filter((l) => l !== undefined);
+  const favoritos = (escolhidos.length ? escolhidos : [...lidos, ...lendo, ...quero]).slice(0, 4);
   const arquetipo = p.bookside ? arquetipos[p.bookside.principal as ArquetipoId] : null;
 
   function abrirResultado() {
@@ -53,8 +54,18 @@ export default function PerfilPage() {
   ];
 
   return (
-    <Tela className="!bg-[var(--papel)] !text-[var(--tinta)]">
-      <div style={estilo} className="flex min-h-dvh flex-col bg-[var(--papel)] text-[var(--tinta)]">
+    <AppShell aba="perfil" style={estilo} className="[&_main]:!bg-[var(--papel)] [&_main]:!text-[var(--tinta)]">
+      <PerfilWeb
+        perfil={p}
+        tema={tema}
+        arquetipo={arquetipo}
+        lidos={lidos}
+        lendo={lendo}
+        quero={quero}
+        favoritos={favoritos}
+        abrirResultado={abrirResultado}
+      />
+      <div className="flex min-h-dvh flex-col bg-[var(--papel)] text-[var(--tinta)] lg:hidden">
         {/* barra do app */}
         <header className="flex items-center justify-between px-6 pt-3 pb-1">
           <span className="font-display text-[19px] font-semibold italic text-[var(--acc)]">
@@ -195,9 +206,7 @@ export default function PerfilPage() {
             ))}
           </ul>
         </section>
-
-        <NavInferior ativa="perfil" />
       </div>
-    </Tela>
+    </AppShell>
   );
 }

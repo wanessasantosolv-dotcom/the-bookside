@@ -1,14 +1,14 @@
 /** Conteúdo fixo do onboarding, tirado das telas do canvas "Perfil — Opções". */
 
 export const temas = [
-  { id: "biblioteca-classica", nome: "biblioteca clássica", papel: "#F5EFE6", destaque: "#692536", texto: "#692536" },
-  { id: "romance-de-epoca", nome: "romance de época", papel: "#ECEBE9", destaque: "#55514F", texto: "#55514F" },
-  { id: "madrugada-de-leitura", nome: "madrugada de leitura", papel: "#E7E5EE", destaque: "#464052", texto: "#464052" },
-  { id: "jardim-de-livros", nome: "jardim de livros", papel: "#E8E7DC", destaque: "#79806B", texto: "#5E6553" },
-  { id: "noite-de-tinta", nome: "noite de tinta", papel: "#29252A", destaque: "#A88B64", texto: "#F5EFE6", escuro: true },
-  { id: "orelha-rosa", nome: "orelha rosa", papel: "#F9D9E2", destaque: "#C0506F", texto: "#9E3A57" },
-  { id: "capa-kraft", nome: "capa kraft", papel: "#D9C3A0", destaque: "#692536", texto: "#692536" },
-  { id: "poesia-de-bolso", nome: "poesia de bolso", papel: "#CFDDEB", destaque: "#2B4C7E", texto: "#2B4C7E" },
+  { id: "biblioteca-classica", fundo: "#EFDFC4", nome: "biblioteca clássica", papel: "#F5EFE6", destaque: "#692536", texto: "#692536" },
+  { id: "romance-de-epoca", fundo: "#DBD9D5", nome: "romance de época", papel: "#ECEBE9", destaque: "#55514F", texto: "#55514F" },
+  { id: "madrugada-de-leitura", fundo: "#D6D1E6", nome: "madrugada de leitura", papel: "#E7E5EE", destaque: "#464052", texto: "#464052" },
+  { id: "jardim-de-livros", fundo: "#D7DCC1", nome: "jardim de livros", papel: "#E8E7DC", destaque: "#79806B", texto: "#5E6553" },
+  { id: "noite-de-tinta", fundo: "#29252A", nome: "noite de tinta", papel: "#29252A", destaque: "#A88B64", texto: "#F5EFE6", escuro: true },
+  { id: "orelha-rosa", fundo: "#F9D9E2", nome: "orelha rosa", papel: "#F9D9E2", destaque: "#C0506F", texto: "#9E3A57" },
+  { id: "capa-kraft", fundo: "#D9C3A0", nome: "capa kraft", papel: "#D9C3A0", destaque: "#692536", texto: "#692536" },
+  { id: "poesia-de-bolso", fundo: "#CFDDEB", nome: "poesia de bolso", papel: "#CFDDEB", destaque: "#2B4C7E", texto: "#2B4C7E" },
 ] as const;
 
 export type Tema = (typeof temas)[number];

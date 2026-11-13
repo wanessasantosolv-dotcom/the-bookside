@@ -205,6 +205,16 @@ function Formulario({ inicial }: { inicial: Rascunho }) {
           <p className="mt-2 font-accent text-[13px] italic text-cinza">o tema define a cor de destaque e o papel do seu perfil.</p>
         </fieldset>
 
+        <div className="mt-5 flex items-center justify-between border-y border-linha py-3">
+          <div>
+            <p className="text-[13px] font-semibold">favoritos</p>
+            <p className="mt-0.5 font-accent text-xs italic text-cinza">até 4 capas em destaque</p>
+          </div>
+          <Link href="/perfil/favoritos" className="flex min-h-11 items-center text-xs font-semibold text-bordo">
+            editar →
+          </Link>
+        </div>
+
         <div className="mt-6 flex gap-2.5">
           <Link
             href="/perfil"

@@ -27,6 +27,17 @@
   --font-sans: var(--font-inter), system-ui, sans-serif;
   --font-maquina: var(--font-special-elite), "Courier New", monospace;
 
+  /* estilo "revista": teste e versão web */
+  --font-revista: var(--font-fraunces), Georgia, serif;
+  --font-texto: var(--font-manrope), system-ui, sans-serif;
+  --font-mono: var(--font-space-mono), ui-monospace, monospace;
+  --color-tinta: #29252a;
+  --color-tinta-suave: #3c3539;
+  --color-jornal: #fbf8f2;
+  --color-vinho: #692536;
+  --color-fio: #e3d9c9;
+  --color-grafite: #71676a;
+
   --radius-sm: 6px;
   --radius-md: 12px;
   --radius-lg: 24px;

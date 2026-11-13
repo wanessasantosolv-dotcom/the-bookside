@@ -2,9 +2,8 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { NavInferior } from "@/components/NavInferior";
+import { AppShell } from "@/components/AppShell";
 import { Botao } from "@/components/ui/Botao";
-import { Tela } from "@/components/ui/Tela";
 import { usePerfil } from "@/lib/perfil-store";
 import { useTeste } from "@/lib/teste-store";
 
@@ -14,15 +13,15 @@ export default function ConfiguracoesPage() {
   const sair = usePerfil((s) => s.sair);
 
   return (
-    <Tela>
-      <header className="px-6 pt-2">
+    <AppShell aba="perfil">
+      <header className="px-6 pt-2 lg:px-12 lg:pt-8">
         <Link href="/perfil" className="-ml-2 flex min-h-11 w-fit items-center px-2 text-[13px] font-semibold text-bordo">
           ‹ perfil
         </Link>
         <h1 className="mt-2 font-display text-[32px] leading-[1.1] font-semibold italic text-bordo">configurações</h1>
       </header>
 
-      <div className="flex-1 px-6 pt-6">
+      <div className="flex-1 px-6 pt-6 lg:max-w-[560px] lg:px-12">
         <dl className="border-t border-linha">
           <div className="flex items-center justify-between border-b border-linha py-3.5">
             <dt className="text-sm font-semibold">conta</dt>
@@ -48,7 +47,6 @@ export default function ConfiguracoesPage() {
         <p className="mt-2 text-center text-[11px] text-cinza">por enquanto, sair apaga o perfil salvo neste navegador.</p>
       </div>
 
-      <NavInferior ativa="perfil" />
-    </Tela>
+    </AppShell>
   );
 }
