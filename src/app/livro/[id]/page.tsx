@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { notFound, useParams } from "next/navigation";
+import { notFound, useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { CapaLivro } from "@/components/CapaLivro";
 import { TrocarCapa } from "@/components/TrocarCapa";
+import { lembrarRemovido } from "@/components/AvisoRemovido";
 import { AmigasComLivro } from "@/components/social/AmigasComLivro";
 import { useHidratado } from "@/components/PerfilHidratacao";
 import { livroLembrado, sinopseDaObra } from "@/lib/catalogo";
@@ -26,8 +27,12 @@ export default function LivroPage() {
   const proprias = usePerfil((s) => s.estantesProprias);
   const editarLivro = usePerfil((s) => s.editarLivro);
   const removerLivro = usePerfil((s) => s.removerLivro);
+  const favoritos = usePerfil((s) => s.favoritos);
+  const router = useRouter();
   const [sinopseOL, setSinopseOL] = useState<string>();
   const [trocandoCapa, setTrocandoCapa] = useState(false);
+  // saindo da página depois de tirar o livro: não mostra "não encontrado" no meio do caminho
+  const [saindo, setSaindo] = useState(false);
 
   useEffect(() => {
     const c = new AbortController();
@@ -37,7 +42,7 @@ export default function LivroPage() {
     return () => c.abort();
   }, [id]);
 
-  if (!hidratado) return <AppShell aba="estantes">{null}</AppShell>;
+  if (!hidratado || saindo) return <AppShell aba="estantes">{null}</AppShell>;
   const encontrado = infoDoLivro(id, livros, livroLembrado(id));
   if (!encontrado) notFound();
   const livro = { ...encontrado, sinopse: encontrado.sinopse ?? sinopseOL };
@@ -54,6 +59,22 @@ export default function LivroPage() {
         : status === "lendo"
           ? { href: "/estantes/lendo", r: "lendo" }
           : { href: "/estantes", r: "estantes" };
+
+  /** volta para a tela de onde a pessoa veio; aberto direto pelo link, vai para a estante */
+  function irDeVolta() {
+    if (window.history.length > 1) router.back();
+    else router.push(voltar.href);
+  }
+
+  function tirarDaEstante() {
+    const salvoAgora = livros.find((l) => l.id === id);
+    if (!salvoAgora) return;
+    if (!confirm(`tirar "${livro!.titulo}" da sua estante? a nota, a resenha e o progresso saem junto.`)) return;
+    lembrarRemovido(salvoAgora, favoritos.includes(id));
+    setSaindo(true);
+    router.push(`${voltar.href}?removido=${encodeURIComponent(livro!.titulo)}`);
+    removerLivro(id);
+  }
 
   function marcar(s: StatusLivro) {
     const agora = new Date().toISOString();
@@ -80,18 +101,19 @@ export default function LivroPage() {
   return (
     <AppShell aba="estantes">
       <div className="flex flex-1 flex-col lg:bg-jornal">
-        <header className="flex items-center justify-between px-6 pt-2 lg:hidden">
-          <Link
-            href={voltar.href}
-            className="-ml-2 flex min-h-11 items-center px-2 text-[13px] font-semibold text-bordo"
+        <header className="flex items-center justify-between px-6 pt-2 lg:bg-[#F3ECDF] lg:px-14 lg:pt-6">
+          <button
+            type="button"
+            onClick={irDeVolta}
+            className="-ml-2 flex min-h-11 items-center px-2 text-[13px] font-semibold text-bordo lg:text-[11px] lg:font-bold lg:tracking-[.1em] lg:uppercase"
           >
-            ‹ {voltar.r}
-          </Link>
+            ‹ voltar
+          </button>
           <span className="eyebrow !text-[10px] text-cinza">o livro</span>
         </header>
 
         {/* topo: capa + dados */}
-        <div className="flex animate-subir gap-[18px] px-6 pt-2 lg:gap-11 lg:border-b lg:border-fio lg:bg-[#F3ECDF] lg:px-14 lg:py-12">
+        <div className="flex animate-subir gap-[18px] px-6 pt-2 lg:gap-11 lg:border-b lg:border-fio lg:bg-[#F3ECDF] lg:px-14 lg:pt-4 lg:pb-12">
           <div className="flex flex-none flex-col items-center">
             <CapaLivro
               key={livro.capa}
@@ -301,7 +323,7 @@ export default function LivroPage() {
             {salvo ? (
               <button
                 type="button"
-                onClick={() => removerLivro(livro.id)}
+                onClick={tirarDaEstante}
                 className="mt-4 min-h-11 text-xs font-semibold text-cinza underline underline-offset-4 hover:text-bordo"
               >
                 tirar da estante

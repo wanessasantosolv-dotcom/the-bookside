@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound, useParams } from "next/navigation";
 import { useState } from "react";
 import { AppShell } from "@/components/AppShell";
+import { AvisoRemovido } from "@/components/AvisoRemovido";
 import { CapaLivro } from "@/components/CapaLivro";
 import { useHidratado } from "@/components/PerfilHidratacao";
 import { BotaoLink } from "@/components/ui/Botao";
@@ -59,6 +60,7 @@ export default function EstanteAbertaPage() {
 
   return (
     <AppShell aba="estantes">
+      <AvisoRemovido />
       <div className="flex flex-1 flex-col lg:bg-jornal lg:px-14 lg:pt-10">
         <header className="flex items-center justify-between px-6 pt-2 lg:px-0 lg:pt-0">
           <Link href="/estantes" className="-ml-2 flex min-h-11 items-center px-2 text-[13px] font-semibold text-bordo">

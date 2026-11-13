@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { AppShell } from "@/components/AppShell";
+import { AvisoRemovido } from "@/components/AvisoRemovido";
 import { CapaLivro } from "@/components/CapaLivro";
 import { useHidratado } from "@/components/PerfilHidratacao";
 import { BotaoLink } from "@/components/ui/Botao";
@@ -179,6 +180,7 @@ export default function EstantesPage() {
 
   return (
     <AppShell aba="estantes">
+      <AvisoRemovido />
       <EstantesWeb estantes={estantes} livros={livros} favoritos={favoritos} />
 
       <div className="flex flex-1 flex-col lg:hidden">
