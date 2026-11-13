@@ -100,7 +100,7 @@ const useCapas = create<{
       definir: (id, url) => set((s) => ({ capas: { ...s.capas, [id]: url } })),
     }),
     {
-      name: "bookside-capas-v2",
+      name: "bookside-capas-v3",
       storage: createJSONStorage(() => localStorage),
     },
   ),
@@ -111,6 +111,19 @@ let buscandoCapas = false;
 /** Tira subtítulo e pontuação para a busca achar mais edições. */
 function tituloCurto(titulo: string) {
   return titulo.split(/[:(\[]/)[0].trim();
+}
+
+/**
+ * Busca ampla: acha a obra por qualquer edição (inclusive traduzida), então
+ * "jogos vorazes" encontra "the hunger games" e usa a capa da obra original.
+ */
+async function capaDaObraOriginal(titulo: string, autor?: string): Promise<string> {
+  const q = `${titulo}${autor ? ` ${autor}` : ""}`;
+  const r = await fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(q)}&limit=5&fields=cover_i`);
+  if (!r.ok) throw new Error(String(r.status));
+  const { docs } = (await r.json()) as { docs: { cover_i?: number }[] };
+  const capa = docs.find((d) => d.cover_i)?.cover_i;
+  return capa ? `https://covers.openlibrary.org/b/id/${capa}-M.jpg` : "";
 }
 
 async function capaNaOpenLibrary(titulo: string, autor?: string): Promise<string> {
@@ -144,6 +157,47 @@ async function capaNoGoogleBooks(titulo: string, autor?: string): Promise<string
   return link ? link.replace(/^http:/, "https:").replace("&edge=curl", "") : "";
 }
 
+/**
+ * Várias capas possíveis para um livro (edições diferentes), das duas fontes,
+ * para a pessoa escolher. Falhas de rede de uma fonte não derrubam a outra.
+ */
+export async function opcoesDeCapa(tituloCompleto: string, autorCompleto: string, signal?: AbortSignal): Promise<string[]> {
+  const titulo = tituloCurto(tituloCompleto);
+  const autor = !autorCompleto || autorCompleto.startsWith("autoria") ? "" : autorCompleto;
+  const google = fetch(
+    `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(`intitle:${titulo}${autor ? ` inauthor:${autor}` : ""}`)}&maxResults=24&printType=books&fields=items(volumeInfo/imageLinks)`,
+    { signal },
+  )
+    .then((r) => (r.ok ? r.json() : { items: [] }))
+    .then((d: { items?: { volumeInfo?: { imageLinks?: { thumbnail?: string } } }[] }) =>
+      (d.items ?? [])
+        .map((i) => i.volumeInfo?.imageLinks?.thumbnail)
+        .filter((u): u is string => !!u)
+        .map((u) => u.replace(/^http:/, "https:").replace("&edge=curl", "")),
+    )
+    .catch(() => [] as string[]);
+  const openLibrary = fetch(
+    `https://openlibrary.org/search.json?title=${encodeURIComponent(titulo)}${autor ? `&author=${encodeURIComponent(autor)}` : ""}&limit=10&fields=cover_i`,
+    { signal },
+  )
+    .then((r) => (r.ok ? r.json() : { docs: [] }))
+    .then((d: { docs: { cover_i?: number }[] }) =>
+      d.docs.filter((x) => x.cover_i).map((x) => `https://covers.openlibrary.org/b/id/${x.cover_i}-M.jpg`),
+    )
+    .catch(() => [] as string[]);
+  const original = fetch(
+    `https://openlibrary.org/search.json?q=${encodeURIComponent(`${titulo} ${autor}`.trim())}&limit=10&fields=cover_i`,
+    { signal },
+  )
+    .then((r) => (r.ok ? r.json() : { docs: [] }))
+    .then((d: { docs: { cover_i?: number }[] }) =>
+      d.docs.filter((x) => x.cover_i).map((x) => `https://covers.openlibrary.org/b/id/${x.cover_i}-M.jpg`),
+    )
+    .catch(() => [] as string[]);
+  const todas = [...(await google), ...(await openLibrary), ...(await original)];
+  return todas.filter((u, i) => todas.indexOf(u) === i).slice(0, 24);
+}
+
 async function procurarCapa(tituloCompleto: string, autorCompleto: string): Promise<string> {
   const titulo = tituloCurto(tituloCompleto);
   const autor = !autorCompleto || autorCompleto.startsWith("autoria") ? undefined : autorCompleto;
@@ -152,6 +206,8 @@ async function procurarCapa(tituloCompleto: string, autorCompleto: string): Prom
     () => capaNaOpenLibrary(titulo, autor),
     () => capaNoGoogleBooks(titulo, autor),
     () => capaNoGoogleBooks(titulo),
+    // sem edição em português com capa: usa a capa da obra original (ex.: em inglês)
+    () => capaDaObraOriginal(titulo, autor),
     () => capaNaOpenLibrary(titulo),
   ];
   for (const tentar of tentativas) {

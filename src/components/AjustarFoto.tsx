@@ -5,10 +5,11 @@ import { Botao } from "@/components/ui/Botao";
 
 const ZOOM_MAX = 4;
 
-/** foto: círculo 1:1 · capa: faixa 2:1 */
+/** foto: círculo 1:1 · capa: faixa 2:1 · livro: capa de livro 2:3 */
 const FORMATOS = {
   foto: { qw: 260, qh: 260, sw: 400, sh: 400, titulo: "ajuste sua foto", redondo: true },
   capa: { qw: 300, qh: 150, sw: 1200, sh: 600, titulo: "ajuste a capa", redondo: false },
+  livro: { qw: 200, qh: 300, sw: 400, sh: 600, titulo: "ajuste a capa do livro", redondo: false },
 } as const;
 
 type Props = {

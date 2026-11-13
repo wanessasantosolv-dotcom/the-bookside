@@ -5,6 +5,7 @@ import { notFound, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { CapaLivro } from "@/components/CapaLivro";
+import { TrocarCapa } from "@/components/TrocarCapa";
 import { useHidratado } from "@/components/PerfilHidratacao";
 import { livroLembrado, sinopseDaObra } from "@/lib/catalogo";
 import { corDoLivro } from "@/lib/cores";
@@ -25,6 +26,7 @@ export default function LivroPage() {
   const editarLivro = usePerfil((s) => s.editarLivro);
   const removerLivro = usePerfil((s) => s.removerLivro);
   const [sinopseOL, setSinopseOL] = useState<string>();
+  const [trocandoCapa, setTrocandoCapa] = useState(false);
 
   useEffect(() => {
     const c = new AbortController();
@@ -78,11 +80,24 @@ export default function LivroPage() {
 
         {/* topo: capa + dados */}
         <div className="flex animate-subir gap-[18px] px-6 pt-2 lg:gap-11 lg:border-b lg:border-fio lg:bg-[#F3ECDF] lg:px-14 lg:py-12">
-          <CapaLivro
-            titulo={livro.titulo} capa={livro.capa}
-            cor={corDoLivro(livro.id)}
-            className="w-[120px] [&>span:last-child]:text-sm lg:w-[200px] lg:shadow-[10px_10px_0_#C9A46A] lg:[&>span:last-child]:text-xl"
-          />
+          <div className="flex flex-none flex-col items-center">
+            <CapaLivro
+              key={livro.capa}
+              titulo={livro.titulo}
+              capa={livro.capa}
+              cor={corDoLivro(livro.id)}
+              className="w-[120px] [&>span:last-child]:text-sm lg:w-[200px] lg:shadow-[10px_10px_0_#C9A46A] lg:[&>span:last-child]:text-xl"
+            />
+            {salvo ? (
+              <button
+                type="button"
+                onClick={() => setTrocandoCapa(true)}
+                className="mt-1 min-h-11 px-2 text-xs font-semibold text-bordo underline underline-offset-4 lg:mt-4"
+              >
+                trocar capa
+              </button>
+            ) : null}
+          </div>
           <div className="min-w-0 flex-1 lg:max-w-[560px] lg:pt-2">
             {livro.genero ? <p className="hidden text-[10px] font-semibold tracking-[.18em] text-grafite uppercase lg:mb-2.5 lg:block">{livro.genero}</p> : null}
             <h1 className={titulo}>{livro.titulo}</h1>
@@ -217,6 +232,15 @@ export default function LivroPage() {
           </aside>
         </div>
       </div>
+      {trocandoCapa ? (
+        <TrocarCapa
+          titulo={livro.titulo}
+          autor={livro.autor}
+          atual={livro.capa}
+          onFechar={() => setTrocandoCapa(false)}
+          onEscolher={(capa) => editarLivro(base, { capa })}
+        />
+      ) : null}
     </AppShell>
   );
 }
