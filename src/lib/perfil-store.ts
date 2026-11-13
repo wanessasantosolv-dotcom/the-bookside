@@ -36,6 +36,10 @@ export type LivroSalvo = {
   notas?: NotasDetalhe;
   resenha?: string;
   anotacao?: string;
+  /** personagem favorita (das fichas) */
+  personagem?: string;
+  /** trecho favorito */
+  citacao?: string;
   /** ids das estantes criadas pela pessoa onde o livro está */
   estantes?: string[];
 };

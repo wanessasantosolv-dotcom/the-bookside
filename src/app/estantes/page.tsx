@@ -109,9 +109,14 @@ function EstantesWeb({ estantes, livros, favoritos }: { estantes: EstanteInfo[];
               </button>
             ))}
           </nav>
-          <Link href="/estantes/nova" className="mb-1.5 rounded-pill border border-vinho px-4 py-2.5 text-[11px] font-bold tracking-[.1em] text-vinho uppercase hover:bg-vinho/5">
-            + nova estante
-          </Link>
+          <span className="mb-1.5 flex gap-2.5">
+            <Link href="/estantes/importar" className="rounded-pill border border-fio px-4 py-2.5 text-[11px] font-bold tracking-[.1em] text-grafite uppercase hover:border-vinho hover:text-vinho">
+              importar lista
+            </Link>
+            <Link href="/estantes/nova" className="rounded-pill border border-vinho px-4 py-2.5 text-[11px] font-bold tracking-[.1em] text-vinho uppercase hover:bg-vinho/5">
+              + nova estante
+            </Link>
+          </span>
         </div>
       </div>
       <div className="px-14 pt-10 pb-16">
@@ -185,9 +190,14 @@ export default function EstantesPage() {
           ) : (
             <span className="text-[13px] font-semibold">estantes</span>
           )}
-          <Link href="/estantes/nova" className="-mr-2 flex min-h-11 items-center px-2 text-[13px] font-semibold text-bordo">
-            + nova estante
-          </Link>
+          <span className="-mr-2 flex">
+            <Link href="/estantes/importar" className="flex min-h-11 items-center px-2 text-[13px] font-semibold text-cinza">
+              importar
+            </Link>
+            <Link href="/estantes/nova" className="flex min-h-11 items-center px-2 text-[13px] font-semibold text-bordo">
+              + nova estante
+            </Link>
+          </span>
         </header>
 
         <div className="animate-subir px-6 pt-3">

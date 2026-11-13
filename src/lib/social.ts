@@ -295,6 +295,18 @@ const prioridade: Record<TipoAtividade, number> = { quer: 1, comecou: 2, termino
  * quer ler, avaliou. Junta mudanças seguidas do mesmo livro (ex.: terminou e
  * já avaliou) e publica só a mais importante. Devolve a função de desligar.
  */
+let silencio = false;
+
+/** Faz mudanças na estante sem publicar no feed (ex.: importar uma lista antiga). */
+export function semPublicar(fazer: () => void) {
+  silencio = true;
+  try {
+    fazer();
+  } finally {
+    silencio = false;
+  }
+}
+
 export function iniciarAtividades() {
   if (!supabase) return () => {};
   const pendentes = new Map<string, TipoAtividade>();
@@ -321,7 +333,7 @@ export function iniciarAtividades() {
   }
 
   return usePerfil.subscribe((s, antes) => {
-    if (!nuvemPronta() || !meuId() || !s.onboardingConcluido || s.livros === antes.livros) return;
+    if (silencio || !nuvemPronta() || !meuId() || !s.onboardingConcluido || s.livros === antes.livros) return;
     for (const l of s.livros) {
       const a = antes.livros.find((x) => x.id === l.id);
       let tipo: TipoAtividade | null = null;

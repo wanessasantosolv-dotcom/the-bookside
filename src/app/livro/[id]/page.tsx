@@ -46,7 +46,14 @@ export default function LivroPage() {
   const base = { id: livro.id, titulo: livro.titulo, autor: livro.autor, capa: livro.capa, genero: livro.genero };
   const estantesProprias = todasAsEstantes(proprias ?? []).filter((e) => e.propria);
   const progresso = livro.paginas && livro.paginaAtual ? Math.round((livro.paginaAtual / livro.paginas) * 100) : null;
-  const voltar = status === "lido" ? { href: "/estantes/lidos", r: "lidos" } : status === "quero" ? { href: "/estantes/quero-ler", r: "quero ler" } : status === "lendo" ? { href: "/estantes/lendo", r: "lendo" } : { href: "/estantes", r: "estantes" };
+  const voltar =
+    status === "lido"
+      ? { href: "/estantes/lidos", r: "lidos" }
+      : status === "quero"
+        ? { href: "/estantes/quero-ler", r: "quero ler" }
+        : status === "lendo"
+          ? { href: "/estantes/lendo", r: "lendo" }
+          : { href: "/estantes", r: "estantes" };
 
   function marcar(s: StatusLivro) {
     const agora = new Date().toISOString();
@@ -66,14 +73,18 @@ export default function LivroPage() {
     });
   }
 
-  const titulo = "font-display text-[28px] leading-[1.08] font-semibold italic text-bordo lg:font-revista lg:text-[40px] lg:leading-[1.1] lg:font-normal lg:text-tinta";
+  const titulo =
+    "font-display text-[28px] leading-[1.08] font-semibold italic text-bordo lg:font-revista lg:text-[40px] lg:leading-[1.1] lg:font-normal lg:text-tinta";
   const secao = "eyebrow text-bordo lg:text-[10px] lg:tracking-[.18em] lg:text-grafite";
 
   return (
     <AppShell aba="estantes">
       <div className="flex flex-1 flex-col lg:bg-jornal">
         <header className="flex items-center justify-between px-6 pt-2 lg:hidden">
-          <Link href={voltar.href} className="-ml-2 flex min-h-11 items-center px-2 text-[13px] font-semibold text-bordo">
+          <Link
+            href={voltar.href}
+            className="-ml-2 flex min-h-11 items-center px-2 text-[13px] font-semibold text-bordo"
+          >
             ‹ {voltar.r}
           </Link>
           <span className="eyebrow !text-[10px] text-cinza">o livro</span>
@@ -100,35 +111,59 @@ export default function LivroPage() {
             ) : null}
           </div>
           <div className="min-w-0 flex-1 lg:max-w-[560px] lg:pt-2">
-            {livro.genero ? <p className="hidden text-[10px] font-semibold tracking-[.18em] text-grafite uppercase lg:mb-2.5 lg:block">{livro.genero}</p> : null}
+            {livro.genero ? (
+              <p className="hidden text-[10px] font-semibold tracking-[.18em] text-grafite uppercase lg:mb-2.5 lg:block">
+                {livro.genero}
+              </p>
+            ) : null}
             <h1 className={titulo}>{livro.titulo}</h1>
             <p className="mt-[7px] font-accent text-sm italic text-cinza lg:font-texto lg:text-sm lg:not-italic">
               {livro.autor}
               <span className="hidden lg:inline">{livro.paginas ? ` · ${livro.paginas} páginas` : ""}</span>
             </p>
-            <p className="mt-2.5 text-[13px] text-cinza lg:hidden">{[livro.paginas ? `${livro.paginas} páginas` : null, livro.ano].filter(Boolean).join(" · ")}</p>
+            <p className="mt-2.5 text-[13px] text-cinza lg:hidden">
+              {[livro.paginas ? `${livro.paginas} páginas` : null, livro.ano].filter(Boolean).join(" · ")}
+            </p>
             {livro.genero ? (
-              <span className="mt-2.5 inline-block rounded-pill bg-[#F1E4DC] px-2 py-1 text-[9px] font-semibold text-bordo lg:hidden">{livro.genero}</span>
+              <span className="mt-2.5 inline-block rounded-pill bg-[#F1E4DC] px-2 py-1 text-[9px] font-semibold text-bordo lg:hidden">
+                {livro.genero}
+              </span>
             ) : null}
             {livro.nota ? (
               <>
                 <p className="eyebrow mt-3.5 mb-1 text-bordo lg:hidden">sua nota</p>
-                <p className="text-[15px] font-semibold tracking-[2px] text-bordo lg:mt-4 lg:text-lg">{estrelas(livro.nota)}</p>
+                <p className="text-[15px] font-semibold tracking-[2px] text-bordo lg:mt-4 lg:text-lg">
+                  {estrelas(livro.nota)}
+                </p>
               </>
             ) : null}
-            {livro.sinopse ? <p className="mt-[18px] hidden max-w-[520px] text-sm leading-[1.6] text-tinta-suave lg:block">{livro.sinopse}</p> : null}
+            {livro.sinopse ? (
+              <p className="mt-[18px] hidden max-w-[520px] text-sm leading-[1.6] text-tinta-suave lg:block">
+                {livro.sinopse}
+              </p>
+            ) : null}
 
             <div className="mt-[22px] hidden gap-3.5 lg:flex">
               {!salvo ? (
-                <button type="button" onClick={() => marcar("quero")} className="rounded-pill bg-vinho px-[22px] py-3 text-[11px] font-bold tracking-[.1em] text-jornal uppercase">
+                <button
+                  type="button"
+                  onClick={() => marcar("quero")}
+                  className="rounded-pill bg-vinho px-[22px] py-3 text-[11px] font-bold tracking-[.1em] text-jornal uppercase"
+                >
                   + adicionar à estante
                 </button>
               ) : null}
-              <Link href={`/livro/${livro.id}/avaliar`} className="rounded-pill border border-vinho px-[22px] py-3 text-[11px] font-bold tracking-[.1em] text-vinho uppercase">
+              <Link
+                href={`/livro/${livro.id}/avaliar`}
+                className="rounded-pill border border-vinho px-[22px] py-3 text-[11px] font-bold tracking-[.1em] text-vinho uppercase"
+              >
                 avaliar
               </Link>
               {status === "lendo" ? (
-                <Link href={`/livro/${livro.id}/progresso`} className="rounded-pill border border-vinho px-[22px] py-3 text-[11px] font-bold tracking-[.1em] text-vinho uppercase">
+                <Link
+                  href={`/livro/${livro.id}/progresso`}
+                  className="rounded-pill border border-vinho px-[22px] py-3 text-[11px] font-bold tracking-[.1em] text-vinho uppercase"
+                >
                   atualizar progresso
                 </Link>
               ) : null}
@@ -158,22 +193,34 @@ export default function LivroPage() {
             </fieldset>
 
             {status === "lendo" ? (
-              <Link href={`/livro/${livro.id}/progresso`} className="mx-6 mt-4 block rounded-md border border-linha bg-creme-quente p-4 lg:mx-0">
+              <Link
+                href={`/livro/${livro.id}/progresso`}
+                className="mx-6 mt-4 block rounded-md border border-linha bg-creme-quente p-4 lg:mx-0"
+              >
                 <div className="flex items-baseline justify-between">
                   <span className="eyebrow text-bordo">lendo agora</span>
-                  <span className="text-xs font-semibold text-bordo">{progresso !== null ? `${progresso}%` : "atualizar →"}</span>
+                  <span className="text-xs font-semibold text-bordo">
+                    {progresso !== null ? `${progresso}%` : "atualizar →"}
+                  </span>
                 </div>
                 <div className="mt-2.5 h-2 overflow-hidden rounded-full bg-[#F1E4DC]">
                   <i className="block h-full rounded-full bg-bordo" style={{ width: `${progresso ?? 0}%` }} />
                 </div>
                 <p className="mt-2 text-xs text-cinza">
-                  {livro.paginaAtual && livro.paginas ? `página ${livro.paginaAtual} de ${livro.paginas}` : "quantas páginas já foram? toque para atualizar"}
+                  {livro.paginaAtual && livro.paginas
+                    ? `página ${livro.paginaAtual} de ${livro.paginas}`
+                    : "quantas páginas já foram? toque para atualizar"}
                 </p>
               </Link>
             ) : null}
             {status === "lido" ? (
-              <Link href={`/livro/${livro.id}/avaliar`} className="mx-6 mt-4 flex min-h-11 items-center justify-between rounded-md border border-linha bg-creme-quente px-4 lg:mx-0">
-                <span className="text-[13px] font-semibold">{livro.nota ? "editar sua avaliação" : "avaliar este livro"}</span>
+              <Link
+                href={`/livro/${livro.id}/avaliar`}
+                className="mx-6 mt-4 flex min-h-11 items-center justify-between rounded-md border border-linha bg-creme-quente px-4 lg:mx-0"
+              >
+                <span className="text-[13px] font-semibold">
+                  {livro.nota ? "editar sua avaliação" : "avaliar este livro"}
+                </span>
                 <span className="text-sm text-bordo">{livro.nota ? estrelas(livro.nota) : "★ →"}</span>
               </Link>
             ) : null}
@@ -182,6 +229,36 @@ export default function LivroPage() {
               <section className="mt-6 px-6 lg:hidden">
                 <p className={secao}>sinopse</p>
                 <p className="mt-2 text-[13px] leading-normal">{livro.sinopse}</p>
+              </section>
+            ) : null}
+
+            {livro.notas && Object.values(livro.notas).some(Boolean) ? (
+              <section className="mx-6 mt-6 lg:mx-0 lg:mt-8">
+                <p className={secao}>por critério</p>
+                <dl className="mt-2 grid grid-cols-2 gap-x-6 gap-y-1.5 lg:max-w-[420px]">
+                  {(["personagens", "plot", "escrita", "final"] as const).map((c) =>
+                    livro.notas![c] ? (
+                      <div
+                        key={c}
+                        className="flex items-baseline justify-between border-b border-linha py-1 lg:border-fio"
+                      >
+                        <dt className="font-accent text-sm italic text-cinza">{c}</dt>
+                        <dd className="text-xs text-bordo">{estrelas(livro.notas![c])}</dd>
+                      </div>
+                    ) : null,
+                  )}
+                </dl>
+              </section>
+            ) : null}
+
+            {livro.personagem || livro.citacao ? (
+              <section className="mx-6 mt-6 lg:mx-0 lg:mt-8">
+                {livro.personagem ? <p className={secao}>personagem favorita · {livro.personagem} ♡</p> : null}
+                {livro.citacao ? (
+                  <blockquote className="mt-2 border-l-2 border-rosa-claro pl-3 font-accent text-[15px] leading-[1.4] italic lg:font-revista">
+                    “{livro.citacao}”
+                  </blockquote>
+                ) : null}
               </section>
             ) : null}
 
