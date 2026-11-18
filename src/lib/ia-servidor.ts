@@ -23,7 +23,10 @@ export class SemCota extends Error {}
 /** Só quem tem conta no app usa a IA (cada pedido custa): confere o login no Supabase. */
 export async function contaValida(req: Request): Promise<boolean> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const chave = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  // aceita os dois nomes que o Supabase usa para a chave pública (igual a src/lib/supabase.ts)
+  const chave =
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   const token = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
   if (!url || !chave || !token) return false;
   try {
