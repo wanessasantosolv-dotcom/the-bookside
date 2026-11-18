@@ -48,8 +48,15 @@ export default function EditarClubePage() {
       });
       recarregar();
       router.push(`/clubes/${clube.id}`);
-    } catch {
-      setErro("não deu para salvar. tente de novo.");
+    } catch (x) {
+      const e = x as { code?: string; message?: string };
+      // campo novo que ainda não existe no banco: falta rodar o supabase/social.sql atualizado
+      const faltaCampo = e?.code === "PGRST204" || e?.code === "42703" || /column/i.test(e?.message ?? "");
+      setErro(
+        faltaCampo
+          ? "o banco ainda não tem esse campo. rode de novo o arquivo supabase/social.sql no SQL Editor do Supabase."
+          : "não deu para salvar. tente de novo.",
+      );
       setOcupado(false);
     }
   }
