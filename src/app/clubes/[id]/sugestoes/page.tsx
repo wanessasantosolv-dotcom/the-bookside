@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useClube } from "@/components/clube/ClubeContexto";
 import { Avatares, botaoPrincipal, Rodape, TopoForm } from "@/components/clube/Pecas";
 import { Carregando, ErroOuFalta, Vazio } from "@/components/social/Estados";
-import { apagarSugestao, livrosDoClube, votar, type LivroDoClube } from "@/lib/clubes";
+import { apagarLivroDoClube, livrosDoClube, votar, type LivroDoClube } from "@/lib/clubes";
 import { nomeDe, useConsulta, useMeuId } from "@/lib/social";
 
 export default function SugestoesPage() {
@@ -36,7 +36,7 @@ export default function SugestoesPage() {
 
   async function tirar(l: LivroDoClube) {
     if (!confirm(`tirar ${l.livro.titulo} das sugestões?`)) return;
-    await apagarSugestao(l.id);
+    await apagarLivroDoClube(l.id);
     consulta.recarregar();
   }
 

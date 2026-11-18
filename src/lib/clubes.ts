@@ -228,7 +228,8 @@ export async function escolherLivroDaVez(clubeId: string, livro: LivroDoClube["l
   await comecarLeitura(clubeId, data.id as string, prazo);
 }
 
-export async function apagarSugestao(id: string) {
+/** Tira um livro da estante do clube, seja sugestão, leitura da vez ou já lido. */
+export async function apagarLivroDoClube(id: string) {
   const { error } = await db().from("clube_livros").delete().eq("id", id);
   if (error) throw error;
 }
