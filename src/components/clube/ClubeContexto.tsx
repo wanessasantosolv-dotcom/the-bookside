@@ -7,6 +7,7 @@ import { createContext, useContext, useEffect, useRef, useState, type ReactNode 
 import { ErroOuFalta, Vazio } from "@/components/social/Estados";
 import { clube, membrosDe, tirarMembro, type Clube, type Membro, type Papel } from "@/lib/clubes";
 import { temas } from "@/lib/dados";
+import { coresDoTema } from "@/lib/tema";
 import { useConsulta, useMeuId } from "@/lib/social";
 
 type Ctx = { clube: Clube; membros: Membro[]; papel: Papel | null; recarregar: () => void };
@@ -151,18 +152,8 @@ function Cabecalho({ c, papel, rodada }: { c: Clube; papel: Papel | null; rodada
               </Link>
               <Link href={base} className="flex items-center gap-3.5 border-l border-fio pl-5">
                 <span>
-                  <span
-                    className="block font-revista text-xl leading-none italic"
-                    style={tema ? { color: tema.texto } : undefined}
-                  >
-                    {c.nome}
-                  </span>
-                  <span
-                    className="mt-1 block text-[11px] text-grafite"
-                    style={tema ? { color: tema.destaque } : undefined}
-                  >
-                    {rodada ?? "clube de leitura"}
-                  </span>
+                  <span className="block font-revista text-xl leading-none italic">{c.nome}</span>
+                  <span className="mt-1 block text-[11px] text-grafite">{rodada ?? "clube de leitura"}</span>
                 </span>
               </Link>
             </span>
@@ -179,7 +170,7 @@ function Cabecalho({ c, papel, rodada }: { c: Clube; papel: Papel | null; rodada
               c.capa
                 ? { backgroundImage: `linear-gradient(rgba(43,20,32,.02),rgba(43,20,32,.14)), url("${c.capa}")` }
                 : tema
-                  ? { background: tema.fundo }
+                  ? { background: "escuro" in tema ? "#3A343B" : tema.fundo }
                   : undefined
             }
           />
@@ -195,32 +186,16 @@ function Cabecalho({ c, papel, rodada }: { c: Clube; papel: Papel | null; rodada
             </span>
           </div>
         </div>
-        <div
-          className={`relative bg-creme px-6 pt-5 text-center lg:bg-jornal lg:text-left ${largura}`}
-          style={tema ? { background: tema.papel } : undefined}
-        >
+        <div className={`relative bg-creme px-6 pt-5 text-center lg:bg-jornal lg:text-left ${largura}`}>
           <div className="lg:flex lg:items-end lg:gap-5">
             <div className="min-w-0 flex-1">
               {rodada ? (
-                <p
-                  className="text-[10px] font-semibold tracking-[.16em] text-cinza uppercase"
-                  style={tema ? { color: tema.destaque } : undefined}
-                >
-                  {rodada}
-                </p>
+                <p className="text-[10px] font-semibold tracking-[.16em] text-cinza uppercase">{rodada}</p>
               ) : null}
-              <h1
-                className="mt-1 font-display text-[34px] leading-[1.05] font-semibold italic text-bordo lg:font-revista lg:text-[40px] lg:font-normal lg:text-tinta"
-                style={tema ? { color: tema.texto } : undefined}
-              >
+              <h1 className="mt-1 font-display text-[34px] leading-[1.05] font-semibold italic text-bordo lg:font-revista lg:text-[40px] lg:font-normal lg:text-tinta">
                 {c.nome}
               </h1>
-              <p
-                className="mt-1 text-[10px] font-semibold tracking-[.2em] text-cinza uppercase"
-                style={tema ? { color: tema.destaque } : undefined}
-              >
-                clube de leitura
-              </p>
+              <p className="mt-1 text-[10px] font-semibold tracking-[.2em] text-cinza uppercase">clube de leitura</p>
             </div>
             <div className="hidden gap-2.5 lg:flex">
               <Link href={`${base}/convidar`} className={acao}>
@@ -279,8 +254,11 @@ export function ClubeProvedor({ id, children }: { id: string; children: ReactNod
 
   return (
     <Contexto.Provider value={{ clube: c, membros, papel, recarregar: consulta.recarregar }}>
-      {comAbas ? <Cabecalho c={c} papel={papel} rodada={null} /> : null}
-      <div className={comAbas ? largura : `${largura} lg:py-8`}>{children}</div>
+      {/* o tema do clube vale para todas as telas dele, como o tema do perfil */}
+      <div style={coresDoTema(c.tema)} className="flex flex-1 flex-col bg-creme pb-8 lg:bg-jornal">
+        {comAbas ? <Cabecalho c={c} papel={papel} rodada={null} /> : null}
+        <div className={comAbas ? largura : `${largura} lg:py-8`}>{children}</div>
+      </div>
     </Contexto.Provider>
   );
 }

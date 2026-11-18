@@ -11,7 +11,7 @@ export default function ClubeLayout({ children }: { children: ReactNode }) {
   const { id } = useParams<{ id: string }>();
   return (
     <AppShell aba="clubes">
-      <div className="flex flex-1 flex-col pb-8 lg:bg-jornal">
+      <div className="flex flex-1 flex-col lg:bg-jornal">
         <ComConta>
           <ClubeProvedor id={id}>{children}</ClubeProvedor>
         </ComConta>
