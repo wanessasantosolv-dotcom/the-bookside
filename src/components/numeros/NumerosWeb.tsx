@@ -8,6 +8,12 @@ import { mediaTexto, numero, type Numeros } from "@/lib/numeros";
 
 const CORES_GENERO = ["#6B0D24", "#8E1D3D", "#B75A6B", "#A88B64", "#6B7A5E", "#464052"];
 
+function hashNumero(id: string) {
+  let h = 11;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  return h;
+}
+
 /** Números na versão web: banner bordô + tudo numa tela só (exceto a retrospectiva, que vira um "wrapped" à parte). */
 export function NumerosWeb({
   n,
@@ -113,29 +119,50 @@ function ConteudoUnificado({
         )}
       </section>
 
+      <section className="mb-14">
+        <h2 className="mb-[18px] border-b border-ameixa pb-2 font-revista text-[22px] leading-none text-ameixa italic">gêneros</h2>
+        {n.generos.length ? (
+          n.generos.map((g, i) => {
+            const pct = Math.round((g.qtd / n.generos[0].qtd) * 100);
+            return (
+              <div key={g.nome} className="mb-3 flex items-center gap-3.5">
+                <span className="w-[150px] flex-none truncate text-xs font-semibold">{g.nome}</span>
+                <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-[#F0E6DC]">
+                  <i className="block h-full rounded-full" style={{ width: `${pct}%`, background: CORES_GENERO[i % CORES_GENERO.length] }} />
+                </div>
+                <span className="w-14 text-right font-maquina text-[11px] font-semibold text-cinza">
+                  {g.qtd} {g.qtd === 1 ? "livro" : "livros"}
+                </span>
+              </div>
+            );
+          })
+        ) : (
+          <p className="font-revista text-sm text-cinza italic">os gêneros aparecem quando você terminar o primeiro livro do ano.</p>
+        )}
+      </section>
+
+      {n.lidos.length ? (
+        <section className="mb-14">
+          <h2 className="mb-[18px] border-b border-ameixa pb-2 font-revista text-[22px] leading-none text-ameixa italic">sua estante do ano, lado a lado</h2>
+          <div className="rounded-md bg-gradient-to-b from-[#F6EDE4] to-[#F0E2D7] px-5 pt-[22px]">
+            <div className="flex min-h-[70px] items-end gap-[3px] pb-3.5">
+              {n.lidos.map((l) => (
+                <div
+                  key={l.id}
+                  className="flex-1 rounded-t-[3px]"
+                  style={{ height: 40 + (hashNumero(l.id) % 26), background: corDoLivro(l.id) }}
+                  title={l.titulo}
+                />
+              ))}
+            </div>
+            <div className="h-2.5 rounded-[3px] bg-gradient-to-b from-bege to-[#C19A6C]" />
+          </div>
+        </section>
+      ) : null}
+
       <div className="mb-14 grid grid-cols-2 gap-12">
         <section>
-          <h2 className="mb-[18px] border-b border-ameixa pb-2 font-revista text-[22px] leading-none text-ameixa italic">gêneros</h2>
-          {n.generos.length ? (
-            n.generos.map((g, i) => {
-              const pct = Math.round((g.qtd / n.generos[0].qtd) * 100);
-              return (
-                <div key={g.nome} className="mb-3 flex items-center gap-3.5">
-                  <span className="w-[150px] flex-none truncate text-xs font-semibold">{g.nome}</span>
-                  <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-[#F0E6DC]">
-                    <i className="block h-full rounded-full" style={{ width: `${pct}%`, background: CORES_GENERO[i % CORES_GENERO.length] }} />
-                  </div>
-                  <span className="w-14 text-right font-maquina text-[11px] font-semibold text-cinza">
-                    {g.qtd} {g.qtd === 1 ? "livro" : "livros"}
-                  </span>
-                </div>
-              );
-            })
-          ) : (
-            <p className="font-revista text-sm text-cinza italic">os gêneros aparecem quando você terminar o primeiro livro do ano.</p>
-          )}
-
-          <h2 className="mt-10 mb-[18px] border-b border-ameixa pb-2 font-revista text-[22px] leading-none text-ameixa italic">livros por mês</h2>
+          <h2 className="mb-[18px] border-b border-ameixa pb-2 font-revista text-[22px] leading-none text-ameixa italic">livros por mês</h2>
           <GraficoMeses n={n} alto={110} />
         </section>
 
