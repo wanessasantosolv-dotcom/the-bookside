@@ -505,7 +505,7 @@ function bordaClara(img: HTMLImageElement) {
  * A imagem parece uma capa de verdade? Precisa existir, ter proporção de
  * livro (em pé, ~2:3) e não ser uma foto do livro sobre fundo branco.
  */
-async function pareceCapa(url: string): Promise<boolean> {
+export async function pareceCapa(url: string): Promise<boolean> {
   let img: HTMLImageElement;
   let legivel = true;
   try {

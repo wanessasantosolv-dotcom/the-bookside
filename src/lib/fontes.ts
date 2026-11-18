@@ -10,6 +10,8 @@
  */
 import {
   livrosDoGoogle,
+  opcoesDeCapa,
+  pareceCapa,
   sinopseDaObra,
   traducoesDoTitulo,
   type LivroBusca,
@@ -27,6 +29,8 @@ export type InfoDoLivro = {
   fonte?: string;
   /** a sinopse só foi achada em inglês */
   emIngles?: boolean;
+  /** capas possíveis (edição brasileira primeiro), já conferidas */
+  capas: string[];
 };
 export type Citacao = { texto: string; idioma: "pt" | "en"; fonte: string };
 
@@ -64,24 +68,26 @@ function mesmoTitulo(achado: string, pedido: string) {
 async function resumoDaWikipedia(
   titulo: string,
   autor: string,
+  idioma: "pt" | "en" = "pt",
 ): Promise<string | undefined> {
+  const palavraLivro = idioma === "pt" ? "livro" : "novel";
   const busca = await json<{ query?: { search?: { title: string }[] } }>(
-    `https://pt.wikipedia.org/w/api.php?action=query&list=search&format=json&origin=*&srlimit=5&srsearch=${encodeURIComponent(
-      `${titulo} ${autor} livro`,
+    `https://${idioma}.wikipedia.org/w/api.php?action=query&list=search&format=json&origin=*&srlimit=5&srsearch=${encodeURIComponent(
+      `${titulo} ${autor} ${palavraLivro}`,
     )}`,
   );
   const sobrenome = autor ? normalizar(autor).split(" ").pop() : undefined;
   for (const r of busca?.query?.search ?? []) {
     if (!mesmoTitulo(r.title, titulo)) continue;
     const resumo = await json<{ extract?: string; type?: string }>(
-      `https://pt.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(r.title.replace(/ /g, "_"))}`,
+      `https://${idioma}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(r.title.replace(/ /g, "_"))}`,
     );
     const texto = resumo?.extract?.trim();
     if (!texto || resumo?.type === "disambiguation") continue;
     // confere que o artigo fala de um livro (ou da autora)
     const n = normalizar(texto);
     if (
-      /\b(livro|romance|obra|novela|conto|poesia|serie)\b/.test(n) ||
+      /\b(livro|romance|obra|novela|conto|poesia|serie|novel|book)\b/.test(n) ||
       (sobrenome && n.includes(sobrenome))
     )
       return texto;
@@ -102,50 +108,114 @@ export function pareceIngles(t: string) {
 
 type Sinopse = { texto: string; fonte: string };
 
-async function sinopseDaBrasilAPI(
-  isbn: string,
-): Promise<{ sinopse?: string; paginas?: number; capa?: string } | null> {
-  return json(`/api/isbn/${isbn}`);
+/** Edições brasileiras (ISBN 978-85 e 978-65) no Open Library: ISBNs e títulos (com acento). */
+async function edicoesBrasileiras(
+  titulo: string,
+  autor: string,
+): Promise<{ isbns: string[]; titulos: string[] }> {
+  const q = new URLSearchParams({
+    title: titulo,
+    fields: "title,isbn,language",
+    limit: "8",
+  });
+  if (autor) q.set("author", autor);
+  const r = await json<{
+    docs?: { title: string; isbn?: string[]; language?: string[] }[];
+  }>(`https://openlibrary.org/search.json?${q}`);
+  const brasileiro = (i: string) =>
+    /^97(885|865)\d{8}$/.test(i) || /^(85|65)\d{7}[\dX]$/.test(i);
+  const docs = (r?.docs ?? []).filter((d) => mesmoTitulo(d.title, titulo));
+  return {
+    isbns: [
+      ...new Set(docs.flatMap((d) => (d.isbn ?? []).filter(brasileiro))),
+    ].slice(0, 6),
+    titulos: docs
+      .filter(
+        (d) => (d.isbn ?? []).some(brasileiro) || d.language?.includes("por"),
+      )
+      .map((d) => d.title),
+  };
 }
 
-/** ISBNs de edições brasileiras (978-85 e 978-65) no Open Library. */
-async function isbnsBrasileiros(
+/** Sinopse da edição no Open Library pelo ISBN (da edição ou da obra). */
+async function sinopsePeloIsbnNoOL(isbn: string): Promise<string | undefined> {
+  const e = await json<{
+    description?: string | { value: string };
+    works?: { key: string }[];
+  }>(`https://openlibrary.org/isbn/${isbn}.json`);
+  const direto =
+    typeof e?.description === "string" ? e.description : e?.description?.value;
+  if (direto?.trim()) return direto.trim();
+  const obra = e?.works?.[0]?.key?.split("/").pop();
+  return obra
+    ? sinopseDaObra(`ol-${obra}`, comTempo()).catch(() => undefined)
+    : undefined;
+}
+
+/** "ÁGUA FRESCA PARA AS FLORES" → "Água fresca para as flores" (títulos em caixa alta de algumas fontes). */
+function tituloBonito(t?: string) {
+  const x = t?.trim();
+  if (!x) return undefined;
+  return x === x.toUpperCase() ? x.charAt(0) + x.slice(1).toLowerCase() : x;
+}
+
+/** quantos acentos o texto tem (para preferir o título escrito corretamente) */
+const acentos = (t: string) =>
+  (t.normalize("NFD").match(/[\u0300-\u036f]/g) ?? []).length;
+
+/**
+ * Confere as capas achadas (tira as quebradas, as minúsculas e as de "foto do
+ * livro") e completa com a busca de capas do app (várias edições).
+ */
+async function conferirCapas(
+  lista: string[],
   titulo: string,
   autor: string,
 ): Promise<string[]> {
-  const q = new URLSearchParams({
-    title: titulo,
-    fields: "title,isbn",
-    limit: "5",
-  });
-  if (autor) q.set("author", autor);
-  const r = await json<{ docs?: { title: string; isbn?: string[] }[] }>(
-    `https://openlibrary.org/search.json?${q}`,
+  const unicas = [...new Set(lista)].slice(0, 10);
+  const boas = await Promise.all(
+    unicas.map((u) => pareceCapa(u).catch(() => false)),
   );
-  return (r?.docs ?? [])
-    .filter((d) => mesmoTitulo(d.title, titulo))
-    .flatMap((d) => d.isbn ?? [])
-    .filter(
-      (i) => /^97(885|865)\d{8}$/.test(i) || /^(85|65)\d{7}[\dX]$/.test(i),
-    )
-    .slice(0, 6);
+  const aprovadas = unicas.filter((_, i) => boas[i]);
+  const mais = await opcoesDeCapa(titulo, autor).catch(() => [] as string[]);
+  return [...new Set([...aprovadas, ...mais])].slice(0, 12);
 }
 
-/** Procura o livro e junta sinopse, páginas, ano e capa. */
+/**
+ * Procura o livro e junta título (como saiu no Brasil), sinopse, páginas e capas.
+ * Ordem: edição brasileira (Google Books em português ou pelo ISBN brasileiro,
+ * BrasilAPI, Open Library), depois qualquer edição, Wikipédia em português e,
+ * por último, sinopse em inglês (Wikipédia em inglês pelo título original).
+ */
 export async function infoNaInternet(
   titulo: string,
   autor: string,
 ): Promise<InfoDoLivro | null> {
   const consulta = `intitle:${titulo}${autor ? ` inauthor:${autor}` : ""}`;
-  const [emPortugues, achados] = await Promise.all([
+  const [googlePt, achados, br] = await Promise.all([
     livrosDoGoogle(consulta, "pt", comTempo()).catch(() => [] as LivroBusca[]),
     acharLivro({ titulo, autor: autor || undefined }).catch(
       () => [] as LivroBusca[],
     ),
+    edicoesBrasileiras(titulo, autor).catch(() => ({
+      isbns: [] as string[],
+      titulos: [] as string[],
+    })),
   ]);
-  const candidatos = [...emPortugues, ...achados].filter(
-    (x, i, a) =>
-      mesmoTitulo(x.titulo, titulo) && a.findIndex((y) => y.id === x.id) === i,
+  const confere = (x: LivroBusca) => mesmoTitulo(x.titulo, titulo);
+  // a edição brasileira no Google Books também pelo ISBN (quando a busca pelo título não acha)
+  let edicoesBR = googlePt.filter(confere);
+  if (!edicoesBR.length)
+    for (const isbn of br.isbns.slice(0, 2)) {
+      edicoesBR = await livrosDoGoogle(
+        `isbn:${isbn}`,
+        undefined,
+        comTempo(),
+      ).catch(() => []);
+      if (edicoesBR.length) break;
+    }
+  const candidatos = [...edicoesBR, ...achados.filter(confere)].filter(
+    (x, i, a) => a.findIndex((y) => y.id === x.id) === i,
   );
   const l = candidatos[0];
 
@@ -157,48 +227,97 @@ export async function infoNaInternet(
   for (const x of candidatos.slice(0, 6))
     if (x.sinopse) achadas.push({ texto: x.sinopse, fonte: fonteDe(x) });
 
-  let paginas = l?.paginas;
-  let capa = l?.capa;
-  if (!emPt() || !paginas) {
-    // BrasilAPI pelo ISBN: primeiro os ISBNs brasileiros (978-85 / 978-65) do
-    // Open Library, depois os das edições do Google Books
-    const isbns = [
-      ...(await isbnsBrasileiros(titulo, autor)),
-      ...candidatos.flatMap((c) => (c.isbn ? [c.isbn] : [])),
-    ].filter((x, i, a) => a.indexOf(x) === i);
-    for (const isbn of isbns.slice(0, 4)) {
-      const b = await sinopseDaBrasilAPI(isbn);
-      if (!b) continue;
-      paginas ??= b.paginas;
-      capa ??= b.capa;
-      if (b.sinopse)
-        achadas.push({ texto: b.sinopse, fonte: "BrasilAPI (ISBN)" });
-      if (emPt() && paginas) break;
-    }
+  const titulosBR: string[] = edicoesBR.map((x) => x.titulo);
+  let paginas = edicoesBR.find((x) => x.paginas)?.paginas ?? l?.paginas;
+  const isbns = [
+    ...br.isbns,
+    ...candidatos.flatMap((c) => (c.isbn ? [c.isbn] : [])),
+  ].filter((x, i, a) => a.indexOf(x) === i);
+  // capas na ordem de preferência: edição brasileira primeiro
+  const capasPossiveis: string[] = br.isbns
+    .slice(0, 3)
+    .map(
+      (i) => `https://covers.openlibrary.org/b/isbn/${i}-L.jpg?default=false`,
+    );
+  for (const x of edicoesBR) if (x.capa) capasPossiveis.push(x.capa);
+
+  // BrasilAPI pelo ISBN (Mercado Editorial, CBL): sinopse, páginas, capa e título
+  for (const isbn of isbns.slice(0, 4)) {
+    if (emPt() && paginas && titulosBR.length) break;
+    const b = await json<{
+      titulo?: string;
+      sinopse?: string;
+      paginas?: number;
+      capa?: string;
+    }>(`/api/isbn/${isbn}`);
+    if (!b) continue;
+    paginas ??= b.paginas;
+    if (b.capa) capasPossiveis.unshift(b.capa);
+    const t = tituloBonito(b.titulo);
+    if (t && mesmoTitulo(t, titulo) && br.isbns.includes(isbn))
+      titulosBR.push(t);
+    if (b.sinopse)
+      achadas.push({ texto: b.sinopse, fonte: "BrasilAPI (ISBN)" });
   }
-  if (!emPt()) {
+  // Open Library pela edição brasileira (ISBN)
+  if (!emPt())
+    for (const isbn of br.isbns.slice(0, 3)) {
+      const t = await sinopsePeloIsbnNoOL(isbn);
+      if (t) achadas.push({ texto: t, fonte: "Open Library" });
+      if (emPt()) break;
+    }
+  // outras edições
+  if (!emPt())
     for (const x of candidatos.slice(0, 3)) {
       if (x.sinopse) continue;
       const t = await sinopseDaObra(x.id, comTempo()).catch(() => undefined);
       if (t) achadas.push({ texto: t, fonte: fonteDe(x) });
       if (emPt()) break;
     }
-  }
   if (!emPt()) {
-    const w = await resumoDaWikipedia(l?.titulo ?? titulo, l?.autor ?? autor);
+    const w = await resumoDaWikipedia(
+      titulosBR[0] ?? titulo,
+      l?.autor ?? autor,
+      "pt",
+    );
     if (w) achadas.push({ texto: w, fonte: "Wikipédia" });
   }
+  // último caso: em inglês, pelo título original
+  if (!achadas.length) {
+    const [original] = await traducoesDoTitulo(titulo, comTempo()).catch(
+      () => [],
+    );
+    const w = await resumoDaWikipedia(
+      original?.titulo ?? titulo,
+      original?.autor ?? autor,
+      "en",
+    );
+    if (w) achadas.push({ texto: w, fonte: "Wikipédia em inglês" });
+  }
+
+  titulosBR.push(...br.titulos);
+  for (const x of candidatos) if (x.capa) capasPossiveis.push(x.capa);
+  const capas = await conferirCapas(
+    capasPossiveis,
+    titulosBR[0] ?? titulo,
+    l?.autor ?? autor,
+  );
   const escolhida = emPt() ?? achadas[0];
-  if (!l && !escolhida) return null;
+  if (!l && !escolhida && !capas.length && !paginas) return null;
+
+  // título como saiu no Brasil: o da edição brasileira mais bem escrito (com acentos)
+  const tituloBR = titulosBR
+    .filter((t) => mesmoTitulo(t, titulo))
+    .sort((a, b) => acentos(b) - acentos(a))[0];
   return {
-    // o título digitado só é trocado pelo da edição brasileira do Google Books
     titulo:
-      emPortugues.find((x) => mesmoTitulo(x.titulo, titulo))?.titulo ?? titulo,
+      tituloBR && acentos(tituloBR) >= acentos(titulo) ? tituloBR : titulo,
     autor: l?.autor ?? autor,
     sinopse: escolhida?.texto.slice(0, 1200),
     paginas,
     ano: l?.ano,
-    capa,
+    capa: capas[0],
+    capas,
     fonte: escolhida?.fonte,
     emIngles: escolhida ? pareceIngles(escolhida.texto) : undefined,
   };

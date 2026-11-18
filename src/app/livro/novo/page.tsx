@@ -47,6 +47,8 @@ function Cadastro() {
   const [nota, setNota] = useState(0);
   const [erro, setErro] = useState<string | null>(null);
   const [sinopse, setSinopse] = useState("");
+  /** capas achadas na internet, para escolher */
+  const [capasAchadas, setCapasAchadas] = useState<string[]>([]);
   const [ia, setIa] = useState<{
     estado: "procurando" | "pronto" | "nada" | "erro";
     fonte?: string;
@@ -64,7 +66,9 @@ function Cadastro() {
       if (r.autor && !autor.trim()) setAutor(r.autor.toLowerCase());
       if (r.sinopse && !sinopse.trim()) setSinopse(r.sinopse);
       if (r.paginas && !paginas) setPaginas(String(r.paginas));
-      if (r.capa && !capa) setCapa(r.capa);
+      setCapasAchadas(r.capas);
+      // a capa achada só entra se a pessoa ainda não pôs uma foto dela
+      if (r.capa && (!capa || capasAchadas.includes(capa))) setCapa(r.capa);
       setIa({ estado: "pronto", fonte: r.fonte, emIngles: r.emIngles });
     } catch {
       setIa({ estado: "erro" });
@@ -215,6 +219,33 @@ function Cadastro() {
                   : "procura o livro no Google Books, BrasilAPI, Open Library e Wikipédia, de preferência a edição brasileira, e preenche sinopse, páginas e capa."}
           </p>
         </div>
+
+        {capasAchadas.length ? (
+          <div>
+            <p className={rotuloCampo}>capas achadas · toque para escolher</p>
+            <ul className="-mx-1 mt-2 flex gap-2.5 overflow-x-auto px-1 pb-1">
+              {capasAchadas.map((u) => (
+                <li key={u} className="flex-none">
+                  <button
+                    type="button"
+                    aria-pressed={capa === u}
+                    aria-label="usar esta capa"
+                    onClick={() => setCapa(u)}
+                    className={`block w-[62px] overflow-hidden rounded-[3px] border-2 ${capa === u ? "border-bordo" : "border-transparent"}`}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={u}
+                      alt=""
+                      className="aspect-[2/3] w-full object-cover"
+                      loading="lazy"
+                    />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
 
         <label className="block">
           <span className={rotuloCampo}>sinopse</span>
