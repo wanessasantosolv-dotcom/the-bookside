@@ -1,6 +1,6 @@
 "use client";
 
-import type { ComponentProps } from "react";
+import { useState, type ComponentProps } from "react";
 import { CapaLivro } from "@/components/CapaLivro";
 import { useCapaDoLivro } from "@/lib/catalogo";
 import { corDoLivro } from "@/lib/cores";
@@ -15,6 +15,16 @@ export function CapaAuto({
   className?: ComponentProps<typeof CapaLivro>["className"];
   cor?: string;
 }) {
-  const capa = useCapaDoLivro(livro);
-  return <CapaLivro titulo={livro.titulo} capa={capa} cor={cor ?? corDoLivro(livro.id)} className={className} />;
+  const [quebrada, setQuebrada] = useState<string>();
+  const capa = useCapaDoLivro(livro, quebrada);
+  return (
+    <CapaLivro
+      key={capa}
+      titulo={livro.titulo}
+      capa={capa}
+      cor={cor ?? corDoLivro(livro.id)}
+      className={className}
+      onFalha={setQuebrada}
+    />
+  );
 }

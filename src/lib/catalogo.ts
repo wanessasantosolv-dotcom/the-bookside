@@ -301,7 +301,7 @@ const useCapas = create<{
       definir: (id, url) => set((s) => ({ capas: { ...s.capas, [id]: url } })),
     }),
     {
-      name: "bookside-capas-v4",
+      name: "bookside-capas-v5",
       storage: createJSONStorage(() => localStorage),
     },
   ),
@@ -419,22 +419,40 @@ async function procurarCapa(tituloCompleto: string, autorCompleto: string): Prom
   ];
   let falhas = 0;
   const vistas = new Set<string>();
-  for (const [fonte, a] of tentativas) {
-    let urls: string[];
-    try {
-      urls = await fonte(titulo, a);
-    } catch {
-      falhas++;
-      continue;
-    }
+  const testar = async (urls: string[]) => {
     for (const u of urls.slice(0, 6)) {
       if (vistas.has(u)) continue;
       vistas.add(u);
       if (await pareceCapa(u)) return u;
     }
+    return "";
+  };
+  for (const [fonte, a] of tentativas) {
+    try {
+      const achada = await testar(await fonte(titulo, a));
+      if (achada) return achada;
+    } catch {
+      falhas++;
+    }
   }
-  // tudo falhou por rede: não guarda "sem capa", tenta outra hora
-  if (falhas === tentativas.length) throw new Error("sem conexão");
+  // último recurso: o título traduzido/original pelo Wikidata (ex.: em inglês)
+  try {
+    for (const t of (await traducoesDoTitulo(titulo)).slice(0, 2)) {
+      for (const fonte of [noGoogleBooks, daObraOriginal]) {
+        try {
+          const achada = await testar(await fonte(t.titulo, t.autor ?? autor));
+          if (achada) return achada;
+        } catch {
+          falhas++;
+        }
+      }
+    }
+  } catch {
+    falhas++;
+  }
+  // se alguma fonte falhou (sem internet, excesso de buscas), não anota "sem capa":
+  // tenta de novo outra hora
+  if (falhas) throw new Error("busca incompleta");
   return "";
 }
 
@@ -529,21 +547,33 @@ const pedidosCapa = new Set<string>();
  * ele; se faltar, a da sua estante; se ainda faltar, procura uma vez
  * (Google Books / Open Library) e guarda no navegador.
  */
-export function useCapaDoLivro(l: { id: string; titulo: string; autor: string; capa?: string }) {
-  const daEstante = usePerfil((s) => s.livros.find((x) => x.id === l.id)?.capa);
-  const guardada = useCapas((s) => s.capas[l.id]);
-  const falta = !l.capa && !daEstante && guardada === undefined;
+export function useCapaDoLivro(l: { id: string; titulo: string; autor: string; capa?: string }, quebrada?: string) {
+  const daEstanteBruta = usePerfil((s) => s.livros.find((x) => x.id === l.id)?.capa);
+  const guardadaBruta = useCapas((s) => s.capas[l.id]);
+  // uma capa que não carregou (link quebrado) conta como ausente
+  const propria = l.capa && l.capa !== quebrada ? l.capa : undefined;
+  const daEstante = daEstanteBruta && daEstanteBruta !== quebrada ? daEstanteBruta : undefined;
+  const guardada = guardadaBruta === quebrada ? undefined : guardadaBruta;
+  const falta = !propria && !daEstante && guardada === undefined;
+  const pedido = `${l.id}|${quebrada ?? ""}`;
   useEffect(() => {
-    if (!falta || pedidosCapa.has(l.id)) return;
-    pedidosCapa.add(l.id);
+    if (!falta || pedidosCapa.has(pedido)) return;
+    pedidosCapa.add(pedido);
     // uma busca por vez, para não ser bloqueada por excesso de pedidos
-    filaCapas = filaCapas.then(() =>
-      procurarCapa(l.titulo, l.autor)
-        .then((url) => useCapas.getState().definir(l.id, url))
-        .catch(() => pedidosCapa.delete(l.id)),
-    );
-  }, [falta, l.id, l.titulo, l.autor]);
-  return l.capa || daEstante || guardada || undefined;
+    filaCapas = filaCapas.then(async () => {
+      // até 3 tentativas, com uma pausa entre elas (a busca pode estar limitada)
+      for (let vez = 0; vez < 3; vez++) {
+        try {
+          useCapas.getState().definir(l.id, await procurarCapa(l.titulo, l.autor));
+          return;
+        } catch {
+          await new Promise((ok) => setTimeout(ok, 4000));
+        }
+      }
+      pedidosCapa.delete(pedido);
+    });
+  }, [falta, pedido, l.id, l.titulo, l.autor]);
+  return propria || daEstante || guardada || undefined;
 }
 
 /** Sugestões locais com as capas já encontradas. */

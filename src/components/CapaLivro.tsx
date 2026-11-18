@@ -11,11 +11,14 @@ export function CapaLivro({
   cor,
   capa,
   className = "",
+  onFalha,
 }: {
   titulo: string;
   cor: string;
   capa?: string;
   className?: string;
+  /** a imagem da capa não carregou */
+  onFalha?: (capa: string) => void;
 }) {
   const [falhou, setFalhou] = useState(false);
   const comImagem = !!capa && !falhou;
@@ -31,7 +34,10 @@ export function CapaLivro({
           src={capa}
           alt=""
           loading="lazy"
-          onError={() => setFalhou(true)}
+          onError={() => {
+            setFalhou(true);
+            if (capa) onFalha?.(capa);
+          }}
           className="absolute inset-0 size-full object-cover"
         />
       ) : null}
@@ -40,7 +46,9 @@ export function CapaLivro({
       ) : (
         <span className="absolute inset-x-1.5 top-2 h-px bg-ouro/70" />
       )}
-      <span className={`line-clamp-3 font-display text-[8px] leading-[1.15] font-semibold italic text-creme ${comImagem ? "sr-only" : ""}`}>
+      <span
+        className={`line-clamp-3 font-display text-[8px] leading-[1.15] font-semibold italic text-creme ${comImagem ? "sr-only" : ""}`}
+      >
         {titulo}
       </span>
     </div>
