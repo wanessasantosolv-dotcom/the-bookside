@@ -2,10 +2,18 @@
 
 import { CapaAuto } from "@/components/CapaAuto";
 import { Animacao } from "@/components/Animacao";
+import { SugerirCitacoes } from "@/components/SugerirCitacoes";
 import { useParams, useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { useClube } from "@/components/clube/ClubeContexto";
-import { botaoPrincipal, campo, EstrelasInput, Rodape, rotuloCampo, TopoForm } from "@/components/clube/Pecas";
+import {
+  botaoPrincipal,
+  campo,
+  EstrelasInput,
+  Rodape,
+  rotuloCampo,
+  TopoForm,
+} from "@/components/clube/Pecas";
 import { ErroOuFalta, Vazio } from "@/components/social/Estados";
 import {
   criterios,
@@ -24,8 +32,12 @@ function Formulario({ l, minha }: { l: LivroDoClube; minha: Ficha | null }) {
   const { clube } = useClube();
   const router = useRouter();
   const editarLivro = usePerfil((s) => s.editarLivro);
-  const [notas, setNotas] = useState<Partial<Record<Criterio, number>>>(minha?.notas ?? {});
-  const [nota, setNota] = useState<number>(minha?.nota ? Math.round(Number(minha.nota)) : 0);
+  const [notas, setNotas] = useState<Partial<Record<Criterio, number>>>(
+    minha?.notas ?? {},
+  );
+  const [nota, setNota] = useState<number>(
+    minha?.nota ? Math.round(Number(minha.nota)) : 0,
+  );
   const [personagem, setPersonagem] = useState(minha?.personagem ?? "");
   const [citacao, setCitacao] = useState(minha?.citacao ?? "");
   const [texto, setTexto] = useState(minha?.texto ?? "");
@@ -35,7 +47,8 @@ function Formulario({ l, minha }: { l: LivroDoClube; minha: Ficha | null }) {
   const [erro, setErro] = useState<string | null>(null);
 
   // sem nota geral, vale a média dos critérios
-  const notaFinal = nota || Math.round((media(Object.values(notas)) ?? 0) * 2) / 2;
+  const notaFinal =
+    nota || Math.round((media(Object.values(notas)) ?? 0) * 2) / 2;
 
   async function publicar(e: FormEvent) {
     e.preventDefault();
@@ -58,7 +71,12 @@ function Formulario({ l, minha }: { l: LivroDoClube; minha: Ficha | null }) {
       if (naEstante) {
         const agora = new Date().toISOString();
         editarLivro(
-          { id: l.livro.id, titulo: l.livro.titulo, autor: l.livro.autor, capa: l.livro.capa },
+          {
+            id: l.livro.id,
+            titulo: l.livro.titulo,
+            autor: l.livro.autor,
+            capa: l.livro.capa,
+          },
           {
             status: "lido",
             lidoEm: agora,
@@ -78,7 +96,12 @@ function Formulario({ l, minha }: { l: LivroDoClube; minha: Ficha | null }) {
   return (
     <form onSubmit={publicar} className="flex min-h-[70dvh] flex-col">
       {enviando ? (
-        <Animacao tipo="carimbo" titulo="guardando a sua ficha" sub="ela já aparece no mural do livro" tela />
+        <Animacao
+          tipo="carimbo"
+          titulo="guardando a sua ficha"
+          sub="ela já aparece no mural do livro"
+          tela
+        />
       ) : null}
       <TopoForm
         voltar={{ href: `/clubes/${clube.id}/leitura`, r: "leitura da vez" }}
@@ -90,25 +113,37 @@ function Formulario({ l, minha }: { l: LivroDoClube; minha: Ficha | null }) {
         <div className="flex gap-4">
           <div className="min-w-0 flex-1">
             <p className={rotuloCampo}>sua nota</p>
-            <EstrelasInput valor={nota || Math.round(notaFinal)} onMudar={setNota} rotulo="sua nota" />
+            <EstrelasInput
+              valor={nota || Math.round(notaFinal)}
+              onMudar={setNota}
+              rotulo="sua nota"
+            />
             <p className="mt-1 text-xs text-cinza">
               {l.livro.autor}
               {l.livro.paginas ? ` · ${l.livro.paginas} páginas` : ""}
             </p>
           </div>
-          <CapaAuto livro={l.livro}
+          <CapaAuto
+            livro={l.livro}
             className="w-[70px] [&>span:last-child]:hidden"
           />
         </div>
 
         <ul className="mt-4 border-t border-linha">
           {criterios.map((c) => (
-            <li key={c} className="flex items-center justify-between border-b border-linha py-1.5">
-              <span className="font-accent text-[15px] italic text-cinza">{c}</span>
+            <li
+              key={c}
+              className="flex items-center justify-between border-b border-linha py-1.5"
+            >
+              <span className="font-accent text-[15px] italic text-cinza">
+                {c}
+              </span>
               <EstrelasInput
                 pequeno
                 valor={notas[c] ?? 0}
-                onMudar={(n) => setNotas((x) => ({ ...x, [c]: n || undefined }))}
+                onMudar={(n) =>
+                  setNotas((x) => ({ ...x, [c]: n || undefined }))
+                }
                 rotulo={`nota para ${c}`}
               />
             </li>
@@ -137,6 +172,14 @@ function Formulario({ l, minha }: { l: LivroDoClube; minha: Ficha | null }) {
               className={`${campo} resize-none font-accent italic`}
             />
           </label>
+          <SugerirCitacoes
+            titulo={l.livro.titulo}
+            autor={l.livro.autor}
+            onEscolher={(c) => {
+              setCitacao(c.texto);
+              if (c.spoiler) setSpoiler(true);
+            }}
+          />
           <label className="block">
             <span className={rotuloCampo}>o que eu achei</span>
             <textarea
@@ -176,7 +219,11 @@ function Formulario({ l, minha }: { l: LivroDoClube; minha: Ficha | null }) {
         </p>
       ) : null}
       <Rodape>
-        <button type="submit" disabled={enviando} className={`${botaoPrincipal} lg:max-w-[640px]`}>
+        <button
+          type="submit"
+          disabled={enviando}
+          className={`${botaoPrincipal} lg:max-w-[640px]`}
+        >
           {enviando ? "publicando…" : minha ? "salvar ficha ✎" : "publicar ✎"}
         </button>
       </Rodape>
@@ -188,12 +235,35 @@ export default function FichaPage() {
   const { livro } = useParams<{ livro: string }>();
   const eu = useMeuId();
   const consulta = useConsulta(async () => {
-    const [l, fichas] = await Promise.all([livroDoClube(livro), fichasDe(livro)]);
+    const [l, fichas] = await Promise.all([
+      livroDoClube(livro),
+      fichasDe(livro),
+    ]);
     return l ? { l, minha: fichas.find((f) => f.autor === eu) ?? null } : null;
   }, [livro, eu]);
   if (consulta.carregando && !consulta.dados)
-    return <Animacao tipo="escrevendo" titulo="abrindo a sua ficha" frase="como foi a leitura?" sub="só um instante" />;
-  if (consulta.erro) return <ErroOuFalta erro={consulta.erro} onTentar={consulta.recarregar} />;
-  if (!consulta.dados) return <Vazio className="mx-6 mt-6 lg:mx-0" titulo="esse livro não está no clube" />;
-  return <Formulario key={consulta.dados.minha?.id ?? "nova"} l={consulta.dados.l} minha={consulta.dados.minha} />;
+    return (
+      <Animacao
+        tipo="escrevendo"
+        titulo="abrindo a sua ficha"
+        frase="como foi a leitura?"
+        sub="só um instante"
+      />
+    );
+  if (consulta.erro)
+    return <ErroOuFalta erro={consulta.erro} onTentar={consulta.recarregar} />;
+  if (!consulta.dados)
+    return (
+      <Vazio
+        className="mx-6 mt-6 lg:mx-0"
+        titulo="esse livro não está no clube"
+      />
+    );
+  return (
+    <Formulario
+      key={consulta.dados.minha?.id ?? "nova"}
+      l={consulta.dados.l}
+      minha={consulta.dados.minha}
+    />
+  );
 }

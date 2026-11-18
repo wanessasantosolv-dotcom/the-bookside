@@ -1,5 +1,6 @@
 "use client";
 
+import { completarLivro, ErroIA } from "@/lib/ia";
 import { Voltar } from "@/components/Voltar";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useRef, useState, type FormEvent } from "react";
@@ -45,6 +46,33 @@ function Cadastro() {
   const [lidoEm, setLidoEm] = useState(hoje());
   const [nota, setNota] = useState(0);
   const [erro, setErro] = useState<string | null>(null);
+  const [sinopse, setSinopse] = useState("");
+  const [ia, setIa] = useState<{
+    estado: "pensando" | "pronto" | "nada" | "erro";
+    msg?: string;
+  } | null>(null);
+
+  /** pesquisa o livro na internet (IA) e preenche o que estiver vazio */
+  async function completarComIA() {
+    if (titulo.trim().length < 2)
+      return setIa({ estado: "erro", msg: "escreva o título primeiro." });
+    setIa({ estado: "pensando" });
+    try {
+      const r = await completarLivro(titulo.trim(), autor.trim());
+      if (!r.encontrado) return setIa({ estado: "nada" });
+      if (r.titulo) setTitulo(r.titulo);
+      if (r.autor && !autor.trim()) setAutor(r.autor.toLowerCase());
+      if (r.sinopse) setSinopse(r.sinopse);
+      if (r.paginas && !paginas) setPaginas(String(r.paginas));
+      if (r.genero && !genero) setGenero(r.genero);
+      setIa({ estado: "pronto" });
+    } catch (x) {
+      setIa({
+        estado: "erro",
+        msg: x instanceof ErroIA ? x.message : "não deu para pesquisar agora.",
+      });
+    }
+  }
   const arquivo = useRef<HTMLInputElement>(null);
   const voltar = params.get("volta") || "/buscar";
 
@@ -74,6 +102,7 @@ function Cadastro() {
       {
         status,
         paginas: pags,
+        sinopse: sinopse.trim() || undefined,
         capaEscolhida: capa ? true : undefined,
         ...(status === "lendo" ? { iniciadoEm: agora } : {}),
         ...(status === "lido"
@@ -165,6 +194,40 @@ function Cadastro() {
             if (f) setAjustar(await reduzirImagem(f, 1600, 0.9));
           }}
         />
+
+        <div className="rounded-md border border-dashed border-bege px-4 py-3">
+          <button
+            type="button"
+            onClick={completarComIA}
+            disabled={ia?.estado === "pensando"}
+            className="flex min-h-10 items-center gap-2 text-[13px] font-semibold text-bordo disabled:opacity-60"
+          >
+            {ia?.estado === "pensando"
+              ? "✦ procurando na internet…"
+              : "✦ completar com IA"}
+          </button>
+          <p className="text-xs text-cinza">
+            {ia?.estado === "pronto"
+              ? "pronto! confira a sinopse, as páginas e o gênero antes de salvar."
+              : ia?.estado === "nada"
+                ? "não achei esse livro com certeza. confira o título e a autoria."
+                : ia?.estado === "erro"
+                  ? ia.msg
+                  : "a IA pesquisa o livro pelo título e autoria e escreve a sinopse para você."}
+          </p>
+        </div>
+
+        <label className="block">
+          <span className={rotuloCampo}>sinopse</span>
+          <textarea
+            value={sinopse}
+            onChange={(e) => setSinopse(e.target.value)}
+            maxLength={1200}
+            rows={4}
+            placeholder="sobre o que é o livro (opcional)"
+            className={`${campo} resize-none`}
+          />
+        </label>
 
         <div className="grid grid-cols-2 gap-3">
           <label className="block">

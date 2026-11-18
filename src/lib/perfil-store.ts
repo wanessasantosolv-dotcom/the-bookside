@@ -19,6 +19,8 @@ export type LivroSalvo = {
   id: string;
   titulo: string;
   autor: string;
+  /** sinopse (escrita pela IA ou pela pessoa, nos livros cadastrados à mão) */
+  sinopse?: string;
   status?: StatusLivro;
   /** URL da capa (Open Library) */
   capa?: string;
