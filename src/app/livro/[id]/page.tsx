@@ -3,7 +3,7 @@
 import { Voltar } from "@/components/Voltar";
 import Link from "next/link";
 import { notFound, useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { AppShell } from "@/components/AppShell";
 import { CapaLivro } from "@/components/CapaLivro";
 import { TrocarCapa } from "@/components/TrocarCapa";
@@ -15,10 +15,35 @@ import { corDoLivro } from "@/lib/cores";
 import { estrelas, infoDoLivro, todasAsEstantes } from "@/lib/estantes";
 import { usePerfil, type StatusLivro } from "@/lib/perfil-store";
 
-const acoes: { status: StatusLivro; rotulo: string }[] = [
-  { status: "lendo", rotulo: "lendo" },
-  { status: "lido", rotulo: "já li ✓" },
-  { status: "quero", rotulo: "quero ler ♡" },
+const acoes: { status: StatusLivro; rotulo: string; icone: ReactNode }[] = [
+  {
+    status: "lendo",
+    rotulo: "lendo",
+    icone: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M4 19.5V5.5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v14" />
+        <path d="M6.5 22a2 2 0 0 1-2-2v0a2 2 0 0 1 2-2H19" />
+      </svg>
+    ),
+  },
+  {
+    status: "lido",
+    rotulo: "já li",
+    icone: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
+        <path d="M20 6 9 17l-5-5" />
+      </svg>
+    ),
+  },
+  {
+    status: "quero",
+    rotulo: "quero ler",
+    icone: (
+      <svg width="16" height="18" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M6 3a2 2 0 0 0-2 2v16l8-5.5L20 21V5a2 2 0 0 0-2-2Z" />
+      </svg>
+    ),
+  },
 ];
 
 export default function LivroPage() {
@@ -216,7 +241,7 @@ export default function LivroPage() {
         <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-11 lg:px-14 lg:pt-10 lg:pb-16">
           <div>
             {/* status */}
-            <fieldset className="mt-5 flex gap-2 px-6 lg:mt-0 lg:px-0">
+            <fieldset className="mt-5 flex gap-6 px-6 lg:mt-0 lg:px-0">
               <legend className="sr-only">status do livro</legend>
               {acoes.map((a) => {
                 const on = status === a.status;
@@ -226,9 +251,16 @@ export default function LivroPage() {
                     type="button"
                     aria-pressed={on}
                     onClick={() => marcar(a.status)}
-                    className={`flex h-11 flex-1 items-center justify-center rounded-pill border border-bordo text-[13px] font-semibold ${on ? "bg-bordo text-creme" : "text-bordo hover:bg-rosa-fundo"}`}
+                    className={`flex flex-col items-center gap-1.5 ${on ? "font-semibold text-bordo" : "text-cinza"}`}
                   >
-                    {a.rotulo}
+                    <span
+                      className={`flex h-[46px] w-[46px] items-center justify-center rounded-full border-[1.5px] ${
+                        on ? "border-bordo bg-bordo text-creme" : "border-linha text-bordo"
+                      }`}
+                    >
+                      {a.icone}
+                    </span>
+                    <span className="text-[10.5px] font-semibold tracking-[.02em]">{a.rotulo}</span>
                   </button>
                 );
               })}
