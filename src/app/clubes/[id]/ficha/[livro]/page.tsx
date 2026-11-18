@@ -2,7 +2,6 @@
 
 import { CapaAuto } from "@/components/CapaAuto";
 import { Animacao } from "@/components/Animacao";
-import { SugerirCitacoes } from "@/components/SugerirCitacoes";
 import { useParams, useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { useClube } from "@/components/clube/ClubeContexto";
@@ -172,11 +171,6 @@ function Formulario({ l, minha }: { l: LivroDoClube; minha: Ficha | null }) {
               className={`${campo} resize-none font-accent italic`}
             />
           </label>
-          <SugerirCitacoes
-            titulo={l.livro.titulo}
-            autor={l.livro.autor}
-            onEscolher={(c) => setCitacao(c.texto)}
-          />
           <label className="block">
             <span className={rotuloCampo}>o que eu achei</span>
             <textarea

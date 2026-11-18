@@ -4,8 +4,6 @@
  * Informações de livros em fontes gratuitas da internet (sem IA):
  * - sinopse, páginas e capa: Google Books (edições em português primeiro),
  *   BrasilAPI pelo ISBN (Mercado Editorial, CBL), Open Library e Wikipédia;
- * - citações: Wikiquote em português e em inglês, na página do livro ou na
- *   página da autora (as frases que citam o livro como fonte).
  * Amazon, Goodreads e Skoob não oferecem acesso gratuito aos dados.
  */
 import {
@@ -34,7 +32,6 @@ export type InfoDoLivro = {
   /** onde procurou e o que cada fonte respondeu (para conferir quando não acha) */
   passos: string[];
 };
-export type Citacao = { texto: string; idioma: "pt" | "en"; fonte: string };
 
 const comTempo = (ms = 12000) => AbortSignal.timeout(ms);
 
@@ -364,170 +361,4 @@ export async function infoNaInternet(
     emIngles: escolhida ? pareceIngles(escolhida.texto) : undefined,
     passos,
   };
-}
-
-/* ---------- Wikiquote ---------- */
-
-/** Tira a marcação de wiki de uma linha de citação. */
-export function limparWiki(linha: string) {
-  return linha
-    .replace(/<ref[^>]*\/>/gi, "")
-    .replace(/<ref[^>]*>[\s\S]*?<\/ref>/gi, "")
-    .replace(/\{\{[^{}]*\}\}/g, "")
-    .replace(/\[\[(?:[^|\]]*\|)?([^\]]*)\]\]/g, "$1")
-    .replace(/\[https?:\/\/\S+\s([^\]]*)\]/g, "$1")
-    .replace(/\[https?:\/\/[^\]]*\]/g, "")
-    .replace(/<br\s*\/?>/gi, " ")
-    .replace(/<[^>]+>/g, "")
-    .replace(/'{2,}/g, "")
-    .replace(/&nbsp;/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-    .replace(/^["“”«»]+|["“”«»]+$/g, "")
-    .trim();
-}
-
-/** Citações de uma página do Wikiquote (linhas que começam com um só "*"). */
-export function citacoesDoWikitexto(wikitexto: string): string[] {
-  const fim = wikitexto.search(
-    /^==\s*(ver também|see also|links externos|external links|referências|references|sobre|about|quotes about)/im,
-  );
-  const corpo = fim > 0 ? wikitexto.slice(0, fim) : wikitexto;
-  const vistas = new Set<string>();
-  const lista: string[] = [];
-  for (const linha of corpo.split("\n")) {
-    const m = linha.match(/^\*(?![*:])\s*(.+)$/);
-    if (!m) continue;
-    const texto = limparWiki(m[1]);
-    if (
-      texto.length < 15 ||
-      texto.length > 400 ||
-      /^(capítulo|chapter|página|page|p\.)\s*\d/i.test(texto)
-    )
-      continue;
-    const chave = normalizar(texto);
-    if (vistas.has(chave)) continue;
-    vistas.add(chave);
-    lista.push(texto);
-  }
-  return lista;
-}
-
-/**
- * Na página de uma autora no Wikiquote, as frases vêm em seções por obra
- * ("== O Pequeno Príncipe ==") ou com a fonte embaixo ("** O Pequeno Príncipe, cap. 2").
- * Pega só as que são do livro pedido.
- */
-export function citacoesDaObra(wikitexto: string, titulos: string[]): string[] {
-  const linhas = wikitexto.split("\n");
-  const doLivro = (t: string) =>
-    titulos.some((x) => mesmoTitulo(limparWiki(t), x));
-  const lista: string[] = [];
-  let secao = "";
-  for (let i = 0; i < linhas.length; i++) {
-    const titulo = linhas[i].match(/^=+\s*(.+?)\s*=+\s*$/);
-    if (titulo) {
-      secao = titulo[1];
-      continue;
-    }
-    const m = linhas[i].match(/^\*(?![*:])\s*(.+)$/);
-    if (!m) continue;
-    let fonte = "";
-    for (let j = i + 1; j < linhas.length && /^\*[*:]/.test(linhas[j]); j++)
-      fonte += ` ${linhas[j]}`;
-    if (!doLivro(secao) && !doLivro(fonte)) continue;
-    const texto = limparWiki(m[1]);
-    if (texto.length >= 15 && texto.length <= 400 && !lista.includes(texto))
-      lista.push(texto);
-  }
-  return lista;
-}
-
-async function buscarPagina(idioma: "pt" | "en", termo: string) {
-  const busca = await json<{ query?: { search?: { title: string }[] } }>(
-    `https://${idioma}.wikiquote.org/w/api.php?format=json&origin=*&formatversion=2&action=query&list=search&srlimit=5&srsearch=${encodeURIComponent(termo)}`,
-  );
-  return (busca?.query?.search ?? []).map((r) => r.title);
-}
-
-async function wikitextoDe(idioma: "pt" | "en", pagina: string) {
-  const p = await json<{ parse?: { wikitext?: string } }>(
-    `https://${idioma}.wikiquote.org/w/api.php?format=json&origin=*&formatversion=2&action=parse&prop=wikitext&redirects=1&page=${encodeURIComponent(pagina)}`,
-  );
-  return p?.parse?.wikitext ?? "";
-}
-
-/** Página da autora no Wikiquote: frases que citam o livro. */
-async function citacoesNaPaginaDaAutora(
-  idioma: "pt" | "en",
-  autor: string,
-  titulos: string[],
-): Promise<Citacao[]> {
-  const sobrenome = normalizar(autor).split(" ").pop() ?? "";
-  const pagina = (await buscarPagina(idioma, autor)).find(
-    (t) => sobrenome && normalizar(t).includes(sobrenome),
-  );
-  if (!pagina) return [];
-  return citacoesDaObra(await wikitextoDe(idioma, pagina), titulos).map(
-    (texto) => ({
-      texto,
-      idioma,
-      fonte: `Wikiquote · ${pagina}`,
-    }),
-  );
-}
-
-async function citacoesNoWikiquote(
-  idioma: "pt" | "en",
-  titulo: string,
-): Promise<Citacao[]> {
-  const base = `https://${idioma}.wikiquote.org/w/api.php?format=json&origin=*&formatversion=2`;
-  const busca = await json<{ query?: { search?: { title: string }[] } }>(
-    `${base}&action=query&list=search&srlimit=5&srsearch=${encodeURIComponent(titulo)}`,
-  );
-  const pagina = (busca?.query?.search ?? []).find((r) =>
-    mesmoTitulo(r.title, titulo),
-  )?.title;
-  if (!pagina) return [];
-  const p = await json<{ parse?: { wikitext?: string } }>(
-    `${base}&action=parse&prop=wikitext&redirects=1&page=${encodeURIComponent(pagina)}`,
-  );
-  return citacoesDoWikitexto(p?.parse?.wikitext ?? "").map((texto) => ({
-    texto,
-    idioma,
-    fonte: `Wikiquote · ${pagina}`,
-  }));
-}
-
-/**
- * Até 8 citações. Ordem: página do livro no Wikiquote em português, página da
- * autora em português, e depois o mesmo em inglês (pelo título original).
- */
-export async function citacoesDoLivro(
-  titulo: string,
-  autor = "",
-): Promise<Citacao[]> {
-  const originais = await traducoesDoTitulo(titulo, comTempo()).catch(() => []);
-  const titulos = [titulo, ...originais.map((o) => o.titulo)].filter(
-    (t, i, a) => a.indexOf(t) === i,
-  );
-  const autoria =
-    autor && autor !== "autoria desconhecida"
-      ? autor
-      : (originais[0]?.autor ?? "");
-  const etapas: (() => Promise<Citacao[]>)[] = [
-    ...titulos.map((t) => () => citacoesNoWikiquote("pt", t)),
-    ...(autoria
-      ? [() => citacoesNaPaginaDaAutora("pt", autoria, titulos)]
-      : []),
-    ...titulos.map((t) => () => citacoesNoWikiquote("en", t)),
-    ...(autoria
-      ? [() => citacoesNaPaginaDaAutora("en", autoria, titulos)]
-      : []),
-  ];
-  for (const etapa of etapas) {
-    const achadas = await etapa().catch(() => []);
-    if (achadas.length) return achadas.slice(0, 8);
-  }
-  return [];
 }
