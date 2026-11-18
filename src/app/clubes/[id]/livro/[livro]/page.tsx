@@ -13,33 +13,77 @@ import { criterios, fichasDe, livroDoClube, media, virgula, type Ficha } from "@
 import { estrelas } from "@/lib/estantes";
 import { nomeDe, useConsulta, useMeuId, type PessoaResumo } from "@/lib/social";
 
-const rotuloFicha = "text-[9px] font-semibold tracking-[.14em] text-bordo uppercase";
-const campoFicha = "rounded-[3px] border border-fio px-3 py-2";
+const rotuloFicha = "font-maquina text-[9px] font-semibold tracking-[.1em] text-bordo-suave uppercase";
+const campoFicha = "rounded-[3px] border border-linha px-3 py-2";
 
-function CartaoFicha({ f, pessoa, eu, clubeId }: { f: Ficha; pessoa: PessoaResumo | null; eu: string | null; clubeId: string }) {
+/** selo circular com o nome do clube em curva, tipo carimbo de biblioteca */
+function SeloFicha({ nota, nomeClube }: { nota: number; nomeClube: string }) {
+  const id = "selo-curva";
+  return (
+    <svg viewBox="0 0 100 100" className="size-[66px] shrink-0 -rotate-[8deg]" aria-hidden>
+      <defs>
+        <path id={id} d="M50,50 m-37,0 a37,37 0 1,1 74,0 a37,37 0 1,1 -74,0" />
+      </defs>
+      <circle cx="50" cy="50" r="37" fill="none" stroke="currentColor" strokeWidth="1.3" strokeDasharray="2.5 3.2" />
+      <circle cx="50" cy="50" r="31" fill="none" stroke="currentColor" strokeWidth="0.6" opacity={0.5} />
+      <text fontFamily="var(--font-maquina)" fontSize="6.4" letterSpacing="2" fill="currentColor">
+        <textPath href={`#${id}`} startOffset="4">
+          ★ {nomeClube.toUpperCase()} ★
+        </textPath>
+      </text>
+      <text x="50" y="47" textAnchor="middle" fontFamily="var(--font-sans)" fontWeight="700" fontSize="21" fill="currentColor">
+        {virgula(nota)}
+      </text>
+      <text x="50" y="61" textAnchor="middle" fontFamily="var(--font-maquina)" fontSize="6.2" letterSpacing="1.5" fill="currentColor">
+        ESTRELAS
+      </text>
+    </svg>
+  );
+}
+
+function CartaoFicha({
+  f,
+  pessoa,
+  eu,
+  clubeId,
+  nomeClube,
+}: {
+  f: Ficha;
+  pessoa: PessoaResumo | null;
+  eu: string | null;
+  clubeId: string;
+  nomeClube: string;
+}) {
   const [revelar, setRevelar] = useState(!f.spoiler || f.autor === eu);
   return (
-    <li className="overflow-hidden rounded-[4px] border border-fio bg-creme-quente">
-      <div className="flex items-center justify-between gap-3 bg-bordo px-4 py-2.5">
+    <li className="relative overflow-hidden rounded-[6px] border border-linha bg-creme-quente shadow-[0_14px_30px_-20px_rgba(43,20,32,.35)]">
+      {/* marquinhas de "furo", tipo bilhete de biblioteca */}
+      <span aria-hidden className="absolute top-[46px] -left-[9px] size-[18px] rounded-full bg-mesa" />
+      <span aria-hidden className="absolute top-[46px] -right-[9px] size-[18px] rounded-full bg-mesa" />
+
+      <div className="relative flex items-center justify-between gap-3 bg-gradient-to-br from-bordo to-bordo-escuro px-4 pt-3 pb-3">
+        <span className="font-maquina absolute top-1.5 left-4 text-[8px] tracking-[.06em] text-creme/55">
+          ficha nº {f.id.slice(0, 4)}
+        </span>
         <Link
           href={pessoa?.usuario ? `/clubes/${clubeId}/membro/${pessoa.usuario}` : "#"}
-          className="flex min-w-0 items-center gap-2"
+          className="mt-2.5 flex min-w-0 items-center gap-2"
         >
           <Avatar pessoa={pessoa} tamanho={24} className="border border-creme/40" />
           <span className="truncate font-display text-lg italic text-creme lg:font-revista">
             {f.autor === eu ? "você" : nomeDe(pessoa)}
           </span>
         </Link>
-        <span className="flex-none text-sm text-creme" aria-label={`nota ${f.nota} de 5`}>
-          {estrelas(Number(f.nota))}
+        <span className="text-creme">
+          <SeloFicha nota={Number(f.nota)} nomeClube={nomeClube} />
         </span>
       </div>
 
-      <div className="space-y-2.5 p-4">
-        <div className="grid grid-cols-2 gap-2.5">
+      <div className="space-y-3 p-4">
+        <div className="grid grid-cols-2 gap-2.5 border-b border-dashed border-bege pb-3.5">
           {criterios.map((c) => (
             <div key={c}>
-              <span className="inline-flex items-center rounded-pill bg-rosa-fundo px-2.5 py-0.5 text-[9px] font-semibold tracking-[.1em] text-rosa-antigo uppercase">
+              <span className="font-maquina inline-flex items-center rounded-pill bg-rosa-fundo px-2.5 py-0.5 text-[9px] text-rosa-antigo uppercase">
                 {c}
               </span>
               <p className="mt-1 text-sm text-bordo">{estrelas(f.notas[c])}</p>
@@ -57,17 +101,17 @@ function CartaoFicha({ f, pessoa, eu, clubeId }: { f: Ficha; pessoa: PessoaResum
         {revelar ? (
           <>
             {f.citacao ? (
-              <blockquote className="relative px-1 py-0.5">
-                <span aria-hidden className="absolute -top-2 -left-0.5 font-display text-3xl text-ouro/60">
+              <blockquote className="relative border-t border-dashed border-bege px-1 pt-3.5 pb-0.5">
+                <span aria-hidden className="absolute top-2 -left-0.5 font-display text-3xl text-rosa-claro">
                   “
                 </span>
-                <p className="pl-3 font-display text-[16px] leading-[1.35] font-semibold italic text-bordo lg:font-revista lg:font-normal lg:text-tinta">
+                <p className="pl-3 font-display text-[16px] leading-[1.35] font-semibold italic text-bordo-escuro lg:font-revista lg:font-normal">
                   {f.citacao}
                 </p>
               </blockquote>
             ) : null}
             {f.texto ? (
-              <div className={campoFicha}>
+              <div className="rounded-md bg-rosa-fundo px-3 py-2.5">
                 <p className={rotuloFicha}>comentários:</p>
                 <p className="mt-1 text-sm leading-[1.5] whitespace-pre-line text-tinta-suave">{f.texto}</p>
               </div>
@@ -83,8 +127,9 @@ function CartaoFicha({ f, pessoa, eu, clubeId }: { f: Ficha; pessoa: PessoaResum
           </button>
         )}
 
-        <p className="text-right text-[9px] font-semibold tracking-[.1em] text-cinza uppercase">
-          {new Date(f.criado_em).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }).replace(".", "")}
+        <p className="font-maquina text-right text-[10px] tracking-[.06em] text-cinza">
+          registrada em{" "}
+          {new Date(f.criado_em).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" })}
         </p>
       </div>
     </li>
@@ -143,7 +188,14 @@ export default function FichasDoLivroPage() {
           {fichas.length ? (
             <ul className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
               {fichas.map((f) => (
-                <CartaoFicha key={f.id} f={f} pessoa={pessoa(f.autor)} eu={eu} clubeId={clube.id} />
+                <CartaoFicha
+                  key={f.id}
+                  f={f}
+                  pessoa={pessoa(f.autor)}
+                  eu={eu}
+                  clubeId={clube.id}
+                  nomeClube={clube.nome}
+                />
               ))}
             </ul>
           ) : (
