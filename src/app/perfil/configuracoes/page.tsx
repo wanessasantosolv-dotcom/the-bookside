@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
+import { InstalarApp } from "@/components/InstalarApp";
 import { Botao } from "@/components/ui/Botao";
 import { usePerfil } from "@/lib/perfil-store";
 import { sairDaConta, useNuvem } from "@/lib/nuvem";
@@ -36,6 +37,9 @@ export default function ConfiguracoesPage() {
             <dd className="text-[13px] text-cinza">{email ?? "não conectada"}</dd>
           </div>
         </dl>
+        <div className="mt-6">
+          <InstalarApp />
+        </div>
         <p className="mt-4 font-accent text-sm italic text-cinza">
           notificações, privacidade e o resto das configurações chegam numa próxima etapa.
         </p>

@@ -71,12 +71,22 @@ const spaceMono = localFont({
 export const metadata: Metadata = {
   title: "the bookside",
   description: "read ✦ track ✦ belong — sua estante, suas leituras e seus clubes.",
+  applicationName: "the bookside",
+  // no iPhone, "Adicionar à Tela de Início" abre em tela cheia, com este nome e ícone
+  appleWebApp: { capable: true, title: "bookside", statusBarStyle: "default" },
+  icons: {
+    icon: [{ url: "/icons/favicon-32.png", sizes: "32x32", type: "image/png" }],
+    apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180" }],
+  },
+  formatDetection: { telephone: false },
 };
 
 export const viewport: Viewport = {
   themeColor: "#6b0d24",
   width: "device-width",
   initialScale: 1,
+  // usa a tela toda no iPhone (o menu de baixo já respeita a barrinha do home)
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
