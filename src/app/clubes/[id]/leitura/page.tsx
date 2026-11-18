@@ -4,6 +4,7 @@ import { CapaAuto } from "@/components/CapaAuto";
 import { Animacao } from "@/components/Animacao";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import type { ReactNode } from "react";
 import { useClube } from "@/components/clube/ClubeContexto";
 import { botaoContorno } from "@/components/clube/Pecas";
 import { ErroOuFalta, Vazio } from "@/components/social/Estados";
@@ -72,19 +73,45 @@ export default function LeituraPage() {
     ? Array.from(new Set([1, ...[0.2, 0.4, 0.6, 0.8].map((x) => Math.max(1, Math.round(and.total * x))), and.total]))
     : [];
 
-  // status de cada um: quem entregou a ficha terminou, mesmo que não tenha marcado; senão vale o que a pessoa marcou (ou "não comecei" por padrão).
+  // status de cada um: o que a pessoa marcou manda sempre (dá pra voltar atrás a qualquer momento);
+  // só cai pra "terminei" sozinho quando ela já entregou a ficha antes de existir esse marcador.
   const statusDe = (usuarioId: string): StatusLeitura =>
-    fichas.some((f) => f.autor === usuarioId) ? "terminei" : (progresso.find((p) => p.usuario_id === usuarioId)?.status ?? "nao_comecei");
+    progresso.find((p) => p.usuario_id === usuarioId)?.status ?? (fichas.some((f) => f.autor === usuarioId) ? "terminei" : "nao_comecei");
   const meuStatus = statusDe(eu ?? "");
   const grupos = {
     terminei: membros.filter((m) => statusDe(m.usuario_id) === "terminei"),
     lendo: membros.filter((m) => statusDe(m.usuario_id) === "lendo"),
     nao_comecei: membros.filter((m) => statusDe(m.usuario_id) === "nao_comecei"),
   };
-  const PILLS: { v: StatusLeitura; icone: string; rotulo: string }[] = [
-    { v: "nao_comecei", icone: "📖", rotulo: "ainda não comecei" },
-    { v: "lendo", icone: "📑", rotulo: "estou lendo" },
-    { v: "terminei", icone: "✓", rotulo: "terminei" },
+  const PILLS: { v: StatusLeitura; rotulo: string; icone: ReactNode }[] = [
+    {
+      v: "nao_comecei",
+      rotulo: "ainda não comecei",
+      icone: (
+        <svg width="16" height="18" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M6 3a2 2 0 0 0-2 2v16l8-5.5L20 21V5a2 2 0 0 0-2-2Z" />
+        </svg>
+      ),
+    },
+    {
+      v: "lendo",
+      rotulo: "estou lendo",
+      icone: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M4 19.5V5.5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v14" />
+          <path d="M6.5 22a2 2 0 0 1-2-2v0a2 2 0 0 1 2-2H19" />
+        </svg>
+      ),
+    },
+    {
+      v: "terminei",
+      rotulo: "terminei",
+      icone: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
+          <path d="M20 6 9 17l-5-5" />
+        </svg>
+      ),
+    },
   ];
 
   return (
@@ -156,40 +183,45 @@ export default function LeituraPage() {
           <h3 className="mt-2 font-revista text-[21px] leading-[1.3] text-ameixa italic lg:font-display lg:font-semibold lg:not-italic lg:text-bordo">
             em que pé você está?
           </h3>
-          <div className="mt-[18px] flex gap-2">
-            {PILLS.map((p) => (
-              <button
-                key={p.v}
-                type="button"
-                onClick={async () => {
-                  await marcarProgresso(lendo.id, p.v);
-                  consulta.recarregar();
-                }}
-                className={`flex h-16 flex-1 flex-col items-center justify-center gap-1 rounded-lg border text-center ${
-                  meuStatus === p.v ? "border-bordo bg-rosa-fundo" : "border-linha bg-creme-quente"
-                }`}
-              >
-                <b aria-hidden className="text-lg leading-none">
-                  {p.icone}
-                </b>
-                <span className={`text-[9.5px] font-semibold tracking-[.06em] uppercase ${meuStatus === p.v ? "text-bordo" : "text-cinza"}`}>
-                  {p.rotulo}
-                </span>
-              </button>
-            ))}
-          </div>
+          <fieldset className="mt-5 flex gap-7">
+            <legend className="sr-only">em que pé você está na leitura</legend>
+            {PILLS.map((p) => {
+              const on = meuStatus === p.v;
+              return (
+                <button
+                  key={p.v}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={async () => {
+                    await marcarProgresso(lendo.id, p.v);
+                    consulta.recarregar();
+                  }}
+                  className={`flex flex-col items-center gap-1.5 ${on ? "font-semibold text-bordo" : "text-cinza"}`}
+                >
+                  <span
+                    className={`flex h-[46px] w-[46px] items-center justify-center rounded-full border-[1.5px] ${
+                      on ? "border-bordo bg-bordo text-creme" : "border-linha text-bordo"
+                    }`}
+                  >
+                    {p.icone}
+                  </span>
+                  <span className="text-[10.5px] font-semibold tracking-[.02em]">{p.rotulo}</span>
+                </button>
+              );
+            })}
+          </fieldset>
 
           {meuStatus === "terminei" ? (
             <Link
               href={`/clubes/${clube.id}/ficha/${lendo.id}`}
-              className="mt-[18px] flex h-[54px] items-center justify-between rounded-lg bg-bordo px-[22px] text-[13px] font-semibold text-creme"
+              className="mt-6 flex h-[54px] items-center justify-between rounded-md bg-bordo px-[22px] text-[13px] font-semibold text-creme"
             >
               <span>{minha ? "editar minha ficha ✎" : "escrever minha ficha ✎"}</span>
               <span aria-hidden>→</span>
             </Link>
           ) : (
-            <p className="mt-[18px] rounded-lg bg-[#F6EDE4] px-4 py-3.5 font-revista text-sm leading-[1.5] text-[#A8968A] italic">
-              quando marcar <b className="not-italic">terminei</b>, sua ficha desbloqueia aqui ✦
+            <p className="mt-6 font-accent text-sm leading-[1.5] text-cinza italic">
+              quando marcar <b className="font-semibold not-italic text-ameixa">terminei</b>, sua ficha desbloqueia aqui ✦
             </p>
           )}
         </section>
