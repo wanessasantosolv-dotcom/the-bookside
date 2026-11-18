@@ -79,6 +79,15 @@ export type Ficha = {
   criado_em: string;
 };
 
+export const statusLeitura = ["nao_comecei", "lendo", "terminei"] as const;
+export type StatusLeitura = (typeof statusLeitura)[number];
+export type Progresso = {
+  clube_livro_id: string;
+  usuario_id: string;
+  status: StatusLeitura;
+  atualizado_em: string;
+};
+
 export type Encontro = {
   id: string;
   clube_id: string;
@@ -425,6 +434,29 @@ export async function fichasDe(livroId: string): Promise<Ficha[]> {
     .order("criado_em", { ascending: false });
   if (error) throw error;
   return (data ?? []) as Ficha[];
+}
+
+// ───────── progresso de leitura ─────────
+
+export async function progressoDe(livroId: string): Promise<Progresso[]> {
+  const { data, error } = await db()
+    .from("progresso_leitura")
+    .select("clube_livro_id,usuario_id,status,atualizado_em")
+    .eq("clube_livro_id", livroId);
+  if (error) throw error;
+  return (data ?? []) as Progresso[];
+}
+
+export async function marcarProgresso(livroId: string, status: StatusLeitura) {
+  const eu = meuId();
+  if (!eu) return;
+  const { error } = await db()
+    .from("progresso_leitura")
+    .upsert(
+      { clube_livro_id: livroId, usuario_id: eu, status, atualizado_em: new Date().toISOString() },
+      { onConflict: "clube_livro_id,usuario_id" },
+    );
+  if (error) throw error;
 }
 
 export async function fichasDoClube(livroIds: string[]): Promise<Ficha[]> {

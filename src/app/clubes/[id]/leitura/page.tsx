@@ -5,10 +5,18 @@ import { Animacao } from "@/components/Animacao";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useClube } from "@/components/clube/ClubeContexto";
-import { botaoContorno, botaoPrincipal } from "@/components/clube/Pecas";
+import { botaoContorno } from "@/components/clube/Pecas";
 import { ErroOuFalta, Vazio } from "@/components/social/Estados";
 import { Avatar } from "@/components/social/Pessoas";
-import { andamento, encerrarLeitura, fichasDe, livrosDoClube } from "@/lib/clubes";
+import {
+  andamento,
+  encerrarLeitura,
+  fichasDe,
+  livrosDoClube,
+  marcarProgresso,
+  progressoDe,
+  type StatusLeitura,
+} from "@/lib/clubes";
 import { nomeDe, useConsulta, useMeuId } from "@/lib/social";
 
 export default function LeituraPage() {
@@ -18,14 +26,14 @@ export default function LeituraPage() {
   const consulta = useConsulta(async () => {
     const livros = await livrosDoClube(clube.id);
     const lendo = livros.find((l) => l.estado === "lendo") ?? null;
-    const fichas = lendo ? await fichasDe(lendo.id) : [];
-    return { livros, lendo, fichas };
+    const [fichas, progresso] = lendo ? await Promise.all([fichasDe(lendo.id), progressoDe(lendo.id)]) : [[], []];
+    return { livros, lendo, fichas, progresso };
   }, [clube.id]);
 
   if (consulta.carregando && !consulta.dados)
     return <Animacao tipo="marcador" titulo="separando sua página" sub="onde vocês pararam no livro" />;
   if (consulta.erro) return <ErroOuFalta erro={consulta.erro} onTentar={consulta.recarregar} />;
-  const { livros, lendo, fichas } = consulta.dados!;
+  const { livros, lendo, fichas, progresso } = consulta.dados!;
   const sugestoes = livros.filter((l) => l.estado === "sugerido").sort((a, b) => b.votos.length - a.votos.length);
   const moderadora = papel === "moderadora";
 
@@ -63,6 +71,21 @@ export default function LeituraPage() {
   const marcas = and
     ? Array.from(new Set([1, ...[0.2, 0.4, 0.6, 0.8].map((x) => Math.max(1, Math.round(and.total * x))), and.total]))
     : [];
+
+  // status de cada um: quem entregou a ficha terminou, mesmo que não tenha marcado; senão vale o que a pessoa marcou (ou "não comecei" por padrão).
+  const statusDe = (usuarioId: string): StatusLeitura =>
+    fichas.some((f) => f.autor === usuarioId) ? "terminei" : (progresso.find((p) => p.usuario_id === usuarioId)?.status ?? "nao_comecei");
+  const meuStatus = statusDe(eu ?? "");
+  const grupos = {
+    terminei: membros.filter((m) => statusDe(m.usuario_id) === "terminei"),
+    lendo: membros.filter((m) => statusDe(m.usuario_id) === "lendo"),
+    nao_comecei: membros.filter((m) => statusDe(m.usuario_id) === "nao_comecei"),
+  };
+  const PILLS: { v: StatusLeitura; icone: string; rotulo: string }[] = [
+    { v: "nao_comecei", icone: "📖", rotulo: "ainda não comecei" },
+    { v: "lendo", icone: "📑", rotulo: "estou lendo" },
+    { v: "terminei", icone: "✓", rotulo: "terminei" },
+  ];
 
   return (
     <div className="px-6 pt-6 lg:grid lg:grid-cols-[minmax(0,1fr)_340px] xl:grid-cols-[minmax(0,1fr)_380px] lg:gap-10 lg:px-0">
@@ -128,49 +151,56 @@ export default function LeituraPage() {
           </section>
         ) : null}
 
-        <section className="mt-7">
-          <p className="text-[10px] font-semibold tracking-[.16em] text-cinza uppercase">envelopes da próxima rodada</p>
-          <div className="mt-3 flex gap-3">
-            {(sugestoes.length ? sugestoes.slice(0, 3) : [null, null, null]).map((s, i) => (
-              <Link
-                key={s?.id ?? i}
-                href={`/clubes/${clube.id}/${s ? "sugestoes" : "sugerir"}`}
-                aria-label={s ? "sugestão lacrada: ver sugestões" : "envelope vazio: sugerir um livro"}
-                className={`relative flex h-[62px] w-[92px] items-center justify-center rounded-[4px] border ${
-                  s ? "border-bege bg-[#F3E6D3]" : "border-dashed border-bege"
+        <section className="mt-9 rounded-[10px] border border-linha p-[26px]">
+          <p className="text-[10px] font-semibold tracking-[.16em] text-cinza uppercase">sua leitura</p>
+          <h3 className="mt-2 font-revista text-[21px] leading-[1.3] text-ameixa italic lg:font-display lg:font-semibold lg:not-italic lg:text-bordo">
+            em que pé você está?
+          </h3>
+          <div className="mt-[18px] flex gap-2">
+            {PILLS.map((p) => (
+              <button
+                key={p.v}
+                type="button"
+                onClick={async () => {
+                  await marcarProgresso(lendo.id, p.v);
+                  consulta.recarregar();
+                }}
+                className={`flex h-16 flex-1 flex-col items-center justify-center gap-1 rounded-lg border text-center ${
+                  meuStatus === p.v ? "border-bordo bg-rosa-fundo" : "border-linha bg-creme-quente"
                 }`}
-                style={{ transform: `rotate(${[-3, 2, -1][i]}deg)` }}
               >
-                <span
-                  aria-hidden
-                  className="absolute inset-x-0 top-0 h-1/2 border-b border-bege/80 [clip-path:polygon(0_0,100%_0,50%_100%)] bg-[#EBDAC2]"
-                />
-                <span
-                  aria-hidden
-                  className={`relative mt-3 font-display text-xl italic ${s ? "text-bordo" : "text-bege"}`}
-                >
-                  ?
+                <b aria-hidden className="text-lg leading-none">
+                  {p.icone}
+                </b>
+                <span className={`text-[9.5px] font-semibold tracking-[.06em] uppercase ${meuStatus === p.v ? "text-bordo" : "text-cinza"}`}>
+                  {p.rotulo}
                 </span>
-              </Link>
+              </button>
             ))}
           </div>
-          <p className="mt-2 text-xs text-cinza">
-            {sugestoes.length
-              ? `${sugestoes.length} ${sugestoes.length === 1 ? "sugestão lacrada" : "sugestões lacradas"} esperando a vez.`
-              : "nenhuma sugestão ainda."}
-          </p>
+
+          {meuStatus === "terminei" ? (
+            <Link
+              href={`/clubes/${clube.id}/ficha/${lendo.id}`}
+              className="mt-[18px] flex h-[54px] items-center justify-between rounded-lg bg-bordo px-[22px] text-[13px] font-semibold text-creme"
+            >
+              <span>{minha ? "editar minha ficha ✎" : "escrever minha ficha ✎"}</span>
+              <span aria-hidden>→</span>
+            </Link>
+          ) : (
+            <p className="mt-[18px] rounded-lg bg-[#F6EDE4] px-4 py-3.5 font-revista text-sm leading-[1.5] text-[#A8968A] italic">
+              quando marcar <b className="not-italic">terminei</b>, sua ficha desbloqueia aqui ✦
+            </p>
+          )}
         </section>
 
-        <div className="mt-7 flex gap-2.5 lg:max-w-[520px]">
-          <Link href={`/clubes/${clube.id}/ficha/${lendo.id}`} className={botaoPrincipal}>
-            {minha ? "editar minha ficha ✎" : "escrever ficha ✎"}
-          </Link>
-          {moderadora ? (
+        {moderadora ? (
+          <div className="mt-4">
             <Link href={`/clubes/${clube.id}/escolher`} className={botaoContorno}>
               trocar livro
             </Link>
-          ) : null}
-        </div>
+          </div>
+        ) : null}
         {moderadora ? (
           <button
             type="button"
@@ -187,22 +217,60 @@ export default function LeituraPage() {
       </div>
 
       <aside className="mt-8 lg:mt-0">
-        <div className="rounded-xl border border-linha p-4 lg:rounded-[4px] lg:border-fio lg:p-5">
-          <p className="text-[10px] font-semibold tracking-[.16em] text-cinza uppercase">
-            fichas entregues · {fichas.length} de {membros.length}
-          </p>
-          <ul className="mt-3 space-y-2.5">
-            {membros.map((m) => {
-              const f = fichas.find((x) => x.autor === m.usuario_id);
-              return (
-                <li key={m.usuario_id} className="flex items-center gap-2.5 text-[13px]">
-                  <Avatar pessoa={m.pessoa} tamanho={26} />
-                  <span className="flex-1 truncate">{m.usuario_id === eu ? "você" : nomeDe(m.pessoa)}</span>
-                  <span className={`text-xs ${f ? "text-bordo" : "text-cinza"}`}>{f ? "entregou ✓" : "lendo…"}</span>
-                </li>
-              );
-            })}
-          </ul>
+        <div className="rounded-xl border border-linha p-4 lg:rounded-[10px] lg:p-[22px]">
+          <div className="flex items-baseline justify-between">
+            <p className="font-revista text-[19px] text-ameixa italic lg:font-display lg:font-semibold lg:not-italic lg:text-tinta">
+              progresso do grupo
+            </p>
+            <span className="font-maquina text-[11px] font-bold text-cinza">
+              {grupos.terminei.length} de {membros.length}
+            </span>
+          </div>
+
+          <div className="mt-[18px] mb-[22px] flex items-center gap-4">
+            <AnelProgresso pct={membros.length ? grupos.terminei.length / membros.length : 0} />
+            <p className="text-[12.5px] leading-[1.4] text-cinza">
+              <b className="text-ameixa">
+                {grupos.terminei.length} de {membros.length}
+              </b>{" "}
+              já {grupos.terminei.length === 1 ? "terminou" : "terminaram"} a leitura
+              {grupos.lendo.length || grupos.nao_comecei.length
+                ? ` — falta ${[...grupos.lendo, ...grupos.nao_comecei].map((m) => (m.usuario_id === eu ? "você" : nomeDe(m.pessoa))).join(", ")} ✦`
+                : " ✦"}
+            </p>
+          </div>
+
+          {(
+            [
+              ["terminei", "terminaram", "#6B7A5E"],
+              ["lendo", "lendo", "#B75A6B"],
+              ["nao_comecei", "ainda não começaram", "#D8C3AA"],
+            ] as const
+          ).map(([chave, rotulo, cor]) => {
+            const lista = grupos[chave];
+            if (!lista.length) return null;
+            return (
+              <div key={chave} className="border-t border-linha pt-3 pb-1 first:border-t-0 first:pt-0">
+                <p className="flex items-center gap-1.5 text-[10px] font-semibold tracking-[.1em] text-cinza uppercase">
+                  <span aria-hidden className="h-[7px] w-[7px] rounded-full" style={{ background: cor }} />
+                  {rotulo} · {lista.length}
+                </p>
+                <ul className="mt-2 space-y-2">
+                  {lista.map((m) => {
+                    const f = fichas.find((x) => x.autor === m.usuario_id);
+                    return (
+                      <li key={m.usuario_id} className="flex items-center gap-2.5 text-[13px]">
+                        <Avatar pessoa={m.pessoa} tamanho={26} />
+                        <span className="flex-1 truncate">{m.usuario_id === eu ? "você" : nomeDe(m.pessoa)}</span>
+                        <span className="font-revista text-xs text-cinza italic">{f ? "escreveu a ficha" : chave === "lendo" ? "lendo…" : ""}</span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            );
+          })}
+
           {fichas.length ? (
             <Link
               href={`/clubes/${clube.id}/livro/${lendo.id}`}
@@ -214,5 +282,31 @@ export default function LeituraPage() {
         </div>
       </aside>
     </div>
+  );
+}
+
+/** Anelzinho com o % do clube que já terminou a leitura da vez. */
+function AnelProgresso({ pct }: { pct: number }) {
+  const r = 27;
+  const volta = 2 * Math.PI * r;
+  return (
+    <svg width="64" height="64" viewBox="0 0 64 64" className="flex-none" role="img" aria-label={`${Math.round(pct * 100)}% do clube terminou`}>
+      <circle cx="32" cy="32" r={r} fill="none" stroke="#F6E3E7" strokeWidth="7" />
+      <circle
+        cx="32"
+        cy="32"
+        r={r}
+        fill="none"
+        stroke="#8E1D3D"
+        strokeWidth="7"
+        strokeLinecap="round"
+        strokeDasharray={volta}
+        strokeDashoffset={volta * (1 - pct)}
+        transform="rotate(-90 32 32)"
+      />
+      <text x="32" y="38" textAnchor="middle" fontStyle="italic" fontWeight="700" fontSize="15" fill="#2B1420" fontFamily="var(--font-revista), serif">
+        {Math.round(pct * 100)}%
+      </text>
+    </svg>
   );
 }

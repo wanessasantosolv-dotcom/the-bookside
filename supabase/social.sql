@@ -387,3 +387,22 @@ language sql stable security invoker set search_path = public as $$
 $$;
 revoke all on function public.livros_em_alta(int) from anon, public;
 grant execute on function public.livros_em_alta(int) to authenticated;
+
+-- progresso de cada membro na leitura em andamento (não comecei / lendo / terminei)
+create table if not exists public.progresso_leitura (
+  clube_livro_id uuid not null references public.clube_livros (id) on delete cascade,
+  usuario_id uuid not null references auth.users (id) on delete cascade,
+  status text not null default 'lendo' check (status in ('nao_comecei', 'lendo', 'terminei')),
+  atualizado_em timestamptz not null default now(),
+  primary key (clube_livro_id, usuario_id)
+);
+alter table public.progresso_leitura enable row level security;
+drop policy if exists "membros veem o progresso" on public.progresso_leitura;
+create policy "membros veem o progresso" on public.progresso_leitura for select to authenticated
+  using (exists (select 1 from clube_livros l where l.id = clube_livro_id and public.e_membro(l.clube_id)));
+drop policy if exists "marcar o próprio progresso" on public.progresso_leitura;
+create policy "marcar o próprio progresso" on public.progresso_leitura for insert to authenticated
+  with check (usuario_id = auth.uid() and exists (select 1 from clube_livros l where l.id = clube_livro_id and public.e_membro(l.clube_id)));
+drop policy if exists "atualizar o próprio progresso" on public.progresso_leitura;
+create policy "atualizar o próprio progresso" on public.progresso_leitura for update to authenticated
+  using (usuario_id = auth.uid()) with check (usuario_id = auth.uid());
