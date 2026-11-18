@@ -896,6 +896,37 @@ type Estado = "sugestoes" | "carregando" | "pronto" | "erro";
  * Hook da busca: espera a pessoa parar de digitar, busca na Open Library
  * e, sem termo (ou sem internet), mostra as sugestões locais.
  */
+/**
+ * A busca de livros do app (a mesma em todo lugar: buscar, sugerir, escolher,
+ * importar): título, autoria ou os dois juntos, no Google Books e no Open Library;
+ * com poucos resultados, procura também pelo título original (Wikidata).
+ */
+export async function buscaDoApp(
+  termo: string,
+  signal?: AbortSignal,
+): Promise<LivroBusca[]> {
+  let livros = await buscarLivros(termo, signal);
+  if (livros.length < 3) {
+    try {
+      const [t] = await traducoesDoTitulo(termo, signal);
+      if (t) {
+        const mais = await buscarLivros(
+          `${t.titulo} ${t.autor ?? ""}`.trim(),
+          signal,
+        );
+        livros = [
+          ...livros,
+          ...mais.filter((m) => !livros.some((l) => l.id === m.id)),
+        ];
+      }
+    } catch (e) {
+      if ((e as Error).name === "AbortError") throw e;
+      /* sem tradução: fica o que achou */
+    }
+  }
+  return livros;
+}
+
 export function useBuscaLivros(termo: string) {
   const sugestoes = useSugestoesVivas();
   const [estado, setEstado] = useState<Estado>("sugestoes");
@@ -910,26 +941,8 @@ export function useBuscaLivros(termo: string) {
     const controle = new AbortController();
     setEstado("carregando");
     const espera = setTimeout(() => {
-      buscarLivros(limpo, controle.signal)
-        .then(async (livros) => {
-          // poucos resultados: procura pelo título original (Wikidata) também
-          if (livros.length < 3) {
-            try {
-              const [t] = await traducoesDoTitulo(limpo, controle.signal);
-              if (t) {
-                const mais = await buscarLivros(
-                  `${t.titulo} ${t.autor ?? ""}`.trim(),
-                  controle.signal,
-                );
-                livros = [
-                  ...livros,
-                  ...mais.filter((m) => !livros.some((l) => l.id === m.id)),
-                ];
-              }
-            } catch {
-              /* sem tradução: fica o que achou */
-            }
-          }
+      buscaDoApp(limpo, controle.signal)
+        .then((livros) => {
           if (controle.signal.aborted) return;
           setResultados(livros);
           setEstado("pronto");

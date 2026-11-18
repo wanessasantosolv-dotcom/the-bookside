@@ -7,7 +7,7 @@ import { AppShell } from "@/components/AppShell";
 import { Animacao } from "@/components/Animacao";
 import { CapaLivro } from "@/components/CapaLivro";
 import { botaoPrincipal, campo, rotuloCampo } from "@/components/clube/Pecas";
-import type { LivroBusca } from "@/lib/catalogo";
+import { buscaDoApp, type LivroBusca } from "@/lib/catalogo";
 import { corDoLivro } from "@/lib/cores";
 import {
   acharLivro,
@@ -39,9 +39,9 @@ const rotuloNota = (n: number) =>
 const hoje = () => new Date().toISOString().slice(0, 10);
 const espera = (ms: number) => new Promise((ok) => setTimeout(ok, ms));
 
-/** Busca esperta (título, autoria e tradução do título); com termo, procura o que a pessoa digitou. */
-function acharOpcoes(item: ItemImport, termo?: string): Promise<LivroBusca[]> {
-  return acharLivro(termo ? { titulo: termo } : item);
+/** Busca esperta para cada linha da lista (título, autoria e tradução do título). */
+function acharOpcoes(item: ItemImport): Promise<LivroBusca[]> {
+  return acharLivro(item);
 }
 
 export default function ImportarPage() {
@@ -105,7 +105,10 @@ export default function ImportarPage() {
   async function procurarDeNovo(i: number, termo: string) {
     if (!linhas || termo.trim().length < 2) return;
     mudar(i, { buscando: true });
-    const opcoes = await acharOpcoes(linhas[i].item, termo.trim());
+    // "procurar de novo" usa a mesma busca da tela de buscar (título, autoria ou os dois)
+    const opcoes = (
+      await buscaDoApp(termo.trim()).catch(() => [] as LivroBusca[])
+    ).slice(0, 12);
     mudar(i, {
       opcoes,
       escolhido: opcoes.length ? 0 : -1,
