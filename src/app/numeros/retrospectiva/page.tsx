@@ -48,7 +48,7 @@ export default function RetrospectivaPage() {
 
   return (
     <AppShell aba="numeros">
-      <NumerosWeb n={n} nome={nome} frase={frase} />
+      <NumerosWeb n={n} nome={nome} frase={frase} aba="retro" />
       <div className="papel-noite flex flex-1 flex-col px-6 pb-6 text-creme lg:hidden">
         <header className="flex items-center justify-between pt-2">
           <Voltar

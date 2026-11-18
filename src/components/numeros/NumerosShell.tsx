@@ -38,7 +38,7 @@ export function NumerosShell({
 
   return (
     <AppShell aba="numeros">
-      <NumerosWeb n={n} nome={nome} frase={frase} />
+      <NumerosWeb n={n} nome={nome} frase={frase} aba={aba} />
       <div className="flex flex-1 flex-col lg:hidden">
         <header className="flex items-center justify-between px-6 pt-2">
           <span className="flex min-h-11 items-center text-[13px] font-semibold">seus números</span>
