@@ -12,6 +12,14 @@ import { livrosDaEstante, todasAsEstantes, type EstanteInfo } from "@/lib/estant
 import { usePerfil, type LivroSalvo } from "@/lib/perfil-store";
 
 type Filtro = "todos" | string;
+type Visualizacao = "prateleira" | "leque" | "estante";
+
+const PROXIMA_VISUALIZACAO: Record<Visualizacao, Visualizacao> = { prateleira: "leque", leque: "estante", estante: "prateleira" };
+const ROTULO_PROXIMA_VISUALIZACAO: Record<Visualizacao, string> = {
+  prateleira: "ver como leque de capas ✧",
+  leque: "ver como estante de pé ✦",
+  estante: "ver como prateleiras",
+};
 
 function Etiqueta({ e, qtd }: { e: EstanteInfo; qtd: number }) {
   return (
@@ -95,9 +103,92 @@ function LequeLinhaWeb({ livros }: { livros: LivroSalvo[] }) {
   );
 }
 
+function hashLombada(id: string, semente: number) {
+  let h = semente;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  return h;
+}
+
+function larguraLombada(l: LivroSalvo) {
+  if (l.paginas) return Math.max(20, Math.min(36, Math.round(20 + (l.paginas / 500) * 16)));
+  return 22 + (hashLombada(l.id, 7) % 14);
+}
+
+function alturaLombada(l: LivroSalvo, base: number) {
+  return base + (hashLombada(l.id, 13) % 20);
+}
+
+/** lombada de verdade: fatia da capa real recortada, ou um bloco colorido com o título na vertical quando não tem capa. */
+function LombadaLivro({ l, alturaBase }: { l: LivroSalvo; alturaBase: number }) {
+  const [falhou, setFalhou] = useState(false);
+  const largura = larguraLombada(l);
+  const altura = alturaLombada(l, alturaBase);
+  const cor = corDoLivro(l.id);
+  const comImagem = !!l.capa && !falhou;
+  return (
+    <Link
+      href={`/livro/${l.id}`}
+      title={l.titulo}
+      className="relative flex-none self-end overflow-hidden rounded-t-[2px] transition-transform hover:-translate-y-1.5"
+      style={{ width: largura, height: altura, background: cor }}
+    >
+      {comImagem ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={l.capa} alt="" loading="lazy" onError={() => setFalhou(true)} className="absolute top-0 left-0 h-full w-auto max-w-none" />
+      ) : (
+        <span className="absolute inset-x-0 bottom-2.5 flex justify-center overflow-hidden" style={{ maxHeight: "85%" }}>
+          <span
+            className="font-revista text-[10px] font-semibold whitespace-nowrap text-creme italic"
+            style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
+          >
+            {l.titulo}
+          </span>
+        </span>
+      )}
+      <span aria-hidden className="pointer-events-none absolute inset-0 shadow-[inset_2px_0_0_rgba(0,0,0,.12),2px_0_6px_-2px_rgba(43,20,32,.3)]" />
+    </Link>
+  );
+}
+
+/** fileira de lombadas em pé numa tábua de madeira — a "estante de verdade". */
+function EstanteDeVerdadeFila({ livros, alturaBase }: { livros: LivroSalvo[]; alturaBase: number }) {
+  if (!livros.length) return <p className="font-accent text-sm italic text-cinza">ainda sem livros ✦</p>;
+  return (
+    <div className="relative overflow-x-auto rounded-md bg-gradient-to-b from-[#F3ECE1] to-[#EFE6D8] px-5 pt-6 pb-4 [scrollbar-width:none]">
+      <div className="relative flex items-end gap-[3px]" style={{ minHeight: alturaBase + 20 }}>
+        {livros.map((l) => (
+          <LombadaLivro key={l.id} l={l} alturaBase={alturaBase} />
+        ))}
+      </div>
+      <span
+        aria-hidden
+        className="mt-3 block h-4 rounded-[3px] bg-gradient-to-b from-ouro to-[#A9814E] shadow-[0_5px_0_#8C6B3E,0_9px_14px_-6px_rgba(43,20,32,.35)]"
+      />
+    </div>
+  );
+}
+
+/** cartão mobile da estante de verdade, com título + etiqueta igual Prateleira/Leque. */
+function EstanteDeVerdade({ e, livros }: { e: EstanteInfo; livros: LivroSalvo[] }) {
+  return (
+    <section className="animate-subir">
+      <div className="mb-2.5 flex items-baseline justify-between">
+        <span className="flex items-center gap-2">
+          <Etiqueta e={e} qtd={livros.length} />
+          <span className="font-display text-xl leading-none font-semibold italic text-bordo">{e.nome}</span>
+        </span>
+        <Link href={`/estantes/${e.id}`} className="eyebrow !text-[10px] text-cinza">
+          abrir →
+        </Link>
+      </div>
+      <EstanteDeVerdadeFila livros={livros.slice(0, 10)} alturaBase={130} />
+    </section>
+  );
+}
+
 function EstantesWeb({ estantes, livros, favoritos }: { estantes: EstanteInfo[]; livros: LivroSalvo[]; favoritos: LivroSalvo[] }) {
   const [aba, setAba] = useState<Filtro>("todas");
-  const [leque, setLeque] = useState(false);
+  const [vis, setVis] = useState<Visualizacao>("prateleira");
   const lidos = livros.filter((l) => l.status === "lido");
   const paginas = lidos.reduce((t, l) => t + (l.paginas ?? 0), 0);
   const linhas = [
@@ -146,10 +237,10 @@ function EstantesWeb({ estantes, livros, favoritos }: { estantes: EstanteInfo[];
           <span className="flex items-center gap-5">
             <button
               type="button"
-              onClick={() => setLeque((v) => !v)}
+              onClick={() => setVis(PROXIMA_VISUALIZACAO[vis])}
               className="font-accent text-[13px] text-cinza italic underline decoration-bege underline-offset-4 hover:text-bordo"
             >
-              {leque ? "ver como prateleiras" : "ver como leque de capas ✧"}
+              {ROTULO_PROXIMA_VISUALIZACAO[vis]}
             </button>
             <Link
               href="/estantes/importar"
@@ -179,8 +270,10 @@ function EstantesWeb({ estantes, livros, favoritos }: { estantes: EstanteInfo[];
                 <p className="font-revista text-sm text-cinza italic">escolha até 4 livros para ficarem em destaque no seu perfil.</p>
               ) : null}
 
-              {leque ? (
+              {vis === "leque" ? (
                 <LequeLinhaWeb livros={linha.livros} />
+              ) : vis === "estante" ? (
+                <EstanteDeVerdadeFila livros={linha.livros.slice(0, 16)} alturaBase={168} />
               ) : (
                 <div className="w-fit">
                   <ul
@@ -228,7 +321,7 @@ export default function EstantesPage() {
   const proprias = usePerfil((s) => s.estantesProprias);
   const idsFavoritos = usePerfil((s) => s.favoritos);
   const [filtro, setFiltro] = useState<Filtro>("todos");
-  const [leque, setLeque] = useState(false);
+  const [vis, setVis] = useState<Visualizacao>("prateleira");
 
   if (!hidratado) return <AppShell aba="estantes">{null}</AppShell>;
 
@@ -244,8 +337,12 @@ export default function EstantesPage() {
 
       <div className="flex flex-1 flex-col lg:hidden">
         <header className="flex items-center justify-between px-6 pt-2">
-          {leque ? (
-            <button type="button" onClick={() => setLeque(false)} className="-ml-2 flex min-h-11 items-center px-2 text-[13px] font-semibold text-bordo">
+          {vis !== "prateleira" ? (
+            <button
+              type="button"
+              onClick={() => setVis("prateleira")}
+              className="-ml-2 flex min-h-11 items-center px-2 text-[13px] font-semibold text-bordo"
+            >
               ‹ prateleiras
             </button>
           ) : (
@@ -284,7 +381,7 @@ export default function EstantesPage() {
           </div>
         ) : (
           <>
-            {!leque ? (
+            {vis === "prateleira" ? (
               <div className="mt-5 flex gap-[7px] overflow-x-auto px-6 pb-1 [scrollbar-width:none]">
                 {[{ id: "todos", nome: `todos · ${livros.length}` }, ...comLivros.map((e) => ({ id: e.id, nome: `${e.nome} · ${livrosDaEstante(e, livros).length}` }))].map((f) => (
                   <button
@@ -302,23 +399,24 @@ export default function EstantesPage() {
               </div>
             ) : null}
 
-            <div className={`flex flex-col px-6 pt-6 pb-6 ${leque ? "gap-4" : "gap-10"}`}>
-              {visiveis.map((e) =>
-                leque ? <Leque key={e.id} e={e} livros={livrosDaEstante(e, livros)} /> : <Prateleira key={e.id} e={e} livros={livrosDaEstante(e, livros)} />,
-              )}
+            <div className={`flex flex-col px-6 pt-6 pb-6 ${vis === "prateleira" ? "gap-10" : "gap-4"}`}>
+              {visiveis.map((e) => {
+                const livrosDaLinha = livrosDaEstante(e, livros);
+                if (vis === "leque") return <Leque key={e.id} e={e} livros={livrosDaLinha} />;
+                if (vis === "estante") return <EstanteDeVerdade key={e.id} e={e} livros={livrosDaLinha} />;
+                return <Prateleira key={e.id} e={e} livros={livrosDaLinha} />;
+              })}
             </div>
 
-            {!leque ? (
-              <p className="pb-6 text-center">
-                <button
-                  type="button"
-                  onClick={() => setLeque(true)}
-                  className="py-2 font-accent text-sm italic text-cinza underline decoration-bege underline-offset-4"
-                >
-                  ver como leque de capas ✧
-                </button>
-              </p>
-            ) : null}
+            <p className="pb-6 text-center">
+              <button
+                type="button"
+                onClick={() => setVis(PROXIMA_VISUALIZACAO[vis])}
+                className="py-2 font-accent text-sm italic text-cinza underline decoration-bege underline-offset-4"
+              >
+                {ROTULO_PROXIMA_VISUALIZACAO[vis]}
+              </button>
+            </p>
           </>
         )}
       </div>
