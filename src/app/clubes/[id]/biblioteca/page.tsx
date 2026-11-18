@@ -130,18 +130,26 @@ export default function BibliotecaPage() {
 
   return (
     <div className="px-6 pt-5 pb-4 lg:px-0">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-[10px] font-semibold tracking-[.16em] text-cinza uppercase">
           todos · {livros.length} &nbsp; lidos · {lidos.length}
         </p>
-        <span className="flex gap-2">
+        <span className="flex flex-wrap gap-2">
           {papel === "moderadora" ? (
-            <Link
-              href={`${base}/adicionar-lido`}
-              className="flex min-h-9 items-center rounded-pill border border-bordo px-4 text-xs font-semibold text-bordo"
-            >
-              + já lido
-            </Link>
+            <>
+              <Link
+                href={`${base}/importar`}
+                className="flex min-h-9 items-center rounded-pill border border-bordo px-4 text-xs font-semibold text-bordo"
+              >
+                importar
+              </Link>
+              <Link
+                href={`${base}/adicionar-lido`}
+                className="flex min-h-9 items-center rounded-pill border border-bordo px-4 text-xs font-semibold text-bordo"
+              >
+                + já lido
+              </Link>
+            </>
           ) : null}
           <Link
             href={`${base}/sugerir`}
