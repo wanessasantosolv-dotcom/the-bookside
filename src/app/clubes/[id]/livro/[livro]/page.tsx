@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import { useClube } from "@/components/clube/ClubeContexto";
-import { botaoPrincipal, Rodape, TopoForm } from "@/components/clube/Pecas";
+import { botaoContorno, Rodape, TopoForm } from "@/components/clube/Pecas";
 import { ErroOuFalta, Vazio } from "@/components/social/Estados";
 import { Avatar } from "@/components/social/Pessoas";
 import { criterios, fichasDe, livroDoClube, media, virgula, type Ficha } from "@/lib/clubes";
@@ -57,10 +57,14 @@ function CartaoFicha({ f, pessoa, eu, clubeId }: { f: Ficha; pessoa: PessoaResum
         {revelar ? (
           <>
             {f.citacao ? (
-              <div className={campoFicha}>
-                <p className={rotuloFicha}>citação favorita:</p>
-                <p className="mt-1 font-accent text-[15px] leading-[1.4] italic lg:font-revista">“{f.citacao}”</p>
-              </div>
+              <blockquote className="relative px-1 py-0.5">
+                <span aria-hidden className="absolute -top-2 -left-0.5 font-display text-3xl text-ouro/60">
+                  “
+                </span>
+                <p className="pl-3 font-display text-[16px] leading-[1.35] font-semibold italic text-bordo lg:font-revista lg:font-normal lg:text-tinta">
+                  {f.citacao}
+                </p>
+              </blockquote>
             ) : null}
             {f.texto ? (
               <div className={campoFicha}>
@@ -179,7 +183,7 @@ export default function FichasDoLivroPage() {
       </div>
       {l.estado !== "sugerido" ? (
         <Rodape>
-          <Link href={`/clubes/${clube.id}/ficha/${l.id}`} className={`${botaoPrincipal} lg:max-w-[560px]`}>
+          <Link href={`/clubes/${clube.id}/ficha/${l.id}`} className={`${botaoContorno} flex-1 lg:max-w-[560px]`}>
             {minha ? "editar a minha ficha ✎" : "escrever a minha ficha ✎"}
           </Link>
         </Rodape>
