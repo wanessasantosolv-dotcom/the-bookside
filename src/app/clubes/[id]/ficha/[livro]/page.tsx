@@ -1,29 +1,25 @@
 "use client";
 
-import { CapaAuto } from "@/components/CapaAuto";
 import { Animacao } from "@/components/Animacao";
 import { useParams, useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { useClube } from "@/components/clube/ClubeContexto";
+import { botaoPrincipal, Rodape, TopoForm } from "@/components/clube/Pecas";
 import {
-  botaoPrincipal,
-  campo,
-  EstrelasInput,
-  Rodape,
-  rotuloCampo,
-  TopoForm,
-} from "@/components/clube/Pecas";
+  FichaLeitura,
+  fichaEmBranco,
+  notaDaFicha,
+  type ValoresFicha,
+} from "@/components/FichaLeitura";
 import { ErroOuFalta, Vazio } from "@/components/social/Estados";
 import {
-  criterios,
   fichasDe,
   livroDoClube,
-  media,
   salvarFicha,
-  type Criterio,
   type Ficha,
   type LivroDoClube,
 } from "@/lib/clubes";
+import { notasCompletas } from "@/lib/estantes";
 import { usePerfil } from "@/lib/perfil-store";
 import { useConsulta, useMeuId } from "@/lib/social";
 
@@ -31,44 +27,41 @@ function Formulario({ l, minha }: { l: LivroDoClube; minha: Ficha | null }) {
   const { clube } = useClube();
   const router = useRouter();
   const editarLivro = usePerfil((s) => s.editarLivro);
-  const [notas, setNotas] = useState<Partial<Record<Criterio, number>>>(
-    minha?.notas ?? {},
+  const [ficha, setFicha] = useState<ValoresFicha>(
+    fichaEmBranco({
+      notas: minha?.notas ?? {},
+      nota: minha?.nota ? Math.round(Number(minha.nota)) : 0,
+      personagem: minha?.personagem ?? "",
+      citacao: minha?.citacao ?? "",
+      texto: minha?.texto ?? "",
+      spoiler: minha?.spoiler ?? false,
+    }),
   );
-  const [nota, setNota] = useState<number>(
-    minha?.nota ? Math.round(Number(minha.nota)) : 0,
-  );
-  const [personagem, setPersonagem] = useState(minha?.personagem ?? "");
-  const [citacao, setCitacao] = useState(minha?.citacao ?? "");
-  const [texto, setTexto] = useState(minha?.texto ?? "");
-  const [spoiler, setSpoiler] = useState(minha?.spoiler ?? false);
   const [naEstante, setNaEstante] = useState(!minha);
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
-  // sem nota geral, vale a média dos critérios
-  const notaFinal =
-    nota || Math.round((media(Object.values(notas)) ?? 0) * 2) / 2;
-
   async function publicar(e: FormEvent) {
     e.preventDefault();
-    if (!notaFinal) return setErro("dê pelo menos a sua nota.");
+    const nota = notaDaFicha(ficha);
+    if (!nota) return setErro("dê pelo menos a sua nota.");
     setEnviando(true);
     setErro(null);
     try {
       await salvarFicha(
         l,
         {
-          notas,
-          nota: notaFinal,
-          personagem: personagem.trim() || null,
-          citacao: citacao.trim() || null,
-          texto: texto.trim() || null,
-          spoiler,
+          notas: ficha.notas,
+          nota,
+          personagem: ficha.personagem.trim() || null,
+          citacao: ficha.citacao.trim() || null,
+          texto: ficha.texto.trim() || null,
+          spoiler: ficha.spoiler,
         },
         !!minha,
       );
       if (naEstante) {
-        const agora = new Date().toISOString();
+        // a mesma ficha vai para a estante: nota, critérios, personagem, trecho e resenha
         editarLivro(
           {
             id: l.livro.id,
@@ -78,9 +71,12 @@ function Formulario({ l, minha }: { l: LivroDoClube; minha: Ficha | null }) {
           },
           {
             status: "lido",
-            lidoEm: agora,
-            nota: notaFinal,
-            resenha: texto.trim() || undefined,
+            lidoEm: new Date().toISOString(),
+            nota,
+            notas: notasCompletas(ficha.notas),
+            personagem: ficha.personagem.trim() || undefined,
+            citacao: ficha.citacao.trim() || undefined,
+            resenha: ficha.texto.trim() || undefined,
             paginas: l.livro.paginas,
           },
         );
@@ -108,89 +104,13 @@ function Formulario({ l, minha }: { l: LivroDoClube; minha: Ficha | null }) {
         titulo={l.livro.titulo}
         frase={minha ? "editando sua ficha ✎" : "como foi a leitura? ✓"}
       />
-      <div className="mx-6 mt-5 rounded-xl border border-linha bg-creme-quente p-4 lg:mx-0 lg:max-w-[640px] lg:rounded-[4px] lg:border-fio lg:bg-transparent lg:p-5">
-        <div className="flex gap-4">
-          <div className="min-w-0 flex-1">
-            <p className={rotuloCampo}>sua nota</p>
-            <EstrelasInput
-              valor={nota || Math.round(notaFinal)}
-              onMudar={setNota}
-              rotulo="sua nota"
-            />
-            <p className="mt-1 text-xs text-cinza">
-              {l.livro.autor}
-              {l.livro.paginas ? ` · ${l.livro.paginas} páginas` : ""}
-            </p>
-          </div>
-          <CapaAuto
-            livro={l.livro}
-            className="w-[70px] [&>span:last-child]:hidden"
-          />
-        </div>
-
-        <ul className="mt-4 border-t border-linha">
-          {criterios.map((c) => (
-            <li
-              key={c}
-              className="flex items-center justify-between border-b border-linha py-1.5"
-            >
-              <span className="font-accent text-[15px] italic text-cinza">
-                {c}
-              </span>
-              <EstrelasInput
-                pequeno
-                valor={notas[c] ?? 0}
-                onMudar={(n) =>
-                  setNotas((x) => ({ ...x, [c]: n || undefined }))
-                }
-                rotulo={`nota para ${c}`}
-              />
-            </li>
-          ))}
-        </ul>
-
-        <div className="mt-5 space-y-5">
-          <label className="block">
-            <span className={rotuloCampo}>personagem favorita ♡</span>
-            <input
-              value={personagem}
-              onChange={(e) => setPersonagem(e.target.value)}
-              maxLength={80}
-              placeholder="helena"
-              className={campo}
-            />
-          </label>
-          <label className="block">
-            <span className={rotuloCampo}>um trecho que ficou</span>
-            <textarea
-              value={citacao}
-              onChange={(e) => setCitacao(e.target.value)}
-              maxLength={400}
-              rows={2}
-              placeholder="não é que a memória falhe. é que ela reescreve."
-              className={`${campo} resize-none font-accent italic`}
-            />
-          </label>
-          <label className="block">
-            <span className={rotuloCampo}>o que eu achei</span>
-            <textarea
-              value={texto}
-              onChange={(e) => setTexto(e.target.value)}
-              maxLength={4000}
-              rows={5}
-              placeholder="conta tudo…"
-              className={`${campo} resize-y`}
-            />
-          </label>
-          <label className="flex min-h-11 items-center gap-3 text-sm">
-            <input
-              type="checkbox"
-              checked={spoiler}
-              onChange={(e) => setSpoiler(e.target.checked)}
-              className="size-5 accent-bordo"
-            />
-            tem spoiler (esconde o texto até a pessoa tocar)
-          </label>
+      <div className="mx-6 mt-5 lg:mx-0 lg:max-w-[640px]">
+        <FichaLeitura
+          livro={l.livro}
+          valores={ficha}
+          onMudar={setFicha}
+          comSpoiler
+        >
           {!minha ? (
             <label className="flex min-h-11 items-center gap-3 text-sm">
               <input
@@ -199,10 +119,10 @@ function Formulario({ l, minha }: { l: LivroDoClube; minha: Ficha | null }) {
                 onChange={(e) => setNaEstante(e.target.checked)}
                 className="size-5 accent-bordo"
               />
-              marcar como lido na minha estante, com esta nota
+              marcar como lido na minha estante, com esta ficha
             </label>
           ) : null}
-        </div>
+        </FichaLeitura>
       </div>
       {erro ? (
         <p role="alert" className="mt-4 px-6 text-[13px] text-bordo lg:px-0">

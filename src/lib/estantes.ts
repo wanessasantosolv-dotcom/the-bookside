@@ -1,5 +1,10 @@
 import { sugestoesDeLivros, type LivroCatalogo } from "@/lib/dados";
-import type { EstantePropria, LivroSalvo, StatusLivro } from "@/lib/perfil-store";
+import type {
+  EstantePropria,
+  LivroSalvo,
+  NotasDetalhe,
+  StatusLivro,
+} from "@/lib/perfil-store";
 
 /** As três estantes fixas + as que a pessoa cria. */
 export type EstanteInfo = {
@@ -12,15 +17,35 @@ export type EstanteInfo = {
 };
 
 export const ESTANTES_FIXAS: EstanteInfo[] = [
-  { id: "lendo", nome: "lendo agora", status: "lendo", etiqueta: { fundo: "#B75A6B", texto: "#FFFFFF" } },
-  { id: "lidos", nome: "lidos", status: "lido", etiqueta: { fundo: "#6B0D24", texto: "#F9F5EE" } },
-  { id: "quero-ler", nome: "quero ler", status: "quero", etiqueta: { fundo: "#E8B4BF", texto: "#6B0D24" } },
+  {
+    id: "lendo",
+    nome: "lendo agora",
+    status: "lendo",
+    etiqueta: { fundo: "#B75A6B", texto: "#FFFFFF" },
+  },
+  {
+    id: "lidos",
+    nome: "lidos",
+    status: "lido",
+    etiqueta: { fundo: "#6B0D24", texto: "#F9F5EE" },
+  },
+  {
+    id: "quero-ler",
+    nome: "quero ler",
+    status: "quero",
+    etiqueta: { fundo: "#E8B4BF", texto: "#6B0D24" },
+  },
 ];
 
 export function todasAsEstantes(proprias: EstantePropria[]): EstanteInfo[] {
   return [
     ...ESTANTES_FIXAS,
-    ...proprias.map((p) => ({ id: p.id, nome: p.nome, propria: p, etiqueta: { fundo: p.cor, texto: "#F9F5EE" } })),
+    ...proprias.map((p) => ({
+      id: p.id,
+      nome: p.nome,
+      propria: p,
+      etiqueta: { fundo: p.cor, texto: "#F9F5EE" },
+    })),
   ];
 }
 
@@ -33,7 +58,8 @@ export function livrosDaEstante(estante: EstanteInfo, livros: LivroSalvo[]) {
   const lista = estante.status
     ? livros.filter((l) => statusDoLivro(l) === estante.status)
     : livros.filter((l) => l.estantes?.includes(estante.id));
-  const data = (l: LivroSalvo) => l.lidoEm ?? l.iniciadoEm ?? l.adicionadoEm ?? "";
+  const data = (l: LivroSalvo) =>
+    l.lidoEm ?? l.iniciadoEm ?? l.adicionadoEm ?? "";
   return [...lista].sort((a, b) => data(b).localeCompare(data(a)));
 }
 
@@ -47,22 +73,48 @@ export function infoDoLivro(
   const salvo = livros.find((l) => l.id === id);
   const catalogo = sugestoesDeLivros.find((l) => l.id === id) ?? daBusca;
   if (!salvo && !catalogo) return null;
-  return { ...catalogo, ...(salvo ?? { id, titulo: catalogo!.titulo, autor: catalogo!.autor }), paginas: salvo?.paginas ?? catalogo?.paginas, capa: salvo?.capa ?? catalogo?.capa };
+  return {
+    ...catalogo,
+    ...(salvo ?? { id, titulo: catalogo!.titulo, autor: catalogo!.autor }),
+    paginas: salvo?.paginas ?? catalogo?.paginas,
+    capa: salvo?.capa ?? catalogo?.capa,
+  };
 }
 
 export function estrelas(nota?: number) {
   if (!nota) return "☆☆☆☆☆";
   const cheias = Math.floor(nota);
   const meia = nota - cheias >= 0.5;
-  return "★".repeat(cheias) + (meia ? "½" : "") + "☆".repeat(5 - cheias - (meia ? 1 : 0));
+  return (
+    "★".repeat(cheias) +
+    (meia ? "½" : "") +
+    "☆".repeat(5 - cheias - (meia ? 1 : 0))
+  );
 }
 
 export function dataCurta(iso?: string) {
   if (!iso) return "";
-  return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }).replace(".", "");
+  return new Date(iso)
+    .toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })
+    .replace(".", "");
 }
 
 export function mesDe(iso?: string) {
   if (!iso) return "sem data";
-  return new Date(iso).toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+  return new Date(iso).toLocaleDateString("pt-BR", {
+    month: "long",
+    year: "numeric",
+  });
+}
+
+/** critérios da ficha (os que ficaram em branco valem 0) no formato da estante */
+export function notasCompletas(
+  n: Partial<Record<keyof NotasDetalhe, number>>,
+): NotasDetalhe {
+  return {
+    personagens: n.personagens ?? 0,
+    plot: n.plot ?? 0,
+    escrita: n.escrita ?? 0,
+    final: n.final ?? 0,
+  };
 }
