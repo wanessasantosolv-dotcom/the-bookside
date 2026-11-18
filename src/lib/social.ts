@@ -10,11 +10,24 @@ import { supabase } from "@/lib/supabase";
  * Tudo depende do Supabase com as tabelas de supabase/social.sql.
  */
 
-export type PessoaResumo = { id: string; usuario: string | null; nome: string | null; foto: string | null };
+export type PessoaResumo = {
+  id: string;
+  usuario: string | null;
+  nome: string | null;
+  foto: string | null;
+};
 export type PerfilPublico = PessoaResumo & { dados: Partial<Perfil> };
 
-export type LivroAtividade = Pick<LivroSalvo, "id" | "titulo" | "autor" | "capa">;
-export type TipoAtividade = "comecou" | "terminou" | "avaliou" | "quer" | "ficha";
+export type LivroAtividade = Pick<
+  LivroSalvo,
+  "id" | "titulo" | "autor" | "capa"
+>;
+export type TipoAtividade =
+  | "comecou"
+  | "terminou"
+  | "avaliou"
+  | "quer"
+  | "ficha";
 export type Atividade = {
   id: string;
   autor: string;
@@ -27,7 +40,13 @@ export type Atividade = {
   curtidas: { autor: string }[];
   comentarios: { count: number }[];
 };
-export type Comentario = { id: string; atividade_id: string; autor: string; texto: string; criado_em: string };
+export type Comentario = {
+  id: string;
+  atividade_id: string;
+  autor: string;
+  texto: string;
+  criado_em: string;
+};
 
 export const verbo: Record<TipoAtividade, string> = {
   comecou: "começou a ler",
@@ -55,17 +74,29 @@ export function useMeuId() {
 
 const cachePessoas = new Map<string, PessoaResumo>();
 
-export async function pessoasPorId(ids: string[]): Promise<Map<string, PessoaResumo>> {
+export async function pessoasPorId(
+  ids: string[],
+): Promise<Map<string, PessoaResumo>> {
   const faltam = [...new Set(ids)].filter((id) => !cachePessoas.has(id));
   if (faltam.length) {
-    const { data, error } = await db().from("perfis_publicos").select("id,usuario,nome,foto").in("id", faltam);
+    const { data, error } = await db()
+      .from("perfis_publicos")
+      .select("id,usuario,nome,foto")
+      .in("id", faltam);
     if (error) throw error;
     for (const p of data ?? []) cachePessoas.set(p.id, p);
   }
-  return new Map(ids.map((id) => [id, cachePessoas.get(id) ?? { id, usuario: null, nome: null, foto: null }]));
+  return new Map(
+    ids.map((id) => [
+      id,
+      cachePessoas.get(id) ?? { id, usuario: null, nome: null, foto: null },
+    ]),
+  );
 }
 
-export async function perfilPorUsuario(usuario: string): Promise<PerfilPublico | null> {
+export async function perfilPorUsuario(
+  usuario: string,
+): Promise<PerfilPublico | null> {
   const { data, error } = await db()
     .from("perfis_publicos")
     .select("id,usuario,nome,foto,dados")
@@ -77,7 +108,10 @@ export async function perfilPorUsuario(usuario: string): Promise<PerfilPublico |
 
 /** Limpa o termo para usar no filtro do PostgREST. */
 function termoSeguro(t: string) {
-  return t.replace(/^@/, "").replace(/[,()%*\\]/g, " ").trim();
+  return t
+    .replace(/^@/, "")
+    .replace(/[,()%*\\]/g, " ")
+    .trim();
 }
 
 export async function buscarPessoas(termo: string): Promise<PessoaResumo[]> {
@@ -94,19 +128,33 @@ export async function buscarPessoas(termo: string): Promise<PessoaResumo[]> {
 }
 
 /** Sugestões: quem segue você e você ainda não segue, depois perfis recentes. */
-export async function sugestoesDePessoas(): Promise<(PessoaResumo & { motivo: string })[]> {
+export async function sugestoesDePessoas(): Promise<
+  (PessoaResumo & { motivo: string })[]
+> {
   const eu = meuId();
   if (!eu) return [];
   const [sigo, meSeguem, recentes] = await Promise.all([
     idsQueSigo(),
     db().from("seguidores").select("seguidor").eq("seguido", eu).limit(30),
-    db().from("perfis_publicos").select("id,usuario,nome,foto").neq("id", eu).not("usuario", "is", null).order("atualizado_em", { ascending: false }).limit(20),
+    db()
+      .from("perfis_publicos")
+      .select("id,usuario,nome,foto")
+      .neq("id", eu)
+      .not("usuario", "is", null)
+      .order("atualizado_em", { ascending: false })
+      .limit(20),
   ]);
-  const deVolta = (meSeguem.data ?? []).map((s) => s.seguidor).filter((id) => !sigo.has(id));
+  const deVolta = (meSeguem.data ?? [])
+    .map((s) => s.seguidor)
+    .filter((id) => !sigo.has(id));
   const pessoas = await pessoasPorId(deVolta);
-  const lista = deVolta.map((id) => ({ ...pessoas.get(id)!, motivo: "segue você" }));
+  const lista = deVolta.map((id) => ({
+    ...pessoas.get(id)!,
+    motivo: "segue você",
+  }));
   for (const p of recentes.data ?? []) {
-    if (!sigo.has(p.id) && !lista.some((x) => x.id === p.id)) lista.push({ ...p, motivo: "chegou há pouco" });
+    if (!sigo.has(p.id) && !lista.some((x) => x.id === p.id))
+      lista.push({ ...p, motivo: "chegou há pouco" });
   }
   return lista.slice(0, 12);
 }
@@ -116,7 +164,10 @@ export async function sugestoesDePessoas(): Promise<(PessoaResumo & { motivo: st
 export async function idsQueSigo(): Promise<Set<string>> {
   const eu = meuId();
   if (!eu) return new Set();
-  const { data, error } = await db().from("seguidores").select("seguido").eq("seguidor", eu);
+  const { data, error } = await db()
+    .from("seguidores")
+    .select("seguido")
+    .eq("seguidor", eu);
   if (error) throw error;
   return new Set((data ?? []).map((s) => s.seguido));
 }
@@ -126,19 +177,32 @@ export async function seguir(id: string, sim: boolean) {
   if (!eu) return;
   const r = sim
     ? await db().from("seguidores").upsert({ seguidor: eu, seguido: id })
-    : await db().from("seguidores").delete().eq("seguidor", eu).eq("seguido", id);
+    : await db()
+        .from("seguidores")
+        .delete()
+        .eq("seguidor", eu)
+        .eq("seguido", id);
   if (r.error) throw r.error;
 }
 
 export async function contagemSeguidores(id: string) {
   const [a, b] = await Promise.all([
-    db().from("seguidores").select("*", { count: "exact", head: true }).eq("seguido", id),
-    db().from("seguidores").select("*", { count: "exact", head: true }).eq("seguidor", id),
+    db()
+      .from("seguidores")
+      .select("*", { count: "exact", head: true })
+      .eq("seguido", id),
+    db()
+      .from("seguidores")
+      .select("*", { count: "exact", head: true })
+      .eq("seguidor", id),
   ]);
   return { seguidores: a.count ?? 0, seguindo: b.count ?? 0 };
 }
 
-export async function listaDeSeguidores(id: string, tipo: "seguidores" | "seguindo"): Promise<PessoaResumo[]> {
+export async function listaDeSeguidores(
+  id: string,
+  tipo: "seguidores" | "seguindo",
+): Promise<PessoaResumo[]> {
   const coluna = tipo === "seguidores" ? "seguidor" : "seguido";
   const filtro = tipo === "seguidores" ? "seguido" : "seguidor";
   const { data, error } = await db()
@@ -155,7 +219,8 @@ export async function listaDeSeguidores(id: string, tipo: "seguidores" | "seguin
 
 // ───────── feed ─────────
 
-const CAMPOS_ATIVIDADE = "id,autor,tipo,livro,nota,texto,clube_id,criado_em,curtidas(autor),comentarios(count)";
+const CAMPOS_ATIVIDADE =
+  "id,autor,tipo,livro,nota,texto,clube_id,criado_em,curtidas(autor),comentarios(count)";
 
 /** O feed: o que as amigas e você mesma andam lendo. */
 export async function feedDeAmigas(): Promise<Atividade[]> {
@@ -170,10 +235,55 @@ export async function feedDeAmigas(): Promise<Atividade[]> {
     .order("criado_em", { ascending: false })
     .limit(50);
   if (error) throw error;
-  return (data ?? []) as Atividade[];
+  return semLivrosTirados((data ?? []) as Atividade[]);
 }
 
-export async function atividadesDe(autor: string, limite = 30): Promise<Atividade[]> {
+/**
+ * Minhas atualizações de livros que já tirei da estante não aparecem mais
+ * (e são apagadas da nuvem). Só confere quando a estante já carregou da nuvem,
+ * para nunca apagar nada por engano.
+ */
+function semLivrosTirados(lista: Atividade[]): Atividade[] {
+  const eu = meuId();
+  const livros = usePerfil.getState().livros;
+  if (!eu || !nuvemPronta() || !livros.length) return lista;
+  const tirados = lista.filter(
+    (a) =>
+      a.autor === eu &&
+      a.tipo !== "ficha" &&
+      !livros.some((l) => l.id === a.livro?.id),
+  );
+  if (tirados.length)
+    void db()
+      .from("atividades")
+      .delete()
+      .in(
+        "id",
+        tirados.map((a) => a.id),
+      )
+      .then(
+        () => {},
+        () => {},
+      );
+  return lista.filter((a) => !tirados.includes(a));
+}
+
+/** Apaga da nuvem minhas atualizações (fora dos clubes) sobre um livro que saiu da estante. */
+async function apagarAtividadesDoLivro(livroId: string) {
+  const eu = meuId();
+  if (!eu) return;
+  await db()
+    .from("atividades")
+    .delete()
+    .eq("autor", eu)
+    .is("clube_id", null)
+    .eq("livro->>id", livroId);
+}
+
+export async function atividadesDe(
+  autor: string,
+  limite = 30,
+): Promise<Atividade[]> {
   const { data, error } = await db()
     .from("atividades")
     .select(CAMPOS_ATIVIDADE)
@@ -182,7 +292,7 @@ export async function atividadesDe(autor: string, limite = 30): Promise<Atividad
     .order("criado_em", { ascending: false })
     .limit(limite);
   if (error) throw error;
-  return (data ?? []) as Atividade[];
+  return semLivrosTirados((data ?? []) as Atividade[]);
 }
 
 export async function atividadesDoClube(clube: string): Promise<Atividade[]> {
@@ -197,36 +307,78 @@ export async function atividadesDoClube(clube: string): Promise<Atividade[]> {
 }
 
 export async function atividade(id: string): Promise<Atividade | null> {
-  const { data, error } = await db().from("atividades").select(CAMPOS_ATIVIDADE).eq("id", id).maybeSingle();
+  const { data, error } = await db()
+    .from("atividades")
+    .select(CAMPOS_ATIVIDADE)
+    .eq("id", id)
+    .maybeSingle();
   if (error) throw error;
   return data as Atividade | null;
 }
 
 /** Amigas lendo agora: o livro "lendo" mais recente de cada pessoa que você segue. */
-export async function lendoEntreAmigas(): Promise<{ pessoa: PessoaResumo; livro: LivroSalvo }[]> {
+export async function lendoEntreAmigas(): Promise<
+  { pessoa: PessoaResumo; livro: LivroSalvo }[]
+> {
   const sigo = [...(await idsQueSigo())];
   if (!sigo.length) return [];
-  const { data, error } = await db().from("perfis_publicos").select("id,usuario,nome,foto,livros:dados->livros").in("id", sigo);
+  const { data, error } = await db()
+    .from("perfis_publicos")
+    .select("id,usuario,nome,foto,livros:dados->livros")
+    .in("id", sigo);
   if (error) throw error;
   return (data ?? [])
     .map((p) => {
-      const livros = ((p as unknown as { livros?: LivroSalvo[] }).livros ?? []).filter((l) => l.status === "lendo");
-      livros.sort((a, b) => (b.iniciadoEm ?? b.adicionadoEm ?? "").localeCompare(a.iniciadoEm ?? a.adicionadoEm ?? ""));
-      return livros[0] ? { pessoa: { id: p.id, usuario: p.usuario, nome: p.nome, foto: p.foto }, livro: livros[0] } : null;
+      const livros = (
+        (p as unknown as { livros?: LivroSalvo[] }).livros ?? []
+      ).filter((l) => l.status === "lendo");
+      livros.sort((a, b) =>
+        (b.iniciadoEm ?? b.adicionadoEm ?? "").localeCompare(
+          a.iniciadoEm ?? a.adicionadoEm ?? "",
+        ),
+      );
+      return livros[0]
+        ? {
+            pessoa: {
+              id: p.id,
+              usuario: p.usuario,
+              nome: p.nome,
+              foto: p.foto,
+            },
+            livro: livros[0],
+          }
+        : null;
     })
     .filter((x) => x !== null);
 }
 
 /** Quem você segue e tem este livro na estante (para a página do livro). */
-export async function amigasComLivro(livroId: string): Promise<{ pessoa: PessoaResumo; livro: LivroSalvo }[]> {
+export async function amigasComLivro(
+  livroId: string,
+): Promise<{ pessoa: PessoaResumo; livro: LivroSalvo }[]> {
   const sigo = [...(await idsQueSigo())];
   if (!sigo.length) return [];
-  const { data, error } = await db().from("perfis_publicos").select("id,usuario,nome,foto,livros:dados->livros").in("id", sigo);
+  const { data, error } = await db()
+    .from("perfis_publicos")
+    .select("id,usuario,nome,foto,livros:dados->livros")
+    .in("id", sigo);
   if (error) throw error;
   return (data ?? [])
     .map((p) => {
-      const livro = ((p as unknown as { livros?: LivroSalvo[] }).livros ?? []).find((l) => l.id === livroId);
-      return livro ? { pessoa: { id: p.id, usuario: p.usuario, nome: p.nome, foto: p.foto }, livro } : null;
+      const livro = (
+        (p as unknown as { livros?: LivroSalvo[] }).livros ?? []
+      ).find((l) => l.id === livroId);
+      return livro
+        ? {
+            pessoa: {
+              id: p.id,
+              usuario: p.usuario,
+              nome: p.nome,
+              foto: p.foto,
+            },
+            livro,
+          }
+        : null;
     })
     .filter((x) => x !== null);
 }
@@ -235,12 +387,20 @@ export async function curtir(atividadeId: string, sim: boolean) {
   const eu = meuId();
   if (!eu) return;
   const r = sim
-    ? await db().from("curtidas").upsert({ atividade_id: atividadeId, autor: eu })
-    : await db().from("curtidas").delete().eq("atividade_id", atividadeId).eq("autor", eu);
+    ? await db()
+        .from("curtidas")
+        .upsert({ atividade_id: atividadeId, autor: eu })
+    : await db()
+        .from("curtidas")
+        .delete()
+        .eq("atividade_id", atividadeId)
+        .eq("autor", eu);
   if (r.error) throw r.error;
 }
 
-export async function comentariosDe(atividadeId: string): Promise<Comentario[]> {
+export async function comentariosDe(
+  atividadeId: string,
+): Promise<Comentario[]> {
   const { data, error } = await db()
     .from("comentarios")
     .select("id,atividade_id,autor,texto,criado_em")
@@ -253,7 +413,9 @@ export async function comentariosDe(atividadeId: string): Promise<Comentario[]> 
 export async function comentar(atividadeId: string, texto: string) {
   const eu = meuId();
   if (!eu) return;
-  const { error } = await db().from("comentarios").insert({ atividade_id: atividadeId, autor: eu, texto: texto.trim() });
+  const { error } = await db()
+    .from("comentarios")
+    .insert({ atividade_id: atividadeId, autor: eu, texto: texto.trim() });
   if (error) throw error;
 }
 
@@ -279,7 +441,12 @@ export async function publicarAtividade(a: {
     .insert({
       autor: eu,
       tipo: a.tipo,
-      livro: { id: a.livro.id, titulo: a.livro.titulo, autor: a.livro.autor, capa },
+      livro: {
+        id: a.livro.id,
+        titulo: a.livro.titulo,
+        autor: a.livro.autor,
+        capa,
+      },
       nota: a.nota ?? null,
       texto: a.texto?.trim() || null,
       clube_id: a.clube_id ?? null,
@@ -290,7 +457,13 @@ export async function publicarAtividade(a: {
   return data.id as string;
 }
 
-const prioridade: Record<TipoAtividade, number> = { quer: 1, comecou: 2, terminou: 3, avaliou: 4, ficha: 5 };
+const prioridade: Record<TipoAtividade, number> = {
+  quer: 1,
+  comecou: 2,
+  terminou: 3,
+  avaliou: 4,
+  ficha: 5,
+};
 
 /**
  * Observa a estante e publica no feed o que a pessoa faz: começou, terminou,
@@ -334,17 +507,50 @@ export function iniciarAtividades() {
     }
   }
 
+  const apagar = new Map<string, ReturnType<typeof setTimeout>>();
+
   return usePerfil.subscribe((s, antes) => {
-    if (silencio || !nuvemPronta() || !meuId() || !s.onboardingConcluido || s.livros === antes.livros) return;
+    if (
+      silencio ||
+      !nuvemPronta() ||
+      !meuId() ||
+      !s.onboardingConcluido ||
+      s.livros === antes.livros
+    )
+      return;
+    // livro tirado da estante: some do feed. Espera 15s por causa do "desfazer".
+    for (const a of antes.livros) {
+      if (s.livros.some((l) => l.id === a.id) || apagar.has(a.id)) continue;
+      apagar.set(
+        a.id,
+        setTimeout(() => {
+          apagar.delete(a.id);
+          if (!usePerfil.getState().livros.some((l) => l.id === a.id))
+            void apagarAtividadesDoLivro(a.id).catch(() => {});
+        }, 15000),
+      );
+    }
     for (const l of s.livros) {
       const a = antes.livros.find((x) => x.id === l.id);
       let tipo: TipoAtividade | null = null;
-      if (l.nota && (a?.nota !== l.nota || (a?.resenha ?? "") !== (l.resenha ?? ""))) tipo = "avaliou";
+      if (
+        l.nota &&
+        (a?.nota !== l.nota || (a?.resenha ?? "") !== (l.resenha ?? ""))
+      )
+        tipo = "avaliou";
       else if (l.status !== a?.status)
-        tipo = l.status === "lido" ? "terminou" : l.status === "lendo" ? "comecou" : l.status === "quero" ? "quer" : null;
+        tipo =
+          l.status === "lido"
+            ? "terminou"
+            : l.status === "lendo"
+              ? "comecou"
+              : l.status === "quero"
+                ? "quer"
+                : null;
       if (!tipo) continue;
       const atual = pendentes.get(l.id);
-      if (!atual || prioridade[tipo] >= prioridade[atual]) pendentes.set(l.id, tipo);
+      if (!atual || prioridade[tipo] >= prioridade[atual])
+        pendentes.set(l.id, tipo);
     }
     if (!pendentes.size) return;
     clearTimeout(espera);
@@ -370,30 +576,45 @@ export async function novidades(): Promise<Novidade[]> {
   const [curt, coment, seg, enc] = await Promise.all([
     db()
       .from("curtidas")
-      .select("criado_em,autor,atividade:atividades!inner(id,livro,autor,clube_id)")
+      .select(
+        "criado_em,autor,atividade:atividades!inner(id,livro,autor,clube_id)",
+      )
       .eq("atividade.autor", eu)
       .neq("autor", eu)
       .order("criado_em", { ascending: false })
       .limit(30),
     db()
       .from("comentarios")
-      .select("id,criado_em,autor,texto,atividade:atividades!inner(id,livro,autor)")
+      .select(
+        "id,criado_em,autor,texto,atividade:atividades!inner(id,livro,autor)",
+      )
       .eq("atividade.autor", eu)
       .neq("autor", eu)
       .order("criado_em", { ascending: false })
       .limit(30),
-    db().from("seguidores").select("seguidor,criado_em").eq("seguido", eu).order("criado_em", { ascending: false }).limit(30),
+    db()
+      .from("seguidores")
+      .select("seguidor,criado_em")
+      .eq("seguido", eu)
+      .order("criado_em", { ascending: false })
+      .limit(30),
     db()
       .from("encontros")
-      .select("id,clube_id,titulo,quando,criado_por,criado_em,clube:clubes(nome)")
+      .select(
+        "id,clube_id,titulo,quando,criado_por,criado_em,clube:clubes(nome)",
+      )
       .neq("criado_por", eu)
       .order("criado_em", { ascending: false })
       .limit(20),
   ]);
   for (const r of [curt, coment, seg, enc]) if (r.error) throw r.error;
 
-  type AtivMin = { id: string; livro: LivroAtividade; clube_id?: string | null };
-  const um = <T,>(v: T | T[]) => (Array.isArray(v) ? v[0] : v);
+  type AtivMin = {
+    id: string;
+    livro: LivroAtividade;
+    clube_id?: string | null;
+  };
+  const um = <T>(v: T | T[]) => (Array.isArray(v) ? v[0] : v);
   const lista: (Omit<Novidade, "pessoa"> & { autor: string | null })[] = [];
   for (const c of curt.data ?? []) {
     const a = um(c.atividade) as AtivMin;
@@ -419,7 +640,14 @@ export async function novidades(): Promise<Novidade[]> {
     });
   }
   for (const s of seg.data ?? []) {
-    lista.push({ id: `s-${s.seguidor}`, quando: s.criado_em, autor: s.seguidor, texto: "começou a seguir você", etiqueta: "pessoas", href: "" });
+    lista.push({
+      id: `s-${s.seguidor}`,
+      quando: s.criado_em,
+      autor: s.seguidor,
+      texto: "começou a seguir você",
+      etiqueta: "pessoas",
+      href: "",
+    });
   }
   for (const e of enc.data ?? []) {
     const clube = um(e.clube) as { nome: string } | null;
@@ -432,11 +660,17 @@ export async function novidades(): Promise<Novidade[]> {
       href: `/clubes/${e.clube_id}/agenda`,
     });
   }
-  const pessoas = await pessoasPorId(lista.map((n) => n.autor).filter((a): a is string => !!a));
+  const pessoas = await pessoasPorId(
+    lista.map((n) => n.autor).filter((a): a is string => !!a),
+  );
   return lista
     .map(({ autor, ...n }) => {
       const pessoa = autor ? (pessoas.get(autor) ?? null) : null;
-      return { ...n, pessoa, href: n.href || (pessoa?.usuario ? `/u/${pessoa.usuario}` : "") };
+      return {
+        ...n,
+        pessoa,
+        href: n.href || (pessoa?.usuario ? `/u/${pessoa.usuario}` : ""),
+      };
     })
     .sort((a, b) => b.quando.localeCompare(a.quando));
 }
@@ -445,7 +679,11 @@ export async function novidades(): Promise<Novidade[]> {
 
 /** Carrega dados assíncronos com estados de carregando/erro e um "tentar de novo". */
 export function useConsulta<T>(buscar: () => Promise<T>, deps: unknown[]) {
-  const [estado, setEstado] = useState<{ dados?: T; carregando: boolean; erro: unknown }>({ carregando: true, erro: null });
+  const [estado, setEstado] = useState<{
+    dados?: T;
+    carregando: boolean;
+    erro: unknown;
+  }>({ carregando: true, erro: null });
   const [versao, setVersao] = useState(0);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const fn = useCallback(buscar, deps);
@@ -453,8 +691,13 @@ export function useConsulta<T>(buscar: () => Promise<T>, deps: unknown[]) {
     let vivo = true;
     setEstado((e) => ({ ...e, carregando: true, erro: null }));
     fn()
-      .then((dados) => vivo && setEstado({ dados, carregando: false, erro: null }))
-      .catch((erro: unknown) => vivo && setEstado((e) => ({ ...e, carregando: false, erro })));
+      .then(
+        (dados) => vivo && setEstado({ dados, carregando: false, erro: null }),
+      )
+      .catch(
+        (erro: unknown) =>
+          vivo && setEstado((e) => ({ ...e, carregando: false, erro })),
+      );
     return () => {
       vivo = false;
     };
@@ -477,8 +720,13 @@ export function quandoFoi(iso: string) {
   if (h < 24) return `há ${h} ${h === 1 ? "hora" : "horas"}`;
   const dias = Math.round(h / 24);
   if (dias === 1) return "ontem";
-  if (dias < 7) return d.toLocaleDateString("pt-BR", { weekday: "long" }).replace("-feira", "");
-  return d.toLocaleDateString("pt-BR", { day: "numeric", month: "short" }).replace(".", "");
+  if (dias < 7)
+    return d
+      .toLocaleDateString("pt-BR", { weekday: "long" })
+      .replace("-feira", "");
+  return d
+    .toLocaleDateString("pt-BR", { day: "numeric", month: "short" })
+    .replace(".", "");
 }
 
 export function nomeDe(p: PessoaResumo | null | undefined) {
