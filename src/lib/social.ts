@@ -268,6 +268,18 @@ function semLivrosTirados(lista: Atividade[]): Atividade[] {
   return lista.filter((a) => !tirados.includes(a));
 }
 
+/** Apaga da nuvem todas as minhas atualizações fora dos clubes (ao esvaziar a estante). */
+export async function apagarMinhasAtividades() {
+  const eu = meuId();
+  if (!eu) return;
+  await db()
+    .from("atividades")
+    .delete()
+    .eq("autor", eu)
+    .is("clube_id", null)
+    .neq("tipo", "ficha");
+}
+
 /** Apaga da nuvem minhas atualizações (fora dos clubes) sobre um livro que saiu da estante. */
 async function apagarAtividadesDoLivro(livroId: string) {
   const eu = meuId();

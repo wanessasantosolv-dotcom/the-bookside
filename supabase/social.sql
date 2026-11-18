@@ -311,3 +311,32 @@ create policy "apagar comentário" on public.comentarios for delete to authentic
 
 -- tema visual do clube (mesmas opções do tema do perfil, em lib/dados.ts)
 alter table public.clubes add column if not exists tema text;
+
+-- ───────────────────────── opiniões sobre um livro ─────────────────────────
+-- Notas e resenhas de quem usa o app e tem o livro na estante (os perfis já são
+-- públicos para quem tem conta). O mesmo livro pode ter códigos diferentes em
+-- cada estante, então também compara o título sem acentos e sem pontuação.
+create or replace function public.titulo_normalizado(t text) returns text
+language sql immutable as $$
+  select trim(regexp_replace(
+    translate(lower(coalesce(t, '')), 'áàâãäéèêëíìîïóòôõöúùûüçñ', 'aaaaaeeeeiiiiooooouuuucn'),
+    '[^a-z0-9]+', ' ', 'g'))
+$$;
+
+create or replace function public.opinioes_do_livro(p_id text, p_titulo text)
+returns table (id uuid, usuario text, nome text, foto text, nota numeric, resenha text, status text)
+language sql stable security invoker set search_path = public as $$
+  select p.id, p.usuario, p.nome, p.foto,
+         nullif(l ->> 'nota', '')::numeric, nullif(trim(l ->> 'resenha'), ''), l ->> 'status'
+  from public.perfis_publicos p
+  cross join lateral jsonb_array_elements(
+    case when jsonb_typeof(p.dados -> 'livros') = 'array' then p.dados -> 'livros' else '[]'::jsonb end
+  ) as l
+  where p.id <> auth.uid()
+    and (l ->> 'id' = p_id or public.titulo_normalizado(l ->> 'titulo') = public.titulo_normalizado(p_titulo))
+    and (coalesce((l ->> 'nota')::numeric, 0) > 0 or coalesce(trim(l ->> 'resenha'), '') <> '')
+  order by (coalesce(trim(l ->> 'resenha'), '') <> '') desc, p.atualizado_em desc
+  limit 30
+$$;
+revoke all on function public.opinioes_do_livro(text, text) from anon, public;
+grant execute on function public.opinioes_do_livro(text, text) to authenticated;

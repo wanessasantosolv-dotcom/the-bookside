@@ -13,7 +13,12 @@ export type PadraoCapa = "linhas" | "bolinhas" | "ondas" | "estrelas";
 export type EscolhaEstante = "lendo" | "quero" | "vazia";
 
 export type StatusLivro = "lendo" | "quero" | "lido";
-export type NotasDetalhe = { personagens: number; plot: number; escrita: number; final: number };
+export type NotasDetalhe = {
+  personagens: number;
+  plot: number;
+  escrita: number;
+  final: number;
+};
 
 export type LivroSalvo = {
   id: string;
@@ -46,7 +51,13 @@ export type LivroSalvo = {
   estantes?: string[];
 };
 
-export type EstantePropria = { id: string; nome: string; cor: string; publica: boolean; criadaEm: string };
+export type EstantePropria = {
+  id: string;
+  nome: string;
+  cor: string;
+  publica: boolean;
+  criadaEm: string;
+};
 
 export type Perfil = {
   email: string | null;
@@ -66,7 +77,13 @@ export type Perfil = {
   /** estantes criadas pela pessoa (além de lidos, lendo e quero ler) */
   estantesProprias: EstantePropria[];
   /** resultado do teste, salvo só com consentimento */
-  bookside: { principal: string; secundario: string; respostas: (number | null)[]; livros: string[]; salvoEm: string } | null;
+  bookside: {
+    principal: string;
+    secundario: string;
+    respostas: (number | null)[];
+    livros: string[];
+    salvoEm: string;
+  } | null;
   onboardingConcluido: boolean;
   /** última vez que abriu as novidades (para marcar o que é novo) */
   novidadesVistasEm: string | null;
@@ -78,8 +95,13 @@ type Acoes = {
   alternarLivro: (livro: LivroSalvo) => void;
   guardarLivro: (livro: LivroSalvo) => void;
   /** junta dados num livro da estante (cria se não existir) */
-  editarLivro: (base: Pick<LivroSalvo, "id" | "titulo" | "autor" | "capa" | "genero">, dados: Partial<LivroSalvo>) => void;
+  editarLivro: (
+    base: Pick<LivroSalvo, "id" | "titulo" | "autor" | "capa" | "genero">,
+    dados: Partial<LivroSalvo>,
+  ) => void;
   removerLivro: (id: string) => void;
+  /** tira todos os livros da estante (e dos favoritos); o resto do perfil fica */
+  esvaziarEstante: () => void;
   criarEstante: (e: Omit<EstantePropria, "id" | "criadaEm">) => string;
   sair: () => void;
 };
@@ -111,13 +133,18 @@ export const usePerfil = create<Perfil & Acoes>()(
       atualizar: (dados) => set(dados),
       alternarGosto: (gosto) =>
         set((s) => ({
-          gostos: s.gostos.includes(gosto) ? s.gostos.filter((g) => g !== gosto) : [...s.gostos, gosto],
+          gostos: s.gostos.includes(gosto)
+            ? s.gostos.filter((g) => g !== gosto)
+            : [...s.gostos, gosto],
         })),
       alternarLivro: (livro) =>
         set((s) => ({
           livros: s.livros.some((l) => l.id === livro.id)
             ? s.livros.filter((l) => l.id !== livro.id)
-            : [...s.livros, { adicionadoEm: new Date().toISOString(), ...livro }],
+            : [
+                ...s.livros,
+                { adicionadoEm: new Date().toISOString(), ...livro },
+              ],
         })),
       guardarLivro: (livro) =>
         set((s) => {
@@ -125,23 +152,45 @@ export const usePerfil = create<Perfil & Acoes>()(
           return {
             livros: [
               ...s.livros.filter((l) => l.id !== livro.id),
-              { ...antigo, adicionadoEm: antigo?.adicionadoEm ?? new Date().toISOString(), ...livro },
+              {
+                ...antigo,
+                adicionadoEm: antigo?.adicionadoEm ?? new Date().toISOString(),
+                ...livro,
+              },
             ],
           };
         }),
       editarLivro: (base, dados) =>
         set((s) => {
           const antigo = s.livros.find((l) => l.id === base.id);
-          const novo: LivroSalvo = { adicionadoEm: new Date().toISOString(), ...base, ...antigo, ...dados };
-          return { livros: antigo ? s.livros.map((l) => (l.id === base.id ? novo : l)) : [...s.livros, novo] };
+          const novo: LivroSalvo = {
+            adicionadoEm: new Date().toISOString(),
+            ...base,
+            ...antigo,
+            ...dados,
+          };
+          return {
+            livros: antigo
+              ? s.livros.map((l) => (l.id === base.id ? novo : l))
+              : [...s.livros, novo],
+          };
         }),
       removerLivro: (id) =>
-        set((s) => ({ livros: s.livros.filter((l) => l.id !== id), favoritos: s.favoritos.filter((f) => f !== id) })),
+        set((s) => ({
+          livros: s.livros.filter((l) => l.id !== id),
+          favoritos: s.favoritos.filter((f) => f !== id),
+        })),
       criarEstante: (e) => {
         const id = `${sugerirUsuario(e.nome).replace(/\./g, "-") || "estante"}-${Date.now().toString(36)}`;
-        set((s) => ({ estantesProprias: [...s.estantesProprias, { ...e, id, criadaEm: new Date().toISOString() }] }));
+        set((s) => ({
+          estantesProprias: [
+            ...s.estantesProprias,
+            { ...e, id, criadaEm: new Date().toISOString() },
+          ],
+        }));
         return id;
       },
+      esvaziarEstante: () => set({ livros: [], favoritos: [] }),
       sair: () => set({ ...perfilInicial }),
     }),
     {

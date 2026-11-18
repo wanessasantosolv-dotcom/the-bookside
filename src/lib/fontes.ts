@@ -33,9 +33,9 @@ export type InfoDoLivro = {
   passos: string[];
 };
 
-const comTempo = (ms = 12000) => AbortSignal.timeout(ms);
+export const comTempo = (ms = 12000) => AbortSignal.timeout(ms);
 
-async function json<T>(url: string): Promise<T | null> {
+export async function json<T>(url: string): Promise<T | null> {
   try {
     const r = await fetch(url, { signal: comTempo() });
     return r.ok ? ((await r.json()) as T) : null;
@@ -55,7 +55,7 @@ const palavras = (t: string) =>
     );
 
 /** o título achado é mesmo o livro pedido? */
-function mesmoTitulo(achado: string, pedido: string) {
+export function mesmoTitulo(achado: string, pedido: string) {
   const a = normalizar(achado);
   const ps = palavras(pedido);
   if (!ps.length) return a.includes(normalizar(pedido));

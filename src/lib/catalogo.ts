@@ -20,10 +20,12 @@ export type LivroBusca = LivroCatalogo & {
   isbn?: string;
   /** idioma da edição (ex.: "pt", "en") */
   idioma?: string;
+  /** nota média dos leitores na fonte (Google Books ou Open Library) */
+  avaliacao?: { media: number; total: number };
 };
 
 const CAMPOS =
-  "key,title,author_name,first_publish_year,number_of_pages_median,cover_i,subject";
+  "key,title,author_name,first_publish_year,number_of_pages_median,cover_i,subject,ratings_average,ratings_count";
 const CACHE = "bookside-catalogo";
 
 type DocOL = {
@@ -34,6 +36,8 @@ type DocOL = {
   number_of_pages_median?: number;
   cover_i?: number;
   subject?: string[];
+  ratings_average?: number;
+  ratings_count?: number;
 };
 
 const paleta = [
@@ -61,6 +65,10 @@ function paraLivro(d: DocOL, i: number): LivroBusca {
     capaGrande: d.cover_i
       ? `https://covers.openlibrary.org/b/id/${d.cover_i}-L.jpg`
       : undefined,
+    avaliacao:
+      d.ratings_average && d.ratings_count
+        ? { media: d.ratings_average, total: d.ratings_count }
+        : undefined,
   };
 }
 
@@ -118,6 +126,8 @@ type VolumeGB = {
     imageLinks?: { thumbnail?: string };
     language?: string;
     industryIdentifiers?: { type: string; identifier: string }[];
+    averageRating?: number;
+    ratingsCount?: number;
   };
 };
 
@@ -155,6 +165,10 @@ function doGoogle(v: VolumeGB, i: number): LivroBusca | null {
       info.industryIdentifiers?.find((x) => x.type === "ISBN_10")
     )?.identifier,
     idioma: info.language,
+    avaliacao:
+      info.averageRating && info.ratingsCount
+        ? { media: info.averageRating, total: info.ratingsCount }
+        : undefined,
   };
 }
 
@@ -204,7 +218,7 @@ async function volumesDoGoogle(
     }
   }
   const r = await fetch(
-    `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=${max}${maisGoogle}&printType=books&fields=items(id,volumeInfo(title,subtitle,authors,publishedDate,pageCount,categories,description,imageLinks/thumbnail,language,industryIdentifiers))`,
+    `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=${max}${maisGoogle}&printType=books&fields=items(id,volumeInfo(title,subtitle,authors,publishedDate,pageCount,categories,description,imageLinks/thumbnail,language,industryIdentifiers,averageRating,ratingsCount))`,
     { signal },
   );
   if (!r.ok) throw new Error(`busca falhou (${r.status})`);

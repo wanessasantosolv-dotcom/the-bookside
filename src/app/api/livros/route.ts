@@ -8,7 +8,7 @@ import { NextResponse, type NextRequest } from "next/server";
  * Sem chave, responde { semChave: true } e o app busca direto do navegador, como antes.
  */
 const CAMPOS =
-  "items(id,volumeInfo(title,subtitle,authors,publishedDate,pageCount,categories,description,imageLinks/thumbnail,language,industryIdentifiers))";
+  "items(id,volumeInfo(title,subtitle,authors,publishedDate,pageCount,categories,description,imageLinks/thumbnail,language,industryIdentifiers,averageRating,ratingsCount))";
 
 export async function GET(req: NextRequest) {
   const chave = process.env.GOOGLE_BOOKS_API_KEY;

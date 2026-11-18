@@ -9,6 +9,7 @@ import { CapaLivro } from "@/components/CapaLivro";
 import { TrocarCapa } from "@/components/TrocarCapa";
 import { lembrarRemovido } from "@/components/AvisoRemovido";
 import { AmigasComLivro } from "@/components/social/AmigasComLivro";
+import { OpinioesDoLivro } from "@/components/OpinioesDoLivro";
 import { useHidratado } from "@/components/PerfilHidratacao";
 import { livroLembrado, sinopseDaObra } from "@/lib/catalogo";
 import { corDoLivro } from "@/lib/cores";
@@ -395,6 +396,9 @@ export default function LivroPage() {
             <div className="rounded-md border border-linha p-4 lg:rounded-[4px] lg:border-fio lg:p-5">
               <p className={secao}>entre suas amigas</p>
               <AmigasComLivro livroId={livro.id} />
+            </div>
+            <div className="mt-4">
+              <OpinioesDoLivro livro={livro} />
             </div>
             {salvo ? (
               <button
