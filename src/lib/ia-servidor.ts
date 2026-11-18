@@ -74,47 +74,122 @@ export async function perguntarComPesquisa(
   return valor;
 }
 
-/** modelos do Gemini tentados em ordem (GEMINI_MODEL na Vercel troca o primeiro) */
+/** modelos do Gemini tentados em ordem (GEMINI_MODEL na Vercel entra primeiro) */
 const modelosGemini = () =>
-  [process.env.GEMINI_MODEL, "gemini-flash-latest", "gemini-2.5-flash"].filter(
-    (m, i, a): m is string => !!m && a.indexOf(m) === i,
-  );
+  [
+    process.env.GEMINI_MODEL,
+    "gemini-2.5-flash",
+    "gemini-flash-latest",
+    "gemini-2.5-flash-lite",
+    "gemini-flash-lite-latest",
+    "gemini-2.0-flash",
+  ].filter((m, i, a): m is string => !!m && a.indexOf(m) === i);
 
-async function comGemini(sistema: string, pergunta: string): Promise<string> {
-  let ultimoErro = "";
-  for (const modelo of modelosGemini()) {
-    const r = await fetch(
-      `${process.env.GEMINI_BASE_URL ?? "https://generativelanguage.googleapis.com"}/v1beta/models/${modelo}:generateContent`,
-      {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          "x-goog-api-key": process.env.GEMINI_API_KEY!,
-        },
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: sistema }] },
-          contents: [{ role: "user", parts: [{ text: pergunta }] }],
-          // pesquisa no Google (grounding)
-          tools: [{ google_search: {} }],
-        }),
+type TentativaGemini = {
+  modelo: string;
+  pesquisa: boolean;
+  status: number;
+  mensagem?: string;
+  texto?: string;
+};
+
+/** Um pedido ao Gemini; devolve o status e a mensagem de erro do Google (sem a chave). */
+async function pedirAoGemini(
+  modelo: string,
+  sistema: string,
+  pergunta: string,
+  pesquisa: boolean,
+): Promise<TentativaGemini> {
+  const r = await fetch(
+    `${process.env.GEMINI_BASE_URL ?? "https://generativelanguage.googleapis.com"}/v1beta/models/${modelo}:generateContent`,
+    {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-goog-api-key": process.env.GEMINI_API_KEY!,
       },
-    );
-    if (r.status === 429) throw new SemCota("cota do Gemini");
-    if (r.status === 404) {
-      ultimoErro = `modelo ${modelo} não existe`;
-      continue; // nome de modelo antigo: tenta o próximo
-    }
-    if (!r.ok) throw new Error(`gemini ${r.status}`);
-    const dados = (await r.json()) as {
-      candidates?: { content?: { parts?: { text?: string }[] } }[];
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: sistema }] },
+        contents: [{ role: "user", parts: [{ text: pergunta }] }],
+        // pesquisa no Google (grounding)
+        ...(pesquisa ? { tools: [{ google_search: {} }] } : {}),
+      }),
+    },
+  ).catch(() => null);
+  if (!r) return { modelo, pesquisa, status: 0, mensagem: "sem conexão" };
+  const dados = (await r.json().catch(() => ({}))) as {
+    error?: { message?: string };
+    candidates?: { content?: { parts?: { text?: string }[] } }[];
+  };
+  if (!r.ok)
+    return {
+      modelo,
+      pesquisa,
+      status: r.status,
+      mensagem: dados.error?.message?.slice(0, 300),
     };
-    const texto = (dados.candidates?.[0]?.content?.parts ?? [])
-      .map((p) => p.text ?? "")
-      .join("");
-    if (!texto) throw new Error("gemini sem texto");
-    return texto;
+  const texto = (dados.candidates?.[0]?.content?.parts ?? [])
+    .map((p) => p.text ?? "")
+    .join("");
+  return {
+    modelo,
+    pesquisa,
+    status: r.status,
+    texto,
+    mensagem: texto ? undefined : "resposta vazia",
+  };
+}
+
+/**
+ * Tenta os modelos em ordem, primeiro com pesquisa no Google. Se a pesquisa não
+ * tiver cota grátis em nenhum, tenta sem pesquisa (o modelo responde com o que sabe).
+ */
+async function comGemini(sistema: string, pergunta: string): Promise<string> {
+  const tentativas: TentativaGemini[] = [];
+  for (const pesquisa of [true, false]) {
+    for (const modelo of modelosGemini()) {
+      const t = await pedirAoGemini(modelo, sistema, pergunta, pesquisa);
+      tentativas.push(t);
+      if (t.texto) return t.texto;
+      // 404: modelo não existe; 429: sem cota nesse modelo; 400/403: recurso indisponível no plano
+      if (![400, 403, 404, 429].includes(t.status)) break;
+    }
   }
-  throw new Error(ultimoErro || "gemini indisponível");
+  console.error(
+    "gemini falhou:",
+    tentativas
+      .map(
+        (t) =>
+          `${t.modelo}${t.pesquisa ? "+busca" : ""} ${t.status} ${t.mensagem ?? ""}`,
+      )
+      .join(" | "),
+  );
+  if (tentativas.some((t) => t.status === 429))
+    throw new SemCota("cota do Gemini");
+  throw new Error("gemini indisponível");
+}
+
+/** Diagnóstico (rota /api/ia/status?teste=1): um pedido curtinho em cada modelo. */
+export async function diagnosticoGemini() {
+  const lista = [];
+  for (const modelo of modelosGemini()) {
+    for (const pesquisa of [true, false]) {
+      const t = await pedirAoGemini(
+        modelo,
+        "Responda só: ok",
+        "teste",
+        pesquisa,
+      );
+      lista.push({
+        modelo,
+        pesquisa,
+        ok: !!t.texto,
+        status: t.status,
+        erro: t.mensagem,
+      });
+    }
+  }
+  return lista;
 }
 
 async function comClaude(sistema: string, pergunta: string): Promise<string> {
