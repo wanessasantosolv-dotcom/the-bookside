@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { ErroOuFalta, Vazio } from "@/components/social/Estados";
 import { clube, membrosDe, tirarMembro, type Clube, type Membro, type Papel } from "@/lib/clubes";
+import { temas } from "@/lib/dados";
 import { useConsulta, useMeuId } from "@/lib/social";
 
 type Ctx = { clube: Clube; membros: Membro[]; papel: Papel | null; recarregar: () => void };
@@ -133,6 +134,7 @@ function Cabecalho({ c, papel, rodada }: { c: Clube; papel: Papel | null; rodada
   const pathname = usePathname();
   const base = `/clubes/${c.id}`;
   const inicio = pathname === base;
+  const tema = c.tema ? (temas.find((t) => t.id === c.tema) ?? null) : null;
   const acao =
     "flex min-h-9 items-center rounded-pill border border-fio px-4 text-[10px] font-bold tracking-[.1em] text-tinta uppercase hover:border-vinho hover:text-vinho";
   return (
@@ -149,8 +151,18 @@ function Cabecalho({ c, papel, rodada }: { c: Clube; papel: Papel | null; rodada
               </Link>
               <Link href={base} className="flex items-center gap-3.5 border-l border-fio pl-5">
                 <span>
-                  <span className="block font-revista text-xl leading-none italic">{c.nome}</span>
-                  <span className="mt-1 block text-[11px] text-grafite">{rodada ?? "clube de leitura"}</span>
+                  <span
+                    className="block font-revista text-xl leading-none italic"
+                    style={tema ? { color: tema.texto } : undefined}
+                  >
+                    {c.nome}
+                  </span>
+                  <span
+                    className="mt-1 block text-[11px] text-grafite"
+                    style={tema ? { color: tema.destaque } : undefined}
+                  >
+                    {rodada ?? "clube de leitura"}
+                  </span>
                 </span>
               </Link>
             </span>
@@ -162,11 +174,13 @@ function Cabecalho({ c, papel, rodada }: { c: Clube; papel: Papel | null; rodada
       <div className={inicio ? "" : "lg:hidden"}>
         <div className={`relative lg:mt-6 ${largura}`}>
           <div
-            className={`aspect-[3/1] w-full bg-cover bg-center lg:rounded-[4px] ${c.capa ? "" : "pat-estrelas"}`}
+            className={`aspect-[3/1] w-full bg-cover bg-center lg:rounded-[4px] ${c.capa || tema ? "" : "pat-estrelas"}`}
             style={
               c.capa
                 ? { backgroundImage: `linear-gradient(rgba(43,20,32,.02),rgba(43,20,32,.14)), url("${c.capa}")` }
-                : undefined
+                : tema
+                  ? { background: tema.fundo }
+                  : undefined
             }
           />
           <div className="absolute inset-x-0 top-0 flex items-center justify-between px-4 pt-2 lg:px-15 lg:pt-3">
@@ -181,16 +195,32 @@ function Cabecalho({ c, papel, rodada }: { c: Clube; papel: Papel | null; rodada
             </span>
           </div>
         </div>
-        <div className={`relative bg-creme px-6 pt-5 text-center lg:bg-jornal lg:text-left ${largura}`}>
+        <div
+          className={`relative bg-creme px-6 pt-5 text-center lg:bg-jornal lg:text-left ${largura}`}
+          style={tema ? { background: tema.papel } : undefined}
+        >
           <div className="lg:flex lg:items-end lg:gap-5">
             <div className="min-w-0 flex-1">
               {rodada ? (
-                <p className="text-[10px] font-semibold tracking-[.16em] text-cinza uppercase">{rodada}</p>
+                <p
+                  className="text-[10px] font-semibold tracking-[.16em] text-cinza uppercase"
+                  style={tema ? { color: tema.destaque } : undefined}
+                >
+                  {rodada}
+                </p>
               ) : null}
-              <h1 className="mt-1 font-display text-[34px] leading-[1.05] font-semibold italic text-bordo lg:font-revista lg:text-[40px] lg:font-normal lg:text-tinta">
+              <h1
+                className="mt-1 font-display text-[34px] leading-[1.05] font-semibold italic text-bordo lg:font-revista lg:text-[40px] lg:font-normal lg:text-tinta"
+                style={tema ? { color: tema.texto } : undefined}
+              >
                 {c.nome}
               </h1>
-              <p className="mt-1 text-[10px] font-semibold tracking-[.2em] text-cinza uppercase">clube de leitura</p>
+              <p
+                className="mt-1 text-[10px] font-semibold tracking-[.2em] text-cinza uppercase"
+                style={tema ? { color: tema.destaque } : undefined}
+              >
+                clube de leitura
+              </p>
             </div>
             <div className="hidden gap-2.5 lg:flex">
               <Link href={`${base}/convidar`} className={acao}>

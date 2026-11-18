@@ -8,6 +8,7 @@ import { useClube } from "@/components/clube/ClubeContexto";
 import { botaoPrincipal, campo, Rodape, rotuloCampo, TopoForm } from "@/components/clube/Pecas";
 import { Vazio } from "@/components/social/Estados";
 import { apagarClube, editarClube } from "@/lib/clubes";
+import { temas } from "@/lib/dados";
 
 export default function EditarClubePage() {
   const { clube, membros, papel, recarregar } = useClube();
@@ -15,6 +16,7 @@ export default function EditarClubePage() {
   const [nome, setNome] = useState(clube.nome);
   const [descricao, setDescricao] = useState(clube.descricao ?? "");
   const [capa, setCapa] = useState<string | null>(clube.capa);
+  const [tema, setTema] = useState<string>(clube.tema ?? temas[0].id);
   const [limite, setLimite] = useState<string>(clube.limite_sugestoes ? String(clube.limite_sugestoes) : "");
   const [maximo, setMaximo] = useState<string>(clube.max_membros ? String(clube.max_membros) : "");
   const [ocupado, setOcupado] = useState(false);
@@ -40,6 +42,7 @@ export default function EditarClubePage() {
         nome: nome.trim(),
         descricao: descricao.trim() || null,
         capa,
+        tema,
         limite_sugestoes: limite ? Number(limite) : null,
         max_membros: maximo ? Math.max(Number(maximo), membros.length) : null,
       });
@@ -83,6 +86,38 @@ export default function EditarClubePage() {
           />
         </label>
         <CampoCapa valor={capa} onMudar={setCapa} />
+        <fieldset>
+          <legend className={rotuloCampo}>tema do clube</legend>
+          <p className="mt-1 font-accent text-[13px] italic text-cinza">define a cor de destaque do cabeçalho do clube.</p>
+          <div className="mt-2 grid grid-cols-4 gap-2.5">
+            {temas.map((t) => {
+              const marcado = t.id === tema;
+              return (
+                <label key={t.id} className="block">
+                  <input
+                    type="radio"
+                    name="tema"
+                    className="sr-only"
+                    checked={marcado}
+                    onChange={() => setTema(t.id)}
+                  />
+                  <span
+                    aria-label={t.nome}
+                    className={`flex aspect-square w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-md border-2 p-1 text-center ${
+                      marcado ? "shadow-[0_6px_14px_-8px_rgba(43,20,32,.5)]" : "border-transparent"
+                    }`}
+                    style={{ background: t.papel, borderColor: marcado ? t.destaque : "transparent" }}
+                  >
+                    <span aria-hidden className="size-4 rounded-full" style={{ background: t.destaque }} />
+                    <span className="text-[9px] leading-tight font-semibold" style={{ color: t.texto }}>
+                      {t.nome}
+                    </span>
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+        </fieldset>
         <fieldset className="space-y-4">
           <legend className={rotuloCampo}>regras do clube</legend>
           <label className="flex items-center justify-between gap-4 text-sm">

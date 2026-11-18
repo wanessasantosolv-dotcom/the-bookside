@@ -22,6 +22,8 @@ export type Clube = {
   max_membros: number | null;
   /** o código de convite vale até aqui */
   codigo_expira_em: string | null;
+  /** id do tema (mesmas opções de @/lib/dados → temas) */
+  tema: string | null;
 };
 export type Papel = "moderadora" | "membro";
 export type Membro = { usuario_id: string; papel: Papel; entrou_em: string; pessoa: PessoaResumo };
@@ -174,7 +176,7 @@ export async function minhasSugestoesNoMes(clubeId: string): Promise<number> {
 
 export async function editarClube(
   id: string,
-  dados: Partial<Pick<Clube, "nome" | "descricao" | "capa" | "limite_sugestoes" | "max_membros">>,
+  dados: Partial<Pick<Clube, "nome" | "descricao" | "capa" | "limite_sugestoes" | "max_membros" | "tema">>,
 ) {
   const { error } = await db().from("clubes").update(dados).eq("id", id);
   if (error) throw error;

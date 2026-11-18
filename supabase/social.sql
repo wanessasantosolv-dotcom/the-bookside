@@ -308,3 +308,6 @@ create policy "comentar" on public.comentarios for insert to authenticated
 drop policy if exists "apagar comentário" on public.comentarios;
 create policy "apagar comentário" on public.comentarios for delete to authenticated
   using (autor = auth.uid() or exists (select 1 from atividades a where a.id = atividade_id and a.autor = auth.uid()));
+
+-- tema visual do clube (mesmas opções do tema do perfil, em lib/dados.ts)
+alter table public.clubes add column if not exists tema text;
