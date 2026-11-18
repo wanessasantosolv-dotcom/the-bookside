@@ -23,6 +23,10 @@ export async function GET(req: NextRequest) {
   url.searchParams.set("maxResults", String(max));
   url.searchParams.set("printType", "books");
   url.searchParams.set("fields", CAMPOS);
+  const lang = req.nextUrl.searchParams.get("lang");
+  if (lang && /^[a-z]{2}$/.test(lang)) url.searchParams.set("langRestrict", lang);
+  const inicio = Number(req.nextUrl.searchParams.get("inicio"));
+  if (inicio > 0 && inicio < 200) url.searchParams.set("startIndex", String(inicio));
   url.searchParams.set("key", chave);
 
   const r = await fetch(url, { next: { revalidate: 86400 } });

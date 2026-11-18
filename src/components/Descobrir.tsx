@@ -5,7 +5,7 @@ import { useState } from "react";
 import { CapaLivro } from "@/components/CapaLivro";
 import { BotaoLink } from "@/components/ui/Botao";
 import { Tela } from "@/components/ui/Tela";
-import { useSugestoes } from "@/lib/catalogo";
+import { useSugestoesVivas } from "@/lib/catalogo";
 import { usePerfil, type StatusLivro } from "@/lib/perfil-store";
 
 /** "guardei esta pra você": um livro por vez — passar, quero ler ou já li. */
@@ -15,7 +15,7 @@ export function Descobrir({ voltar, continuar }: { voltar: Destino; continuar: D
   const guardarLivro = usePerfil((s) => s.guardarLivro);
   const livros = usePerfil((s) => s.livros);
   // começa pelo livro com sinopse (o destaque do design)
-  const sugestoes = useSugestoes();
+  const sugestoes = useSugestoesVivas(false);
   const fila = [...sugestoes].sort((a, b) => Number(!!b.sinopse) - Number(!!a.sinopse));
   const [indice, setIndice] = useState(0);
   const livro = fila[indice];
@@ -26,8 +26,7 @@ export function Descobrir({ voltar, continuar }: { voltar: Destino; continuar: D
     setIndice((i) => i + 1);
   }
 
-  const botao =
-    "flex flex-col items-center gap-[9px] text-[9px] font-semibold tracking-[.14em] text-cinza uppercase";
+  const botao = "flex flex-col items-center gap-[9px] text-[9px] font-semibold tracking-[.14em] text-cinza uppercase";
   const selo =
     "flex size-[62px] items-center justify-center rounded-full border border-linha bg-creme-quente transition-transform active:scale-95";
 
@@ -50,10 +49,15 @@ export function Descobrir({ voltar, continuar }: { voltar: Destino; continuar: D
       {livro ? (
         <>
           <div key={livro.id} className="relative mt-6 flex animate-subir justify-center">
-            <span aria-hidden className="absolute top-2 left-7 text-[15px] text-ouro">✧</span>
-            <span aria-hidden className="absolute top-20 right-6 text-[11px] text-rosa-antigo">✦</span>
+            <span aria-hidden className="absolute top-2 left-7 text-[15px] text-ouro">
+              ✧
+            </span>
+            <span aria-hidden className="absolute top-20 right-6 text-[11px] text-rosa-antigo">
+              ✦
+            </span>
             <CapaLivro
-              titulo={livro.titulo} capa={livro.capa}
+              titulo={livro.titulo}
+              capa={livro.capa}
               cor={livro.cor}
               className="w-[166px] rotate-[1.5deg] !rounded-[3px_7px_7px_3px] !p-3 shadow-[inset_7px_0_8px_-6px_rgba(43,20,32,.55),0_16px_28px_-12px_rgba(43,20,32,.5)] [&>span:last-child]:text-lg"
             />
@@ -71,7 +75,16 @@ export function Descobrir({ voltar, continuar }: { voltar: Destino; continuar: D
           <div className="mt-auto flex justify-center gap-[34px] pt-8">
             <button type="button" className={botao} onClick={() => responder(null)}>
               <span className={selo}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2B1420" strokeWidth="1.7" strokeLinecap="round" aria-hidden>
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#2B1420"
+                  strokeWidth="1.7"
+                  strokeLinecap="round"
+                  aria-hidden
+                >
                   <path d="M6 6l12 12M18 6L6 18" />
                 </svg>
               </span>
@@ -79,7 +92,16 @@ export function Descobrir({ voltar, continuar }: { voltar: Destino; continuar: D
             </button>
             <button type="button" className={`${botao} text-bordo`} onClick={() => responder("quero")}>
               <span className={`${selo} border-bordo`}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6B0D24" strokeWidth="1.7" strokeLinejoin="round" aria-hidden>
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#6B0D24"
+                  strokeWidth="1.7"
+                  strokeLinejoin="round"
+                  aria-hidden
+                >
                   <path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.5-7 10-7 10z" />
                 </svg>
               </span>
@@ -87,7 +109,17 @@ export function Descobrir({ voltar, continuar }: { voltar: Destino; continuar: D
             </button>
             <button type="button" className={botao} onClick={() => responder("lido")}>
               <span className={selo}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2B1420" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#2B1420"
+                  strokeWidth="1.7"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden
+                >
                   <path d="M5 12.5l4.5 4.5L19 7.5" />
                 </svg>
               </span>
@@ -96,7 +128,10 @@ export function Descobrir({ voltar, continuar }: { voltar: Destino; continuar: D
           </div>
 
           <p className="mt-6 text-center">
-            <Link href={continuar.href} className="inline-block py-2 font-accent text-[15px] italic text-cinza underline underline-offset-4">
+            <Link
+              href={continuar.href}
+              className="inline-block py-2 font-accent text-[15px] italic text-cinza underline underline-offset-4"
+            >
               {queroLer ? `continuar com ${queroLer} na lista` : continuar.r}
             </Link>
           </p>

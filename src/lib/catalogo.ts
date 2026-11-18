@@ -122,10 +122,17 @@ let semRota = false;
  * chave do projeto e cache de 1 dia: mais rápido e sem bloqueio); sem chave
  * configurada, direto do navegador, como antes.
  */
-async function volumesDoGoogle(q: string, max: number, signal?: AbortSignal): Promise<VolumeGB[]> {
+async function volumesDoGoogle(
+  q: string,
+  max: number,
+  signal?: AbortSignal,
+  extra: { lang?: string; inicio?: number } = {},
+): Promise<VolumeGB[]> {
+  const mais = `${extra.lang ? `&lang=${extra.lang}` : ""}${extra.inicio ? `&inicio=${extra.inicio}` : ""}`;
+  const maisGoogle = `${extra.lang ? `&langRestrict=${extra.lang}` : ""}${extra.inicio ? `&startIndex=${extra.inicio}` : ""}`;
   if (!semRota) {
     try {
-      const r = await fetch(`/api/livros?q=${encodeURIComponent(q)}&max=${max}`, { signal });
+      const r = await fetch(`/api/livros?q=${encodeURIComponent(q)}&max=${max}${mais}`, { signal });
       if (r.ok) {
         const dados = (await r.json()) as { items?: VolumeGB[]; semChave?: boolean };
         if (!dados.semChave) return dados.items ?? [];
@@ -136,7 +143,7 @@ async function volumesDoGoogle(q: string, max: number, signal?: AbortSignal): Pr
     }
   }
   const r = await fetch(
-    `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=${max}&printType=books&fields=items(id,volumeInfo(title,subtitle,authors,publishedDate,pageCount,categories,description,imageLinks/thumbnail))`,
+    `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=${max}${maisGoogle}&printType=books&fields=items(id,volumeInfo(title,subtitle,authors,publishedDate,pageCount,categories,description,imageLinks/thumbnail))`,
     { signal },
   );
   if (!r.ok) throw new Error(`busca falhou (${r.status})`);
@@ -576,6 +583,112 @@ export function useCapaDoLivro(l: { id: string; titulo: string; autor: string; c
   return propria || daEstante || guardada || undefined;
 }
 
+/** Gostos do perfil → assunto do Google Books (as categorias de lá são em inglês). */
+const assuntoDoGosto: Record<string, string> = {
+  romance: "romance",
+  suspense: "thrillers",
+  "ficção científica": "science fiction",
+  "não ficção": "history",
+  poesia: "poetry",
+  fantasia: "fantasy",
+  drama: "drama",
+  clássicos: "classics",
+  humor: "humor",
+  "histórias de família": "family life",
+  biografia: "biography",
+  terror: "horror",
+};
+const SUGESTOES_SESSAO = "bookside-sugestoes";
+
+function embaralhar<T>(lista: T[]) {
+  return lista
+    .map((x) => ({ x, r: Math.random() }))
+    .sort((a, b) => a.r - b.r)
+    .map(({ x }) => x);
+}
+
+/**
+ * Sugestões de verdade: livros em português dos gêneros de que a pessoa gosta,
+ * com capa, que ela ainda não tem. Sorteia gêneros e páginas, então muda a
+ * cada visita; fica guardado durante a visita para não buscar a cada tela.
+ */
+async function sugestoesPorGosto(gostos: string[], jaTenho: string[]): Promise<LivroBusca[]> {
+  const chave = `${gostos.join(",")}`;
+  try {
+    const salvo = JSON.parse(sessionStorage.getItem(SUGESTOES_SESSAO) ?? "null") as {
+      chave: string;
+      livros: LivroBusca[];
+    } | null;
+    if (salvo?.chave === chave && salvo.livros.length) return salvo.livros;
+  } catch {
+    /* sem sessionStorage */
+  }
+  const escolhidos = embaralhar(gostos.map((g) => assuntoDoGosto[g]).filter(Boolean));
+  const assuntos = (escolhidos.length ? escolhidos : ["fiction", "romance", "thrillers", "fantasy"]).slice(0, 3);
+  const tenho = new Set(jaTenho.map(chaveTitulo));
+  const listas = await Promise.all(
+    assuntos.map((a) =>
+      volumesDoGoogle(`subject:"${a}"`, 20, undefined, { lang: "pt", inicio: Math.floor(Math.random() * 4) * 10 })
+        .then((items) =>
+          items.map(doGoogle).filter((l): l is LivroBusca => !!l && !!l.capa && !tenho.has(chaveTitulo(l.titulo))),
+        )
+        .catch(() => [] as LivroBusca[]),
+    ),
+  );
+  // intercala os gêneros e tira repetidos
+  const vistos = new Set<string>();
+  const livros: LivroBusca[] = [];
+  for (let i = 0; livros.length < 15 && listas.some((l) => l[i]); i++) {
+    for (const l of listas) {
+      const x = l[i];
+      if (x && !vistos.has(chaveTitulo(x.titulo))) {
+        vistos.add(chaveTitulo(x.titulo));
+        livros.push(x);
+      }
+    }
+  }
+  if (livros.length) {
+    lembrar(livros);
+    try {
+      sessionStorage.setItem(SUGESTOES_SESSAO, JSON.stringify({ chave, livros }));
+    } catch {
+      /* sem sessionStorage */
+    }
+  }
+  return livros;
+}
+
+const chaveTitulo = (t: string) =>
+  t
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+
+/**
+ * Sugestões que mudam: começam com a lista local (sem os livros que a pessoa
+ * já tem) e trocam pelas sugestões dos gostos dela assim que chegam.
+ */
+export function useSugestoesVivas(tirarOsQueTenho = true): LivroBusca[] {
+  const locais = useSugestoes();
+  const gostos = usePerfil((s) => s.gostos);
+  const livros = usePerfil((s) => s.livros);
+  const [vivas, setVivas] = useState<LivroBusca[] | null>(null);
+  const titulos = livros.map((l) => l.titulo);
+  const chaveTitulos = titulos.join("|");
+  useEffect(() => {
+    let vivo = true;
+    sugestoesPorGosto(gostos, chaveTitulos ? chaveTitulos.split("|") : []).then((l) => vivo && l.length && setVivas(l));
+    return () => {
+      vivo = false;
+    };
+  }, [gostos, chaveTitulos]);
+  const tenho = new Set(titulos.map(chaveTitulo));
+  const lista = vivas ?? locais;
+  return tirarOsQueTenho ? lista.filter((l) => !tenho.has(chaveTitulo(l.titulo))) : lista;
+}
+
 /** Sugestões locais com as capas já encontradas. */
 export function useSugestoes(): LivroBusca[] {
   const capas = useCapas((s) => s.capas);
@@ -589,7 +702,7 @@ type Estado = "sugestoes" | "carregando" | "pronto" | "erro";
  * e, sem termo (ou sem internet), mostra as sugestões locais.
  */
 export function useBuscaLivros(termo: string) {
-  const sugestoes = useSugestoes();
+  const sugestoes = useSugestoesVivas();
   const [estado, setEstado] = useState<Estado>("sugestoes");
   const [resultados, setResultados] = useState<LivroBusca[]>(sugestoesDeLivros);
   const limpo = termo.trim();
