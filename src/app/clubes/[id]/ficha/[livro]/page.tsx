@@ -174,11 +174,7 @@ function Formulario({ l, minha }: { l: LivroDoClube; minha: Ficha | null }) {
           </label>
           <SugerirCitacoes
             titulo={l.livro.titulo}
-            autor={l.livro.autor}
-            onEscolher={(c) => {
-              setCitacao(c.texto);
-              if (c.spoiler) setSpoiler(true);
-            }}
+            onEscolher={(c) => setCitacao(c.texto)}
           />
           <label className="block">
             <span className={rotuloCampo}>o que eu achei</span>

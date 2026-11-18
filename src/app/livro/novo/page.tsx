@@ -1,6 +1,6 @@
 "use client";
 
-import { completarLivro, ErroIA } from "@/lib/ia";
+import { infoNaInternet } from "@/lib/fontes";
 import { Voltar } from "@/components/Voltar";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useRef, useState, type FormEvent } from "react";
@@ -48,29 +48,25 @@ function Cadastro() {
   const [erro, setErro] = useState<string | null>(null);
   const [sinopse, setSinopse] = useState("");
   const [ia, setIa] = useState<{
-    estado: "pensando" | "pronto" | "nada" | "erro";
-    msg?: string;
+    estado: "procurando" | "pronto" | "nada" | "erro";
+    fonte?: string;
   } | null>(null);
 
-  /** pesquisa o livro na internet (IA) e preenche o que estiver vazio */
-  async function completarComIA() {
-    if (titulo.trim().length < 2)
-      return setIa({ estado: "erro", msg: "escreva o título primeiro." });
-    setIa({ estado: "pensando" });
+  /** procura o livro (Google Books, Open Library, Wikipédia) e preenche o que estiver vazio */
+  async function completarDaInternet() {
+    if (titulo.trim().length < 2) return setIa({ estado: "erro" });
+    setIa({ estado: "procurando" });
     try {
-      const r = await completarLivro(titulo.trim(), autor.trim());
-      if (!r.encontrado) return setIa({ estado: "nada" });
+      const r = await infoNaInternet(titulo.trim(), autor.trim());
+      if (!r) return setIa({ estado: "nada" });
       if (r.titulo) setTitulo(r.titulo);
       if (r.autor && !autor.trim()) setAutor(r.autor.toLowerCase());
-      if (r.sinopse) setSinopse(r.sinopse);
+      if (r.sinopse && !sinopse.trim()) setSinopse(r.sinopse);
       if (r.paginas && !paginas) setPaginas(String(r.paginas));
-      if (r.genero && !genero) setGenero(r.genero);
-      setIa({ estado: "pronto" });
-    } catch (x) {
-      setIa({
-        estado: "erro",
-        msg: x instanceof ErroIA ? x.message : "não deu para pesquisar agora.",
-      });
+      if (r.capa && !capa) setCapa(r.capa);
+      setIa({ estado: "pronto", fonte: r.fonte });
+    } catch {
+      setIa({ estado: "erro" });
     }
   }
   const arquivo = useRef<HTMLInputElement>(null);
@@ -198,22 +194,24 @@ function Cadastro() {
         <div className="rounded-md border border-dashed border-bege px-4 py-3">
           <button
             type="button"
-            onClick={completarComIA}
-            disabled={ia?.estado === "pensando"}
+            onClick={completarDaInternet}
+            disabled={ia?.estado === "procurando"}
             className="flex min-h-10 items-center gap-2 text-[13px] font-semibold text-bordo disabled:opacity-60"
           >
-            {ia?.estado === "pensando"
-              ? "✦ procurando na internet…"
-              : "✦ completar com IA"}
+            {ia?.estado === "procurando"
+              ? "✦ procurando o livro…"
+              : "✦ completar com a internet"}
           </button>
           <p className="text-xs text-cinza">
             {ia?.estado === "pronto"
-              ? "pronto! confira a sinopse, as páginas e o gênero antes de salvar."
+              ? `pronto! confira os dados antes de salvar.${ia.fonte ? ` (sinopse: ${ia.fonte})` : " não achei sinopse."}`
               : ia?.estado === "nada"
-                ? "não achei esse livro com certeza. confira o título e a autoria."
+                ? "não achei esse livro. confira o título e a autoria, ou preencha à mão."
                 : ia?.estado === "erro"
-                  ? ia.msg
-                  : "a IA pesquisa o livro pelo título e autoria e escreve a sinopse para você."}
+                  ? titulo.trim().length < 2
+                    ? "escreva o título primeiro."
+                    : "sem conexão agora. tente de novo."
+                  : "procura o livro no Google Books, Open Library e Wikipédia e preenche sinopse, páginas e capa."}
           </p>
         </div>
 
