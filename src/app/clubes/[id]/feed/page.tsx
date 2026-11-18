@@ -1,13 +1,12 @@
 "use client";
 
+import { CapaAuto } from "@/components/CapaAuto";
 import Link from "next/link";
 import { useState } from "react";
-import { CapaLivro } from "@/components/CapaLivro";
 import { useClube } from "@/components/clube/ClubeContexto";
 import { Carregando, ErroOuFalta, Vazio } from "@/components/social/Estados";
 import { Avatar, CartaoAtividade } from "@/components/social/Pessoas";
 import { encontrosDe, livrosDoClube } from "@/lib/clubes";
-import { corDoLivro } from "@/lib/cores";
 import {
   atividadesDoClube,
   nomeDe,
@@ -122,10 +121,7 @@ export default function ClubeFeedPage() {
                   </span>
                 </span>
                 {i.livro ? (
-                  <CapaLivro
-                    titulo={i.livro.titulo}
-                    capa={i.livro.capa}
-                    cor={corDoLivro(i.livro.id)}
+                  <CapaAuto livro={i.livro}
                     className="w-11 self-start [&>span:last-child]:hidden"
                   />
                 ) : null}

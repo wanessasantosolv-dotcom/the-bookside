@@ -1,16 +1,15 @@
 "use client";
 
+import { CapaAuto } from "@/components/CapaAuto";
 import { Animacao } from "@/components/Animacao";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
-import { CapaLivro } from "@/components/CapaLivro";
 import { useClube } from "@/components/clube/ClubeContexto";
 import { botaoPrincipal, Rodape, TopoForm } from "@/components/clube/Pecas";
 import { ErroOuFalta, Vazio } from "@/components/social/Estados";
 import { Avatar } from "@/components/social/Pessoas";
 import { criterios, fichasDe, livroDoClube, media, virgula, type Ficha } from "@/lib/clubes";
-import { corDoLivro } from "@/lib/cores";
 import { estrelas } from "@/lib/estantes";
 import { nomeDe, useConsulta, useMeuId, type PessoaResumo } from "@/lib/social";
 
@@ -83,10 +82,7 @@ export default function FichasDoLivroPage() {
       <div className="px-6 lg:grid lg:max-w-[1000px] lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-10 lg:px-0">
         <div>
           <div className="mt-4 flex gap-4 rounded-xl border border-linha bg-creme-quente p-4 lg:rounded-[4px] lg:border-fio lg:bg-transparent">
-            <CapaLivro
-              titulo={l.livro.titulo}
-              capa={l.livro.capa}
-              cor={corDoLivro(l.livro.id)}
+            <CapaAuto livro={l.livro}
               className="w-[84px] [&>span:last-child]:hidden"
             />
             <div className="min-w-0">

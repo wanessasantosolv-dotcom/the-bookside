@@ -1,5 +1,6 @@
 "use client";
 
+import { CapaAuto } from "@/components/CapaAuto";
 import Link from "next/link";
 import { useState } from "react";
 import { AppShell } from "@/components/AppShell";
@@ -84,7 +85,7 @@ function Feed() {
       {lendo.map(({ pessoa, livro }) => (
         <li key={pessoa.id} className="w-[58px] flex-none text-center">
           <Link href={`/livro/${livro.id}`} aria-label={`${nomeDe(pessoa)} está lendo ${livro.titulo}`}>
-            <CapaLivro titulo={livro.titulo} capa={livro.capa} cor={corDoLivro(livro.id)} className="w-full [&>span:last-child]:hidden" />
+            <CapaAuto livro={livro} className="w-full [&>span:last-child]:hidden" />
           </Link>
           <Link href={pessoa.usuario ? `/u/${pessoa.usuario}` : "#"} className="mt-1.5 flex items-center justify-center gap-1">
             <Avatar pessoa={pessoa} tamanho={14} className="!text-[7px]" />
@@ -148,7 +149,7 @@ function AmigasLendoWeb() {
         {lendo.dados.map(({ pessoa, livro }) => (
           <li key={pessoa.id} className="w-12 text-center">
             <Link href={`/livro/${livro.id}`} onClick={() => lembrarLivros([livro])} aria-label={`${nomeDe(pessoa)} está lendo ${livro.titulo}`}>
-              <CapaLivro titulo={livro.titulo} capa={livro.capa} cor={corDoLivro(livro.id)} className="w-full [&>span:last-child]:hidden" />
+              <CapaAuto livro={livro} className="w-full [&>span:last-child]:hidden" />
             </Link>
             <Link href={pessoa.usuario ? `/u/${pessoa.usuario}` : "#"} className="mt-1.5 block truncate font-revista text-xs italic">
               {pessoa.nome || pessoa.usuario}

@@ -1,12 +1,11 @@
 "use client";
 
+import { CapaAuto } from "@/components/CapaAuto";
 import Link from "next/link";
-import { CapaLivro } from "@/components/CapaLivro";
 import { useClube } from "@/components/clube/ClubeContexto";
 import { Carregando, ErroOuFalta } from "@/components/social/Estados";
 import { Avatar } from "@/components/social/Pessoas";
 import { andamento, encontrosDe, fichasDoClube, livrosDoClube, media, virgula } from "@/lib/clubes";
-import { corDoLivro } from "@/lib/cores";
 import { estrelas } from "@/lib/estantes";
 import { nomeDe, useConsulta, useMeuId } from "@/lib/social";
 
@@ -53,10 +52,7 @@ export default function ClubeInicioPage() {
           </div>
           {lendo ? (
             <Link href={`/clubes/${clube.id}/leitura`} className="mt-4 flex gap-4">
-              <CapaLivro
-                titulo={lendo.livro.titulo}
-                capa={lendo.livro.capa}
-                cor={corDoLivro(lendo.livro.id)}
+              <CapaAuto livro={lendo.livro}
                 className="w-[92px] -rotate-1 [&>span:last-child]:text-xs"
               />
               <span className="min-w-0 pt-1">
@@ -116,10 +112,7 @@ export default function ClubeInicioPage() {
               {amados.map(({ l, m }) => (
                 <li key={l.id}>
                   <Link href={`/clubes/${clube.id}/livro/${l.id}`}>
-                    <CapaLivro
-                      titulo={l.livro.titulo}
-                      capa={l.livro.capa}
-                      cor={corDoLivro(l.livro.id)}
+                    <CapaAuto livro={l.livro}
                       className="w-full"
                     />
                     <span className="mt-1.5 block text-center text-[10px] text-bordo">

@@ -1,15 +1,14 @@
 "use client";
 
+import { CapaAuto } from "@/components/CapaAuto";
 import { Animacao } from "@/components/Animacao";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CapaLivro } from "@/components/CapaLivro";
 import { useClube } from "@/components/clube/ClubeContexto";
 import { botaoContorno, botaoPrincipal } from "@/components/clube/Pecas";
 import { ErroOuFalta, Vazio } from "@/components/social/Estados";
 import { Avatar } from "@/components/social/Pessoas";
 import { andamento, encerrarLeitura, fichasDe, livrosDoClube } from "@/lib/clubes";
-import { corDoLivro } from "@/lib/cores";
 import { nomeDe, useConsulta, useMeuId } from "@/lib/social";
 
 export default function LeituraPage() {
@@ -72,10 +71,7 @@ export default function LeituraPage() {
           lendo agora{lendo.rodada ? ` · rodada ${lendo.rodada}` : ""}
         </p>
         <div className="mt-3 flex gap-4">
-          <CapaLivro
-            titulo={lendo.livro.titulo}
-            capa={lendo.livro.capa}
-            cor={corDoLivro(lendo.livro.id)}
+          <CapaAuto livro={lendo.livro}
             className="w-[110px] -rotate-1 [&>span:last-child]:text-sm"
           />
           <div className="min-w-0 pt-1">

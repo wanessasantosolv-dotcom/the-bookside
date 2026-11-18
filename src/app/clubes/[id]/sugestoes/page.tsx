@@ -1,12 +1,11 @@
 "use client";
 
+import { CapaAuto } from "@/components/CapaAuto";
 import Link from "next/link";
-import { CapaLivro } from "@/components/CapaLivro";
 import { useClube } from "@/components/clube/ClubeContexto";
 import { Avatares, botaoPrincipal, Rodape, TopoForm } from "@/components/clube/Pecas";
 import { Carregando, ErroOuFalta, Vazio } from "@/components/social/Estados";
 import { apagarSugestao, livrosDoClube, votar, type LivroDoClube } from "@/lib/clubes";
-import { corDoLivro } from "@/lib/cores";
 import { nomeDe, useConsulta, useMeuId } from "@/lib/social";
 
 export default function SugestoesPage() {
@@ -71,10 +70,7 @@ export default function SugestoesPage() {
                   key={l.id}
                   className="flex gap-3.5 rounded-xl border border-linha bg-creme-quente p-3.5 lg:rounded-[4px] lg:border-fio lg:bg-transparent"
                 >
-                  <CapaLivro
-                    titulo={l.livro.titulo}
-                    capa={l.livro.capa}
-                    cor={corDoLivro(l.livro.id)}
+                  <CapaAuto livro={l.livro}
                     className="w-[64px] self-start [&>span:last-child]:hidden"
                   />
                   <div className="min-w-0 flex-1">

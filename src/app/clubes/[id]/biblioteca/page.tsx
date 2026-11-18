@@ -1,13 +1,12 @@
 "use client";
 
+import { CapaAuto } from "@/components/CapaAuto";
 import { Animacao } from "@/components/Animacao";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { CapaLivro } from "@/components/CapaLivro";
 import { useClube } from "@/components/clube/ClubeContexto";
 import { ErroOuFalta, Vazio } from "@/components/social/Estados";
 import { andamento, livrosDoClube, type LivroDoClube } from "@/lib/clubes";
-import { corDoLivro } from "@/lib/cores";
 import { useConsulta } from "@/lib/social";
 
 function Prateleira({
@@ -52,10 +51,7 @@ function Prateleira({
           {livros.map((l) => (
             <li key={l.id} className="w-[72px] flex-none lg:w-[84px]">
               <Link href={link(l)} aria-label={l.livro.titulo}>
-                <CapaLivro
-                  titulo={l.livro.titulo}
-                  capa={l.livro.capa}
-                  cor={corDoLivro(l.livro.id)}
+                <CapaAuto livro={l.livro}
                   className="w-full"
                 />
               </Link>

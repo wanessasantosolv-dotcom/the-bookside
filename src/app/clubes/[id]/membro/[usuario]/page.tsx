@@ -1,14 +1,13 @@
 "use client";
 
+import { CapaAuto } from "@/components/CapaAuto";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { CapaLivro } from "@/components/CapaLivro";
 import { Animacao } from "@/components/Animacao";
 import { useClube } from "@/components/clube/ClubeContexto";
 import { ErroOuFalta, Vazio } from "@/components/social/Estados";
 import { BotaoSeguir } from "@/components/social/Pessoas";
 import { fichasDoClube, livrosDoClube, media, virgula } from "@/lib/clubes";
-import { corDoLivro } from "@/lib/cores";
 import { estrelas } from "@/lib/estantes";
 import type { LivroSalvo } from "@/lib/perfil-store";
 import { contagemSeguidores, idsQueSigo, perfilPorUsuario, useConsulta, useMeuId } from "@/lib/social";
@@ -149,10 +148,7 @@ export default function MembroPage() {
               return (
                 <li key={f.id} className="border-t border-linha lg:border-fio">
                   <Link href={`/clubes/${clube.id}/livro/${l.id}`} className="flex gap-3.5 py-3">
-                    <CapaLivro
-                      titulo={l.livro.titulo}
-                      capa={l.livro.capa}
-                      cor={corDoLivro(l.livro.id)}
+                    <CapaAuto livro={l.livro}
                       className="w-11 [&>span:last-child]:hidden"
                     />
                     <span className="min-w-0 flex-1">

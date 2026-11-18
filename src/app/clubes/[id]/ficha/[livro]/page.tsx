@@ -1,9 +1,9 @@
 "use client";
 
+import { CapaAuto } from "@/components/CapaAuto";
 import { Animacao } from "@/components/Animacao";
 import { useParams, useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { CapaLivro } from "@/components/CapaLivro";
 import { useClube } from "@/components/clube/ClubeContexto";
 import { botaoPrincipal, campo, EstrelasInput, Rodape, rotuloCampo, TopoForm } from "@/components/clube/Pecas";
 import { ErroOuFalta, Vazio } from "@/components/social/Estados";
@@ -17,7 +17,6 @@ import {
   type Ficha,
   type LivroDoClube,
 } from "@/lib/clubes";
-import { corDoLivro } from "@/lib/cores";
 import { usePerfil } from "@/lib/perfil-store";
 import { useConsulta, useMeuId } from "@/lib/social";
 
@@ -97,10 +96,7 @@ function Formulario({ l, minha }: { l: LivroDoClube; minha: Ficha | null }) {
               {l.livro.paginas ? ` · ${l.livro.paginas} páginas` : ""}
             </p>
           </div>
-          <CapaLivro
-            titulo={l.livro.titulo}
-            capa={l.livro.capa}
-            cor={corDoLivro(l.livro.id)}
+          <CapaAuto livro={l.livro}
             className="w-[70px] [&>span:last-child]:hidden"
           />
         </div>

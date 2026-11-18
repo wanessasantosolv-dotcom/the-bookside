@@ -1,10 +1,9 @@
 "use client";
 
+import { CapaAuto } from "@/components/CapaAuto";
 import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
-import { CapaLivro } from "@/components/CapaLivro";
 import { lembrarLivros } from "@/lib/catalogo";
-import { corDoLivro } from "@/lib/cores";
 import { estrelas } from "@/lib/estantes";
 import { contagemSeguidores, curtir, nomeDe, quandoFoi, seguir, useMeuId, verbo, type Atividade, type PessoaResumo } from "@/lib/social";
 
@@ -150,7 +149,7 @@ export function CartaoAtividade({
       </div>
       <div className="mt-3 flex gap-3.5 lg:mt-0 lg:flex-1">
         <Link href={livroHref} onClick={() => lembrarLivros([a.livro])} className="flex-none">
-          <CapaLivro titulo={a.livro.titulo} capa={a.livro.capa} cor={corDoLivro(a.livro.id)} className="w-[52px] lg:w-[58px] [&>span:last-child]:hidden" />
+          <CapaAuto livro={a.livro} className="w-[52px] lg:w-[58px] [&>span:last-child]:hidden" />
         </Link>
         <div className="min-w-0 flex-1">
           <Link href={livroHref} onClick={() => lembrarLivros([a.livro])}>

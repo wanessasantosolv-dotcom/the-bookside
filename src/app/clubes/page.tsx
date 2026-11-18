@@ -1,13 +1,12 @@
 "use client";
 
+import { CapaAuto } from "@/components/CapaAuto";
 import { Animacao } from "@/components/Animacao";
 import Link from "next/link";
 import { AppShell } from "@/components/AppShell";
-import { CapaLivro } from "@/components/CapaLivro";
 import { Avatares } from "@/components/clube/Pecas";
 import { ComConta, ErroOuFalta, Vazio } from "@/components/social/Estados";
 import { andamento, meusClubes, type ResumoClube } from "@/lib/clubes";
-import { corDoLivro } from "@/lib/cores";
 import { pessoasPorId, useConsulta, useMeuId } from "@/lib/social";
 
 function Cartao({
@@ -64,10 +63,7 @@ function Cartao({
           </div>
         </div>
         {c.lendo ? (
-          <CapaLivro
-            titulo={c.lendo.livro.titulo}
-            capa={c.lendo.livro.capa}
-            cor={corDoLivro(c.lendo.livro.id)}
+          <CapaAuto livro={c.lendo.livro}
             className="w-[64px] self-start [&>span:last-child]:hidden"
           />
         ) : null}

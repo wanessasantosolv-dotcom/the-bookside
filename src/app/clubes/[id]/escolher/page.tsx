@@ -1,5 +1,6 @@
 "use client";
 
+import { CapaAuto } from "@/components/CapaAuto";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { Animacao } from "@/components/Animacao";
@@ -153,10 +154,7 @@ function Escolher() {
                         onClick={() => setEscolha({ tipo: "sugestao", l: s })}
                         className={`flex w-full items-center gap-3 rounded-md border p-2.5 text-left ${on ? "border-bordo bg-rosa-fundo/50" : "border-linha hover:border-bordo"}`}
                       >
-                        <CapaLivro
-                          titulo={s.livro.titulo}
-                          capa={s.livro.capa}
-                          cor={corDoLivro(s.livro.id)}
+                        <CapaAuto livro={s.livro}
                           className="w-9 [&>span:last-child]:hidden"
                         />
                         <span className="min-w-0 flex-1">

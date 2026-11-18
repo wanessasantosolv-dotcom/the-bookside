@@ -521,6 +521,31 @@ export function iniciarCapas() {
   });
 }
 
+let filaCapas: Promise<unknown> = Promise.resolve();
+const pedidosCapa = new Set<string>();
+
+/**
+ * Capa de um livro qualquer (feed, clube, perfil de amiga): a que veio com
+ * ele; se faltar, a da sua estante; se ainda faltar, procura uma vez
+ * (Google Books / Open Library) e guarda no navegador.
+ */
+export function useCapaDoLivro(l: { id: string; titulo: string; autor: string; capa?: string }) {
+  const daEstante = usePerfil((s) => s.livros.find((x) => x.id === l.id)?.capa);
+  const guardada = useCapas((s) => s.capas[l.id]);
+  const falta = !l.capa && !daEstante && guardada === undefined;
+  useEffect(() => {
+    if (!falta || pedidosCapa.has(l.id)) return;
+    pedidosCapa.add(l.id);
+    // uma busca por vez, para não ser bloqueada por excesso de pedidos
+    filaCapas = filaCapas.then(() =>
+      procurarCapa(l.titulo, l.autor)
+        .then((url) => useCapas.getState().definir(l.id, url))
+        .catch(() => pedidosCapa.delete(l.id)),
+    );
+  }, [falta, l.id, l.titulo, l.autor]);
+  return l.capa || daEstante || guardada || undefined;
+}
+
 /** Sugestões locais com as capas já encontradas. */
 export function useSugestoes(): LivroBusca[] {
   const capas = useCapas((s) => s.capas);
