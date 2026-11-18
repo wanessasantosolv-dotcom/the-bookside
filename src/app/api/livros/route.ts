@@ -8,7 +8,7 @@ import { NextResponse, type NextRequest } from "next/server";
  * Sem chave, responde { semChave: true } e o app busca direto do navegador, como antes.
  */
 const CAMPOS =
-  "items(id,volumeInfo(title,subtitle,authors,publishedDate,pageCount,categories,description,imageLinks/thumbnail,language))";
+  "items(id,volumeInfo(title,subtitle,authors,publishedDate,pageCount,categories,description,imageLinks/thumbnail,language,industryIdentifiers))";
 
 export async function GET(req: NextRequest) {
   const chave = process.env.GOOGLE_BOOKS_API_KEY;
@@ -16,7 +16,10 @@ export async function GET(req: NextRequest) {
 
   const q = req.nextUrl.searchParams.get("q")?.trim().slice(0, 300);
   if (!q) return NextResponse.json({ items: [] });
-  const max = Math.min(40, Math.max(1, Number(req.nextUrl.searchParams.get("max")) || 20));
+  const max = Math.min(
+    40,
+    Math.max(1, Number(req.nextUrl.searchParams.get("max")) || 20),
+  );
 
   const url = new URL("https://www.googleapis.com/books/v1/volumes");
   url.searchParams.set("q", q);
@@ -24,15 +27,23 @@ export async function GET(req: NextRequest) {
   url.searchParams.set("printType", "books");
   url.searchParams.set("fields", CAMPOS);
   const lang = req.nextUrl.searchParams.get("lang");
-  if (lang && /^[a-z]{2}$/.test(lang)) url.searchParams.set("langRestrict", lang);
+  if (lang && /^[a-z]{2}$/.test(lang))
+    url.searchParams.set("langRestrict", lang);
   const inicio = Number(req.nextUrl.searchParams.get("inicio"));
-  if (inicio > 0 && inicio < 200) url.searchParams.set("startIndex", String(inicio));
+  if (inicio > 0 && inicio < 200)
+    url.searchParams.set("startIndex", String(inicio));
   url.searchParams.set("key", chave);
 
   const r = await fetch(url, { next: { revalidate: 86400 } });
-  if (!r.ok) return NextResponse.json({ erro: `google ${r.status}` }, { status: r.status === 429 ? 429 : 502 });
+  if (!r.ok)
+    return NextResponse.json(
+      { erro: `google ${r.status}` },
+      { status: r.status === 429 ? 429 : 502 },
+    );
   const dados = await r.json();
   return NextResponse.json(dados, {
-    headers: { "Cache-Control": "public, s-maxage=86400, stale-while-revalidate=604800" },
+    headers: {
+      "Cache-Control": "public, s-maxage=86400, stale-while-revalidate=604800",
+    },
   });
 }

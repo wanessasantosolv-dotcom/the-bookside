@@ -13,9 +13,17 @@ import { sugestoesDeLivros, type LivroCatalogo } from "@/lib/dados";
  * Roda no navegador de quem usa o app.
  */
 
-export type LivroBusca = LivroCatalogo & { capa?: string; capaGrande?: string };
+export type LivroBusca = LivroCatalogo & {
+  capa?: string;
+  capaGrande?: string;
+  /** ISBN-13 (ou 10) da edição, quando a fonte manda */
+  isbn?: string;
+  /** idioma da edição (ex.: "pt", "en") */
+  idioma?: string;
+};
 
-const CAMPOS = "key,title,author_name,first_publish_year,number_of_pages_median,cover_i,subject";
+const CAMPOS =
+  "key,title,author_name,first_publish_year,number_of_pages_median,cover_i,subject";
 const CACHE = "bookside-catalogo";
 
 type DocOL = {
@@ -28,7 +36,14 @@ type DocOL = {
   subject?: string[];
 };
 
-const paleta = ["#6B0D24", "#2B1420", "#B75A6B", "#6B7A5E", "#8E1D3D", "#4B0D1B"];
+const paleta = [
+  "#6B0D24",
+  "#2B1420",
+  "#B75A6B",
+  "#6B7A5E",
+  "#8E1D3D",
+  "#4B0D1B",
+];
 
 function paraLivro(d: DocOL, i: number): LivroBusca {
   const workId = d.key.replace("/works/", "");
@@ -40,15 +55,22 @@ function paraLivro(d: DocOL, i: number): LivroBusca {
     paginas: d.number_of_pages_median,
     genero: d.subject?.[0]?.toLowerCase(),
     cor: paleta[i % paleta.length],
-    capa: d.cover_i ? `https://covers.openlibrary.org/b/id/${d.cover_i}-M.jpg` : undefined,
-    capaGrande: d.cover_i ? `https://covers.openlibrary.org/b/id/${d.cover_i}-L.jpg` : undefined,
+    capa: d.cover_i
+      ? `https://covers.openlibrary.org/b/id/${d.cover_i}-M.jpg`
+      : undefined,
+    capaGrande: d.cover_i
+      ? `https://covers.openlibrary.org/b/id/${d.cover_i}-L.jpg`
+      : undefined,
   };
 }
 
 /** Guarda os livros vistos na busca para a página do livro abrir sem buscar de novo. */
 function lembrar(livros: LivroBusca[]) {
   try {
-    const atual = JSON.parse(sessionStorage.getItem(CACHE) ?? "{}") as Record<string, LivroBusca>;
+    const atual = JSON.parse(sessionStorage.getItem(CACHE) ?? "{}") as Record<
+      string,
+      LivroBusca
+    >;
     for (const l of livros) atual[l.id] = l;
     sessionStorage.setItem(CACHE, JSON.stringify(atual));
   } catch {
@@ -58,14 +80,26 @@ function lembrar(livros: LivroBusca[]) {
 
 /** Guarda livros vistos fora da busca (feed, perfil de amiga) para a página do livro abrir. */
 export function lembrarLivros(
-  livros: { id: string; titulo: string; autor: string; capa?: string; genero?: string; paginas?: number }[],
+  livros: {
+    id: string;
+    titulo: string;
+    autor: string;
+    capa?: string;
+    genero?: string;
+    paginas?: number;
+  }[],
 ) {
   lembrar(livros.map((l) => ({ ...l, cor: corDoLivro(l.id) })));
 }
 
 export function livroLembrado(id: string): LivroBusca | undefined {
   try {
-    return (JSON.parse(sessionStorage.getItem(CACHE) ?? "{}") as Record<string, LivroBusca>)[id];
+    return (
+      JSON.parse(sessionStorage.getItem(CACHE) ?? "{}") as Record<
+        string,
+        LivroBusca
+      >
+    )[id];
   } catch {
     return undefined;
   }
@@ -82,6 +116,8 @@ type VolumeGB = {
     categories?: string[];
     description?: string;
     imageLinks?: { thumbnail?: string };
+    language?: string;
+    industryIdentifiers?: { type: string; identifier: string }[];
   };
 };
 
@@ -99,7 +135,9 @@ function textoLimpo(html?: string) {
 function doGoogle(v: VolumeGB, i: number): LivroBusca | null {
   const info = v.volumeInfo;
   if (!info?.title) return null;
-  const capa = info.imageLinks?.thumbnail?.replace(/^http:/, "https:").replace("&edge=curl", "");
+  const capa = info.imageLinks?.thumbnail
+    ?.replace(/^http:/, "https:")
+    .replace("&edge=curl", "");
   const ano = Number(info.publishedDate?.slice(0, 4));
   return {
     id: `gb-${v.id}`,
@@ -112,7 +150,24 @@ function doGoogle(v: VolumeGB, i: number): LivroBusca | null {
     cor: paleta[i % paleta.length],
     capa,
     capaGrande: capa?.replace("zoom=1", "zoom=2"),
+    isbn: (
+      info.industryIdentifiers?.find((x) => x.type === "ISBN_13") ??
+      info.industryIdentifiers?.find((x) => x.type === "ISBN_10")
+    )?.identifier,
+    idioma: info.language,
   };
+}
+
+/** Busca só no Google Books (com idioma opcional, ex. "pt" para edições brasileiras). */
+export async function livrosDoGoogle(
+  q: string,
+  lang?: string,
+  signal?: AbortSignal,
+): Promise<LivroBusca[]> {
+  const itens = await volumesDoGoogle(q, 20, signal, { lang });
+  return itens
+    .map((v, i) => doGoogle(v, i))
+    .filter((l): l is LivroBusca => !!l);
 }
 
 let semRota = false;
@@ -132,9 +187,15 @@ async function volumesDoGoogle(
   const maisGoogle = `${extra.lang ? `&langRestrict=${extra.lang}` : ""}${extra.inicio ? `&startIndex=${extra.inicio}` : ""}`;
   if (!semRota) {
     try {
-      const r = await fetch(`/api/livros?q=${encodeURIComponent(q)}&max=${max}${mais}`, { signal });
+      const r = await fetch(
+        `/api/livros?q=${encodeURIComponent(q)}&max=${max}${mais}`,
+        { signal },
+      );
       if (r.ok) {
-        const dados = (await r.json()) as { items?: VolumeGB[]; semChave?: boolean };
+        const dados = (await r.json()) as {
+          items?: VolumeGB[];
+          semChave?: boolean;
+        };
         if (!dados.semChave) return dados.items ?? [];
         semRota = true; // sem chave configurada: daqui em diante, direto do navegador
       } else if (r.status === 404) semRota = true;
@@ -143,7 +204,7 @@ async function volumesDoGoogle(
     }
   }
   const r = await fetch(
-    `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=${max}${maisGoogle}&printType=books&fields=items(id,volumeInfo(title,subtitle,authors,publishedDate,pageCount,categories,description,imageLinks/thumbnail))`,
+    `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=${max}${maisGoogle}&printType=books&fields=items(id,volumeInfo(title,subtitle,authors,publishedDate,pageCount,categories,description,imageLinks/thumbnail,language,industryIdentifiers))`,
     { signal },
   );
   if (!r.ok) throw new Error(`busca falhou (${r.status})`);
@@ -151,12 +212,18 @@ async function volumesDoGoogle(
 }
 
 /** Google Books: bom em títulos em português e em palavras ainda incompletas. */
-async function buscarNoGoogle(termo: string, signal?: AbortSignal): Promise<LivroBusca[]> {
+async function buscarNoGoogle(
+  termo: string,
+  signal?: AbortSignal,
+): Promise<LivroBusca[]> {
   const items = await volumesDoGoogle(termo, 20, signal);
   return items.map(doGoogle).filter((l): l is LivroBusca => !!l);
 }
 
-async function buscarNaOpenLibrary(termo: string, signal?: AbortSignal): Promise<LivroBusca[]> {
+async function buscarNaOpenLibrary(
+  termo: string,
+  signal?: AbortSignal,
+): Promise<LivroBusca[]> {
   const url = `https://openlibrary.org/search.json?q=${encodeURIComponent(termo)}&limit=20&fields=${CAMPOS}`;
   const r = await fetch(url, { signal });
   if (!r.ok) throw new Error(`busca falhou (${r.status})`);
@@ -177,12 +244,16 @@ const chave = (l: LivroBusca) =>
  * em português); da Open Library entram os livros que ainda não apareceram.
  * Se uma fonte falhar, a outra basta.
  */
-export async function buscarLivros(termo: string, signal?: AbortSignal): Promise<LivroBusca[]> {
+export async function buscarLivros(
+  termo: string,
+  signal?: AbortSignal,
+): Promise<LivroBusca[]> {
   const [google, openLibrary] = await Promise.allSettled([
     buscarNoGoogle(termo, signal),
     buscarNaOpenLibrary(termo, signal),
   ]);
-  if (google.status === "rejected" && openLibrary.status === "rejected") throw google.reason;
+  if (google.status === "rejected" && openLibrary.status === "rejected")
+    throw google.reason;
   const todos = [
     ...(google.status === "fulfilled" ? google.value : []),
     ...(openLibrary.status === "fulfilled" ? openLibrary.value : []),
@@ -199,16 +270,27 @@ export async function buscarLivros(termo: string, signal?: AbortSignal): Promise
 }
 
 /** Todos os livros de uma autora nas duas fontes (para achar o título certo entre eles). */
-export async function buscarPorAutoria(autor: string, signal?: AbortSignal): Promise<LivroBusca[]> {
+export async function buscarPorAutoria(
+  autor: string,
+  signal?: AbortSignal,
+): Promise<LivroBusca[]> {
   const [google, openLibrary] = await Promise.allSettled([
     buscarNoGoogle(`inauthor:"${autor}"`, signal),
-    fetch(`https://openlibrary.org/search.json?author=${encodeURIComponent(autor)}&limit=40&fields=${CAMPOS}`, {
-      signal,
-    })
-      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
-      .then((d: { docs: DocOL[] }) => d.docs.filter((x) => x.title).map(paraLivro)),
+    fetch(
+      `https://openlibrary.org/search.json?author=${encodeURIComponent(autor)}&limit=40&fields=${CAMPOS}`,
+      {
+        signal,
+      },
+    )
+      .then((r) =>
+        r.ok ? r.json() : Promise.reject(new Error(String(r.status))),
+      )
+      .then((d: { docs: DocOL[] }) =>
+        d.docs.filter((x) => x.title).map(paraLivro),
+      ),
   ]);
-  if (google.status === "rejected" && openLibrary.status === "rejected") throw google.reason;
+  if (google.status === "rejected" && openLibrary.status === "rejected")
+    throw google.reason;
   const livros = [
     ...(google.status === "fulfilled" ? google.value : []),
     ...(openLibrary.status === "fulfilled" ? openLibrary.value : []),
@@ -219,7 +301,10 @@ export async function buscarPorAutoria(autor: string, signal?: AbortSignal): Pro
 
 type EntidadeWD = {
   labels?: Record<string, { value: string }>;
-  claims?: Record<string, { mainsnak?: { datavalue?: { value?: { id?: string; text?: string } } } }[]>;
+  claims?: Record<
+    string,
+    { mainsnak?: { datavalue?: { value?: { id?: string; text?: string } } } }[]
+  >;
 };
 
 /**
@@ -243,15 +328,24 @@ export async function traducoesDoTitulo(
     { signal },
   ).then((r) => r.json())) as { entities: Record<string, EntidadeWD> };
   // só obras com autoria (P50) ou título (P1476): livros, não pessoas ou lugares
-  const obras = ids.map((id) => entities[id]).filter((e) => e?.claims?.P50 || e?.claims?.P1476);
+  const obras = ids
+    .map((id) => entities[id])
+    .filter((e) => e?.claims?.P50 || e?.claims?.P1476);
   const idsAutoria = [
-    ...new Set(obras.map((e) => e.claims?.P50?.[0]?.mainsnak?.datavalue?.value?.id).filter((x): x is string => !!x)),
+    ...new Set(
+      obras
+        .map((e) => e.claims?.P50?.[0]?.mainsnak?.datavalue?.value?.id)
+        .filter((x): x is string => !!x),
+    ),
   ];
   const autorias: Record<string, EntidadeWD> = idsAutoria.length
     ? ((
-        (await fetch(`${base}&action=wbgetentities&props=labels&languages=en|pt&ids=${idsAutoria.join("|")}`, {
-          signal,
-        }).then((r) => r.json())) as { entities: Record<string, EntidadeWD> }
+        (await fetch(
+          `${base}&action=wbgetentities&props=labels&languages=en|pt&ids=${idsAutoria.join("|")}`,
+          {
+            signal,
+          },
+        ).then((r) => r.json())) as { entities: Record<string, EntidadeWD> }
       ).entities ?? {})
     : {};
   const vistos = new Set<string>();
@@ -259,7 +353,8 @@ export async function traducoesDoTitulo(
     .flatMap((e) => {
       const idAutor = e.claims?.P50?.[0]?.mainsnak?.datavalue?.value?.id;
       const autor = idAutor
-        ? (autorias[idAutor]?.labels?.en?.value ?? autorias[idAutor]?.labels?.pt?.value)
+        ? (autorias[idAutor]?.labels?.en?.value ??
+          autorias[idAutor]?.labels?.pt?.value)
         : undefined;
       const original = e.claims?.P1476?.[0]?.mainsnak?.datavalue?.value?.text;
       return [e.labels?.en?.value, original, e.labels?.pt?.value]
@@ -268,7 +363,8 @@ export async function traducoesDoTitulo(
     })
     .filter((t) => {
       const k = `${t.titulo}|${t.autor}`.toLowerCase();
-      if (vistos.has(k) || t.titulo.toLowerCase() === titulo.toLowerCase()) return false;
+      if (vistos.has(k) || t.titulo.toLowerCase() === titulo.toLowerCase())
+        return false;
       vistos.add(k);
       return true;
     })
@@ -276,20 +372,29 @@ export async function traducoesDoTitulo(
 }
 
 /** Sinopse de uma obra (Open Library ou Google Books), quando existe. */
-export async function sinopseDaObra(id: string, signal?: AbortSignal): Promise<string | undefined> {
+export async function sinopseDaObra(
+  id: string,
+  signal?: AbortSignal,
+): Promise<string | undefined> {
   if (id.startsWith("gb-")) {
-    const r = await fetch(`https://www.googleapis.com/books/v1/volumes/${id.slice(3)}?fields=volumeInfo/description`, {
-      signal,
-    });
+    const r = await fetch(
+      `https://www.googleapis.com/books/v1/volumes/${id.slice(3)}?fields=volumeInfo/description`,
+      {
+        signal,
+      },
+    );
     if (!r.ok) return undefined;
     const d = (await r.json()) as VolumeGB;
     return textoLimpo(d.volumeInfo?.description);
   }
   if (!id.startsWith("ol-")) return undefined;
-  const r = await fetch(`https://openlibrary.org/works/${id.slice(3)}.json`, { signal });
+  const r = await fetch(`https://openlibrary.org/works/${id.slice(3)}.json`, {
+    signal,
+  });
   if (!r.ok) return undefined;
   const d = (await r.json()) as { description?: string | { value: string } };
-  const texto = typeof d.description === "string" ? d.description : d.description?.value;
+  const texto =
+    typeof d.description === "string" ? d.description : d.description?.value;
   return texto?.split(/\n-{3,}|\r?\n\r?\n\(/)[0]?.trim();
 }
 
@@ -324,22 +429,30 @@ function tituloCurto(titulo: string) {
 type Fonte = (titulo: string, autor?: string) => Promise<string[]>;
 
 async function urlsDaOpenLibrary(params: string): Promise<string[]> {
-  const r = await fetch(`https://openlibrary.org/search.json?${params}&limit=8&fields=cover_i`);
+  const r = await fetch(
+    `https://openlibrary.org/search.json?${params}&limit=8&fields=cover_i`,
+  );
   if (!r.ok) throw new Error(String(r.status));
   const { docs } = (await r.json()) as { docs: { cover_i?: number }[] };
-  return docs.filter((d) => d.cover_i).map((d) => `https://covers.openlibrary.org/b/id/${d.cover_i}-M.jpg`);
+  return docs
+    .filter((d) => d.cover_i)
+    .map((d) => `https://covers.openlibrary.org/b/id/${d.cover_i}-M.jpg`);
 }
 
 /** Edições com esse título (e autoria) na Open Library. */
 const naOpenLibrary: Fonte = (titulo, autor) =>
-  urlsDaOpenLibrary(`title=${encodeURIComponent(titulo)}${autor ? `&author=${encodeURIComponent(autor)}` : ""}`);
+  urlsDaOpenLibrary(
+    `title=${encodeURIComponent(titulo)}${autor ? `&author=${encodeURIComponent(autor)}` : ""}`,
+  );
 
 /**
  * Busca ampla: acha a obra por qualquer edição (inclusive traduzida), então
  * "jogos vorazes" encontra "the hunger games" e usa a capa da obra original.
  */
 const daObraOriginal: Fonte = (titulo, autor) =>
-  urlsDaOpenLibrary(`q=${encodeURIComponent(`${titulo}${autor ? ` ${autor}` : ""}`)}`);
+  urlsDaOpenLibrary(
+    `q=${encodeURIComponent(`${titulo}${autor ? ` ${autor}` : ""}`)}`,
+  );
 
 /** Google Books: cobre bem as edições brasileiras (títulos em português). */
 const noGoogleBooks: Fonte = async (titulo, autor) => {
@@ -412,9 +525,15 @@ async function pareceCapa(url: string): Promise<boolean> {
   return !(legivel && bordaClara(img));
 }
 
-async function procurarCapa(tituloCompleto: string, autorCompleto: string): Promise<string> {
+async function procurarCapa(
+  tituloCompleto: string,
+  autorCompleto: string,
+): Promise<string> {
   const titulo = tituloCurto(tituloCompleto);
-  const autor = !autorCompleto || autorCompleto.startsWith("autoria") ? undefined : autorCompleto;
+  const autor =
+    !autorCompleto || autorCompleto.startsWith("autoria")
+      ? undefined
+      : autorCompleto;
   const tentativas: [Fonte, string | undefined][] = [
     // primeiro as edições brasileiras (Google Books), depois a Open Library
     [noGoogleBooks, autor],
@@ -467,11 +586,19 @@ async function procurarCapa(tituloCompleto: string, autorCompleto: string): Prom
  * Várias capas possíveis para um livro (edições diferentes), das duas fontes,
  * para a pessoa escolher. Falhas de rede de uma fonte não derrubam a outra.
  */
-export async function opcoesDeCapa(tituloCompleto: string, autorCompleto: string): Promise<string[]> {
+export async function opcoesDeCapa(
+  tituloCompleto: string,
+  autorCompleto: string,
+): Promise<string[]> {
   const titulo = tituloCurto(tituloCompleto);
-  const autor = !autorCompleto || autorCompleto.startsWith("autoria") ? undefined : autorCompleto;
+  const autor =
+    !autorCompleto || autorCompleto.startsWith("autoria")
+      ? undefined
+      : autorCompleto;
   const listas = await Promise.all(
-    [noGoogleBooks, naOpenLibrary, daObraOriginal].map((f) => f(titulo, autor).catch(() => [] as string[])),
+    [noGoogleBooks, naOpenLibrary, daObraOriginal].map((f) =>
+      f(titulo, autor).catch(() => [] as string[]),
+    ),
   );
   const todas = [...new Set(listas.flat())].slice(0, 30);
   const boas = await Promise.all(todas.map(pareceCapa));
@@ -483,7 +610,11 @@ export async function opcoesDeCapa(tituloCompleto: string, autorCompleto: string
  * pessoa): pode ser revista quando a busca de capas melhora.
  */
 function capaAutomatica(l: LivroSalvo) {
-  return !!l.capa && !l.capaEscolhida && (!l.id.startsWith("ol-") || l.capa.includes("books.google"));
+  return (
+    !!l.capa &&
+    !l.capaEscolhida &&
+    (!l.id.startsWith("ol-") || l.capa.includes("books.google"))
+  );
 }
 
 /**
@@ -502,13 +633,19 @@ export async function completarCapas() {
         titulo: l.titulo,
         autor: l.autor,
       })),
-      ...usePerfil.getState().livros.filter((l) => !l.capa || capaAutomatica(l)),
+      ...usePerfil
+        .getState()
+        .livros.filter((l) => !l.capa || capaAutomatica(l)),
     ].filter(
-      (l, i, todos) => todos.findIndex((x) => x.id === l.id) === i && useCapas.getState().capas[l.id] === undefined,
+      (l, i, todos) =>
+        todos.findIndex((x) => x.id === l.id) === i &&
+        useCapas.getState().capas[l.id] === undefined,
     );
     for (const l of pendentes) {
       try {
-        useCapas.getState().definir(l.id, await procurarCapa(l.titulo, l.autor));
+        useCapas
+          .getState()
+          .definir(l.id, await procurarCapa(l.titulo, l.autor));
       } catch {
         break; // sem internet: tenta de novo outra hora
       }
@@ -527,7 +664,11 @@ export async function completarCapas() {
     return achada || (l.capa.includes("books.google") ? undefined : l.capa);
   };
   if (livros.some((l) => nova(l) !== l.capa)) {
-    usePerfil.setState({ livros: livros.map((l) => (nova(l) !== l.capa ? { ...l, capa: nova(l) } : l)) });
+    usePerfil.setState({
+      livros: livros.map((l) =>
+        nova(l) !== l.capa ? { ...l, capa: nova(l) } : l,
+      ),
+    });
   }
 }
 
@@ -538,7 +679,11 @@ export function iniciarCapas() {
   return usePerfil.subscribe((s, antes) => {
     if (
       s.livros === antes.livros ||
-      !s.livros.some((l) => (!l.capa || capaAutomatica(l)) && useCapas.getState().capas[l.id] === undefined)
+      !s.livros.some(
+        (l) =>
+          (!l.capa || capaAutomatica(l)) &&
+          useCapas.getState().capas[l.id] === undefined,
+      )
     )
       return;
     clearTimeout(espera);
@@ -554,12 +699,18 @@ const pedidosCapa = new Set<string>();
  * ele; se faltar, a da sua estante; se ainda faltar, procura uma vez
  * (Google Books / Open Library) e guarda no navegador.
  */
-export function useCapaDoLivro(l: { id: string; titulo: string; autor: string; capa?: string }, quebrada?: string) {
-  const daEstanteBruta = usePerfil((s) => s.livros.find((x) => x.id === l.id)?.capa);
+export function useCapaDoLivro(
+  l: { id: string; titulo: string; autor: string; capa?: string },
+  quebrada?: string,
+) {
+  const daEstanteBruta = usePerfil(
+    (s) => s.livros.find((x) => x.id === l.id)?.capa,
+  );
   const guardadaBruta = useCapas((s) => s.capas[l.id]);
   // uma capa que não carregou (link quebrado) conta como ausente
   const propria = l.capa && l.capa !== quebrada ? l.capa : undefined;
-  const daEstante = daEstanteBruta && daEstanteBruta !== quebrada ? daEstanteBruta : undefined;
+  const daEstante =
+    daEstanteBruta && daEstanteBruta !== quebrada ? daEstanteBruta : undefined;
   const guardada = guardadaBruta === quebrada ? undefined : guardadaBruta;
   const falta = !propria && !daEstante && guardada === undefined;
   const pedido = `${l.id}|${quebrada ?? ""}`;
@@ -571,7 +722,9 @@ export function useCapaDoLivro(l: { id: string; titulo: string; autor: string; c
       // até 3 tentativas, com uma pausa entre elas (a busca pode estar limitada)
       for (let vez = 0; vez < 3; vez++) {
         try {
-          useCapas.getState().definir(l.id, await procurarCapa(l.titulo, l.autor));
+          useCapas
+            .getState()
+            .definir(l.id, await procurarCapa(l.titulo, l.autor));
           return;
         } catch {
           await new Promise((ok) => setTimeout(ok, 4000));
@@ -612,10 +765,15 @@ function embaralhar<T>(lista: T[]) {
  * com capa, que ela ainda não tem. Sorteia gêneros e páginas, então muda a
  * cada visita; fica guardado durante a visita para não buscar a cada tela.
  */
-async function sugestoesPorGosto(gostos: string[], jaTenho: string[]): Promise<LivroBusca[]> {
+async function sugestoesPorGosto(
+  gostos: string[],
+  jaTenho: string[],
+): Promise<LivroBusca[]> {
   const chave = `${gostos.join(",")}`;
   try {
-    const salvo = JSON.parse(sessionStorage.getItem(SUGESTOES_SESSAO) ?? "null") as {
+    const salvo = JSON.parse(
+      sessionStorage.getItem(SUGESTOES_SESSAO) ?? "null",
+    ) as {
       chave: string;
       livros: LivroBusca[];
     } | null;
@@ -623,14 +781,28 @@ async function sugestoesPorGosto(gostos: string[], jaTenho: string[]): Promise<L
   } catch {
     /* sem sessionStorage */
   }
-  const escolhidos = embaralhar(gostos.map((g) => assuntoDoGosto[g]).filter(Boolean));
-  const assuntos = (escolhidos.length ? escolhidos : ["fiction", "romance", "thrillers", "fantasy"]).slice(0, 3);
+  const escolhidos = embaralhar(
+    gostos.map((g) => assuntoDoGosto[g]).filter(Boolean),
+  );
+  const assuntos = (
+    escolhidos.length
+      ? escolhidos
+      : ["fiction", "romance", "thrillers", "fantasy"]
+  ).slice(0, 3);
   const tenho = new Set(jaTenho.map(chaveTitulo));
   const listas = await Promise.all(
     assuntos.map((a) =>
-      volumesDoGoogle(`subject:"${a}"`, 20, undefined, { lang: "pt", inicio: Math.floor(Math.random() * 4) * 10 })
+      volumesDoGoogle(`subject:"${a}"`, 20, undefined, {
+        lang: "pt",
+        inicio: Math.floor(Math.random() * 4) * 10,
+      })
         .then((items) =>
-          items.map(doGoogle).filter((l): l is LivroBusca => !!l && !!l.capa && !tenho.has(chaveTitulo(l.titulo))),
+          items
+            .map(doGoogle)
+            .filter(
+              (l): l is LivroBusca =>
+                !!l && !!l.capa && !tenho.has(chaveTitulo(l.titulo)),
+            ),
         )
         .catch(() => [] as LivroBusca[]),
     ),
@@ -650,7 +822,10 @@ async function sugestoesPorGosto(gostos: string[], jaTenho: string[]): Promise<L
   if (livros.length) {
     lembrar(livros);
     try {
-      sessionStorage.setItem(SUGESTOES_SESSAO, JSON.stringify({ chave, livros }));
+      sessionStorage.setItem(
+        SUGESTOES_SESSAO,
+        JSON.stringify({ chave, livros }),
+      );
     } catch {
       /* sem sessionStorage */
     }
@@ -679,20 +854,26 @@ export function useSugestoesVivas(tirarOsQueTenho = true): LivroBusca[] {
   const chaveTitulos = titulos.join("|");
   useEffect(() => {
     let vivo = true;
-    sugestoesPorGosto(gostos, chaveTitulos ? chaveTitulos.split("|") : []).then((l) => vivo && l.length && setVivas(l));
+    sugestoesPorGosto(gostos, chaveTitulos ? chaveTitulos.split("|") : []).then(
+      (l) => vivo && l.length && setVivas(l),
+    );
     return () => {
       vivo = false;
     };
   }, [gostos, chaveTitulos]);
   const tenho = new Set(titulos.map(chaveTitulo));
   const lista = vivas ?? locais;
-  return tirarOsQueTenho ? lista.filter((l) => !tenho.has(chaveTitulo(l.titulo))) : lista;
+  return tirarOsQueTenho
+    ? lista.filter((l) => !tenho.has(chaveTitulo(l.titulo)))
+    : lista;
 }
 
 /** Sugestões locais com as capas já encontradas. */
 export function useSugestoes(): LivroBusca[] {
   const capas = useCapas((s) => s.capas);
-  return sugestoesDeLivros.map((l) => (capas[l.id] ? { ...l, capa: capas[l.id] } : l));
+  return sugestoesDeLivros.map((l) =>
+    capas[l.id] ? { ...l, capa: capas[l.id] } : l,
+  );
 }
 
 type Estado = "sugestoes" | "carregando" | "pronto" | "erro";
@@ -722,8 +903,14 @@ export function useBuscaLivros(termo: string) {
             try {
               const [t] = await traducoesDoTitulo(limpo, controle.signal);
               if (t) {
-                const mais = await buscarLivros(`${t.titulo} ${t.autor ?? ""}`.trim(), controle.signal);
-                livros = [...livros, ...mais.filter((m) => !livros.some((l) => l.id === m.id))];
+                const mais = await buscarLivros(
+                  `${t.titulo} ${t.autor ?? ""}`.trim(),
+                  controle.signal,
+                );
+                livros = [
+                  ...livros,
+                  ...mais.filter((m) => !livros.some((l) => l.id === m.id)),
+                ];
               }
             } catch {
               /* sem tradução: fica o que achou */
@@ -738,7 +925,11 @@ export function useBuscaLivros(termo: string) {
           const t = limpo.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
           setResultados(
             sugestoesDeLivros.filter((l) =>
-              `${l.titulo} ${l.autor}`.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().includes(t),
+              `${l.titulo} ${l.autor}`
+                .normalize("NFD")
+                .replace(/[̀-ͯ]/g, "")
+                .toLowerCase()
+                .includes(t),
             ),
           );
           setEstado("erro");

@@ -3,12 +3,14 @@
 import { useState } from "react";
 import { citacoesDoLivro, type Citacao } from "@/lib/fontes";
 
-/** "✦ procurar citações": busca no Wikiquote frases conhecidas do livro para a pessoa escolher. */
+/** "✦ procurar citações": busca no Wikiquote (página do livro ou da autora) frases do livro para a pessoa escolher. */
 export function SugerirCitacoes({
   titulo,
+  autor,
   onEscolher,
 }: {
   titulo: string;
+  autor?: string;
   onEscolher: (c: Citacao) => void;
 }) {
   const [estado, setEstado] = useState<"procurando" | "pronto" | "erro" | null>(
@@ -19,7 +21,7 @@ export function SugerirCitacoes({
   async function buscar() {
     setEstado("procurando");
     try {
-      setLista(await citacoesDoLivro(titulo));
+      setLista(await citacoesDoLivro(titulo, autor));
       setEstado("pronto");
     } catch {
       setEstado("erro");

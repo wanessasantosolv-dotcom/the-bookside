@@ -50,9 +50,10 @@ function Cadastro() {
   const [ia, setIa] = useState<{
     estado: "procurando" | "pronto" | "nada" | "erro";
     fonte?: string;
+    emIngles?: boolean;
   } | null>(null);
 
-  /** procura o livro (Google Books, Open Library, Wikipédia) e preenche o que estiver vazio */
+  /** procura o livro (Google Books, BrasilAPI, Open Library, Wikipédia) e preenche o que estiver vazio */
   async function completarDaInternet() {
     if (titulo.trim().length < 2) return setIa({ estado: "erro" });
     setIa({ estado: "procurando" });
@@ -64,7 +65,7 @@ function Cadastro() {
       if (r.sinopse && !sinopse.trim()) setSinopse(r.sinopse);
       if (r.paginas && !paginas) setPaginas(String(r.paginas));
       if (r.capa && !capa) setCapa(r.capa);
-      setIa({ estado: "pronto", fonte: r.fonte });
+      setIa({ estado: "pronto", fonte: r.fonte, emIngles: r.emIngles });
     } catch {
       setIa({ estado: "erro" });
     }
@@ -204,14 +205,14 @@ function Cadastro() {
           </button>
           <p className="text-xs text-cinza">
             {ia?.estado === "pronto"
-              ? `pronto! confira os dados antes de salvar.${ia.fonte ? ` (sinopse: ${ia.fonte})` : " não achei sinopse."}`
+              ? `pronto! confira os dados antes de salvar.${ia.fonte ? ` (sinopse: ${ia.fonte}${ia.emIngles ? ", só achei em inglês" : ""})` : " não achei sinopse."}`
               : ia?.estado === "nada"
                 ? "não achei esse livro. confira o título e a autoria, ou preencha à mão."
                 : ia?.estado === "erro"
                   ? titulo.trim().length < 2
                     ? "escreva o título primeiro."
                     : "sem conexão agora. tente de novo."
-                  : "procura o livro no Google Books, Open Library e Wikipédia e preenche sinopse, páginas e capa."}
+                  : "procura o livro no Google Books, BrasilAPI, Open Library e Wikipédia, de preferência a edição brasileira, e preenche sinopse, páginas e capa."}
           </p>
         </div>
 
