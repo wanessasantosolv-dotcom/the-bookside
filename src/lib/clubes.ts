@@ -726,3 +726,121 @@ export function iniciarSincronizacaoClubes() {
   }, 2000);
   return () => clearInterval(t);
 }
+
+// ───────── o ano do clube (wrapped e revista) ─────────
+
+export type AnoDoClube = {
+  ano: number;
+  clube: Clube;
+  membros: Membro[];
+  /** livros lidos no ano (e a leitura da vez), do mais antigo ao mais novo */
+  livros: LivroDoClube[];
+  fichas: Ficha[];
+  encontros: Encontro[];
+  /** o que cada pessoa leu no ano fora do clube (da estante dela) */
+  foraDoClube: Map<
+    string,
+    {
+      id: string;
+      titulo: string;
+      autor: string;
+      capa?: string;
+      nota?: number;
+      lidoEm?: string;
+    }[]
+  >;
+};
+
+export async function anoDoClube(
+  clubeId: string,
+  ano = new Date().getFullYear(),
+): Promise<AnoDoClube | null> {
+  const c = await clube(clubeId);
+  if (!c) return null;
+  const [membros, todos, encontros] = await Promise.all([
+    membrosDe(clubeId),
+    livrosDoClube(clubeId),
+    encontrosDe(clubeId).catch(() => [] as Encontro[]),
+  ]);
+  const doAno = (iso?: string | null) =>
+    !!iso && new Date(iso).getFullYear() === ano;
+  const livros = todos
+    .filter(
+      (l) =>
+        (l.estado === "lido" && doAno(l.encerrado_em)) ||
+        (l.estado === "lendo" &&
+          (doAno(l.iniciado_em) || ano === new Date().getFullYear())),
+    )
+    .sort((a, b) =>
+      (a.encerrado_em ?? a.iniciado_em ?? a.criado_em).localeCompare(
+        b.encerrado_em ?? b.iniciado_em ?? b.criado_em,
+      ),
+    );
+  const ids = livros.map((l) => l.id);
+  const fichas = ids.length
+    ? (((
+        await db()
+          .from("fichas")
+          .select(
+            "id,clube_livro_id,autor,notas,nota,personagem,citacao,texto,spoiler,criado_em",
+          )
+          .in("clube_livro_id", ids)
+      ).data ?? []) as Ficha[])
+    : [];
+
+  // fora do clube: os lidos do ano na estante de cada uma que não são livros do clube
+  const doClube = new Set(todos.map((l) => chaveLivro(l.livro.titulo)));
+  const perfis = membros.length
+    ? ((
+        await db()
+          .from("perfis_publicos")
+          .select("id,livros:dados->livros")
+          .in(
+            "id",
+            membros.map((m) => m.usuario_id),
+          )
+      ).data ?? [])
+    : [];
+  const foraDoClube: AnoDoClube["foraDoClube"] = new Map();
+  for (const p of perfis as {
+    id: string;
+    livros?: {
+      id: string;
+      titulo: string;
+      autor: string;
+      capa?: string;
+      status?: string;
+      nota?: number;
+      lidoEm?: string;
+    }[];
+  }[]) {
+    foraDoClube.set(
+      p.id,
+      (p.livros ?? [])
+        .filter(
+          (l) =>
+            l.status === "lido" &&
+            doAno(l.lidoEm) &&
+            !doClube.has(chaveLivro(l.titulo ?? "")),
+        )
+        .sort((a, b) => (a.lidoEm ?? "").localeCompare(b.lidoEm ?? ""))
+        .map((l) => ({
+          id: l.id,
+          titulo: l.titulo,
+          autor: l.autor,
+          capa: l.capa?.startsWith("data:") ? undefined : l.capa,
+          nota: l.nota,
+          lidoEm: l.lidoEm,
+        })),
+    );
+  }
+  return {
+    ano,
+    clube: c,
+    membros,
+    livros,
+    fichas,
+    encontros: encontros.filter((e) => doAno(e.quando)),
+    foraDoClube,
+  };
+}

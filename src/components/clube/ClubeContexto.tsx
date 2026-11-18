@@ -111,6 +111,12 @@ function Menu({ c, papel }: { c: Clube; papel: Papel | null }) {
           <Link href={`/clubes/${c.id}/sugestoes`} className={item}>
             sugestões e votação
           </Link>
+          <Link href={`/clubes/${c.id}/retrospectiva`} className={item}>
+            retrospectiva do ano ✦
+          </Link>
+          <Link href={`/revista/${c.id}`} className={item}>
+            revista do clube (PDF)
+          </Link>
           <button type="button" onClick={sair} className={`${item} text-bordo`}>
             sair do clube
           </button>
