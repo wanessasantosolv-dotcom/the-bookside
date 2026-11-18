@@ -39,7 +39,7 @@ export default function ClubeInicioPage() {
     .slice(0, 4);
 
   return (
-    <div className="space-y-8 px-6 pt-6 lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-10 lg:space-y-0 lg:px-0">
+    <div className="space-y-8 px-6 pt-6 lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-12 xl:grid-cols-[minmax(0,1fr)_380px] lg:space-y-0 lg:px-0">
       <div className="space-y-8">
         <section>
           <div className={secao}>

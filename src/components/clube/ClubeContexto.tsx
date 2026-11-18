@@ -19,8 +19,8 @@ export function useClube() {
   return c;
 }
 
-/** largura do clube no computador: capa, título e conteúdo alinhados na mesma coluna */
-const largura = "lg:mx-auto lg:w-full lg:max-w-[1100px] lg:px-12";
+/** largura do clube no computador: ocupa a tela toda, com capa, título e conteúdo alinhados */
+const largura = "lg:w-full lg:px-12 xl:px-16";
 
 const abas = [
   { id: "", r: "início" },
@@ -163,9 +163,10 @@ function Cabecalho({ c, papel, rodada }: { c: Clube; papel: Papel | null; rodada
       ) : null}
 
       <div className={inicio ? "" : "lg:hidden"}>
-        <div className={`relative lg:mt-6 ${largura}`}>
+        {/* computador: capa de ponta a ponta, como no perfil (a faixa do meio, 5:1) */}
+        <div className="relative">
           <div
-            className={`aspect-[3/1] w-full bg-cover bg-center lg:rounded-[4px] ${c.capa || tema ? "" : "pat-estrelas"}`}
+            className={`aspect-[3/1] w-full bg-cover bg-center lg:aspect-[5/1] ${c.capa || tema ? "" : "pat-estrelas"}`}
             style={
               c.capa
                 ? { backgroundImage: `linear-gradient(rgba(43,20,32,.02),rgba(43,20,32,.14)), url("${c.capa}")` }
@@ -174,7 +175,7 @@ function Cabecalho({ c, papel, rodada }: { c: Clube; papel: Papel | null; rodada
                   : undefined
             }
           />
-          <div className="absolute inset-x-0 top-0 flex items-center justify-between px-4 pt-2 lg:px-15 lg:pt-3">
+          <div className="absolute inset-x-0 top-0 flex items-center justify-between px-4 pt-2 lg:px-10 lg:pt-4 xl:px-14">
             <Link
               href={inicio ? "/clubes" : base}
               className="flex min-h-11 items-center rounded-pill bg-creme/85 px-3 text-[11px] font-semibold tracking-[.14em] text-bordo uppercase"

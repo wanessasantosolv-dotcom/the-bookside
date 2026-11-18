@@ -65,7 +65,7 @@ export default function LeituraPage() {
     : [];
 
   return (
-    <div className="px-6 pt-6 lg:grid lg:max-w-[1000px] lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-10 lg:px-0">
+    <div className="px-6 pt-6 lg:grid lg:grid-cols-[minmax(0,1fr)_340px] xl:grid-cols-[minmax(0,1fr)_380px] lg:gap-10 lg:px-0">
       <div>
         <p className="text-[10px] font-semibold tracking-[.16em] text-rosa-antigo uppercase">
           lendo agora{lendo.rodada ? ` · rodada ${lendo.rodada}` : ""}

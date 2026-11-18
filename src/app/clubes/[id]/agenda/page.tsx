@@ -161,7 +161,7 @@ export default function AgendaPage() {
     );
 
   return (
-    <div className="px-6 pt-5 lg:max-w-[760px] lg:px-0">
+    <div className="px-6 pt-5 lg:px-0">
       <div className="flex items-center justify-between gap-3">
         <div role="group" aria-label="período" className="flex gap-1.5">
           {[

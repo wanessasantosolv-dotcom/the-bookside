@@ -105,7 +105,7 @@ export default function BibliotecaPage() {
   const base = `/clubes/${clube.id}`;
 
   return (
-    <div className="px-6 pt-5 pb-4 lg:max-w-[900px] lg:px-0">
+    <div className="px-6 pt-5 pb-4 lg:px-0">
       <div className="flex items-center justify-between">
         <p className="text-[10px] font-semibold tracking-[.16em] text-cinza uppercase">
           todos · {livros.length} &nbsp; lidos · {lidos.length}

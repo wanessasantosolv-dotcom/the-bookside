@@ -79,7 +79,7 @@ export default function ClubeFeedPage() {
     .sort((a, b) => b.quando.localeCompare(a.quando));
 
   return (
-    <div className="px-6 pt-5 lg:max-w-[760px] lg:px-0">
+    <div className="px-6 pt-5 lg:px-0">
       <div role="group" aria-label="filtrar" className="flex gap-1.5">
         {(["tudo", "fichas", "agenda"] as const).map((f) => (
           <button
