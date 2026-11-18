@@ -30,6 +30,7 @@ async function chamar<T>(rota: string, corpo: object): Promise<T> {
   if (!r) throw new ErroIA("sem conexão agora. tente de novo.");
   const dados = await r.json().catch(() => ({}));
   if (dados.semIA) throw new ErroIA("a IA ainda não foi ligada no app.");
+  if (dados.erro && r.status === 503) throw new ErroIA(dados.erro);
   if (r.status === 429)
     throw new ErroIA("muitos pedidos seguidos. espere uns minutinhos.");
   if (!r.ok)

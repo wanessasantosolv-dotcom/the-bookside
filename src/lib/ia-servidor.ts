@@ -1,15 +1,24 @@
 import Anthropic from "@anthropic-ai/sdk";
 
 /**
- * IA do app (só no servidor). A chave ANTHROPIC_API_KEY fica nas variáveis
- * da Vercel e nunca chega ao navegador. Cada pedido pesquisa na internet
- * (web search) e devolve JSON.
+ * IA do app (só no servidor). As chaves ficam nas variáveis da Vercel e nunca
+ * chegam ao navegador. Cada pedido pesquisa na internet e devolve JSON.
+ *
+ * Duas opções (a primeira que tiver chave é usada):
+ * - GEMINI_API_KEY: Google Gemini, com cota grátis diária (pesquisa no Google).
+ *   No plano grátis o Google pode usar o que é enviado para melhorar os produtos
+ *   dele — aqui só vão título e autoria do livro, nada da pessoa.
+ * - ANTHROPIC_API_KEY: Claude (pago por uso).
  */
 const MODELO = "claude-opus-5-5";
 const cache = new Map<string, { quando: number; valor: unknown }>();
 const UM_DIA = 864e5;
 
-export const iaConfigurada = () => !!process.env.ANTHROPIC_API_KEY;
+export const iaConfigurada = () =>
+  !!(process.env.GEMINI_API_KEY || process.env.ANTHROPIC_API_KEY);
+
+/** a cota grátis do dia acabou (Gemini) ou a conta está sem crédito */
+export class SemCota extends Error {}
 
 /** Só quem tem conta no app usa a IA (cada pedido custa): confere o login no Supabase. */
 export async function contaValida(req: Request): Promise<boolean> {
@@ -54,6 +63,58 @@ export async function perguntarComPesquisa(
   const guardado = cache.get(chaveCache);
   if (guardado && Date.now() - guardado.quando < UM_DIA) return guardado.valor;
 
+  const texto = process.env.GEMINI_API_KEY
+    ? await comGemini(sistema, pergunta)
+    : await comClaude(sistema, pergunta);
+  const valor = extrairJson(texto);
+  cache.set(chaveCache, { quando: Date.now(), valor });
+  return valor;
+}
+
+/** modelos do Gemini tentados em ordem (GEMINI_MODEL na Vercel troca o primeiro) */
+const modelosGemini = () =>
+  [process.env.GEMINI_MODEL, "gemini-flash-latest", "gemini-2.5-flash"].filter(
+    (m, i, a): m is string => !!m && a.indexOf(m) === i,
+  );
+
+async function comGemini(sistema: string, pergunta: string): Promise<string> {
+  let ultimoErro = "";
+  for (const modelo of modelosGemini()) {
+    const r = await fetch(
+      `${process.env.GEMINI_BASE_URL ?? "https://generativelanguage.googleapis.com"}/v1beta/models/${modelo}:generateContent`,
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-goog-api-key": process.env.GEMINI_API_KEY!,
+        },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: sistema }] },
+          contents: [{ role: "user", parts: [{ text: pergunta }] }],
+          // pesquisa no Google (grounding)
+          tools: [{ google_search: {} }],
+        }),
+      },
+    );
+    if (r.status === 429) throw new SemCota("cota do Gemini");
+    if (r.status === 404) {
+      ultimoErro = `modelo ${modelo} não existe`;
+      continue; // nome de modelo antigo: tenta o próximo
+    }
+    if (!r.ok) throw new Error(`gemini ${r.status}`);
+    const dados = (await r.json()) as {
+      candidates?: { content?: { parts?: { text?: string }[] } }[];
+    };
+    const texto = (dados.candidates?.[0]?.content?.parts ?? [])
+      .map((p) => p.text ?? "")
+      .join("");
+    if (!texto) throw new Error("gemini sem texto");
+    return texto;
+  }
+  throw new Error(ultimoErro || "gemini indisponível");
+}
+
+async function comClaude(sistema: string, pergunta: string): Promise<string> {
   const client = new Anthropic();
   const messages: Anthropic.Beta.BetaMessageParam[] = [
     { role: "user", content: pergunta },
@@ -84,13 +145,10 @@ export async function perguntarComPesquisa(
   resposta.content.forEach((b, k) => {
     if (b.type !== "text") ultimo = k;
   });
-  const texto = resposta.content
+  return resposta.content
     .slice(ultimo + 1)
     .map((b) => (b.type === "text" ? b.text : ""))
     .join("");
-  const valor = extrairJson(texto);
-  cache.set(chaveCache, { quando: Date.now(), valor });
-  return valor;
 }
 
 export const textoCurto = (v: unknown, max: number) =>

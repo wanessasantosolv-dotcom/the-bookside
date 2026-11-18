@@ -1,4 +1,5 @@
 import {
+  SemCota,
   contaValida,
   dentroDoLimite,
   iaConfigurada,
@@ -49,7 +50,12 @@ export async function POST(req: Request) {
       .filter((c) => c.texto)
       .slice(0, 6);
     return Response.json({ citacoes });
-  } catch {
+  } catch (x) {
+    if (x instanceof SemCota)
+      return Response.json(
+        { erro: "o limite grátis de hoje da IA acabou. tente amanhã." },
+        { status: 503 },
+      );
     return Response.json(
       { erro: "não deu para pesquisar agora" },
       { status: 502 },
