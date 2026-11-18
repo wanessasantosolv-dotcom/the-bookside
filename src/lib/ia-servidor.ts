@@ -74,16 +74,28 @@ export async function perguntarComPesquisa(
   return valor;
 }
 
-/** modelos do Gemini tentados em ordem (GEMINI_MODEL na Vercel entra primeiro) */
+/**
+ * Modelos do Gemini tentados em ordem (GEMINI_MODEL na Vercel entra primeiro).
+ * O Google aposenta nomes antigos de tempos em tempos: os "-latest" seguem sempre o atual.
+ */
 const modelosGemini = () =>
   [
     process.env.GEMINI_MODEL,
-    "gemini-2.5-flash",
+    "gemini-3.8-flash",
     "gemini-flash-latest",
-    "gemini-2.5-flash-lite",
+    "gemini-3.5-flash-lite",
     "gemini-flash-lite-latest",
-    "gemini-2.0-flash",
   ].filter((m, i, a): m is string => !!m && a.indexOf(m) === i);
+
+/**
+ * O que não funcionou recentemente (sem cota, aposentado, sem pesquisa no plano):
+ * pula por 1 hora, para responder mais rápido e não gastar a cota à toa.
+ */
+const bloqueado = new Map<string, number>();
+const chaveBloqueio = (modelo: string, pesquisa: boolean) =>
+  `${modelo}|${pesquisa}`;
+const estaBloqueado = (modelo: string, pesquisa: boolean) =>
+  (bloqueado.get(chaveBloqueio(modelo, pesquisa)) ?? 0) > Date.now();
 
 type TentativaGemini = {
   modelo: string;
@@ -144,15 +156,28 @@ async function pedirAoGemini(
  * Tenta os modelos em ordem, primeiro com pesquisa no Google. Se a pesquisa não
  * tiver cota grátis em nenhum, tenta sem pesquisa (o modelo responde com o que sabe).
  */
+/** quando o plano não deixa pesquisar: responde só com o que sabe, sem inventar */
+const SEM_INTERNET = `
+IMPORTANTE: agora você está SEM acesso à internet. Use só o que você sabe com segurança sobre esse livro.
+Na dúvida, é melhor devolver menos (ou nada: "encontrado": false, ou a lista vazia) do que inventar.`;
+
 async function comGemini(sistema: string, pergunta: string): Promise<string> {
   const tentativas: TentativaGemini[] = [];
   for (const pesquisa of [true, false]) {
     for (const modelo of modelosGemini()) {
-      const t = await pedirAoGemini(modelo, sistema, pergunta, pesquisa);
+      if (estaBloqueado(modelo, pesquisa)) continue;
+      const t = await pedirAoGemini(
+        modelo,
+        pesquisa ? sistema : sistema + SEM_INTERNET,
+        pergunta,
+        pesquisa,
+      );
       tentativas.push(t);
       if (t.texto) return t.texto;
-      // 404: modelo não existe; 429: sem cota nesse modelo; 400/403: recurso indisponível no plano
-      if (![400, 403, 404, 429].includes(t.status)) break;
+      // sem cota, aposentado ou recurso fora do plano: esquece esse caminho por 1 hora
+      if ([400, 403, 404, 429].includes(t.status))
+        bloqueado.set(chaveBloqueio(modelo, pesquisa), Date.now() + 36e5);
+      // 500/503 (Google ocupado) e o resto: só passa para o próximo
     }
   }
   console.error(
@@ -164,7 +189,10 @@ async function comGemini(sistema: string, pergunta: string): Promise<string> {
       )
       .join(" | "),
   );
-  if (tentativas.some((t) => t.status === 429))
+  if (
+    tentativas.length &&
+    tentativas.every((t) => t.status === 429 || t.status === 404)
+  )
     throw new SemCota("cota do Gemini");
   throw new Error("gemini indisponível");
 }
