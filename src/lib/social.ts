@@ -822,22 +822,47 @@ export async function novidades(): Promise<Novidade[]> {
 // ───────── utilidades de tela ─────────
 
 /** Carrega dados assíncronos com estados de carregando/erro e um "tentar de novo". */
+/**
+ * O que já foi carregado nesta visita (por pessoa, consulta e parâmetros).
+ * Voltar a uma tela mostra na hora o que ela tinha e atualiza por trás,
+ * sem tela de carregamento.
+ */
+const consultas = new Map<string, unknown>();
+const chaveDaConsulta = (buscar: () => unknown, deps: unknown[]) => {
+  try {
+    return `${meuId() ?? ""}|${buscar.toString()}|${JSON.stringify(deps)}`;
+  } catch {
+    return null;
+  }
+};
+
 export function useConsulta<T>(buscar: () => Promise<T>, deps: unknown[]) {
+  const chave = chaveDaConsulta(buscar, deps);
   const [estado, setEstado] = useState<{
     dados?: T;
     carregando: boolean;
     erro: unknown;
-  }>({ carregando: true, erro: null });
+  }>(() =>
+    chave && consultas.has(chave)
+      ? { dados: consultas.get(chave) as T, carregando: true, erro: null }
+      : { carregando: true, erro: null },
+  );
   const [versao, setVersao] = useState(0);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const fn = useCallback(buscar, deps);
   useEffect(() => {
     let vivo = true;
-    setEstado((e) => ({ ...e, carregando: true, erro: null }));
+    // troca de parâmetros: mostra o que já tinha guardado para eles (se tiver)
+    setEstado((e) =>
+      chave && consultas.has(chave)
+        ? { dados: consultas.get(chave) as T, carregando: true, erro: null }
+        : { ...e, carregando: true, erro: null },
+    );
     fn()
-      .then(
-        (dados) => vivo && setEstado({ dados, carregando: false, erro: null }),
-      )
+      .then((dados) => {
+        if (chave) consultas.set(chave, dados);
+        if (vivo) setEstado({ dados, carregando: false, erro: null });
+      })
       .catch(
         (erro: unknown) =>
           vivo && setEstado((e) => ({ ...e, carregando: false, erro })),
@@ -845,12 +870,16 @@ export function useConsulta<T>(buscar: () => Promise<T>, deps: unknown[]) {
     return () => {
       vivo = false;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fn, versao]);
   return {
     ...estado,
     recarregar: () => setVersao((v) => v + 1),
     /** troca os dados na hora (para respostas otimistas) */
-    definir: (d: T) => setEstado({ dados: d, carregando: false, erro: null }),
+    definir: (d: T) => {
+      if (chave) consultas.set(chave, d);
+      setEstado({ dados: d, carregando: false, erro: null });
+    },
   };
 }
 

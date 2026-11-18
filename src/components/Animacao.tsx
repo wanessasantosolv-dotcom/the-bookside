@@ -1,12 +1,30 @@
 "use client";
 
-import type { CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
+
+/** Esperas curtas não mostram animação nenhuma (evita o "pisca" de carregamento). */
+export function useDepoisDe(ms: number, ativo = true) {
+  const [passou, setPassou] = useState(!ativo);
+  useEffect(() => {
+    if (!ativo) return;
+    const t = setTimeout(() => setPassou(true), ms);
+    return () => clearTimeout(t);
+  }, [ms, ativo]);
+  return passou;
+}
 
 /**
  * As animações de carregamento do canvas (45a–45h).
  * Cada uma tem o desenho, um título em itálico, os pontinhos e uma frase.
  */
-export type TipoAnimacao = "livro" | "pilha" | "carimbo" | "marcador" | "fita" | "escrevendo" | "estrelas";
+export type TipoAnimacao =
+  | "livro"
+  | "pilha"
+  | "carimbo"
+  | "marcador"
+  | "fita"
+  | "escrevendo"
+  | "estrelas";
 
 const atraso = (s: number): CSSProperties => ({ animationDelay: `${s}s` });
 
@@ -48,7 +66,9 @@ function Desenho({ tipo, frase }: { tipo: TipoAnimacao; frase?: string }) {
     case "carimbo":
       return (
         <div className="relative h-[286px] w-[252px] rounded-[4px] border border-linha bg-creme-quente px-[22px] pt-[22px] shadow-[0_14px_24px_-14px_rgba(43,20,32,.45)]">
-          <p className="font-display text-2xl leading-none font-semibold italic text-bordo">sua ficha</p>
+          <p className="font-display text-2xl leading-none font-semibold italic text-bordo">
+            sua ficha
+          </p>
           {["100%", "80%", "92%", "60%", "85%", "42%"].map((w, i) => (
             <div
               key={i}
@@ -57,8 +77,12 @@ function Desenho({ tipo, frase }: { tipo: TipoAnimacao; frase?: string }) {
             />
           ))}
           <span className="ld-carimbo absolute top-[52%] left-1/2 -mt-[68px] -ml-[68px] flex size-[136px] flex-col items-center justify-center rounded-full border-[3px] border-double border-rosa-antigo bg-creme-quente/80 text-rosa-antigo">
-            <b className="font-display text-[26px] leading-none font-bold italic">salvo</b>
-            <i className="mt-1.5 text-[8px] font-semibold tracking-[.22em] uppercase not-italic">ficha no clube</i>
+            <b className="font-display text-[26px] leading-none font-bold italic">
+              salvo
+            </b>
+            <i className="mt-1.5 text-[8px] font-semibold tracking-[.22em] uppercase not-italic">
+              ficha no clube
+            </i>
           </span>
         </div>
       );
@@ -66,13 +90,15 @@ function Desenho({ tipo, frase }: { tipo: TipoAnimacao; frase?: string }) {
       return (
         <div className="flex flex-col items-center">
           <div className="relative h-[270px] w-[210px] overflow-hidden rounded-[3px] border border-linha bg-creme-quente pt-[30px] shadow-[0_14px_24px_-14px_rgba(43,20,32,.45)]">
-            {["auto", "70%", "auto", "85%", "60%", "auto", "75%"].map((w, i) => (
-              <div
-                key={i}
-                className="mx-6 mb-[15px] h-[7px] rounded-full bg-[#F0E6DC]"
-                style={w === "auto" ? undefined : { width: w }}
-              />
-            ))}
+            {["auto", "70%", "auto", "85%", "60%", "auto", "75%"].map(
+              (w, i) => (
+                <div
+                  key={i}
+                  className="mx-6 mb-[15px] h-[7px] rounded-full bg-[#F0E6DC]"
+                  style={w === "auto" ? undefined : { width: w }}
+                />
+              ),
+            )}
             <span className="ld-fita absolute -top-2 right-[30px] h-[156px] w-7 bg-[linear-gradient(#8E1D3D,#6B0D24)] shadow-[0_3px_6px_-2px_rgba(43,20,32,.4)]" />
           </div>
           <div className="mt-[26px] h-[7px] w-[210px] overflow-hidden rounded-full bg-[#F0E6DC]">
@@ -100,7 +126,11 @@ function Desenho({ tipo, frase }: { tipo: TipoAnimacao; frase?: string }) {
         <div className="flex flex-col items-center">
           <div className="flex gap-3 text-[42px] leading-none">
             {[0, 0.3, 0.6, 0.9, 1.2].map((d) => (
-              <span key={d} className="ld-estrela inline-block text-linha" style={atraso(d)}>
+              <span
+                key={d}
+                className="ld-estrela inline-block text-linha"
+                style={atraso(d)}
+              >
                 ★
               </span>
             ))}
@@ -130,6 +160,9 @@ export function Animacao({
   /** ocupa a tela toda, por cima de tudo (ex.: enquanto salva) */
   tela?: boolean;
 }) {
+  // carregando uma tela: só aparece se demorar mais de meio segundo (o espaço fica reservado)
+  const visivel = useDepoisDe(500, !tela);
+  if (!visivel) return <div aria-hidden className="min-h-[62dvh]" />;
   return (
     <div
       role="status"
@@ -145,7 +178,10 @@ export function Animacao({
           the bookside ✦
         </p>
       ) : null}
-      <span aria-hidden className="ld-brilho absolute top-[12%] left-[12%] text-sm text-ouro">
+      <span
+        aria-hidden
+        className="ld-brilho absolute top-[12%] left-[12%] text-sm text-ouro"
+      >
         ✦
       </span>
       <span
@@ -172,16 +208,24 @@ export function Animacao({
       <div aria-hidden>
         <Desenho tipo={tipo} frase={frase} />
       </div>
-      <p className="mt-9 font-display text-[28px] leading-[1.15] font-bold italic text-bordo">{titulo}</p>
+      <p className="mt-9 font-display text-[28px] leading-[1.15] font-bold italic text-bordo">
+        {titulo}
+      </p>
       {pontos ? (
         <span aria-hidden className="ld-pontos mt-4 flex gap-[7px]">
           {[0, 0.18, 0.36].map((d) => (
-            <i key={d} className="size-[7px] rounded-full bg-bordo" style={atraso(d)} />
+            <i
+              key={d}
+              className="size-[7px] rounded-full bg-bordo"
+              style={atraso(d)}
+            />
           ))}
         </span>
       ) : null}
       {sub ? (
-        <p className="mt-3.5 max-w-[250px] font-accent text-[15px] leading-[1.35] italic text-cinza">{sub}</p>
+        <p className="mt-3.5 max-w-[250px] font-accent text-[15px] leading-[1.35] italic text-cinza">
+          {sub}
+        </p>
       ) : null}
     </div>
   );
