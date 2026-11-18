@@ -185,12 +185,13 @@ export function CartaoAtividade({
   const livroHref = `/livro/${a.livro.id}`;
 
   return (
-    <article className="rounded-xl border border-linha bg-creme-quente p-4 lg:flex lg:gap-4 lg:rounded-[4px] lg:border-fio lg:bg-transparent lg:p-5">
-      <div className="flex items-center gap-2.5 lg:hidden">
+    <article className="rounded-xl border border-linha bg-creme-quente p-4 lg:rounded-[4px] lg:border-fio lg:bg-transparent lg:p-5">
+      {/* quem fez: a fotinha da pessoa, no celular e no computador */}
+      <div className="flex items-center gap-2.5">
         <Link href={perfil}>
           <Avatar pessoa={pessoa} tamanho={30} />
         </Link>
-        <p className="min-w-0 truncate text-xs font-semibold">
+        <p className="min-w-0 truncate text-xs font-semibold lg:text-[13px]">
           <Link href={perfil}>{a.autor === eu ? "você" : nomeDe(pessoa)}</Link>{" "}
           <span className="font-normal text-cinza">{verbo[a.tipo]}</span>
         </p>
@@ -198,7 +199,7 @@ export function CartaoAtividade({
           {quandoFoi(a.criado_em)}
         </span>
       </div>
-      <div className="mt-3 flex gap-3.5 lg:mt-0 lg:flex-1">
+      <div className="mt-3 flex gap-3.5 lg:gap-4">
         <Link
           href={livroHref}
           onClick={() => lembrarLivros([a.livro])}
@@ -215,16 +216,8 @@ export function CartaoAtividade({
               {a.livro.titulo}
             </h3>
           </Link>
-          <p className="mt-1 hidden text-xs text-grafite lg:block">
-            <Link
-              href={perfil}
-              className="font-semibold text-tinta hover:underline"
-            >
-              {a.autor === eu ? "você" : nomeDe(pessoa)}
-            </Link>{" "}
-            {verbo[a.tipo]} · {a.livro.autor} · {quandoFoi(a.criado_em)}
-          </p>
-          <p className="mt-0.5 text-xs text-cinza lg:hidden">{a.livro.autor}</p>
+
+          <p className="mt-0.5 text-xs text-cinza">{a.livro.autor}</p>
           {a.nota ? (
             <p
               className="mt-1.5 text-[12px] font-semibold tracking-[1px] text-bordo"
