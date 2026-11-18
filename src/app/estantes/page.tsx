@@ -74,8 +74,30 @@ function Leque({ e, livros }: { e: EstanteInfo; livros: LivroSalvo[] }) {
   );
 }
 
+/** livros fanados tipo leque, pro computador — mesma ideia da versão celular, só que maior. */
+function LequeLinhaWeb({ livros }: { livros: LivroSalvo[] }) {
+  const mostrados = livros.slice(0, 6);
+  const giros = ["-9deg", "-5deg", "-1deg", "3deg", "7deg", "11deg"];
+  if (!mostrados.length) return <p className="font-accent text-sm italic text-cinza">ainda sem livros ✦</p>;
+  return (
+    <div className="flex h-[186px] items-end pl-2">
+      {mostrados.map((l, i) => (
+        <Link
+          key={l.id}
+          href={`/livro/${l.id}`}
+          className="-ml-6 w-[108px] flex-none transition-transform first:ml-0 hover:z-10 hover:-translate-y-2"
+          style={{ transform: `rotate(${giros[i]})`, zIndex: i }}
+        >
+          <CapaLivro titulo={l.titulo} capa={l.capa} cor={corDoLivro(l.id)} className="w-full shadow-[2px_6px_14px_-4px_rgba(43,20,32,.4)]" />
+        </Link>
+      ))}
+    </div>
+  );
+}
+
 function EstantesWeb({ estantes, livros, favoritos }: { estantes: EstanteInfo[]; livros: LivroSalvo[]; favoritos: LivroSalvo[] }) {
   const [aba, setAba] = useState<Filtro>("todas");
+  const [leque, setLeque] = useState(false);
   const lidos = livros.filter((l) => l.status === "lido");
   const paginas = lidos.reduce((t, l) => t + (l.paginas ?? 0), 0);
   const linhas = [
@@ -87,11 +109,11 @@ function EstantesWeb({ estantes, livros, favoritos }: { estantes: EstanteInfo[];
   const visiveis = aba === "todas" ? linhas.filter((l) => l.livros.length || (l.id !== "lendo" && l.id !== "favoritos")) : linhas.filter((l) => l.id === aba);
 
   return (
-    <div className="hidden min-h-dvh bg-jornal font-texto text-tinta lg:block">
-      <div className="flex items-end justify-between border-b border-fio px-14 pt-12 pb-8">
+    <div className="hidden min-h-dvh bg-creme font-sans text-ameixa lg:block">
+      <div className="flex items-end justify-between border-b border-linha px-14 pt-12 pb-8">
         <div>
-          <h1 className="font-revista text-[44px] leading-none italic">minhas estantes</h1>
-          <p className="mt-2.5 text-[13px] font-medium text-grafite">
+          <h1 className="font-revista text-[44px] leading-none text-bordo italic">minhas estantes</h1>
+          <p className="mt-2.5 text-[13px] font-medium text-cinza">
             {lidos.length} {lidos.length === 1 ? "livro lido" : "livros lidos"}
             {paginas ? ` · ${paginas.toLocaleString("pt-BR")} páginas` : ""} · {livros.length} na estante
           </p>
@@ -104,60 +126,87 @@ function EstantesWeb({ estantes, livros, favoritos }: { estantes: EstanteInfo[];
                 type="button"
                 aria-pressed={aba === t.id}
                 onClick={() => setAba(t.id)}
-                className={`border-b-2 pb-2.5 text-[11px] font-bold tracking-[.1em] uppercase ${aba === t.id ? "border-vinho text-vinho" : "border-transparent text-grafite hover:text-tinta"}`}
+                className={`border-b-2 pb-2.5 text-[11px] font-bold tracking-[.1em] uppercase ${aba === t.id ? "border-bordo text-bordo" : "border-transparent text-cinza hover:text-ameixa"}`}
               >
                 {t.nome}
               </button>
             ))}
           </nav>
-          <span className="mb-1.5 flex gap-2.5">
-            <Link href="/estantes/importar" className="rounded-pill border border-fio px-4 py-2.5 text-[11px] font-bold tracking-[.1em] text-grafite uppercase hover:border-vinho hover:text-vinho">
+          <span className="mb-1.5 flex items-center gap-2.5">
+            <button
+              type="button"
+              onClick={() => setLeque((v) => !v)}
+              aria-pressed={leque}
+              className={`rounded-pill border px-4 py-2.5 text-[11px] font-bold tracking-[.1em] uppercase ${
+                leque ? "border-bordo bg-bordo text-creme" : "border-linha text-cinza hover:border-bordo hover:text-bordo"
+              }`}
+            >
+              {leque ? "ver prateleiras" : "ver como leque ✧"}
+            </button>
+            <Link href="/estantes/importar" className="rounded-pill border border-linha px-4 py-2.5 text-[11px] font-bold tracking-[.1em] text-cinza uppercase hover:border-bordo hover:text-bordo">
               importar lista
             </Link>
-            <Link href="/estantes/nova" className="rounded-pill border border-vinho px-4 py-2.5 text-[11px] font-bold tracking-[.1em] text-vinho uppercase hover:bg-vinho/5">
+            <Link href="/estantes/nova" className="rounded-pill border border-bordo px-4 py-2.5 text-[11px] font-bold tracking-[.1em] text-bordo uppercase hover:bg-bordo/5">
               + nova estante
             </Link>
           </span>
         </div>
       </div>
       <div className="px-14 pt-10 pb-16">
-        {visiveis.map((linha) => (
-          <section key={linha.id} className="mb-12">
-            <div className="mb-[18px] flex items-baseline justify-between border-b border-tinta pb-2">
-              <h2 className="font-revista text-2xl leading-none italic">
-                {linha.nome}
-                <span className="ml-2.5 font-texto text-[11px] font-semibold text-grafite not-italic">· {linha.livros.length}</span>
-              </h2>
-              <Link href={linha.link} className="border-b border-vinho pb-0.5 text-[10px] font-bold tracking-[.12em] text-vinho uppercase">
-                {linha.id === "favoritos" ? "escolher →" : "ver todos →"}
-              </Link>
-            </div>
-            {linha.id === "favoritos" && !linha.livros.length ? (
-              <p className="font-revista text-sm italic text-grafite">escolha até 4 livros para ficarem em destaque no seu perfil.</p>
-            ) : null}
-            <ul className="grid grid-cols-8 gap-4">
-              {linha.livros.slice(0, linha.id === "favoritos" ? 8 : 7).map((l) => (
-                <li key={l.id}>
-                  <Link href={`/livro/${l.id}`} className="block">
-                    <CapaLivro titulo={l.titulo} capa={l.capa} cor={corDoLivro(l.id)} className="w-full [&>span:last-child]:text-[11px]" />
-                    <i className="mt-2 block text-center text-[11px] leading-[1.3] text-grafite not-italic">{l.titulo}</i>
-                  </Link>
-                </li>
-              ))}
-              {linha.id !== "favoritos" ? (
-                <li>
-                  <Link
-                    href={`/buscar?estante=${linha.id}`}
-                    aria-label={`adicionar livro em ${linha.nome}`}
-                    className="flex aspect-[2/3] items-center justify-center rounded-[2px] border-[1.5px] border-dashed border-ouro text-2xl font-semibold text-vinho hover:bg-vinho/5"
-                  >
-                    +
-                  </Link>
-                </li>
+        {visiveis.map((linha) => {
+          const covers = linha.livros.slice(0, linha.id === "favoritos" ? 8 : 7);
+          const comMais = linha.id !== "favoritos";
+          return (
+            <section key={linha.id} className="mb-12">
+              <div className="mb-[18px] flex items-baseline justify-between border-b border-ameixa pb-2">
+                <h2 className="font-revista text-2xl leading-none text-ameixa italic">
+                  {linha.nome}
+                  <span className="ml-2.5 font-sans text-[11px] font-semibold text-cinza not-italic">· {linha.livros.length}</span>
+                </h2>
+                <Link href={linha.link} className="border-b border-bordo pb-0.5 text-[10px] font-bold tracking-[.12em] text-bordo uppercase">
+                  {linha.id === "favoritos" ? "escolher →" : "ver todos →"}
+                </Link>
+              </div>
+              {linha.id === "favoritos" && !linha.livros.length ? (
+                <p className="font-revista text-sm text-cinza italic">escolha até 4 livros para ficarem em destaque no seu perfil.</p>
               ) : null}
-            </ul>
-          </section>
-        ))}
+
+              {leque ? (
+                <LequeLinhaWeb livros={linha.livros} />
+              ) : (
+                <div>
+                  <ul className="grid grid-cols-8 items-end gap-4">
+                    {covers.map((l) => (
+                      <li key={l.id} className="flex flex-col">
+                        <Link href={`/livro/${l.id}`} className="block">
+                          <CapaLivro titulo={l.titulo} capa={l.capa} cor={corDoLivro(l.id)} className="w-full [&>span:last-child]:text-[11px]" />
+                        </Link>
+                        {covers.length ? (
+                          <span aria-hidden className="mt-[3px] block h-[9px] rounded-[3px] bg-gradient-to-b from-linha to-bege shadow-[0_2px_0_#c4ac93]" />
+                        ) : null}
+                        <Link href={`/livro/${l.id}`} className="block">
+                          <i className="mt-2 block text-center text-[11px] leading-[1.3] text-cinza not-italic">{l.titulo}</i>
+                        </Link>
+                      </li>
+                    ))}
+                    {comMais ? (
+                      <li className="flex flex-col">
+                        <Link
+                          href={`/buscar?estante=${linha.id}`}
+                          aria-label={`adicionar livro em ${linha.nome}`}
+                          className="flex aspect-[2/3] items-center justify-center rounded-[2px] border-[1.5px] border-dashed border-ouro text-2xl font-semibold text-bordo hover:bg-bordo/5"
+                        >
+                          +
+                        </Link>
+                        <span aria-hidden className="mt-[3px] block h-[9px] rounded-[3px] bg-gradient-to-b from-linha to-bege shadow-[0_2px_0_#c4ac93]" />
+                      </li>
+                    ) : null}
+                  </ul>
+                </div>
+              )}
+            </section>
+          );
+        })}
       </div>
     </div>
   );
