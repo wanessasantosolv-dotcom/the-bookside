@@ -165,7 +165,7 @@ function Cabecalho({ c, papel, rodada }: { c: Clube; papel: Papel | null; rodada
             className={`aspect-[3/1] w-full bg-cover bg-center lg:rounded-[4px] ${c.capa ? "" : "pat-estrelas"}`}
             style={
               c.capa
-                ? { backgroundImage: `linear-gradient(rgba(43,20,32,.05),rgba(43,20,32,.35)), url("${c.capa}")` }
+                ? { backgroundImage: `linear-gradient(rgba(43,20,32,.02),rgba(43,20,32,.14)), url("${c.capa}")` }
                 : undefined
             }
           />

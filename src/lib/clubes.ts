@@ -217,7 +217,12 @@ export async function sugerir(clubeId: string, livro: LivroDoClube["livro"], mot
 }
 
 /** Moderadora escolhe um livro direto (sem passar pela votação) e já começa a leitura. */
-export async function escolherLivroDaVez(clubeId: string, livro: LivroDoClube["livro"], prazo: string) {
+export async function escolherLivroDaVez(
+  clubeId: string,
+  livro: LivroDoClube["livro"],
+  prazo: string,
+  inicio?: string,
+) {
   const eu = meuId();
   const { data, error } = await db()
     .from("clube_livros")
@@ -225,7 +230,7 @@ export async function escolherLivroDaVez(clubeId: string, livro: LivroDoClube["l
     .select("id")
     .single();
   if (error) throw error;
-  await comecarLeitura(clubeId, data.id as string, prazo);
+  await comecarLeitura(clubeId, data.id as string, prazo, inicio);
 }
 
 /** Tira um livro da estante do clube, seja sugestão, leitura da vez ou já lido. */
@@ -244,14 +249,15 @@ export async function votar(livroId: string, sim: boolean) {
 }
 
 /** Começa a leitura da vez (só moderadora): encerra a anterior, numera a rodada e marca o prazo. */
-export async function comecarLeitura(clubeId: string, livroId: string, prazo: string) {
+export async function comecarLeitura(clubeId: string, livroId: string, prazo: string, inicio?: string) {
   const livros = await livrosDoClube(clubeId);
   const atual = livros.find((l) => l.estado === "lendo");
   if (atual) await encerrarLeitura(atual.id);
   const rodada = Math.max(0, ...livros.map((l) => l.rodada ?? 0)) + 1;
+  const iniciado_em = inicio ? new Date(`${inicio}T12:00:00`).toISOString() : new Date().toISOString();
   const { error } = await db()
     .from("clube_livros")
-    .update({ estado: "lendo", rodada, prazo, iniciado_em: new Date().toISOString() })
+    .update({ estado: "lendo", rodada, prazo, iniciado_em })
     .eq("id", livroId);
   if (error) throw error;
 }
