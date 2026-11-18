@@ -130,7 +130,7 @@ export function PerfilWeb({
   }
 
   const botaoHero =
-    "flex min-h-10 items-center rounded-pill border border-white/50 px-4 text-[11px] font-bold tracking-[.1em] text-jornal uppercase hover:bg-white/10";
+    "flex min-h-10 items-center rounded-pill border border-white/50 bg-black/25 px-4 text-[11px] font-bold tracking-[.1em] text-jornal uppercase backdrop-blur-sm hover:bg-black/35";
 
   return (
     <div
@@ -142,7 +142,7 @@ export function PerfilWeb({
         className="relative flex h-[280px] items-end bg-cover bg-center px-14"
         style={{
           backgroundImage: p.capaImagem
-            ? `linear-gradient(135deg, ${escurecer(base, 1, 0.55)}, ${escurecer(base, 0.45, 0.8)}), url("${p.capaImagem}")`
+            ? `url("${p.capaImagem}")` // a foto com as cores originais, sem camada por cima
             : `linear-gradient(135deg, ${base}, ${escurecer(base)})`,
         }}
       >
@@ -174,14 +174,16 @@ export function PerfilWeb({
             )}
           </div>
           <div className="pb-16">
-            <h1 className="mb-1.5 font-revista text-4xl leading-none text-jornal italic">
+            <h1 className="mb-1.5 font-revista text-4xl leading-none text-jornal italic [text-shadow:0_1px_12px_rgba(0,0,0,.55),0_1px_2px_rgba(0,0,0,.45)]">
               {p.nome || "sem nome"}
             </h1>
-            <p className="text-xs font-semibold text-white/80">
+            <p className="text-xs font-semibold text-white/90 [text-shadow:0_1px_6px_rgba(0,0,0,.6)]">
               @{p.usuario || "seu.nome"}
             </p>
             {detalhe ? (
-              <div className="mt-1.5 text-xs text-white/80">{detalhe}</div>
+              <div className="mt-1.5 text-xs text-white/90 [text-shadow:0_1px_6px_rgba(0,0,0,.6)]">
+                {detalhe}
+              </div>
             ) : null}
           </div>
           <div className="ml-auto flex gap-3.5 pb-[70px]">
