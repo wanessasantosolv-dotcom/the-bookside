@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { Voltar } from "@/components/Voltar";
 import { TelaApp } from "@/components/AppShell";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -14,7 +14,8 @@ const cores = [
   { cor: "#A88B64", nome: "dourado" },
   { cor: "#464052", nome: "ameixa" },
 ];
-const rotulo = "mb-1.5 block text-[10px] leading-[14px] font-semibold tracking-[.12em] text-bordo uppercase";
+const rotulo =
+  "mb-1.5 block text-[10px] leading-[14px] font-semibold tracking-[.12em] text-bordo uppercase";
 
 export default function NovaEstantePage() {
   const router = useRouter();
@@ -26,15 +27,21 @@ export default function NovaEstantePage() {
   return (
     <TelaApp aba="estantes">
       <header className="flex items-center justify-between px-6 pt-2">
-        <Link href="/estantes" className="-ml-2 flex min-h-11 items-center px-2 text-[13px] font-semibold text-bordo">
-          ‹ estantes
-        </Link>
+        <Voltar
+          padrao="/estantes"
+          rotulo="estantes"
+          className="-ml-2 flex min-h-11 items-center px-2 text-[13px] font-semibold text-bordo"
+        />
         <span className="eyebrow !text-[10px] text-cinza">nova estante</span>
       </header>
       <div className="animate-subir px-6 pt-4">
-        <h1 className="font-display text-[30px] leading-[1.1] font-semibold italic text-bordo">crie uma estante</h1>
+        <h1 className="font-display text-[30px] leading-[1.1] font-semibold italic text-bordo">
+          crie uma estante
+        </h1>
         <p className="mt-2 font-accent text-sm italic text-cinza">
-          pra organizar do seu jeito — &quot;favoritos de {new Date().getFullYear()}&quot;, &quot;pra chorar&quot;, o que quiser.
+          pra organizar do seu jeito — &quot;favoritos de{" "}
+          {new Date().getFullYear()}&quot;, &quot;pra chorar&quot;, o que
+          quiser.
         </p>
       </div>
 
@@ -55,8 +62,17 @@ export default function NovaEstantePage() {
             <legend className={rotulo}>cor</legend>
             <div className="mt-1 flex gap-1">
               {cores.map((c) => (
-                <label key={c.cor} className="flex size-11 cursor-pointer items-center justify-center rounded-full has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-bordo">
-                  <input type="radio" name="cor" className="sr-only" checked={cor === c.cor} onChange={() => setCor(c.cor)} />
+                <label
+                  key={c.cor}
+                  className="flex size-11 cursor-pointer items-center justify-center rounded-full has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-bordo"
+                >
+                  <input
+                    type="radio"
+                    name="cor"
+                    className="sr-only"
+                    checked={cor === c.cor}
+                    onChange={() => setCor(c.cor)}
+                  />
                   <span className="sr-only">{c.nome}</span>
                   <span
                     aria-hidden
@@ -78,10 +94,18 @@ export default function NovaEstantePage() {
                 <label
                   key={o.t}
                   className={`flex h-11 cursor-pointer items-center rounded-pill border px-[13px] text-xs font-semibold has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-bordo ${
-                    publica === o.v ? "border-bordo bg-bordo text-creme" : "border-bege bg-creme-quente"
+                    publica === o.v
+                      ? "border-bordo bg-bordo text-creme"
+                      : "border-bege bg-creme-quente"
                   }`}
                 >
-                  <input type="radio" name="vis" className="sr-only" checked={publica === o.v} onChange={() => setPublica(o.v)} />
+                  <input
+                    type="radio"
+                    name="vis"
+                    className="sr-only"
+                    checked={publica === o.v}
+                    onChange={() => setPublica(o.v)}
+                  />
                   {o.t}
                 </label>
               ))}

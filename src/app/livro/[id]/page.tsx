@@ -1,5 +1,6 @@
 "use client";
 
+import { Voltar } from "@/components/Voltar";
 import Link from "next/link";
 import { notFound, useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -48,9 +49,20 @@ export default function LivroPage() {
   const livro = { ...encontrado, sinopse: encontrado.sinopse ?? sinopseOL };
   const salvo = livros.some((l) => l.id === id);
   const status = salvo ? (livro.status ?? "lendo") : null;
-  const base = { id: livro.id, titulo: livro.titulo, autor: livro.autor, capa: livro.capa, genero: livro.genero };
-  const estantesProprias = todasAsEstantes(proprias ?? []).filter((e) => e.propria);
-  const progresso = livro.paginas && livro.paginaAtual ? Math.round((livro.paginaAtual / livro.paginas) * 100) : null;
+  const base = {
+    id: livro.id,
+    titulo: livro.titulo,
+    autor: livro.autor,
+    capa: livro.capa,
+    genero: livro.genero,
+  };
+  const estantesProprias = todasAsEstantes(proprias ?? []).filter(
+    (e) => e.propria,
+  );
+  const progresso =
+    livro.paginas && livro.paginaAtual
+      ? Math.round((livro.paginaAtual / livro.paginas) * 100)
+      : null;
   const voltar =
     status === "lido"
       ? { href: "/estantes/lidos", r: "lidos" }
@@ -60,16 +72,15 @@ export default function LivroPage() {
           ? { href: "/estantes/lendo", r: "lendo" }
           : { href: "/estantes", r: "estantes" };
 
-  /** volta para a tela de onde a pessoa veio; aberto direto pelo link, vai para a estante */
-  function irDeVolta() {
-    if (window.history.length > 1) router.back();
-    else router.push(voltar.href);
-  }
-
   function tirarDaEstante() {
     const salvoAgora = livros.find((l) => l.id === id);
     if (!salvoAgora) return;
-    if (!confirm(`tirar "${livro!.titulo}" da sua estante? a nota, a resenha e o progresso saem junto.`)) return;
+    if (
+      !confirm(
+        `tirar "${livro!.titulo}" da sua estante? a nota, a resenha e o progresso saem junto.`,
+      )
+    )
+      return;
     lembrarRemovido(salvoAgora, favoritos.includes(id));
     setSaindo(true);
     router.push(`${voltar.href}?removido=${encodeURIComponent(livro!.titulo)}`);
@@ -82,7 +93,9 @@ export default function LivroPage() {
       status: s,
       paginas: livro!.paginas,
       ...(s === "lendo" ? { iniciadoEm: livro!.iniciadoEm ?? agora } : {}),
-      ...(s === "lido" ? { lidoEm: livro!.lidoEm ?? agora, paginaAtual: livro!.paginas } : {}),
+      ...(s === "lido"
+        ? { lidoEm: livro!.lidoEm ?? agora, paginaAtual: livro!.paginas }
+        : {}),
     });
   }
 
@@ -90,25 +103,26 @@ export default function LivroPage() {
     const atual = livro!.estantes ?? [];
     editarLivro(base, {
       status: livro!.status ?? "quero",
-      estantes: atual.includes(eid) ? atual.filter((x) => x !== eid) : [...atual, eid],
+      estantes: atual.includes(eid)
+        ? atual.filter((x) => x !== eid)
+        : [...atual, eid],
     });
   }
 
   const titulo =
     "font-display text-[28px] leading-[1.08] font-semibold italic text-bordo lg:font-revista lg:text-[40px] lg:leading-[1.1] lg:font-normal lg:text-tinta";
-  const secao = "eyebrow text-bordo lg:text-[10px] lg:tracking-[.18em] lg:text-grafite";
+  const secao =
+    "eyebrow text-bordo lg:text-[10px] lg:tracking-[.18em] lg:text-grafite";
 
   return (
     <AppShell aba="estantes">
       <div className="flex flex-1 flex-col lg:bg-jornal">
         <header className="flex items-center justify-between px-6 pt-2 lg:bg-[#F3ECDF] lg:px-14 lg:pt-6">
-          <button
-            type="button"
-            onClick={irDeVolta}
+          {/* volta para a tela de onde a pessoa veio; aberto direto pelo link, vai para a estante */}
+          <Voltar
+            padrao={voltar.href}
             className="-ml-2 flex min-h-11 items-center px-2 text-[13px] font-semibold text-bordo lg:text-[11px] lg:font-bold lg:tracking-[.1em] lg:uppercase"
-          >
-            ‹ voltar
-          </button>
+          />
           <span className="eyebrow !text-[10px] text-cinza">o livro</span>
         </header>
 
@@ -141,10 +155,14 @@ export default function LivroPage() {
             <h1 className={titulo}>{livro.titulo}</h1>
             <p className="mt-[7px] font-accent text-sm italic text-cinza lg:font-texto lg:text-sm lg:not-italic">
               {livro.autor}
-              <span className="hidden lg:inline">{livro.paginas ? ` · ${livro.paginas} páginas` : ""}</span>
+              <span className="hidden lg:inline">
+                {livro.paginas ? ` · ${livro.paginas} páginas` : ""}
+              </span>
             </p>
             <p className="mt-2.5 text-[13px] text-cinza lg:hidden">
-              {[livro.paginas ? `${livro.paginas} páginas` : null, livro.ano].filter(Boolean).join(" · ")}
+              {[livro.paginas ? `${livro.paginas} páginas` : null, livro.ano]
+                .filter(Boolean)
+                .join(" · ")}
             </p>
             {livro.genero ? (
               <span className="mt-2.5 inline-block rounded-pill bg-[#F1E4DC] px-2 py-1 text-[9px] font-semibold text-bordo lg:hidden">
@@ -153,7 +171,9 @@ export default function LivroPage() {
             ) : null}
             {livro.nota ? (
               <>
-                <p className="eyebrow mt-3.5 mb-1 text-bordo lg:hidden">sua nota</p>
+                <p className="eyebrow mt-3.5 mb-1 text-bordo lg:hidden">
+                  sua nota
+                </p>
                 <p className="text-[15px] font-semibold tracking-[2px] text-bordo lg:mt-4 lg:text-lg">
                   {estrelas(livro.nota)}
                 </p>
@@ -226,7 +246,10 @@ export default function LivroPage() {
                   </span>
                 </div>
                 <div className="mt-2.5 h-2 overflow-hidden rounded-full bg-[#F1E4DC]">
-                  <i className="block h-full rounded-full bg-bordo" style={{ width: `${progresso ?? 0}%` }} />
+                  <i
+                    className="block h-full rounded-full bg-bordo"
+                    style={{ width: `${progresso ?? 0}%` }}
+                  />
                 </div>
                 <p className="mt-2 text-xs text-cinza">
                   {livro.paginaAtual && livro.paginas
@@ -243,14 +266,18 @@ export default function LivroPage() {
                 <span className="text-[13px] font-semibold">
                   {livro.nota ? "editar sua avaliação" : "avaliar este livro"}
                 </span>
-                <span className="text-sm text-bordo">{livro.nota ? estrelas(livro.nota) : "★ →"}</span>
+                <span className="text-sm text-bordo">
+                  {livro.nota ? estrelas(livro.nota) : "★ →"}
+                </span>
               </Link>
             ) : null}
 
             {livro.sinopse ? (
               <section className="mt-6 px-6 lg:hidden">
                 <p className={secao}>sinopse</p>
-                <p className="mt-2 text-[13px] leading-normal">{livro.sinopse}</p>
+                <p className="mt-2 text-[13px] leading-normal">
+                  {livro.sinopse}
+                </p>
               </section>
             ) : null}
 
@@ -258,16 +285,21 @@ export default function LivroPage() {
               <section className="mx-6 mt-6 lg:mx-0 lg:mt-8">
                 <p className={secao}>por critério</p>
                 <dl className="mt-2 grid grid-cols-2 gap-x-6 gap-y-1.5 lg:max-w-[420px]">
-                  {(["personagens", "plot", "escrita", "final"] as const).map((c) =>
-                    livro.notas![c] ? (
-                      <div
-                        key={c}
-                        className="flex items-baseline justify-between border-b border-linha py-1 lg:border-fio"
-                      >
-                        <dt className="font-accent text-sm italic text-cinza">{c}</dt>
-                        <dd className="text-xs text-bordo">{estrelas(livro.notas![c])}</dd>
-                      </div>
-                    ) : null,
+                  {(["personagens", "plot", "escrita", "final"] as const).map(
+                    (c) =>
+                      livro.notas![c] ? (
+                        <div
+                          key={c}
+                          className="flex items-baseline justify-between border-b border-linha py-1 lg:border-fio"
+                        >
+                          <dt className="font-accent text-sm italic text-cinza">
+                            {c}
+                          </dt>
+                          <dd className="text-xs text-bordo">
+                            {estrelas(livro.notas![c])}
+                          </dd>
+                        </div>
+                      ) : null,
                   )}
                 </dl>
               </section>
@@ -275,7 +307,11 @@ export default function LivroPage() {
 
             {livro.personagem || livro.citacao ? (
               <section className="mx-6 mt-6 lg:mx-0 lg:mt-8">
-                {livro.personagem ? <p className={secao}>personagem favorita · {livro.personagem} ♡</p> : null}
+                {livro.personagem ? (
+                  <p className={secao}>
+                    personagem favorita · {livro.personagem} ♡
+                  </p>
+                ) : null}
                 {livro.citacao ? (
                   <blockquote className="mt-2 border-l-2 border-rosa-claro pl-3 font-accent text-[15px] leading-[1.4] italic lg:font-revista">
                     “{livro.citacao}”
@@ -286,8 +322,12 @@ export default function LivroPage() {
 
             {livro.resenha || livro.anotacao ? (
               <section className="mx-6 mt-6 rounded-md border border-linha bg-creme-quente px-4 py-3.5 lg:mx-0 lg:mt-8">
-                <p className={secao}>{livro.resenha ? "sua resenha" : "sua anotação"}</p>
-                <p className="mt-2 font-accent text-sm leading-[1.35] italic">“{livro.resenha ?? livro.anotacao}”</p>
+                <p className={secao}>
+                  {livro.resenha ? "sua resenha" : "sua anotação"}
+                </p>
+                <p className="mt-2 font-accent text-sm leading-[1.35] italic">
+                  “{livro.resenha ?? livro.anotacao}”
+                </p>
               </section>
             ) : null}
 
@@ -305,7 +345,11 @@ export default function LivroPage() {
                         onClick={() => alternarEstante(e.id)}
                         className={`flex h-11 items-center gap-1.5 rounded-pill border px-3.5 text-xs font-semibold ${on ? "border-bordo bg-bordo text-creme" : "border-bege bg-creme-quente"}`}
                       >
-                        <span aria-hidden className="size-2.5 rounded-full" style={{ background: e.etiqueta.fundo }} />
+                        <span
+                          aria-hidden
+                          className="size-2.5 rounded-full"
+                          style={{ background: e.etiqueta.fundo }}
+                        />
                         {e.nome}
                       </button>
                     );
@@ -338,7 +382,9 @@ export default function LivroPage() {
           autor={livro.autor}
           atual={livro.capa}
           onFechar={() => setTrocandoCapa(false)}
-          onEscolher={(capa) => editarLivro(base, { capa, capaEscolhida: true })}
+          onEscolher={(capa) =>
+            editarLivro(base, { capa, capaEscolhida: true })
+          }
         />
       ) : null}
     </AppShell>

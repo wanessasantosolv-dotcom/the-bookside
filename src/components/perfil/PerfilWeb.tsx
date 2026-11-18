@@ -1,7 +1,7 @@
 "use client";
 
+import { Voltar } from "@/components/Voltar";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { CapaLivro } from "@/components/CapaLivro";
 import { corDoLivro } from "@/lib/cores";
@@ -12,11 +12,14 @@ import type { Arquetipo } from "@/lib/teste";
 /** Escurece uma cor hex (para o degradê do topo). */
 function escurecer(hex: string, fator = 0.45, alfa = 1) {
   const n = parseInt(hex.slice(1), 16);
-  const c = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => Math.round(v * fator));
+  const c = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) =>
+    Math.round(v * fator),
+  );
   return `rgba(${c.join(",")},${alfa})`;
 }
 
-const rotulo = "text-[9px] leading-[1.2] font-semibold tracking-[.14em] uppercase text-grafite";
+const rotulo =
+  "text-[9px] leading-[1.2] font-semibold tracking-[.14em] uppercase text-grafite";
 
 function Coluna({
   titulo,
@@ -32,8 +35,13 @@ function Coluna({
   return (
     <section>
       <div className="mb-3.5 flex items-baseline justify-between border-b border-tinta pb-2">
-        <h2 className="font-revista text-[19px] leading-none italic">{titulo}</h2>
-        <Link href={href} className="text-[9px] font-bold tracking-[.1em] text-[var(--acc-web)] uppercase">
+        <h2 className="font-revista text-[19px] leading-none italic">
+          {titulo}
+        </h2>
+        <Link
+          href={href}
+          className="text-[9px] font-bold tracking-[.1em] text-[var(--acc-web)] uppercase"
+        >
           ver todos →
         </Link>
       </div>
@@ -42,13 +50,20 @@ function Coluna({
           {livros.slice(0, 3).map((l) => (
             <li key={l.id} className="w-[84px]">
               <Link href={`/livro/${l.id}`} className="block">
-                <CapaLivro titulo={l.titulo} capa={l.capa} cor={corDoLivro(l.id)} className="w-full" />
+                <CapaLivro
+                  titulo={l.titulo}
+                  capa={l.capa}
+                  cor={corDoLivro(l.id)}
+                  className="w-full"
+                />
               </Link>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="font-revista text-[13px] leading-[1.4] italic text-grafite">{vazio}</p>
+        <p className="font-revista text-[13px] leading-[1.4] italic text-grafite">
+          {vazio}
+        </p>
       )}
     </section>
   );
@@ -80,7 +95,12 @@ export function PerfilWeb({
   acoes?: ReactNode;
   /** linha extra embaixo do @usuário (ex.: seguidores) */
   detalhe?: ReactNode;
-  links?: { numeros?: string; favoritos?: string; lidos?: string; quero?: string };
+  links?: {
+    numeros?: string;
+    favoritos?: string;
+    lidos?: string;
+    quero?: string;
+  };
 }) {
   const href = {
     numeros: "/numeros",
@@ -90,7 +110,6 @@ export function PerfilWeb({
     ...links,
   };
   const outra = !!acoes;
-  const router = useRouter();
   const [copiado, setCopiado] = useState(false);
   const base = tema.id === "biblioteca-classica" ? "#692536" : tema.destaque;
   const acc = tema.id === "noite-de-tinta" ? "#692536" : base;
@@ -98,7 +117,8 @@ export function PerfilWeb({
   async function compartilhar() {
     const url = `${window.location.origin}/perfil`;
     try {
-      if (navigator.share) await navigator.share({ title: `${p.nome} · the bookside`, url });
+      if (navigator.share)
+        await navigator.share({ title: `${p.nome} · the bookside`, url });
       else {
         await navigator.clipboard.writeText(url);
         setCopiado(true);
@@ -113,7 +133,10 @@ export function PerfilWeb({
     "flex min-h-10 items-center rounded-pill border border-white/50 px-4 text-[11px] font-bold tracking-[.1em] text-jornal uppercase hover:bg-white/10";
 
   return (
-    <div className="hidden min-h-dvh bg-jornal font-texto text-tinta lg:block" style={{ ["--acc-web" as string]: acc }}>
+    <div
+      className="hidden min-h-dvh bg-jornal font-texto text-tinta lg:block"
+      style={{ ["--acc-web" as string]: acc }}
+    >
       {/* topo */}
       <div
         className="relative flex h-[280px] items-end bg-cover bg-center px-14"
@@ -124,13 +147,10 @@ export function PerfilWeb({
         }}
       >
         {outra ? (
-          <button
-            type="button"
-            onClick={() => (window.history.length > 1 ? router.back() : router.push("/inicio"))}
+          <Voltar
+            padrao="/inicio"
             className="absolute top-5 left-14 z-10 flex min-h-10 items-center rounded-pill bg-black/25 px-4 text-[11px] font-bold tracking-[.1em] text-jornal uppercase hover:bg-black/35"
-          >
-            ‹ voltar
-          </button>
+          />
         ) : null}
         {p.capaImagem ? null : (
           <div
@@ -142,7 +162,11 @@ export function PerfilWeb({
           <div className="size-32 flex-none overflow-hidden rounded-full border-[5px] border-jornal bg-rosa-fundo">
             {p.foto ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={p.foto} alt="sua foto" className="size-full object-cover object-[50%_30%]" />
+              <img
+                src={p.foto}
+                alt="sua foto"
+                className="size-full object-cover object-[50%_30%]"
+              />
             ) : (
               <span className="flex size-full items-center justify-center font-revista text-5xl italic text-vinho">
                 {(p.nome || "?").slice(0, 1).toLowerCase()}
@@ -150,9 +174,15 @@ export function PerfilWeb({
             )}
           </div>
           <div className="pb-16">
-            <h1 className="mb-1.5 font-revista text-4xl leading-none text-jornal italic">{p.nome || "sem nome"}</h1>
-            <p className="text-xs font-semibold text-white/80">@{p.usuario || "seu.nome"}</p>
-            {detalhe ? <div className="mt-1.5 text-xs text-white/80">{detalhe}</div> : null}
+            <h1 className="mb-1.5 font-revista text-4xl leading-none text-jornal italic">
+              {p.nome || "sem nome"}
+            </h1>
+            <p className="text-xs font-semibold text-white/80">
+              @{p.usuario || "seu.nome"}
+            </p>
+            {detalhe ? (
+              <div className="mt-1.5 text-xs text-white/80">{detalhe}</div>
+            ) : null}
           </div>
           <div className="ml-auto flex gap-3.5 pb-[70px]">
             {acoes ?? (
@@ -160,7 +190,11 @@ export function PerfilWeb({
                 <Link href="/perfil/editar" className={botaoHero}>
                   editar perfil
                 </Link>
-                <button type="button" onClick={compartilhar} className={botaoHero}>
+                <button
+                  type="button"
+                  onClick={compartilhar}
+                  className={botaoHero}
+                >
                   {copiado ? "link copiado ✓" : "compartilhar"}
                 </button>
               </>
@@ -201,8 +235,13 @@ export function PerfilWeb({
             { n: quero.length, r: "quero ler" },
             { n: p.meta ?? "—", r: `meta ${new Date().getFullYear()}` },
           ].map((s, i) => (
-            <span key={s.r} className={`py-4 text-center ${i ? "border-l border-fio" : ""}`}>
-              <b className="block font-revista text-[28px] leading-none font-normal">{s.n}</b>
+            <span
+              key={s.r}
+              className={`py-4 text-center ${i ? "border-l border-fio" : ""}`}
+            >
+              <b className="block font-revista text-[28px] leading-none font-normal">
+                {s.n}
+              </b>
               <span className={rotulo}>{s.r}</span>
             </span>
           ))}
@@ -211,7 +250,9 @@ export function PerfilWeb({
         <div className="grid grid-cols-3 gap-8">
           <section>
             <div className="mb-3.5 flex items-baseline justify-between border-b border-tinta pb-2">
-              <h2 className="font-revista text-[19px] leading-none italic">favoritos</h2>
+              <h2 className="font-revista text-[19px] leading-none italic">
+                favoritos
+              </h2>
               <Link
                 href={href.favoritos}
                 className="text-[9px] font-bold tracking-[.1em] text-[var(--acc-web)] uppercase"
@@ -224,14 +265,21 @@ export function PerfilWeb({
                 {favoritos.slice(0, 3).map((l) => (
                   <li key={l.id} className="w-[84px]">
                     <Link href={`/livro/${l.id}`} className="block">
-                      <CapaLivro titulo={l.titulo} capa={l.capa} cor={corDoLivro(l.id)} className="w-full" />
+                      <CapaLivro
+                        titulo={l.titulo}
+                        capa={l.capa}
+                        cor={corDoLivro(l.id)}
+                        className="w-full"
+                      />
                     </Link>
                   </li>
                 ))}
               </ul>
             ) : (
               <p className="font-revista text-[13px] leading-[1.4] italic text-grafite">
-                {outra ? "nenhum favorito escolhido ainda." : "escolha até 4 livros para ficarem em destaque."}
+                {outra
+                  ? "nenhum favorito escolhido ainda."
+                  : "escolha até 4 livros para ficarem em destaque."}
               </p>
             )}
           </section>
@@ -245,16 +293,25 @@ export function PerfilWeb({
             titulo="quero ler"
             href={href.quero}
             livros={quero}
-            vazio={outra ? "a lista de quero ler está vazia." : "sua lista de quero ler está vazia."}
+            vazio={
+              outra
+                ? "a lista de quero ler está vazia."
+                : "sua lista de quero ler está vazia."
+            }
           />
         </div>
 
         <section className="mt-9 border-t border-fio pt-7">
-          <h2 className="mb-4 border-b border-tinta pb-2 font-revista text-[19px] leading-none italic">lendo agora</h2>
+          <h2 className="mb-4 border-b border-tinta pb-2 font-revista text-[19px] leading-none italic">
+            lendo agora
+          </h2>
           {lendo.length ? (
             <ul className="grid grid-cols-2 gap-6">
               {lendo.map((l) => (
-                <li key={l.id} className="flex items-center gap-3 rounded-[4px] border border-fio p-4">
+                <li
+                  key={l.id}
+                  className="flex items-center gap-3 rounded-[4px] border border-fio p-4"
+                >
                   <CapaLivro
                     titulo={l.titulo}
                     capa={l.capa}
@@ -262,14 +319,20 @@ export function PerfilWeb({
                     className="w-11 [&>span:last-child]:hidden"
                   />
                   <div>
-                    <h3 className="font-revista text-[15px] leading-[1.2] italic">{l.titulo}</h3>
-                    <p className="mt-1 text-[11px] text-grafite">{l.autor} · lendo</p>
+                    <h3 className="font-revista text-[15px] leading-[1.2] italic">
+                      {l.titulo}
+                    </h3>
+                    <p className="mt-1 text-[11px] text-grafite">
+                      {l.autor} · lendo
+                    </p>
                   </div>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="font-revista text-[13px] italic text-grafite">nenhuma leitura em andamento.</p>
+            <p className="font-revista text-[13px] italic text-grafite">
+              nenhuma leitura em andamento.
+            </p>
           )}
         </section>
       </div>

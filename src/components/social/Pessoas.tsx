@@ -1,26 +1,62 @@
 "use client";
 
+import { Voltar } from "@/components/Voltar";
 import { CapaAuto } from "@/components/CapaAuto";
 import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
 import { lembrarLivros } from "@/lib/catalogo";
 import { estrelas } from "@/lib/estantes";
-import { contagemSeguidores, curtir, nomeDe, quandoFoi, seguir, useMeuId, verbo, type Atividade, type PessoaResumo } from "@/lib/social";
+import {
+  contagemSeguidores,
+  curtir,
+  nomeDe,
+  quandoFoi,
+  seguir,
+  useMeuId,
+  verbo,
+  type Atividade,
+  type PessoaResumo,
+} from "@/lib/social";
 
 /** Topo das telas internas: voltar à esquerda, rótulo à direita. */
-export function Topo({ voltar, rotulo, direita }: { voltar: { href: string; r: string }; rotulo?: string; direita?: ReactNode }) {
+export function Topo({
+  voltar,
+  rotulo,
+  direita,
+}: {
+  voltar: { href: string; r: string };
+  rotulo?: string;
+  direita?: ReactNode;
+}) {
   return (
     <header className="flex items-center justify-between px-6 pt-2 lg:px-0 lg:pt-0">
-      <Link href={voltar.href} className="-ml-2 flex min-h-11 items-center px-2 text-[13px] font-semibold text-bordo">
-        ‹ {voltar.r}
-      </Link>
-      {direita ?? (rotulo ? <span className="text-[11px] font-semibold tracking-[.16em] text-bordo uppercase">{rotulo}</span> : null)}
+      <Voltar
+        padrao={voltar.href}
+        rotulo={voltar.r}
+        className="-ml-2 flex min-h-11 items-center px-2 text-[13px] font-semibold text-bordo"
+      />
+      {direita ??
+        (rotulo ? (
+          <span className="text-[11px] font-semibold tracking-[.16em] text-bordo uppercase">
+            {rotulo}
+          </span>
+        ) : null)}
     </header>
   );
 }
 
-export function Avatar({ pessoa, tamanho = 40, className = "" }: { pessoa: PessoaResumo | null; tamanho?: number; className?: string }) {
-  const letra = (pessoa?.nome || pessoa?.usuario || "?").slice(0, 1).toLowerCase();
+export function Avatar({
+  pessoa,
+  tamanho = 40,
+  className = "",
+}: {
+  pessoa: PessoaResumo | null;
+  tamanho?: number;
+  className?: string;
+}) {
+  const letra = (pessoa?.nome || pessoa?.usuario || "?")
+    .slice(0, 1)
+    .toLowerCase();
   return (
     <span
       aria-hidden
@@ -29,7 +65,11 @@ export function Avatar({ pessoa, tamanho = 40, className = "" }: { pessoa: Pesso
     >
       {pessoa?.foto ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={pessoa.foto} alt="" className="size-full object-cover object-[50%_30%]" />
+        <img
+          src={pessoa.foto}
+          alt=""
+          className="size-full object-cover object-[50%_30%]"
+        />
       ) : (
         letra
       )}
@@ -85,7 +125,15 @@ export function BotaoSeguir({
   );
 }
 
-export function LinhaPessoa({ pessoa, detalhe, acao }: { pessoa: PessoaResumo; detalhe?: string; acao?: ReactNode }) {
+export function LinhaPessoa({
+  pessoa,
+  detalhe,
+  acao,
+}: {
+  pessoa: PessoaResumo;
+  detalhe?: string;
+  acao?: ReactNode;
+}) {
   const href = pessoa.usuario ? `/u/${pessoa.usuario}` : "#";
   return (
     <li className="flex items-center gap-3 border-t border-linha py-3 lg:border-fio">
@@ -143,13 +191,23 @@ export function CartaoAtividade({
           <Avatar pessoa={pessoa} tamanho={30} />
         </Link>
         <p className="min-w-0 truncate text-xs font-semibold">
-          <Link href={perfil}>{a.autor === eu ? "você" : nomeDe(pessoa)}</Link> <span className="font-normal text-cinza">{verbo[a.tipo]}</span>
+          <Link href={perfil}>{a.autor === eu ? "você" : nomeDe(pessoa)}</Link>{" "}
+          <span className="font-normal text-cinza">{verbo[a.tipo]}</span>
         </p>
-        <span className="ml-auto flex-none text-[10px] font-semibold tracking-[.12em] text-cinza uppercase">{quandoFoi(a.criado_em)}</span>
+        <span className="ml-auto flex-none text-[10px] font-semibold tracking-[.12em] text-cinza uppercase">
+          {quandoFoi(a.criado_em)}
+        </span>
       </div>
       <div className="mt-3 flex gap-3.5 lg:mt-0 lg:flex-1">
-        <Link href={livroHref} onClick={() => lembrarLivros([a.livro])} className="flex-none">
-          <CapaAuto livro={a.livro} className="w-[52px] lg:w-[58px] [&>span:last-child]:hidden" />
+        <Link
+          href={livroHref}
+          onClick={() => lembrarLivros([a.livro])}
+          className="flex-none"
+        >
+          <CapaAuto
+            livro={a.livro}
+            className="w-[52px] lg:w-[58px] [&>span:last-child]:hidden"
+          />
         </Link>
         <div className="min-w-0 flex-1">
           <Link href={livroHref} onClick={() => lembrarLivros([a.livro])}>
@@ -158,19 +216,27 @@ export function CartaoAtividade({
             </h3>
           </Link>
           <p className="mt-1 hidden text-xs text-grafite lg:block">
-            <Link href={perfil} className="font-semibold text-tinta hover:underline">
+            <Link
+              href={perfil}
+              className="font-semibold text-tinta hover:underline"
+            >
               {a.autor === eu ? "você" : nomeDe(pessoa)}
             </Link>{" "}
             {verbo[a.tipo]} · {a.livro.autor} · {quandoFoi(a.criado_em)}
           </p>
           <p className="mt-0.5 text-xs text-cinza lg:hidden">{a.livro.autor}</p>
           {a.nota ? (
-            <p className="mt-1.5 text-[12px] font-semibold tracking-[1px] text-bordo" aria-label={`nota ${a.nota} de 5`}>
+            <p
+              className="mt-1.5 text-[12px] font-semibold tracking-[1px] text-bordo"
+              aria-label={`nota ${a.nota} de 5`}
+            >
               {estrelas(Number(a.nota))}
             </p>
           ) : null}
           {a.texto ? (
-            <blockquote className="mt-2 line-clamp-4 font-accent text-sm leading-[1.4] italic lg:font-revista">“{a.texto}”</blockquote>
+            <blockquote className="mt-2 line-clamp-4 font-accent text-sm leading-[1.4] italic lg:font-revista">
+              “{a.texto}”
+            </blockquote>
           ) : null}
           <div className="mt-3 flex items-center gap-1 text-[11px] font-semibold text-cinza">
             <button
@@ -182,8 +248,13 @@ export function CartaoAtividade({
               {curtiu ? "♥" : "♡"} {total ? total : "curtir"}
             </button>
             {linkComentarios ? (
-              <Link href={`/atividade/${a.id}`} className="flex min-h-9 items-center rounded-pill px-2 hover:text-bordo">
-                {comentarios ? `${comentarios} ${comentarios === 1 ? "comentário" : "comentários"}` : "comentar"}
+              <Link
+                href={`/atividade/${a.id}`}
+                className="flex min-h-9 items-center rounded-pill px-2 hover:text-bordo"
+              >
+                {comentarios
+                  ? `${comentarios} ${comentarios === 1 ? "comentário" : "comentários"}`
+                  : "comentar"}
               </Link>
             ) : null}
           </div>
@@ -194,9 +265,17 @@ export function CartaoAtividade({
 }
 
 /** "12 seguidores · 8 seguindo" com links, para o seu próprio perfil. */
-export function MeusSeguidores({ usuario, className = "" }: { usuario: string; className?: string }) {
+export function MeusSeguidores({
+  usuario,
+  className = "",
+}: {
+  usuario: string;
+  className?: string;
+}) {
   const eu = useMeuId();
-  const [n, setN] = useState<{ seguidores: number; seguindo: number } | null>(null);
+  const [n, setN] = useState<{ seguidores: number; seguindo: number } | null>(
+    null,
+  );
   useEffect(() => {
     if (!eu) return;
     contagemSeguidores(eu)
@@ -207,9 +286,13 @@ export function MeusSeguidores({ usuario, className = "" }: { usuario: string; c
   return (
     <span className={`flex justify-center gap-3 ${className}`}>
       <Link href={`/u/${usuario}/seguidores`} className="hover:underline">
-        <b className="font-semibold">{n.seguidores}</b> {n.seguidores === 1 ? "seguidora" : "seguidores"}
+        <b className="font-semibold">{n.seguidores}</b>{" "}
+        {n.seguidores === 1 ? "seguidora" : "seguidores"}
       </Link>
-      <Link href={`/u/${usuario}/seguidores?aba=seguindo`} className="hover:underline">
+      <Link
+        href={`/u/${usuario}/seguidores?aba=seguindo`}
+        className="hover:underline"
+      >
         <b className="font-semibold">{n.seguindo}</b> seguindo
       </Link>
     </span>

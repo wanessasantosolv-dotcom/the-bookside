@@ -1,5 +1,6 @@
 "use client";
 
+import { Voltar } from "@/components/Voltar";
 import Link from "next/link";
 import { TelaApp } from "@/components/AppShell";
 import { useRouter } from "next/navigation";
@@ -8,20 +9,38 @@ import { AjustarFoto } from "@/components/AjustarFoto";
 import { useHidratado } from "@/components/PerfilHidratacao";
 import { metas, temas } from "@/lib/dados";
 import { reduzirImagem } from "@/lib/imagem";
-import { sugerirUsuario, usePerfil, type PadraoCapa, type Perfil } from "@/lib/perfil-store";
+import {
+  sugerirUsuario,
+  usePerfil,
+  type PadraoCapa,
+  type Perfil,
+} from "@/lib/perfil-store";
 
 const LIMITE_FRASE = 120;
 const padroes: PadraoCapa[] = ["linhas", "bolinhas", "ondas", "estrelas"];
-const rotulo = "mb-1.5 block text-[10px] leading-[14px] font-semibold tracking-[.12em] text-bordo uppercase";
+const rotulo =
+  "mb-1.5 block text-[10px] leading-[14px] font-semibold tracking-[.12em] text-bordo uppercase";
 const caixa =
   "w-full rounded-sm border border-bege bg-creme-quente px-3 text-ameixa outline-none focus:border-bordo focus:ring-1 focus:ring-bordo";
 
-type Rascunho = Pick<Perfil, "nome" | "usuario" | "frase" | "meta" | "tema" | "foto" | "capa" | "capaImagem">;
+type Rascunho = Pick<
+  Perfil,
+  | "nome"
+  | "usuario"
+  | "frase"
+  | "meta"
+  | "tema"
+  | "foto"
+  | "capa"
+  | "capaImagem"
+>;
 
 function Formulario({ inicial }: { inicial: Rascunho }) {
   const router = useRouter();
   const atualizar = usePerfil((s) => s.atualizar);
-  const livrosLidos = usePerfil((s) => s.livros.filter((l) => l.status === "lido").length);
+  const livrosLidos = usePerfil(
+    (s) => s.livros.filter((l) => l.status === "lido").length,
+  );
   const [r, setR] = useState<Rascunho>(inicial);
   const fotoRef = useRef<HTMLInputElement>(null);
   const [fotoParaAjustar, setFotoParaAjustar] = useState<string | null>(null);
@@ -44,10 +63,14 @@ function Formulario({ inicial }: { inicial: Rascunho }) {
   return (
     <TelaApp aba="perfil">
       <header className="flex items-center justify-between px-6 pt-2">
-        <Link href="/perfil" className="-ml-2 flex min-h-11 items-center px-2 text-[13px] font-semibold text-bordo">
-          ‹ perfil
-        </Link>
-        <h1 className="font-display text-lg font-semibold italic">editar perfil</h1>
+        <Voltar
+          padrao="/perfil"
+          rotulo="perfil"
+          className="-ml-2 flex min-h-11 items-center px-2 text-[13px] font-semibold text-bordo"
+        />
+        <h1 className="font-display text-lg font-semibold italic">
+          editar perfil
+        </h1>
         <button
           type="button"
           onClick={salvar}
@@ -61,19 +84,38 @@ function Formulario({ inicial }: { inicial: Rascunho }) {
       {/* capa */}
       <div
         className={`relative mt-1 h-[104px] bg-cover bg-center ${r.capaImagem ? "" : `pat-${r.capa}`}`}
-        style={r.capaImagem ? { backgroundImage: `url("${r.capaImagem}")` } : undefined}
+        style={
+          r.capaImagem
+            ? { backgroundImage: `url("${r.capaImagem}")` }
+            : undefined
+        }
       >
-        <div aria-hidden className="absolute inset-0 bg-gradient-to-b from-transparent from-45% to-ameixa/45" />
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-gradient-to-b from-transparent from-45% to-ameixa/45"
+        />
         <div className="absolute right-4 bottom-3 flex gap-2">
-          <button type="button" onClick={trocarPadrao} className="h-[30px] rounded-pill bg-creme/90 px-3 text-xs font-semibold text-bordo">
+          <button
+            type="button"
+            onClick={trocarPadrao}
+            className="h-[30px] rounded-pill bg-creme/90 px-3 text-xs font-semibold text-bordo"
+          >
             padrão: {r.capaImagem ? "foto" : r.capa}
           </button>
           {r.capaImagem ? (
-            <button type="button" onClick={() => setCapaParaAjustar(r.capaImagem)} className="h-[30px] rounded-pill bg-creme/90 px-3 text-xs font-semibold text-bordo">
+            <button
+              type="button"
+              onClick={() => setCapaParaAjustar(r.capaImagem)}
+              className="h-[30px] rounded-pill bg-creme/90 px-3 text-xs font-semibold text-bordo"
+            >
               ajustar
             </button>
           ) : null}
-          <button type="button" onClick={() => capaRef.current?.click()} className="h-[30px] rounded-pill bg-creme px-3 text-xs font-semibold text-bordo">
+          <button
+            type="button"
+            onClick={() => capaRef.current?.click()}
+            className="h-[30px] rounded-pill bg-creme px-3 text-xs font-semibold text-bordo"
+          >
             trocar capa
           </button>
         </div>
@@ -111,16 +153,31 @@ function Formulario({ inicial }: { inicial: Rascunho }) {
         >
           {r.foto ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={r.foto} alt="" className="size-full object-cover object-[50%_30%]" />
+            <img
+              src={r.foto}
+              alt=""
+              className="size-full object-cover object-[50%_30%]"
+            />
           ) : (
-            <span className="font-display text-3xl font-semibold italic text-bordo">+</span>
+            <span className="font-display text-3xl font-semibold italic text-bordo">
+              +
+            </span>
           )}
         </button>
         <span
           aria-hidden
           className="pointer-events-none absolute -right-0.5 -bottom-0.5 flex size-[26px] items-center justify-center rounded-full border-2 border-creme bg-bordo"
         >
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#F9F5EE" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            width="11"
+            height="11"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#F9F5EE"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <path d="M12 20h9" />
             <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
           </svg>
@@ -169,12 +226,16 @@ function Formulario({ inicial }: { inicial: Rascunho }) {
           </label>
           <label className="block flex-1">
             <span className={rotulo}>usuário</span>
-            <span className={`${caixa} flex h-[46px] items-center text-sm font-medium focus-within:border-bordo`}>
+            <span
+              className={`${caixa} flex h-[46px] items-center text-sm font-medium focus-within:border-bordo`}
+            >
               <span className="text-bordo">@</span>
               <input
                 value={r.usuario}
                 autoCapitalize="none"
-                onChange={(e) => mudar({ usuario: sugerirUsuario(e.target.value) || "" })}
+                onChange={(e) =>
+                  mudar({ usuario: sugerirUsuario(e.target.value) || "" })
+                }
                 className="w-full min-w-0 bg-transparent outline-none"
               />
             </span>
@@ -196,20 +257,32 @@ function Formulario({ inicial }: { inicial: Rascunho }) {
         </label>
 
         <fieldset className="mt-3">
-          <legend className={rotulo}>meta de leitura · {new Date().getFullYear()}</legend>
+          <legend className={rotulo}>
+            meta de leitura · {new Date().getFullYear()}
+          </legend>
           <div className="flex flex-wrap items-center gap-2">
             {metas.map((m) => (
               <label
                 key={String(m.valor)}
                 className={`inline-flex h-11 min-w-11 cursor-pointer items-center justify-center rounded-pill border px-3.5 text-sm font-medium has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-bordo ${
-                  r.meta === m.valor ? "border-bordo bg-bordo text-creme" : "border-bege bg-creme-quente"
+                  r.meta === m.valor
+                    ? "border-bordo bg-bordo text-creme"
+                    : "border-bege bg-creme-quente"
                 }`}
               >
-                <input type="radio" name="meta" className="sr-only" checked={r.meta === m.valor} onChange={() => mudar({ meta: m.valor })} />
+                <input
+                  type="radio"
+                  name="meta"
+                  className="sr-only"
+                  checked={r.meta === m.valor}
+                  onChange={() => mudar({ meta: m.valor })}
+                />
                 {m.valor ?? "sem meta"}
               </label>
             ))}
-            <span className="ml-auto text-[9px] font-semibold tracking-[.12em] text-cinza uppercase">{livrosLidos} lidos</span>
+            <span className="ml-auto text-[9px] font-semibold tracking-[.12em] text-cinza uppercase">
+              {livrosLidos} lidos
+            </span>
           </div>
         </fieldset>
 
@@ -222,19 +295,42 @@ function Formulario({ inicial }: { inicial: Rascunho }) {
                 <label
                   key={t.id}
                   className={`relative h-[78px] w-[92px] flex-none cursor-pointer overflow-hidden rounded-[10px] has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-bordo ${
-                    on ? "border-2 border-bordo shadow-[0_6px_12px_-8px_rgba(107,13,36,.6)]" : "border-[1.5px] border-linha"
+                    on
+                      ? "border-2 border-bordo shadow-[0_6px_12px_-8px_rgba(107,13,36,.6)]"
+                      : "border-[1.5px] border-linha"
                   }`}
                   style={{ background: t.papel }}
                 >
-                  <input type="radio" name="tema" className="sr-only" checked={on} onChange={() => mudar({ tema: t.id })} />
-                  <div className="h-[26px]" style={{ background: t.destaque, opacity: 0.55 }} />
-                  <div className="absolute inset-x-2.5 top-[18px] bottom-0 rounded-t-[8px]" style={{ background: t.papel }} />
-                  <span className="absolute top-3.5 left-1/2 -ml-[9px] size-[18px] rounded-full border-2 border-creme-quente" style={{ background: t.destaque }} />
-                  <span className="absolute inset-x-1 top-[38px] text-center font-display text-[11px] leading-[1.15] font-semibold italic" style={{ color: t.texto }}>
+                  <input
+                    type="radio"
+                    name="tema"
+                    className="sr-only"
+                    checked={on}
+                    onChange={() => mudar({ tema: t.id })}
+                  />
+                  <div
+                    className="h-[26px]"
+                    style={{ background: t.destaque, opacity: 0.55 }}
+                  />
+                  <div
+                    className="absolute inset-x-2.5 top-[18px] bottom-0 rounded-t-[8px]"
+                    style={{ background: t.papel }}
+                  />
+                  <span
+                    className="absolute top-3.5 left-1/2 -ml-[9px] size-[18px] rounded-full border-2 border-creme-quente"
+                    style={{ background: t.destaque }}
+                  />
+                  <span
+                    className="absolute inset-x-1 top-[38px] text-center font-display text-[11px] leading-[1.15] font-semibold italic"
+                    style={{ color: t.texto }}
+                  >
                     {t.nome}
                   </span>
                   {on ? (
-                    <span aria-hidden className="absolute top-[5px] right-[5px] size-4 rounded-full bg-bordo text-center text-[10px] leading-4 font-bold text-creme">
+                    <span
+                      aria-hidden
+                      className="absolute top-[5px] right-[5px] size-4 rounded-full bg-bordo text-center text-[10px] leading-4 font-bold text-creme"
+                    >
                       ✓
                     </span>
                   ) : null}
@@ -242,15 +338,22 @@ function Formulario({ inicial }: { inicial: Rascunho }) {
               );
             })}
           </div>
-          <p className="mt-2 font-accent text-[13px] italic text-cinza">o tema define a cor de destaque e o papel do seu perfil.</p>
+          <p className="mt-2 font-accent text-[13px] italic text-cinza">
+            o tema define a cor de destaque e o papel do seu perfil.
+          </p>
         </fieldset>
 
         <div className="mt-5 flex items-center justify-between border-y border-linha py-3">
           <div>
             <p className="text-[13px] font-semibold">favoritos</p>
-            <p className="mt-0.5 font-accent text-xs italic text-cinza">até 4 capas em destaque</p>
+            <p className="mt-0.5 font-accent text-xs italic text-cinza">
+              até 4 capas em destaque
+            </p>
           </div>
-          <Link href="/perfil/favoritos" className="flex min-h-11 items-center text-xs font-semibold text-bordo">
+          <Link
+            href="/perfil/favoritos"
+            className="flex min-h-11 items-center text-xs font-semibold text-bordo"
+          >
             editar →
           </Link>
         </div>

@@ -1,8 +1,9 @@
 "use client";
 
+import { Voltar } from "@/components/Voltar";
 import { Animacao } from "@/components/Animacao";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { AppShell } from "@/components/AppShell";
 import { ComConta, ErroOuFalta, Vazio } from "@/components/social/Estados";
@@ -26,9 +27,16 @@ function Conversa({ id }: { id: string }) {
   const [erro, setErro] = useState<string | null>(null);
 
   const consulta = useConsulta(async () => {
-    const [a, comentarios] = await Promise.all([atividade(id), comentariosDe(id)]);
+    const [a, comentarios] = await Promise.all([
+      atividade(id),
+      comentariosDe(id),
+    ]);
     if (!a) return null;
-    const pessoas = await pessoasPorId([a.autor, ...comentarios.map((c) => c.autor), ...(eu ? [eu] : [])]);
+    const pessoas = await pessoasPorId([
+      a.autor,
+      ...comentarios.map((c) => c.autor),
+      ...(eu ? [eu] : []),
+    ]);
     return { a, comentarios, pessoas };
   }, [id]);
 
@@ -51,7 +59,10 @@ function Conversa({ id }: { id: string }) {
   async function apagar(cid: string) {
     if (!consulta.dados) return;
     const antes = consulta.dados;
-    consulta.definir({ ...antes, comentarios: antes.comentarios.filter((c) => c.id !== cid) });
+    consulta.definir({
+      ...antes,
+      comentarios: antes.comentarios.filter((c) => c.id !== cid),
+    });
     try {
       await apagarComentario(cid);
     } catch {
@@ -60,8 +71,16 @@ function Conversa({ id }: { id: string }) {
   }
 
   if (consulta.carregando && !consulta.dados)
-    return <Animacao tipo="escrevendo" titulo="abrindo a conversa" frase="eu também amei esse…" sub="só um instante" />;
-  if (consulta.erro) return <ErroOuFalta erro={consulta.erro} onTentar={consulta.recarregar} />;
+    return (
+      <Animacao
+        tipo="escrevendo"
+        titulo="abrindo a conversa"
+        frase="eu também amei esse…"
+        sub="só um instante"
+      />
+    );
+  if (consulta.erro)
+    return <ErroOuFalta erro={consulta.erro} onTentar={consulta.recarregar} />;
   if (!consulta.dados)
     return (
       <Vazio
@@ -76,23 +95,34 @@ function Conversa({ id }: { id: string }) {
   return (
     <>
       <div className="px-6 pt-3 lg:px-0">
-        <CartaoAtividade a={a} pessoa={pessoas.get(a.autor) ?? null} linkComentarios={false} />
+        <CartaoAtividade
+          a={a}
+          pessoa={pessoas.get(a.autor) ?? null}
+          linkComentarios={false}
+        />
       </div>
       <h2 className="mt-6 px-6 text-[10px] font-semibold tracking-[.16em] text-cinza uppercase lg:px-0">
-        {n ? `${n} ${n === 1 ? "comentário" : "comentários"}` : "nenhum comentário ainda"}
+        {n
+          ? `${n} ${n === 1 ? "comentário" : "comentários"}`
+          : "nenhum comentário ainda"}
       </h2>
       <ul className="mt-1 flex-1 px-6 pb-4 lg:px-0">
         {comentarios.map((c) => {
           const p = pessoas.get(c.autor) ?? null;
           const posso = c.autor === eu || a.autor === eu;
           return (
-            <li key={c.id} className="flex gap-3 border-t border-linha py-3.5 lg:border-fio">
+            <li
+              key={c.id}
+              className="flex gap-3 border-t border-linha py-3.5 lg:border-fio"
+            >
               <Link href={p?.usuario ? `/u/${p.usuario}` : "#"}>
                 <Avatar pessoa={p} tamanho={30} />
               </Link>
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-semibold">{nomeDe(p)}</p>
-                <p className="mt-0.5 text-sm leading-normal break-words whitespace-pre-line">{c.texto}</p>
+                <p className="mt-0.5 text-sm leading-normal break-words whitespace-pre-line">
+                  {c.texto}
+                </p>
                 <p className="mt-1 flex items-center gap-3 text-[10px] font-semibold tracking-[.1em] text-cinza uppercase">
                   {quandoFoi(c.criado_em)}
                   {posso ? (
@@ -157,20 +187,18 @@ function Conversa({ id }: { id: string }) {
 
 export default function AtividadePage() {
   const { id } = useParams<{ id: string }>();
-  const router = useRouter();
   return (
     <AppShell aba="inicio">
       <div className="flex flex-1 flex-col lg:bg-jornal lg:px-12 lg:py-8">
         <div className="flex flex-1 flex-col lg:max-w-[720px]">
           <header className="flex items-center justify-between px-6 pt-2 lg:px-0 lg:pt-0">
-            <button
-              type="button"
-              onClick={() => router.back()}
+            <Voltar
+              padrao="/inicio"
               className="-ml-2 flex min-h-11 items-center px-2 text-[13px] font-semibold text-bordo"
-            >
-              ‹ voltar
-            </button>
-            <span className="text-[11px] font-semibold tracking-[.16em] text-bordo uppercase">comentários</span>
+            />
+            <span className="text-[11px] font-semibold tracking-[.16em] text-bordo uppercase">
+              comentários
+            </span>
           </header>
           <ComConta>
             <Conversa id={id} />

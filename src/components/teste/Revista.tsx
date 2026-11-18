@@ -1,3 +1,4 @@
+import { Voltar } from "@/components/Voltar";
 import Link from "next/link";
 import type { ComponentProps, ReactNode } from "react";
 
@@ -12,7 +13,9 @@ export function PaginaRevista({
   children,
   rodape,
 }: {
-  voltar: { href: string; rotulo: string } | { onClick: () => void; rotulo: string };
+  voltar:
+    | { href: string; rotulo: string }
+    | { onClick: () => void; rotulo: string };
   rotulo: ReactNode;
   /** progresso de 0 a 1: mostra a barrinha vinho no lugar do filete */
   barra?: number;
@@ -26,19 +29,32 @@ export function PaginaRevista({
       <header className="pt-2.5 lg:pt-5">
         <div className="flex items-center justify-between lg:grid lg:grid-cols-[1fr_auto_1fr]">
           {"href" in voltar ? (
-            <Link href={voltar.href} className={classeVoltar}>
-              ‹ {voltar.rotulo}
-            </Link>
+            <Voltar
+              padrao={voltar.href}
+              rotulo={voltar.rotulo}
+              className={classeVoltar}
+            />
           ) : (
-            <button type="button" onClick={voltar.onClick} className={classeVoltar}>
+            <button
+              type="button"
+              onClick={voltar.onClick}
+              className={classeVoltar}
+            >
               ‹ {voltar.rotulo}
             </button>
           )}
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/brand/logo-bordo.png" alt="the bookside" className="hidden w-[92px] lg:block" />
+          <img
+            src="/brand/logo-bordo.png"
+            alt="the bookside"
+            className="hidden w-[92px] lg:block"
+          />
           <span className="text-[9px] font-bold tracking-[.18em] text-tinta uppercase lg:flex lg:items-center lg:justify-end lg:gap-3">
             {barra !== undefined ? (
-              <span aria-hidden className="hidden h-[3px] w-[180px] overflow-hidden bg-fio lg:block">
+              <span
+                aria-hidden
+                className="hidden h-[3px] w-[180px] overflow-hidden bg-fio lg:block"
+              >
                 <i
                   className="block h-full bg-vinho transition-[width] duration-500"
                   style={{ width: `${barra * 100}%` }}
@@ -59,14 +75,21 @@ export function PaginaRevista({
             aria-valuemax={100}
             aria-valuenow={Math.round(barra * 100)}
           >
-            <i className="block h-full bg-vinho transition-[width] duration-500" style={{ width: `${barra * 100}%` }} />
+            <i
+              className="block h-full bg-vinho transition-[width] duration-500"
+              style={{ width: `${barra * 100}%` }}
+            />
           </div>
         )}
       </header>
       <div className="flex flex-1 flex-col lg:mx-auto lg:w-full lg:max-w-[640px] lg:flex-none lg:pt-12 lg:text-center">
         {children}
       </div>
-      {rodape ? <footer className="pt-6 lg:mx-auto lg:w-full lg:max-w-[420px]">{rodape}</footer> : null}
+      {rodape ? (
+        <footer className="pt-6 lg:mx-auto lg:w-full lg:max-w-[420px]">
+          {rodape}
+        </footer>
+      ) : null}
     </main>
   );
 }
@@ -76,11 +99,19 @@ const classeBarra =
 
 /** Botão-barra preto, com o texto em caixa alta espaçada. */
 export function BarraLink(props: ComponentProps<typeof Link>) {
-  return <Link {...props} className={`${classeBarra} ${props.className ?? ""}`} />;
+  return (
+    <Link {...props} className={`${classeBarra} ${props.className ?? ""}`} />
+  );
 }
 
 export function BarraBotao(props: ComponentProps<"button">) {
-  return <button type="button" {...props} className={`${classeBarra} ${props.className ?? ""}`} />;
+  return (
+    <button
+      type="button"
+      {...props}
+      className={`${classeBarra} ${props.className ?? ""}`}
+    />
+  );
 }
 
 /** Rótulo pequeno em caixa alta (8–9px). */

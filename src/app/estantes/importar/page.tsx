@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { Voltar } from "@/components/Voltar";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { AppShell } from "@/components/AppShell";
@@ -9,7 +9,13 @@ import { CapaLivro } from "@/components/CapaLivro";
 import { botaoPrincipal, campo, rotuloCampo } from "@/components/clube/Pecas";
 import type { LivroBusca } from "@/lib/catalogo";
 import { corDoLivro } from "@/lib/cores";
-import { acharLivro, lerArquivo, lerLista, normalizar, type ItemImport } from "@/lib/importar";
+import {
+  acharLivro,
+  lerArquivo,
+  lerLista,
+  normalizar,
+  type ItemImport,
+} from "@/lib/importar";
 import { usePerfil, type LivroSalvo } from "@/lib/perfil-store";
 import { semPublicar } from "@/lib/social";
 
@@ -27,7 +33,9 @@ type Linha = {
 
 const notas = [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5];
 const rotuloNota = (n: number) =>
-  n ? `${"★".repeat(Math.floor(n))}${n % 1 ? "½" : ""} (${String(n).replace(".", ",")})` : "sem nota";
+  n
+    ? `${"★".repeat(Math.floor(n))}${n % 1 ? "½" : ""} (${String(n).replace(".", ",")})`
+    : "sem nota";
 const hoje = () => new Date().toISOString().slice(0, 10);
 const espera = (ms: number) => new Promise((ok) => setTimeout(ok, ms));
 
@@ -42,12 +50,18 @@ export default function ImportarPage() {
   const editarLivro = usePerfil((s) => s.editarLivro);
   const [texto, setTexto] = useState("");
   const [linhas, setLinhas] = useState<Linha[] | null>(null);
-  const [progresso, setProgresso] = useState<{ feito: number; total: number } | null>(null);
+  const [progresso, setProgresso] = useState<{
+    feito: number;
+    total: number;
+  } | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const arquivo = useRef<HTMLInputElement>(null);
 
   async function procurar(itens: ItemImport[]) {
-    if (!itens.length) return setErro("não achei nenhum livro. escreva um por linha, como “três - 27/05”.");
+    if (!itens.length)
+      return setErro(
+        "não achei nenhum livro. escreva um por linha, como “três - 27/05”.",
+      );
     setErro(null);
     setProgresso({ feito: 0, total: itens.length });
     const resultado: Linha[] = [];
@@ -73,7 +87,9 @@ export default function ImportarPage() {
     try {
       const conteudo = await f.text();
       await procurar(
-        f.name.endsWith(".json") || conteudo.trim().startsWith("[") || conteudo.trim().startsWith("{")
+        f.name.endsWith(".json") ||
+          conteudo.trim().startsWith("[") ||
+          conteudo.trim().startsWith("{")
           ? lerArquivo(conteudo)
           : lerLista(conteudo),
       );
@@ -90,7 +106,12 @@ export default function ImportarPage() {
     if (!linhas || termo.trim().length < 2) return;
     mudar(i, { buscando: true });
     const opcoes = await acharOpcoes(linhas[i].item, termo.trim());
-    mudar(i, { opcoes, escolhido: opcoes.length ? 0 : -1, buscando: false, termo: opcoes.length ? undefined : termo });
+    mudar(i, {
+      opcoes,
+      escolhido: opcoes.length ? 0 : -1,
+      buscando: false,
+      termo: opcoes.length ? undefined : termo,
+    });
   }
 
   function salvar() {
@@ -106,7 +127,10 @@ export default function ImportarPage() {
             normalizar(x.titulo) === normalizar(titulo) ||
             normalizar(x.titulo) === normalizar(l.item.titulo),
         );
-        const base: Pick<LivroSalvo, "id" | "titulo" | "autor" | "capa" | "genero"> = existente
+        const base: Pick<
+          LivroSalvo,
+          "id" | "titulo" | "autor" | "capa" | "genero"
+        > = existente
           ? {
               id: existente.id,
               titulo: existente.titulo,
@@ -115,9 +139,13 @@ export default function ImportarPage() {
               genero: existente.genero,
             }
           : {
-              id: achado?.id ?? `imp-${normalizar(l.item.titulo).replace(/ /g, "-")}`,
+              id:
+                achado?.id ??
+                `imp-${normalizar(l.item.titulo).replace(/ /g, "-")}`,
               titulo,
-              autor: achado?.autor ?? (l.item.autor?.toLowerCase() || "autoria desconhecida"),
+              autor:
+                achado?.autor ??
+                (l.item.autor?.toLowerCase() || "autoria desconhecida"),
               capa: achado?.capa,
               genero: achado?.genero,
             };
@@ -126,11 +154,23 @@ export default function ImportarPage() {
         editarLivro(base, {
           status: "lido",
           lidoEm: new Date(`${l.lidoEm}T12:00:00`).toISOString(),
-          iniciadoEm: it.iniciadoEm ? new Date(`${it.iniciadoEm}T12:00:00`).toISOString() : existente?.iniciadoEm,
+          iniciadoEm: it.iniciadoEm
+            ? new Date(`${it.iniciadoEm}T12:00:00`).toISOString()
+            : existente?.iniciadoEm,
           paginas,
           paginaAtual: paginas,
           nota: l.nota || undefined,
-          ...(it.notas ? { notas: { personagens: 0, plot: 0, escrita: 0, final: 0, ...it.notas } } : {}),
+          ...(it.notas
+            ? {
+                notas: {
+                  personagens: 0,
+                  plot: 0,
+                  escrita: 0,
+                  final: 0,
+                  ...it.notas,
+                },
+              }
+            : {}),
           ...(it.personagem ? { personagem: it.personagem } : {}),
           ...(it.citacao ? { citacao: it.citacao } : {}),
           ...(it.resenha ? { resenha: it.resenha } : {}),
@@ -147,10 +187,14 @@ export default function ImportarPage() {
     <AppShell aba="estantes">
       <div className="flex flex-1 flex-col pb-8 lg:bg-jornal lg:px-12 lg:py-8">
         <header className="flex items-center justify-between px-6 pt-2 lg:px-0 lg:pt-0">
-          <Link href="/estantes" className="-ml-2 flex min-h-11 items-center px-2 text-[13px] font-semibold text-bordo">
-            ‹ estantes
-          </Link>
-          <span className="text-[11px] font-semibold tracking-[.16em] text-bordo uppercase">importar</span>
+          <Voltar
+            padrao="/estantes"
+            rotulo="estantes"
+            className="-ml-2 flex min-h-11 items-center px-2 text-[13px] font-semibold text-bordo"
+          />
+          <span className="text-[11px] font-semibold tracking-[.16em] text-bordo uppercase">
+            importar
+          </span>
         </header>
 
         {progresso ? (
@@ -171,12 +215,15 @@ export default function ImportarPage() {
                 value={texto}
                 onChange={(e) => setTexto(e.target.value)}
                 rows={10}
-                placeholder={"guerra da papoula - 14/04 ★★★½\nquarta asa - 20/05\ntrês - 27/05 ★★★★"}
+                placeholder={
+                  "guerra da papoula - 14/04 ★★★½\nquarta asa - 20/05\ntrês - 27/05 ★★★★"
+                }
                 className={`${campo} resize-y font-mono text-[13px]`}
               />
             </label>
             <p className="mt-2 text-xs text-cinza">
-              a data é quando você terminou. as estrelas são opcionais — dá para escolher na próxima tela.
+              a data é quando você terminou. as estrelas são opcionais — dá para
+              escolher na próxima tela.
             </p>
             {erro ? (
               <p role="alert" className="mt-3 text-[13px] text-bordo">
@@ -216,20 +263,25 @@ export default function ImportarPage() {
           <div className="px-6 lg:max-w-[820px] lg:px-0">
             <h1 className={`mt-4 ${titulo}`}>confira antes de salvar</h1>
             <p className="mt-1.5 font-accent text-sm italic text-cinza">
-              {linhas.filter((l) => l.incluir).length} de {linhas.length} livros vão para os lidos. nada disso aparece
-              no feed das amigas.
+              {linhas.filter((l) => l.incluir).length} de {linhas.length} livros
+              vão para os lidos. nada disso aparece no feed das amigas.
             </p>
             <ul className="mt-5">
               {linhas.map((l, i) => {
-                const achado = l.escolhido >= 0 ? l.opcoes[l.escolhido] : undefined;
+                const achado =
+                  l.escolhido >= 0 ? l.opcoes[l.escolhido] : undefined;
                 const ja = livros.some(
                   (x) =>
                     (achado && x.id === achado.id) ||
-                    normalizar(x.titulo) === normalizar(achado?.titulo ?? l.item.titulo) ||
+                    normalizar(x.titulo) ===
+                      normalizar(achado?.titulo ?? l.item.titulo) ||
                     normalizar(x.titulo) === normalizar(l.item.titulo),
                 );
                 return (
-                  <li key={i} className={`border-t border-linha py-4 lg:border-fio ${l.incluir ? "" : "opacity-50"}`}>
+                  <li
+                    key={i}
+                    className={`border-t border-linha py-4 lg:border-fio ${l.incluir ? "" : "opacity-50"}`}
+                  >
                     <div className="flex gap-3.5">
                       <CapaLivro
                         titulo={achado?.titulo ?? l.item.titulo}
@@ -251,7 +303,9 @@ export default function ImportarPage() {
                             <input
                               type="checkbox"
                               checked={l.incluir}
-                              onChange={(e) => mudar(i, { incluir: e.target.checked })}
+                              onChange={(e) =>
+                                mudar(i, { incluir: e.target.checked })
+                              }
                               className="size-4 accent-bordo"
                             />
                             incluir
@@ -261,7 +315,9 @@ export default function ImportarPage() {
                           <span className="sr-only">qual livro é</span>
                           <select
                             value={l.escolhido}
-                            onChange={(e) => mudar(i, { escolhido: Number(e.target.value) })}
+                            onChange={(e) =>
+                              mudar(i, { escolhido: Number(e.target.value) })
+                            }
                             className="min-h-11 w-full rounded-md border border-linha bg-creme-quente px-3 text-sm"
                           >
                             {l.opcoes.map((o, k) => (
@@ -270,7 +326,9 @@ export default function ImportarPage() {
                                 {o.ano ? ` (${o.ano})` : ""}
                               </option>
                             ))}
-                            <option value={-1}>cadastrar manualmente (só o que escrevi)</option>
+                            <option value={-1}>
+                              cadastrar manualmente (só o que escrevi)
+                            </option>
                           </select>
                         </label>
                         {l.termo === undefined ? (
@@ -279,7 +337,9 @@ export default function ImportarPage() {
                             onClick={() => mudar(i, { termo: l.item.titulo })}
                             className="min-h-9 text-xs font-semibold text-bordo underline underline-offset-4"
                           >
-                            {l.opcoes.length ? "não é esse? procurar de novo" : "nada encontrado · procurar de novo"}
+                            {l.opcoes.length
+                              ? "não é esse? procurar de novo"
+                              : "nada encontrado · procurar de novo"}
                           </button>
                         ) : (
                           <form
@@ -290,11 +350,15 @@ export default function ImportarPage() {
                             className="flex gap-2"
                           >
                             <label className="min-w-0 flex-1">
-                              <span className="sr-only">buscar por título ou autoria</span>
+                              <span className="sr-only">
+                                buscar por título ou autoria
+                              </span>
                               <input
                                 type="search"
                                 value={l.termo}
-                                onChange={(e) => mudar(i, { termo: e.target.value })}
+                                onChange={(e) =>
+                                  mudar(i, { termo: e.target.value })
+                                }
                                 placeholder="título ou autoria"
                                 className="min-h-10 w-full rounded-md border border-linha bg-creme-quente px-3 text-sm outline-none focus:border-bordo"
                               />
@@ -308,8 +372,12 @@ export default function ImportarPage() {
                             </button>
                           </form>
                         )}
-                        {l.termo !== undefined && !l.buscando && !l.opcoes.length ? (
-                          <p className="text-xs text-cinza">tente só o título, ou o título em inglês.</p>
+                        {l.termo !== undefined &&
+                        !l.buscando &&
+                        !l.opcoes.length ? (
+                          <p className="text-xs text-cinza">
+                            tente só o título, ou o título em inglês.
+                          </p>
                         ) : null}
                         <div className="flex flex-wrap gap-2">
                           <label className="flex items-center gap-2 text-xs text-cinza">
@@ -317,7 +385,9 @@ export default function ImportarPage() {
                             <input
                               type="date"
                               value={l.lidoEm}
-                              onChange={(e) => mudar(i, { lidoEm: e.target.value })}
+                              onChange={(e) =>
+                                mudar(i, { lidoEm: e.target.value })
+                              }
                               className="min-h-10 rounded-md border border-linha bg-creme-quente px-2 text-sm text-ameixa"
                             />
                           </label>
@@ -325,7 +395,9 @@ export default function ImportarPage() {
                             nota
                             <select
                               value={l.nota}
-                              onChange={(e) => mudar(i, { nota: Number(e.target.value) })}
+                              onChange={(e) =>
+                                mudar(i, { nota: Number(e.target.value) })
+                              }
                               className="min-h-10 rounded-md border border-linha bg-creme-quente px-2 text-sm text-bordo"
                             >
                               {notas.map((n) => (
@@ -336,7 +408,10 @@ export default function ImportarPage() {
                             </select>
                           </label>
                         </div>
-                        {l.item.personagem || l.item.citacao || l.item.resenha || l.item.notas ? (
+                        {l.item.personagem ||
+                        l.item.citacao ||
+                        l.item.resenha ||
+                        l.item.notas ? (
                           <p className="text-xs text-cinza">
                             ✦ com ficha:{" "}
                             {[

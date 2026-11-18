@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { Voltar } from "@/components/Voltar";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useRef, useState, type FormEvent } from "react";
 import { AjustarFoto } from "@/components/AjustarFoto";
@@ -53,7 +53,13 @@ function Cadastro() {
     const t = titulo.trim();
     if (!t) return setErro("escreva o título do livro.");
     const repetido = livros.find((l) => normalizar(l.titulo) === normalizar(t));
-    if (repetido && !confirm(`"${repetido.titulo}" já está na sua estante. cadastrar mesmo assim?`)) return;
+    if (
+      repetido &&
+      !confirm(
+        `"${repetido.titulo}" já está na sua estante. cadastrar mesmo assim?`,
+      )
+    )
+      return;
     const id = `manual-${normalizar(t).replace(/ /g, "-").slice(0, 40)}-${Date.now().toString(36)}`;
     const pags = Number(paginas) || undefined;
     const agora = new Date().toISOString();
@@ -71,7 +77,11 @@ function Cadastro() {
         capaEscolhida: capa ? true : undefined,
         ...(status === "lendo" ? { iniciadoEm: agora } : {}),
         ...(status === "lido"
-          ? { lidoEm: new Date(`${lidoEm}T12:00:00`).toISOString(), paginaAtual: pags, nota: nota || undefined }
+          ? {
+              lidoEm: new Date(`${lidoEm}T12:00:00`).toISOString(),
+              paginaAtual: pags,
+              nota: nota || undefined,
+            }
           : {}),
       },
     );
@@ -84,10 +94,14 @@ function Cadastro() {
   return (
     <form onSubmit={salvar} className="flex flex-1 flex-col">
       <header className="flex items-center justify-between px-6 pt-2 lg:px-0">
-        <Link href={voltar} className="-ml-2 flex min-h-11 items-center px-2 text-[13px] font-semibold text-bordo">
-          ‹ voltar
-        </Link>
-        <span className="text-[11px] font-semibold tracking-[.16em] text-bordo uppercase">novo livro</span>
+        <Voltar
+          padrao={voltar}
+          rotulo="voltar"
+          className="-ml-2 flex min-h-11 items-center px-2 text-[13px] font-semibold text-bordo"
+        />
+        <span className="text-[11px] font-semibold tracking-[.16em] text-bordo uppercase">
+          novo livro
+        </span>
       </header>
       <h1 className="mt-3 px-6 font-display text-[32px] leading-[1.1] font-semibold italic text-bordo lg:px-0 lg:font-revista lg:text-[38px] lg:font-normal lg:text-tinta">
         cadastrar um livro
@@ -101,7 +115,9 @@ function Cadastro() {
           <button
             type="button"
             onClick={() => arquivo.current?.click()}
-            aria-label={capa ? "trocar a foto da capa" : "adicionar foto da capa"}
+            aria-label={
+              capa ? "trocar a foto da capa" : "adicionar foto da capa"
+            }
             className="relative w-[96px] flex-none"
           >
             <CapaLivro
@@ -165,7 +181,11 @@ function Cadastro() {
           </label>
           <label className="block">
             <span className={rotuloCampo}>gênero</span>
-            <select value={genero} onChange={(e) => setGenero(e.target.value)} className={`${campo} min-h-[50px]`}>
+            <select
+              value={genero}
+              onChange={(e) => setGenero(e.target.value)}
+              className={`${campo} min-h-[50px]`}
+            >
               <option value="">—</option>
               {generos.map((g) => (
                 <option key={g}>{g}</option>

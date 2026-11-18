@@ -1,16 +1,36 @@
 "use client";
 
+import { Voltar } from "@/components/Voltar";
 import { Animacao } from "@/components/Animacao";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { ErroOuFalta, Vazio } from "@/components/social/Estados";
-import { clube, membrosDe, tirarMembro, type Clube, type Membro, type Papel } from "@/lib/clubes";
+import {
+  clube,
+  membrosDe,
+  tirarMembro,
+  type Clube,
+  type Membro,
+  type Papel,
+} from "@/lib/clubes";
 import { temas } from "@/lib/dados";
 import { coresDoTema } from "@/lib/tema";
 import { useConsulta, useMeuId } from "@/lib/social";
 
-type Ctx = { clube: Clube; membros: Membro[]; papel: Papel | null; recarregar: () => void };
+type Ctx = {
+  clube: Clube;
+  membros: Membro[];
+  papel: Papel | null;
+  recarregar: () => void;
+};
 const Contexto = createContext<Ctx | null>(null);
 
 export function useClube() {
@@ -37,7 +57,8 @@ function Menu({ c, papel }: { c: Clube; papel: Papel | null }) {
   const caixa = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!aberto) return;
-    const fora = (e: MouseEvent) => !caixa.current?.contains(e.target as Node) && setAberto(false);
+    const fora = (e: MouseEvent) =>
+      !caixa.current?.contains(e.target as Node) && setAberto(false);
     const esc = (e: KeyboardEvent) => e.key === "Escape" && setAberto(false);
     document.addEventListener("mousedown", fora);
     document.addEventListener("keydown", esc);
@@ -53,7 +74,8 @@ function Menu({ c, papel }: { c: Clube; papel: Papel | null }) {
     router.push("/clubes");
   }
 
-  const item = "flex min-h-11 w-full items-center px-4 text-left text-[13px] hover:bg-rosa-fundo";
+  const item =
+    "flex min-h-11 w-full items-center px-4 text-left text-[13px] hover:bg-rosa-fundo";
   return (
     <div ref={caixa} className="relative">
       <button
@@ -63,7 +85,13 @@ function Menu({ c, papel }: { c: Clube; papel: Papel | null }) {
         onClick={() => setAberto((v) => !v)}
         className="flex size-11 items-center justify-center rounded-full text-bordo hover:bg-rosa-fundo"
       >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          aria-hidden
+        >
           <circle cx="5" cy="12" r="1.8" />
           <circle cx="12" cy="12" r="1.8" />
           <circle cx="19" cy="12" r="1.8" />
@@ -97,7 +125,9 @@ function Abas({ base, sublinhadas }: { base: string; sublinhadas?: boolean }) {
     <nav
       aria-label="seções do clube"
       className={
-        sublinhadas ? "flex gap-6" : "-mx-6 mt-2 flex gap-1.5 overflow-x-auto px-6 pb-0.5 [scrollbar-width:none]"
+        sublinhadas
+          ? "flex gap-6"
+          : "-mx-6 mt-2 flex gap-1.5 overflow-x-auto px-6 pb-0.5 [scrollbar-width:none]"
       }
     >
       {abas.map((a) => {
@@ -111,10 +141,14 @@ function Abas({ base, sublinhadas }: { base: string; sublinhadas?: boolean }) {
             className={
               sublinhadas
                 ? `flex min-h-10 items-center border-b-2 text-[10px] font-bold tracking-[.1em] uppercase ${
-                    on ? "border-vinho text-vinho" : "border-transparent text-grafite hover:text-tinta"
+                    on
+                      ? "border-vinho text-vinho"
+                      : "border-transparent text-grafite hover:text-tinta"
                   }`
                 : `flex min-h-9 flex-none items-center rounded-pill px-3.5 text-xs font-semibold ${
-                    on ? "bg-bordo text-creme" : "border border-linha text-cinza hover:text-bordo"
+                    on
+                      ? "bg-bordo text-creme"
+                      : "border border-linha text-cinza hover:text-bordo"
                   }`
             }
           >
@@ -131,7 +165,15 @@ function Abas({ base, sublinhadas }: { base: string; sublinhadas?: boolean }) {
  * Computador: na home, capa com o selo do clube e ações; nas outras abas,
  * a barra compacta do canvas (selo, nome, edição e abas sublinhadas).
  */
-function Cabecalho({ c, papel, rodada }: { c: Clube; papel: Papel | null; rodada: string | null }) {
+function Cabecalho({
+  c,
+  papel,
+  rodada,
+}: {
+  c: Clube;
+  papel: Papel | null;
+  rodada: string | null;
+}) {
   const pathname = usePathname();
   const base = `/clubes/${c.id}`;
   const inicio = pathname === base;
@@ -142,18 +184,26 @@ function Cabecalho({ c, papel, rodada }: { c: Clube; papel: Papel | null; rodada
     <>
       {!inicio ? (
         <div className="hidden border-b border-fio lg:block">
-          <div className={`${largura} flex items-center justify-between gap-6 py-4`}>
+          <div
+            className={`${largura} flex items-center justify-between gap-6 py-4`}
+          >
             <span className="flex items-center gap-5">
+              <Voltar
+                padrao={base}
+                rotulo="voltar"
+                className="-ml-2 flex min-h-11 items-center px-2 text-[11px] font-bold tracking-[.1em] text-grafite uppercase hover:text-vinho"
+              />
               <Link
                 href={base}
-                className="-ml-2 flex min-h-11 items-center px-2 text-[11px] font-bold tracking-[.1em] text-grafite uppercase hover:text-vinho"
+                className="flex items-center gap-3.5 border-l border-fio pl-5"
               >
-                ‹ voltar
-              </Link>
-              <Link href={base} className="flex items-center gap-3.5 border-l border-fio pl-5">
                 <span>
-                  <span className="block font-revista text-xl leading-none italic">{c.nome}</span>
-                  <span className="mt-1 block text-[11px] text-grafite">{rodada ?? "clube de leitura"}</span>
+                  <span className="block font-revista text-xl leading-none italic">
+                    {c.nome}
+                  </span>
+                  <span className="mt-1 block text-[11px] text-grafite">
+                    {rodada ?? "clube de leitura"}
+                  </span>
                 </span>
               </Link>
             </span>
@@ -169,34 +219,41 @@ function Cabecalho({ c, papel, rodada }: { c: Clube; papel: Papel | null; rodada
             className={`aspect-[3/1] w-full bg-cover bg-center lg:aspect-[5/1] ${c.capa || tema ? "" : "pat-estrelas"}`}
             style={
               c.capa
-                ? { backgroundImage: `linear-gradient(rgba(43,20,32,.02),rgba(43,20,32,.14)), url("${c.capa}")` }
+                ? {
+                    backgroundImage: `linear-gradient(rgba(43,20,32,.02),rgba(43,20,32,.14)), url("${c.capa}")`,
+                  }
                 : tema
                   ? { background: "escuro" in tema ? "#3A343B" : tema.fundo }
                   : undefined
             }
           />
           <div className="absolute inset-x-0 top-0 flex items-center justify-between px-4 pt-2 lg:px-10 lg:pt-4 xl:px-14">
-            <Link
-              href={inicio ? "/clubes" : base}
+            <Voltar
+              padrao={inicio ? "/clubes" : base}
+              rotulo={inicio ? "clubes" : "voltar"}
               className="flex min-h-11 items-center rounded-pill bg-creme/85 px-3 text-[11px] font-semibold tracking-[.14em] text-bordo uppercase"
-            >
-              {inicio ? "‹ clubes" : "‹ voltar"}
-            </Link>
+            />
             <span className="rounded-pill bg-creme/85">
               <Menu c={c} papel={papel} />
             </span>
           </div>
         </div>
-        <div className={`relative bg-creme px-6 pt-5 text-center lg:bg-jornal lg:text-left ${largura}`}>
+        <div
+          className={`relative bg-creme px-6 pt-5 text-center lg:bg-jornal lg:text-left ${largura}`}
+        >
           <div className="lg:flex lg:items-end lg:gap-5">
             <div className="min-w-0 flex-1">
               {rodada ? (
-                <p className="text-[10px] font-semibold tracking-[.16em] text-cinza uppercase">{rodada}</p>
+                <p className="text-[10px] font-semibold tracking-[.16em] text-cinza uppercase">
+                  {rodada}
+                </p>
               ) : null}
               <h1 className="mt-1 font-display text-[34px] leading-[1.05] font-semibold italic text-bordo lg:font-revista lg:text-[40px] lg:font-normal lg:text-tinta">
                 {c.nome}
               </h1>
-              <p className="mt-1 text-[10px] font-semibold tracking-[.2em] text-cinza uppercase">clube de leitura</p>
+              <p className="mt-1 text-[10px] font-semibold tracking-[.2em] text-cinza uppercase">
+                clube de leitura
+              </p>
             </div>
             <div className="hidden gap-2.5 lg:flex">
               <Link href={`${base}/convidar`} className={acao}>
@@ -210,7 +267,9 @@ function Cabecalho({ c, papel, rodada }: { c: Clube; papel: Papel | null; rodada
             </div>
           </div>
           {c.descricao ? (
-            <p className="mx-auto mt-2 max-w-[30em] font-accent text-sm italic text-cinza lg:mx-0">{c.descricao}</p>
+            <p className="mx-auto mt-2 max-w-[30em] font-accent text-sm italic text-cinza lg:mx-0">
+              {c.descricao}
+            </p>
           ) : null}
           <div className="hidden lg:mt-5 lg:block lg:border-b lg:border-fio">
             <Abas base={base} sublinhadas />
@@ -226,7 +285,13 @@ function Cabecalho({ c, papel, rodada }: { c: Clube; papel: Papel | null; rodada
 }
 
 /** Carrega o clube uma vez e entrega para as telas de dentro. */
-export function ClubeProvedor({ id, children }: { id: string; children: ReactNode }) {
+export function ClubeProvedor({
+  id,
+  children,
+}: {
+  id: string;
+  children: ReactNode;
+}) {
   const eu = useMeuId();
   const pathname = usePathname();
   const consulta = useConsulta(async () => {
@@ -235,8 +300,15 @@ export function ClubeProvedor({ id, children }: { id: string; children: ReactNod
   }, [id]);
 
   if (consulta.carregando && !consulta.dados)
-    return <Animacao tipo="livro" titulo="abrindo o clube" sub="arrumando as estantes e as fichas do mês" />;
-  if (consulta.erro) return <ErroOuFalta erro={consulta.erro} onTentar={consulta.recarregar} />;
+    return (
+      <Animacao
+        tipo="livro"
+        titulo="abrindo o clube"
+        sub="arrumando as estantes e as fichas do mês"
+      />
+    );
+  if (consulta.erro)
+    return <ErroOuFalta erro={consulta.erro} onTentar={consulta.recarregar} />;
   if (!consulta.dados)
     return (
       <div className="px-6 pt-10 lg:px-12">
@@ -251,14 +323,27 @@ export function ClubeProvedor({ id, children }: { id: string; children: ReactNod
   const { c, membros } = consulta.dados;
   const papel = membros.find((m) => m.usuario_id === eu)?.papel ?? null;
   const base = `/clubes/${c.id}`;
-  const comAbas = [base, `${base}/feed`, `${base}/biblioteca`, `${base}/leitura`, `${base}/agenda`].includes(pathname);
+  const comAbas = [
+    base,
+    `${base}/feed`,
+    `${base}/biblioteca`,
+    `${base}/leitura`,
+    `${base}/agenda`,
+  ].includes(pathname);
 
   return (
-    <Contexto.Provider value={{ clube: c, membros, papel, recarregar: consulta.recarregar }}>
+    <Contexto.Provider
+      value={{ clube: c, membros, papel, recarregar: consulta.recarregar }}
+    >
       {/* o tema do clube vale para todas as telas dele, como o tema do perfil */}
-      <div style={coresDoTema(c.tema)} className="flex flex-1 flex-col bg-creme pb-8 lg:bg-jornal">
+      <div
+        style={coresDoTema(c.tema)}
+        className="flex flex-1 flex-col bg-creme pb-8 lg:bg-jornal"
+      >
         {comAbas ? <Cabecalho c={c} papel={papel} rodada={null} /> : null}
-        <div className={comAbas ? largura : `${largura} lg:py-8`}>{children}</div>
+        <div className={comAbas ? largura : `${largura} lg:py-8`}>
+          {children}
+        </div>
       </div>
     </Contexto.Provider>
   );

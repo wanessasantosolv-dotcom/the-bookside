@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { Voltar } from "@/components/Voltar";
 import { TelaApp } from "@/components/AppShell";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -20,20 +20,32 @@ function Escolha({ inicial }: { inicial: string[] }) {
   const cheio = escolhidos.length >= MAXIMO;
 
   function alternar(id: string) {
-    setEscolhidos((e) => (e.includes(id) ? e.filter((x) => x !== id) : e.length < MAXIMO ? [...e, id] : e));
+    setEscolhidos((e) =>
+      e.includes(id)
+        ? e.filter((x) => x !== id)
+        : e.length < MAXIMO
+          ? [...e, id]
+          : e,
+    );
   }
 
   return (
     <TelaApp aba="perfil">
       <header className="flex items-center justify-between px-6 pt-2">
-        <Link href="/perfil/editar" className="-ml-2 flex min-h-11 items-center px-2 text-[13px] font-semibold text-bordo">
-          ‹ editar perfil
-        </Link>
+        <Voltar
+          padrao="/perfil/editar"
+          rotulo="editar perfil"
+          className="-ml-2 flex min-h-11 items-center px-2 text-[13px] font-semibold text-bordo"
+        />
         <span className="eyebrow !text-[10px] text-cinza">favoritos</span>
       </header>
       <div className="animate-subir px-6 pt-4">
-        <h1 className="font-display text-[30px] leading-[1.1] font-semibold italic text-bordo">escolha até 4</h1>
-        <p className="mt-2 font-accent text-sm italic text-cinza">esses livros aparecem em destaque no seu perfil.</p>
+        <h1 className="font-display text-[30px] leading-[1.1] font-semibold italic text-bordo">
+          escolha até 4
+        </h1>
+        <p className="mt-2 font-accent text-sm italic text-cinza">
+          esses livros aparecem em destaque no seu perfil.
+        </p>
         <p className="mt-3 text-xs font-semibold text-bordo" aria-live="polite">
           {escolhidos.length} de {MAXIMO}
         </p>
@@ -52,25 +64,46 @@ function Escolha({ inicial }: { inicial: string[] }) {
                     !on && cheio ? "opacity-45" : ""
                   }`}
                 >
-                  <input type="checkbox" className="sr-only" checked={on} disabled={!on && cheio} onChange={() => alternar(l.id)} />
-                  <CapaLivro titulo={l.titulo} capa={l.capa} cor={corDoLivro(l.id)} className={`w-full ${on ? "ring-2 ring-bordo ring-offset-2 ring-offset-creme" : ""}`} />
+                  <input
+                    type="checkbox"
+                    className="sr-only"
+                    checked={on}
+                    disabled={!on && cheio}
+                    onChange={() => alternar(l.id)}
+                  />
+                  <CapaLivro
+                    titulo={l.titulo}
+                    capa={l.capa}
+                    cor={corDoLivro(l.id)}
+                    className={`w-full ${on ? "ring-2 ring-bordo ring-offset-2 ring-offset-creme" : ""}`}
+                  />
                   <span
                     aria-hidden
                     className={`absolute top-1.5 right-1.5 flex size-6 items-center justify-center rounded-full border-2 border-creme text-xs font-bold ${
-                      on ? "bg-bordo text-creme" : "bg-creme/70 text-transparent"
+                      on
+                        ? "bg-bordo text-creme"
+                        : "bg-creme/70 text-transparent"
                     }`}
                   >
                     ✓
                   </span>
-                  <span className="mt-1.5 block truncate text-[11px] text-cinza">{l.titulo}</span>
+                  <span className="mt-1.5 block truncate text-[11px] text-cinza">
+                    {l.titulo}
+                  </span>
                 </label>
               );
             })}
           </fieldset>
         ) : (
           <div className="pt-10 text-center">
-            <p className="font-accent text-[17px] italic text-cinza">sua estante ainda está vazia.</p>
-            <BotaoLink href="/criar-perfil/estante/buscar" variante="contorno" className="mx-auto mt-6 max-w-[260px]">
+            <p className="font-accent text-[17px] italic text-cinza">
+              sua estante ainda está vazia.
+            </p>
+            <BotaoLink
+              href="/criar-perfil/estante/buscar"
+              variante="contorno"
+              className="mx-auto mt-6 max-w-[260px]"
+            >
               adicionar livros
             </BotaoLink>
           </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { Voltar } from "@/components/Voltar";
 import Link from "next/link";
 import { useState } from "react";
 import { AppShell } from "@/components/AppShell";
@@ -10,7 +11,8 @@ import { calcularNumeros, numero } from "@/lib/numeros";
 import { usePerfil } from "@/lib/perfil-store";
 
 const cartao = "rounded-[14px] border border-rosa-claro/30 bg-creme/5 p-[18px]";
-const etiqueta = "text-[9px] leading-none font-semibold tracking-[.2em] text-ouro uppercase";
+const etiqueta =
+  "text-[9px] leading-none font-semibold tracking-[.2em] text-ouro uppercase";
 
 export default function RetrospectivaPage() {
   const hidratado = useHidratado();
@@ -49,14 +51,20 @@ export default function RetrospectivaPage() {
       <NumerosWeb n={n} nome={nome} frase={frase} />
       <div className="papel-noite flex flex-1 flex-col px-6 pb-6 text-creme lg:hidden">
         <header className="flex items-center justify-between pt-2">
-          <Link href="/numeros" className="-ml-2 flex min-h-11 items-center px-2 text-[13px] font-semibold text-rosa-claro">
-            ‹ números
-          </Link>
-          <span className="text-[10px] font-semibold tracking-[.14em] text-rosa-claro uppercase">{n.ano}</span>
+          <Voltar
+            padrao="/numeros"
+            rotulo="números"
+            className="-ml-2 flex min-h-11 items-center px-2 text-[13px] font-semibold text-rosa-claro"
+          />
+          <span className="text-[10px] font-semibold tracking-[.14em] text-rosa-claro uppercase">
+            {n.ano}
+          </span>
         </header>
 
         <div className="mt-4 animate-subir">
-          <p className="text-[10px] leading-none font-semibold tracking-[.2em] text-ouro uppercase">sua retrospectiva</p>
+          <p className="text-[10px] leading-none font-semibold tracking-[.2em] text-ouro uppercase">
+            sua retrospectiva
+          </p>
           <h1 className="mt-3 font-display text-4xl leading-[1.05] font-bold italic">
             o seu ano
             <br />
@@ -67,18 +75,24 @@ export default function RetrospectivaPage() {
         <div className="mt-7 flex flex-col gap-3.5">
           <div className={`${cartao} animate-subir [animation-delay:.12s]`}>
             <p className={etiqueta}>você leu</p>
-            <p className="mt-2.5 font-display text-[70px] leading-[.95] font-bold italic">{n.total}</p>
+            <p className="mt-2.5 font-display text-[70px] leading-[.95] font-bold italic">
+              {n.total}
+            </p>
             <p className="mt-2 font-accent text-[15px] leading-[1.3] italic text-rosa-claro">
               {n.total === 1 ? "livro" : "livros"}
               {n.paginasConhecidas ? ` · ${numero(n.paginas)} páginas` : ""}
-              {n.paginasPorLivro ? ` · ${numero(n.paginasPorLivro)} por livro` : ""}
+              {n.paginasPorLivro
+                ? ` · ${numero(n.paginasPorLivro)} por livro`
+                : ""}
             </p>
           </div>
 
           {genero ? (
             <div className={cartao}>
               <p className={etiqueta}>seu gênero do ano</p>
-              <p className="mt-2 font-display text-2xl leading-[1.15] font-semibold italic">{genero.nome}</p>
+              <p className="mt-2 font-display text-2xl leading-[1.15] font-semibold italic">
+                {genero.nome}
+              </p>
               <p className="mt-2 font-accent text-[15px] italic text-rosa-claro">
                 {genero.qtd} dos seus {n.total} livros ✦
               </p>
@@ -86,11 +100,18 @@ export default function RetrospectivaPage() {
           ) : null}
 
           {n.livroDoAno ? (
-            <Link href={`/livro/${n.livroDoAno.id}`} className={`${cartao} block`}>
+            <Link
+              href={`/livro/${n.livroDoAno.id}`}
+              className={`${cartao} block`}
+            >
               <p className={etiqueta}>o livro do ano</p>
-              <p className="mt-2 font-display text-2xl leading-[1.15] font-semibold italic">{n.livroDoAno.titulo}</p>
+              <p className="mt-2 font-display text-2xl leading-[1.15] font-semibold italic">
+                {n.livroDoAno.titulo}
+              </p>
               <p className="mt-2 font-accent text-[15px] italic text-rosa-claro">
-                {n.livroDoAno.nota === 5 ? "cinco estrelas ♡" : `${n.livroDoAno.nota} estrelas, a maior nota do ano ♡`}
+                {n.livroDoAno.nota === 5
+                  ? "cinco estrelas ♡"
+                  : `${n.livroDoAno.nota} estrelas, a maior nota do ano ♡`}
               </p>
             </Link>
           ) : null}
@@ -99,18 +120,25 @@ export default function RetrospectivaPage() {
             <div className={`${cartao} py-3.5`}>
               <p className={etiqueta}>e ainda</p>
               <p className="mt-2 font-accent text-sm italic">
-                {n.maisForte.mes} foi seu mês mais forte, com {n.maisForte.livros} {n.maisForte.livros === 1 ? "livro" : "livros"}.
+                {n.maisForte.mes} foi seu mês mais forte, com{" "}
+                {n.maisForte.livros}{" "}
+                {n.maisForte.livros === 1 ? "livro" : "livros"}.
               </p>
             </div>
           ) : null}
 
           {!n.total ? (
-            <p className="font-accent text-[15px] italic text-rosa-claro">sua retrospectiva começa no primeiro “já li” do ano ✦</p>
+            <p className="font-accent text-[15px] italic text-rosa-claro">
+              sua retrospectiva começa no primeiro “já li” do ano ✦
+            </p>
           ) : null}
         </div>
 
         <div className="mt-auto pt-8">
-          <p role="status" className="mb-2 min-h-4 text-center text-xs text-rosa-claro">
+          <p
+            role="status"
+            className="mb-2 min-h-4 text-center text-xs text-rosa-claro"
+          >
             {aviso}
           </p>
           <Botao variante="creme" onClick={compartilhar} disabled={!n.total}>

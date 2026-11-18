@@ -1,5 +1,6 @@
 "use client";
 
+import { Voltar } from "@/components/Voltar";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
@@ -19,25 +20,40 @@ function Busca() {
   const editarLivro = usePerfil((s) => s.editarLivro);
   const [busca, setBusca] = useState("");
 
-  const estante = todasAsEstantes(proprias ?? []).find((e) => e.id === params.get("estante")) ?? todasAsEstantes([])[2];
+  const estante =
+    todasAsEstantes(proprias ?? []).find(
+      (e) => e.id === params.get("estante"),
+    ) ?? todasAsEstantes([])[2];
   const { estado, resultados } = useBuscaLivros(busca);
 
   function estaNaEstante(id: string) {
     const l = livros.find((x) => x.id === id);
     if (!l) return false;
-    return estante.status ? (l.status ?? "lendo") === estante.status : !!l.estantes?.includes(estante.id);
+    return estante.status
+      ? (l.status ?? "lendo") === estante.status
+      : !!l.estantes?.includes(estante.id);
   }
 
   function adicionar(l: LivroBusca) {
-    const base = { id: l.id, titulo: l.titulo, autor: l.autor, capa: l.capa, genero: l.genero };
+    const base = {
+      id: l.id,
+      titulo: l.titulo,
+      autor: l.autor,
+      capa: l.capa,
+      genero: l.genero,
+    };
     const atual = livros.find((x) => x.id === l.id);
     if (estante.status) {
       const agora = new Date().toISOString();
       editarLivro(base, {
         status: estante.status,
         paginas: l.paginas,
-        ...(estante.status === "lendo" ? { iniciadoEm: atual?.iniciadoEm ?? agora } : {}),
-        ...(estante.status === "lido" ? { lidoEm: atual?.lidoEm ?? agora } : {}),
+        ...(estante.status === "lendo"
+          ? { iniciadoEm: atual?.iniciadoEm ?? agora }
+          : {}),
+        ...(estante.status === "lido"
+          ? { lidoEm: atual?.lidoEm ?? agora }
+          : {}),
       });
     } else {
       editarLivro(base, {
@@ -51,12 +67,11 @@ function Busca() {
   return (
     <div className="flex flex-1 flex-col px-6 pb-8 lg:max-w-[760px] lg:px-14 lg:pt-8">
       <header className="flex items-center justify-between pt-2">
-        <Link
-          href={`/estantes/${estante.id}`}
+        <Voltar
+          padrao={`/estantes/${estante.id}`}
+          rotulo={estante.nome}
           className="-ml-2 flex min-h-11 items-center px-2 text-[13px] font-semibold text-bordo"
-        >
-          ‹ {estante.nome}
-        </Link>
+        />
         <span className="eyebrow !text-[10px] text-cinza">buscar</span>
       </header>
       <h1 className="mt-3 animate-subir font-display text-[32px] leading-[1.1] font-semibold italic text-bordo">
@@ -92,14 +107,27 @@ function Busca() {
         />
       </label>
 
-      <p className="eyebrow mt-6 mb-1 !text-[10px] text-bordo">{estado === "sugestoes" ? "sugestões" : "resultados"}</p>
-      <EstadoBusca estado={estado} vazio={!resultados.length} termo={busca} volta="/buscar" />
+      <p className="eyebrow mt-6 mb-1 !text-[10px] text-bordo">
+        {estado === "sugestoes" ? "sugestões" : "resultados"}
+      </p>
+      <EstadoBusca
+        estado={estado}
+        vazio={!resultados.length}
+        termo={busca}
+        volta="/buscar"
+      />
       <ul>
         {(estado === "carregando" ? [] : resultados).map((l) => {
           const ok = hidratado && estaNaEstante(l.id);
           return (
-            <li key={l.id} className="flex items-center gap-3.5 border-t border-linha py-[13px]">
-              <Link href={`/livro/${l.id}`} className="flex min-w-0 flex-1 items-center gap-3.5">
+            <li
+              key={l.id}
+              className="flex items-center gap-3.5 border-t border-linha py-[13px]"
+            >
+              <Link
+                href={`/livro/${l.id}`}
+                className="flex min-w-0 flex-1 items-center gap-3.5"
+              >
                 <CapaLivro
                   titulo={l.titulo}
                   capa={l.capa}
@@ -107,7 +135,9 @@ function Busca() {
                   className="w-[52px] [&>span:last-child]:hidden"
                 />
                 <span className="min-w-0">
-                  <h3 className="font-display text-[17px] leading-[1.2] font-semibold italic">{l.titulo}</h3>
+                  <h3 className="font-display text-[17px] leading-[1.2] font-semibold italic">
+                    {l.titulo}
+                  </h3>
                   <small className="mt-1 block text-xs text-cinza">
                     {l.autor}
                     {l.ano ? ` · ${l.ano}` : ""}
@@ -120,7 +150,9 @@ function Busca() {
                 disabled={ok}
                 onClick={() => adicionar(l)}
                 className={`flex h-11 flex-none items-center rounded-pill border px-3 text-[11px] font-semibold whitespace-nowrap ${
-                  ok ? "border-linha bg-[#F1E4DC] text-cinza" : "border-bordo text-bordo hover:bg-rosa-fundo"
+                  ok
+                    ? "border-linha bg-[#F1E4DC] text-cinza"
+                    : "border-bordo text-bordo hover:bg-rosa-fundo"
                 }`}
               >
                 {ok ? "na estante" : "+ estante"}
@@ -129,9 +161,15 @@ function Busca() {
           );
         })}
       </ul>
-      {estado === "pronto" && resultados.length ? <LinkCadastrar termo={busca} volta="/buscar" /> : null}
-      {estado === "sugestoes" ? <LinkCadastrar termo="" volta="/buscar" /> : null}
-      <p className="mt-6 text-center text-[11px] text-cinza">busca e capas: Google Books e Open Library</p>
+      {estado === "pronto" && resultados.length ? (
+        <LinkCadastrar termo={busca} volta="/buscar" />
+      ) : null}
+      {estado === "sugestoes" ? (
+        <LinkCadastrar termo="" volta="/buscar" />
+      ) : null}
+      <p className="mt-6 text-center text-[11px] text-cinza">
+        busca e capas: Google Books e Open Library
+      </p>
     </div>
   );
 }

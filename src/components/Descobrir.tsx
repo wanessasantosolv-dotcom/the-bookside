@@ -1,5 +1,6 @@
 "use client";
 
+import { Voltar } from "@/components/Voltar";
 import Link from "next/link";
 import { useState } from "react";
 import { CapaLivro } from "@/components/CapaLivro";
@@ -11,36 +12,56 @@ import { usePerfil, type StatusLivro } from "@/lib/perfil-store";
 /** "guardei esta pra você": um livro por vez — passar, quero ler ou já li. */
 type Destino = { href: string; r: string };
 
-export function Descobrir({ voltar, continuar }: { voltar: Destino; continuar: Destino }) {
+export function Descobrir({
+  voltar,
+  continuar,
+}: {
+  voltar: Destino;
+  continuar: Destino;
+}) {
   const guardarLivro = usePerfil((s) => s.guardarLivro);
   const livros = usePerfil((s) => s.livros);
   // começa pelo livro com sinopse (o destaque do design)
   const sugestoes = useSugestoesVivas(false);
-  const fila = [...sugestoes].sort((a, b) => Number(!!b.sinopse) - Number(!!a.sinopse));
+  const fila = [...sugestoes].sort(
+    (a, b) => Number(!!b.sinopse) - Number(!!a.sinopse),
+  );
   const [indice, setIndice] = useState(0);
   const livro = fila[indice];
   const queroLer = livros.filter((l) => l.status === "quero").length;
 
   function responder(status: StatusLivro | null) {
-    if (status) guardarLivro({ id: livro.id, titulo: livro.titulo, autor: livro.autor, capa: livro.capa, status });
+    if (status)
+      guardarLivro({
+        id: livro.id,
+        titulo: livro.titulo,
+        autor: livro.autor,
+        capa: livro.capa,
+        status,
+      });
     setIndice((i) => i + 1);
   }
 
-  const botao = "flex flex-col items-center gap-[9px] text-[9px] font-semibold tracking-[.14em] text-cinza uppercase";
+  const botao =
+    "flex flex-col items-center gap-[9px] text-[9px] font-semibold tracking-[.14em] text-cinza uppercase";
   const selo =
     "flex size-[62px] items-center justify-center rounded-full border border-linha bg-creme-quente transition-transform active:scale-95";
 
   return (
     <Tela className="px-6 pb-[max(24px,env(safe-area-inset-bottom))]">
       <header className="flex items-center justify-between pt-[18px]">
-        <Link href={voltar.href} className="-ml-2 flex min-h-11 items-center px-2 text-[13px] font-semibold text-bordo">
-          ‹ {voltar.r}
-        </Link>
+        <Voltar
+          padrao={voltar.href}
+          rotulo={voltar.r}
+          className="-ml-2 flex min-h-11 items-center px-2 text-[13px] font-semibold text-bordo"
+        />
         <span className="eyebrow !text-[10px] text-cinza">pra você ✦</span>
       </header>
 
       <div className="animate-subir pt-4">
-        <p className="eyebrow !text-[10px] !tracking-[.14em] text-bordo">indicação do dia</p>
+        <p className="eyebrow !text-[10px] !tracking-[.14em] text-bordo">
+          indicação do dia
+        </p>
         <p className="mt-2 font-display text-[26px] leading-[1.15] font-semibold italic text-bordo">
           {livro ? "guardei esta pra você:" : "sua lista está começando"}
         </p>
@@ -48,11 +69,20 @@ export function Descobrir({ voltar, continuar }: { voltar: Destino; continuar: D
 
       {livro ? (
         <>
-          <div key={livro.id} className="relative mt-6 flex animate-subir justify-center">
-            <span aria-hidden className="absolute top-2 left-7 text-[15px] text-ouro">
+          <div
+            key={livro.id}
+            className="relative mt-6 flex animate-subir justify-center"
+          >
+            <span
+              aria-hidden
+              className="absolute top-2 left-7 text-[15px] text-ouro"
+            >
               ✧
             </span>
-            <span aria-hidden className="absolute top-20 right-6 text-[11px] text-rosa-antigo">
+            <span
+              aria-hidden
+              className="absolute top-20 right-6 text-[11px] text-rosa-antigo"
+            >
               ✦
             </span>
             <CapaLivro
@@ -64,16 +94,26 @@ export function Descobrir({ voltar, continuar }: { voltar: Destino; continuar: D
           </div>
 
           <div className="mt-6 text-center">
-            <p className="font-display text-[23px] leading-[1.15] font-semibold italic text-ameixa">{livro.titulo}</p>
+            <p className="font-display text-[23px] leading-[1.15] font-semibold italic text-ameixa">
+              {livro.titulo}
+            </p>
             <p className="eyebrow mt-1.5 !text-[10px] text-cinza">
               {livro.autor}
               {livro.genero ? ` · ${livro.genero}` : ""}
             </p>
-            {livro.sinopse ? <p className="mt-3 text-[13px] leading-normal text-cinza">{livro.sinopse}</p> : null}
+            {livro.sinopse ? (
+              <p className="mt-3 text-[13px] leading-normal text-cinza">
+                {livro.sinopse}
+              </p>
+            ) : null}
           </div>
 
           <div className="mt-auto flex justify-center gap-[34px] pt-8">
-            <button type="button" className={botao} onClick={() => responder(null)}>
+            <button
+              type="button"
+              className={botao}
+              onClick={() => responder(null)}
+            >
               <span className={selo}>
                 <svg
                   width="24"
@@ -90,7 +130,11 @@ export function Descobrir({ voltar, continuar }: { voltar: Destino; continuar: D
               </span>
               passar
             </button>
-            <button type="button" className={`${botao} text-bordo`} onClick={() => responder("quero")}>
+            <button
+              type="button"
+              className={`${botao} text-bordo`}
+              onClick={() => responder("quero")}
+            >
               <span className={`${selo} border-bordo`}>
                 <svg
                   width="24"
@@ -107,7 +151,11 @@ export function Descobrir({ voltar, continuar }: { voltar: Destino; continuar: D
               </span>
               quero ler
             </button>
-            <button type="button" className={botao} onClick={() => responder("lido")}>
+            <button
+              type="button"
+              className={botao}
+              onClick={() => responder("lido")}
+            >
               <span className={selo}>
                 <svg
                   width="24"

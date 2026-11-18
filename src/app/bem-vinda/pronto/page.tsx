@@ -1,5 +1,6 @@
 "use client";
 
+import { Voltar } from "@/components/Voltar";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { PainelLateral, telaAoLado } from "@/components/ui/PainelLateral";
@@ -10,7 +11,8 @@ import { arquetipos, type ArquetipoId } from "@/lib/teste";
 import { usePerfil } from "@/lib/perfil-store";
 
 export default function ProntoPage() {
-  const { nome, usuario, livros, gostos, tema, bookside, atualizar } = usePerfil();
+  const { nome, usuario, livros, gostos, tema, bookside, atualizar } =
+    usePerfil();
   const [aberto, setAberto] = useState(false);
   const selo = bookside
     ? arquetipos[bookside.principal as ArquetipoId]?.nome.replace(/^a /, "")
@@ -23,21 +25,29 @@ export default function ProntoPage() {
 
   return (
     <div className="lg:flex lg:min-h-dvh lg:bg-jornal">
-      <PainelLateral eyebrow="tudo pronto ✦" frase="sua história começa agora" />
-      <Tela className={`papel-pontilhado items-center px-6 pb-[max(24px,env(safe-area-inset-bottom))] ${telaAoLado}`}>
+      <PainelLateral
+        eyebrow="tudo pronto ✦"
+        frase="sua história começa agora"
+      />
+      <Tela
+        className={`papel-pontilhado items-center px-6 pb-[max(24px,env(safe-area-inset-bottom))] ${telaAoLado}`}
+      >
         <div
           data-aberto={aberto}
           className="relative flex w-full flex-1 flex-col items-center lg:max-w-[460px] lg:flex-none"
         >
-          <Link
-            href="/bem-vinda/primeiro-livro"
+          <Voltar
+            padrao="/bem-vinda/primeiro-livro"
+            rotulo="voltar"
             className="absolute top-2 -left-2 flex min-h-11 items-center px-2 text-[13px] font-semibold text-bordo"
-          >
-            ‹ voltar
-          </Link>
-          <p className="eyebrow mt-5 !text-[10px] !tracking-[.14em] text-cinza">tudo pronto ✦</p>
+          />
+          <p className="eyebrow mt-5 !text-[10px] !tracking-[.14em] text-cinza">
+            tudo pronto ✦
+          </p>
 
-          <div className={`mt-2 text-center transition-opacity duration-500 ${aberto ? "opacity-0" : ""}`}>
+          <div
+            className={`mt-2 text-center transition-opacity duration-500 ${aberto ? "opacity-0" : ""}`}
+          >
             <h1 className="font-display text-[31px] leading-[1.08] font-bold italic text-bordo">
               seu perfil está pronto
             </h1>
@@ -48,7 +58,10 @@ export default function ProntoPage() {
             </p>
           </div>
 
-          <span aria-hidden className="estrelinha absolute top-[214px] left-7 text-[15px] text-ouro">
+          <span
+            aria-hidden
+            className="estrelinha absolute top-[214px] left-7 text-[15px] text-ouro"
+          >
             ✦
           </span>
           <span
@@ -71,7 +84,10 @@ export default function ProntoPage() {
           </span>
 
           {/* o livro */}
-          <div data-aberto={aberto} className="livro3d relative mt-8 h-[318px] w-[212px]">
+          <div
+            data-aberto={aberto}
+            className="livro3d relative mt-8 h-[318px] w-[212px]"
+          >
             <div className="absolute inset-0 z-[1] flex flex-col items-center justify-center rounded-[4px_10px_10px_4px] bg-[#FFFCF6] px-6 text-center shadow-[inset_0_0_0_1px_#E6D5CE,inset_-8px_0_10px_-8px_rgba(43,20,32,.25)]">
               <span className="revela font-accent text-[26px] leading-none italic text-ouro [transition-delay:1.5s]">
                 ✦
@@ -105,8 +121,21 @@ export default function ProntoPage() {
               {/* selo: dois anéis dourados com o nome no meio */}
               <div className="absolute inset-x-0 top-20 flex justify-center pl-4">
                 <div className="relative size-[148px]">
-                  <svg width="148" height="148" viewBox="0 0 148 148" aria-hidden className="absolute inset-0">
-                    <circle cx="74" cy="74" r="66" fill="none" stroke="#C9A46A" strokeWidth="1.3" />
+                  <svg
+                    width="148"
+                    height="148"
+                    viewBox="0 0 148 148"
+                    aria-hidden
+                    className="absolute inset-0"
+                  >
+                    <circle
+                      cx="74"
+                      cy="74"
+                      r="66"
+                      fill="none"
+                      stroke="#C9A46A"
+                      strokeWidth="1.3"
+                    />
                     <circle
                       cx="74"
                       cy="74"
@@ -151,7 +180,11 @@ export default function ProntoPage() {
                         </>
                       )}
                     </p>
-                    {usuario ? <p className="mt-1 text-[10px] text-rosa-claro">@{usuario}</p> : null}
+                    {usuario ? (
+                      <p className="mt-1 text-[10px] text-rosa-claro">
+                        @{usuario}
+                      </p>
+                    ) : null}
                   </div>
                 </div>
               </div>
@@ -173,8 +206,12 @@ export default function ProntoPage() {
                 key={x.r}
                 className={`flex flex-1 flex-col-reverse items-center ${i ? "border-l border-linha" : ""}`}
               >
-                <dt className="mt-1.5 text-[10px] leading-none font-medium text-cinza">{x.r}</dt>
-                <dd className="font-display text-[22px] leading-none font-bold italic text-bordo">{x.n}</dd>
+                <dt className="mt-1.5 text-[10px] leading-none font-medium text-cinza">
+                  {x.r}
+                </dt>
+                <dd className="font-display text-[22px] leading-none font-bold italic text-bordo">
+                  {x.n}
+                </dd>
               </div>
             ))}
           </dl>

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Voltar } from "@/components/Voltar";
 import type { CSSProperties, ReactNode } from "react";
 import { PainelLateral } from "@/components/ui/PainelLateral";
 import { Tela } from "@/components/ui/Tela";
@@ -41,11 +41,19 @@ export function Passo({
 }: Props) {
   const estilo = { "--fundo": fundo ?? "#F9F5EE" } as CSSProperties;
   const cor = escuro
-    ? { link: "text-[#C9B8A8]", suave: "text-[#C9B8A8]", destaque: "text-rosa-claro" }
+    ? {
+        link: "text-[#C9B8A8]",
+        suave: "text-[#C9B8A8]",
+        destaque: "text-rosa-claro",
+      }
     : { link: "text-bordo", suave: "text-cinza", destaque: "text-bordo" };
   return (
     <div className="lg:flex lg:min-h-dvh lg:bg-jornal">
-      <PainelLateral eyebrow={eyebrow} frase={frase ?? (typeof titulo === "string" ? titulo : eyebrow)} passo={passo} />
+      <PainelLateral
+        eyebrow={eyebrow}
+        frase={frase ?? (typeof titulo === "string" ? titulo : eyebrow)}
+        passo={passo}
+      />
       <Tela
         style={estilo}
         className="!bg-[var(--fundo)] transition-colors duration-300 lg:mx-0 lg:max-w-none lg:flex-1 lg:items-center lg:justify-center lg:py-12 lg:shadow-none"
@@ -60,12 +68,11 @@ export function Passo({
           ) : null}
           <header className="px-6 pt-[18px]">
             <div className="flex items-center justify-between">
-              <Link
-                href={voltar.href}
+              <Voltar
+                padrao={voltar.href}
+                rotulo={voltar.rotulo}
                 className={`-ml-2 flex min-h-11 items-center px-2 text-[13px] font-semibold ${cor.link}`}
-              >
-                ‹ {voltar.rotulo}
-              </Link>
+              />
               <span className={`eyebrow !text-[10px] lg:hidden ${cor.suave}`}>
                 {passo ? `passo ${passo} de ${PASSOS_PERFIL}` : rotuloTopo}
               </span>
@@ -83,7 +90,11 @@ export function Passo({
                   <i
                     key={i}
                     className={`h-1 flex-1 rounded-full ${
-                      i + 1 < passo ? "bg-bordo" : i + 1 === passo ? "bg-rosa-antigo" : "bg-linha"
+                      i + 1 < passo
+                        ? "bg-bordo"
+                        : i + 1 === passo
+                          ? "bg-rosa-antigo"
+                          : "bg-linha"
                     }`}
                   />
                 ))}
@@ -98,10 +109,16 @@ export function Passo({
             >
               {titulo}
             </h1>
-            {descricao ? <p className={`mt-3 text-sm leading-normal ${cor.suave}`}>{descricao}</p> : null}
+            {descricao ? (
+              <p className={`mt-3 text-sm leading-normal ${cor.suave}`}>
+                {descricao}
+              </p>
+            ) : null}
           </div>
 
-          <div className="flex-1 px-6 pt-7 pb-6 [animation-delay:.18s] animate-subir">{children}</div>
+          <div className="flex-1 px-6 pt-7 pb-6 [animation-delay:.18s] animate-subir">
+            {children}
+          </div>
 
           {rodape ? (
             <footer className="sticky bottom-0 bg-gradient-to-t from-[var(--fundo)] from-70% to-transparent px-6 pt-4 pb-[max(24px,env(safe-area-inset-bottom))] lg:static lg:bg-none lg:pb-0">
