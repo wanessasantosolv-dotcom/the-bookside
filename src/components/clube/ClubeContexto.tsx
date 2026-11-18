@@ -142,10 +142,10 @@ function Cabecalho({ c, papel, rodada }: { c: Clube; papel: Papel | null; rodada
           <div className={`${largura} flex items-center justify-between gap-6 py-4`}>
             <span className="flex items-center gap-5">
               <Link
-                href="/clubes"
+                href={base}
                 className="-ml-2 flex min-h-11 items-center px-2 text-[11px] font-bold tracking-[.1em] text-grafite uppercase hover:text-vinho"
               >
-                ‹ clubes
+                ‹ voltar
               </Link>
               <Link href={base} className="flex items-center gap-3.5 border-l border-fio pl-5">
                 <span>
@@ -171,10 +171,10 @@ function Cabecalho({ c, papel, rodada }: { c: Clube; papel: Papel | null; rodada
           />
           <div className="absolute inset-x-0 top-0 flex items-center justify-between px-4 pt-2 lg:px-15 lg:pt-3">
             <Link
-              href="/clubes"
+              href={inicio ? "/clubes" : base}
               className="flex min-h-11 items-center rounded-pill bg-creme/85 px-3 text-[11px] font-semibold tracking-[.14em] text-bordo uppercase"
             >
-              ‹ clubes
+              {inicio ? "‹ clubes" : "‹ voltar"}
             </Link>
             <span className="rounded-pill bg-creme/85">
               <Menu c={c} papel={papel} />
