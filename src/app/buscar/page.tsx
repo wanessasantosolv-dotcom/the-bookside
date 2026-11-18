@@ -6,7 +6,7 @@ import { Suspense, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { CapaLivro } from "@/components/CapaLivro";
 import { useHidratado } from "@/components/PerfilHidratacao";
-import { EstadoBusca } from "@/components/EstadoBusca";
+import { EstadoBusca, LinkCadastrar } from "@/components/EstadoBusca";
 import { useBuscaLivros, type LivroBusca } from "@/lib/catalogo";
 import { todasAsEstantes } from "@/lib/estantes";
 import { usePerfil } from "@/lib/perfil-store";
@@ -40,26 +40,45 @@ function Busca() {
         ...(estante.status === "lido" ? { lidoEm: atual?.lidoEm ?? agora } : {}),
       });
     } else {
-      editarLivro(base, { status: atual?.status ?? "quero", paginas: l.paginas, estantes: [...new Set([...(atual?.estantes ?? []), estante.id])] });
+      editarLivro(base, {
+        status: atual?.status ?? "quero",
+        paginas: l.paginas,
+        estantes: [...new Set([...(atual?.estantes ?? []), estante.id])],
+      });
     }
   }
 
   return (
     <div className="flex flex-1 flex-col px-6 pb-8 lg:max-w-[760px] lg:px-14 lg:pt-8">
       <header className="flex items-center justify-between pt-2">
-        <Link href={`/estantes/${estante.id}`} className="-ml-2 flex min-h-11 items-center px-2 text-[13px] font-semibold text-bordo">
+        <Link
+          href={`/estantes/${estante.id}`}
+          className="-ml-2 flex min-h-11 items-center px-2 text-[13px] font-semibold text-bordo"
+        >
           ‹ {estante.nome}
         </Link>
         <span className="eyebrow !text-[10px] text-cinza">buscar</span>
       </header>
-      <h1 className="mt-3 animate-subir font-display text-[32px] leading-[1.1] font-semibold italic text-bordo">buscar livro</h1>
+      <h1 className="mt-3 animate-subir font-display text-[32px] leading-[1.1] font-semibold italic text-bordo">
+        buscar livro
+      </h1>
       <p className="mt-1.5 text-[13px] text-cinza">
         adicionando em <b className="text-bordo">{estante.nome}</b>
       </p>
 
       <label className="relative mt-5 block">
         <span className="sr-only">buscar um livro</span>
-        <svg aria-hidden className="absolute top-1/2 left-4 -translate-y-1/2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7A6A6E" strokeWidth="2" strokeLinecap="round">
+        <svg
+          aria-hidden
+          className="absolute top-1/2 left-4 -translate-y-1/2"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#7A6A6E"
+          strokeWidth="2"
+          strokeLinecap="round"
+        >
           <circle cx="11" cy="11" r="6.5" />
           <path d="m16 16 4.5 4.5" />
         </svg>
@@ -74,14 +93,19 @@ function Busca() {
       </label>
 
       <p className="eyebrow mt-6 mb-1 !text-[10px] text-bordo">{estado === "sugestoes" ? "sugestões" : "resultados"}</p>
-      <EstadoBusca estado={estado} vazio={!resultados.length} />
+      <EstadoBusca estado={estado} vazio={!resultados.length} termo={busca} volta="/buscar" />
       <ul>
         {(estado === "carregando" ? [] : resultados).map((l) => {
           const ok = hidratado && estaNaEstante(l.id);
           return (
             <li key={l.id} className="flex items-center gap-3.5 border-t border-linha py-[13px]">
               <Link href={`/livro/${l.id}`} className="flex min-w-0 flex-1 items-center gap-3.5">
-                <CapaLivro titulo={l.titulo} capa={l.capa} cor={l.cor} className="w-[52px] [&>span:last-child]:hidden" />
+                <CapaLivro
+                  titulo={l.titulo}
+                  capa={l.capa}
+                  cor={l.cor}
+                  className="w-[52px] [&>span:last-child]:hidden"
+                />
                 <span className="min-w-0">
                   <h3 className="font-display text-[17px] leading-[1.2] font-semibold italic">{l.titulo}</h3>
                   <small className="mt-1 block text-xs text-cinza">
@@ -105,6 +129,8 @@ function Busca() {
           );
         })}
       </ul>
+      {estado === "pronto" && resultados.length ? <LinkCadastrar termo={busca} volta="/buscar" /> : null}
+      {estado === "sugestoes" ? <LinkCadastrar termo="" volta="/buscar" /> : null}
       <p className="mt-6 text-center text-[11px] text-cinza">busca e capas: Google Books e Open Library</p>
     </div>
   );

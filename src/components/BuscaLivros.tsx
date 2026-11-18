@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { CapaLivro } from "@/components/CapaLivro";
-import { EstadoBusca } from "@/components/EstadoBusca";
+import { EstadoBusca, LinkCadastrar } from "@/components/EstadoBusca";
 import { useBuscaLivros } from "@/lib/catalogo";
 import { usePerfil, type StatusLivro } from "@/lib/perfil-store";
 
@@ -10,7 +10,13 @@ import { usePerfil, type StatusLivro } from "@/lib/perfil-store";
  * Campo de busca + lista de livros com botão "+ estante".
  * Busca no Google Books e na Open Library; sem termo, mostra as sugestões locais.
  */
-export function BuscaLivros({ status, rotuloInicial = "sugestões para começar" }: { status: StatusLivro; rotuloInicial?: string }) {
+export function BuscaLivros({
+  status,
+  rotuloInicial = "sugestões para começar",
+}: {
+  status: StatusLivro;
+  rotuloInicial?: string;
+}) {
   const livros = usePerfil((s) => s.livros);
   const alternarLivro = usePerfil((s) => s.alternarLivro);
   const [busca, setBusca] = useState("");
@@ -44,8 +50,10 @@ export function BuscaLivros({ status, rotuloInicial = "sugestões para começar"
         />
       </label>
 
-      <p className="eyebrow mt-6 mb-1.5 !text-[10px] text-cinza">{estado === "sugestoes" ? rotuloInicial : "resultados"}</p>
-      <EstadoBusca estado={estado} vazio={!resultados.length} />
+      <p className="eyebrow mt-6 mb-1.5 !text-[10px] text-cinza">
+        {estado === "sugestoes" ? rotuloInicial : "resultados"}
+      </p>
+      <EstadoBusca estado={estado} vazio={!resultados.length} termo={busca} />
       <ul>
         {(estado === "carregando" ? [] : resultados).map((l) => {
           const naEstante = livros.some((x) => x.id === l.id);
@@ -62,7 +70,17 @@ export function BuscaLivros({ status, rotuloInicial = "sugestões para começar"
               <button
                 type="button"
                 aria-pressed={naEstante}
-                onClick={() => alternarLivro({ id: l.id, titulo: l.titulo, autor: l.autor, capa: l.capa, genero: l.genero, paginas: l.paginas, status })}
+                onClick={() =>
+                  alternarLivro({
+                    id: l.id,
+                    titulo: l.titulo,
+                    autor: l.autor,
+                    capa: l.capa,
+                    genero: l.genero,
+                    paginas: l.paginas,
+                    status,
+                  })
+                }
                 className={`ml-auto flex h-11 flex-none items-center rounded-pill border px-3 text-[11px] font-semibold whitespace-nowrap transition-colors ${
                   naEstante ? "border-linha bg-[#F1E4DC] text-cinza" : "border-bordo text-bordo hover:bg-rosa-fundo"
                 }`}
@@ -73,6 +91,7 @@ export function BuscaLivros({ status, rotuloInicial = "sugestões para começar"
           );
         })}
       </ul>
+      {estado === "pronto" && resultados.length ? <LinkCadastrar termo={busca} /> : null}
     </>
   );
 }

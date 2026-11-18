@@ -123,8 +123,8 @@ function Feed() {
       <div className="mt-4 space-y-3 px-6 lg:px-0">
         {!atividades.length ? (
           <Vazio
-            titulo="suas amigas aparecem aqui"
-            texto="siga quem você conhece para ver o que estão lendo, as notas e as resenhas."
+            titulo="suas leituras e as das amigas aparecem aqui"
+            texto="marque o que está lendo ou avalie um livro, e siga quem você conhece para ver o que estão lendo."
             acao={{ href: "/pessoas", rotulo: "buscar pessoas" }}
           />
         ) : !visiveis.length ? (

@@ -126,8 +126,11 @@ async function volumesDoGoogle(q: string, max: number, signal?: AbortSignal): Pr
   if (!semRota) {
     try {
       const r = await fetch(`/api/livros?q=${encodeURIComponent(q)}&max=${max}`, { signal });
-      if (r.ok) return ((await r.json()) as { items?: VolumeGB[] }).items ?? [];
-      if (r.status === 503 || r.status === 404) semRota = true;
+      if (r.ok) {
+        const dados = (await r.json()) as { items?: VolumeGB[]; semChave?: boolean };
+        if (!dados.semChave) return dados.items ?? [];
+        semRota = true; // sem chave configurada: daqui em diante, direto do navegador
+      } else if (r.status === 404) semRota = true;
     } catch (e) {
       if ((e as Error).name === "AbortError") throw e;
     }

@@ -144,7 +144,7 @@ export function CartaoAtividade({
           <Avatar pessoa={pessoa} tamanho={30} />
         </Link>
         <p className="min-w-0 truncate text-xs font-semibold">
-          <Link href={perfil}>{nomeDe(pessoa)}</Link> <span className="font-normal text-cinza">{verbo[a.tipo]}</span>
+          <Link href={perfil}>{a.autor === eu ? "você" : nomeDe(pessoa)}</Link> <span className="font-normal text-cinza">{verbo[a.tipo]}</span>
         </p>
         <span className="ml-auto flex-none text-[10px] font-semibold tracking-[.12em] text-cinza uppercase">{quandoFoi(a.criado_em)}</span>
       </div>
@@ -160,7 +160,7 @@ export function CartaoAtividade({
           </Link>
           <p className="mt-1 hidden text-xs text-grafite lg:block">
             <Link href={perfil} className="font-semibold text-tinta hover:underline">
-              {nomeDe(pessoa)}
+              {a.autor === eu ? "você" : nomeDe(pessoa)}
             </Link>{" "}
             {verbo[a.tipo]} · {a.livro.autor} · {quandoFoi(a.criado_em)}
           </p>

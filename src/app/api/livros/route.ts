@@ -5,14 +5,14 @@ import { NextResponse, type NextRequest } from "next/server";
  * A chave fica só na Vercel (GOOGLE_BOOKS_API_KEY, sem NEXT_PUBLIC) e nunca
  * vai para o navegador. Resultados ficam em cache por 1 dia na Vercel, então
  * a mesma busca volta na hora para todo mundo.
- * Sem chave, responde 503 e o app busca direto do navegador, como antes.
+ * Sem chave, responde { semChave: true } e o app busca direto do navegador, como antes.
  */
 const CAMPOS =
   "items(id,volumeInfo(title,subtitle,authors,publishedDate,pageCount,categories,description,imageLinks/thumbnail,language))";
 
 export async function GET(req: NextRequest) {
   const chave = process.env.GOOGLE_BOOKS_API_KEY;
-  if (!chave) return NextResponse.json({ erro: "sem chave" }, { status: 503 });
+  if (!chave) return NextResponse.json({ semChave: true });
 
   const q = req.nextUrl.searchParams.get("q")?.trim().slice(0, 300);
   if (!q) return NextResponse.json({ items: [] });

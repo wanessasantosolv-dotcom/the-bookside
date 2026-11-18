@@ -157,8 +157,10 @@ export async function listaDeSeguidores(id: string, tipo: "seguidores" | "seguin
 
 const CAMPOS_ATIVIDADE = "id,autor,tipo,livro,nota,texto,clube_id,criado_em,curtidas(autor),comentarios(count)";
 
+/** O feed: o que as amigas e você mesma andam lendo. */
 export async function feedDeAmigas(): Promise<Atividade[]> {
-  const sigo = [...(await idsQueSigo())];
+  const eu = meuId();
+  const sigo = [...(await idsQueSigo()), ...(eu ? [eu] : [])];
   if (!sigo.length) return [];
   const { data, error } = await db()
     .from("atividades")
