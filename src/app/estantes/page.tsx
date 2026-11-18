@@ -14,12 +14,36 @@ import { usePerfil, type LivroSalvo } from "@/lib/perfil-store";
 type Filtro = "todos" | string;
 type Visualizacao = "prateleira" | "leque" | "estante";
 
-const PROXIMA_VISUALIZACAO: Record<Visualizacao, Visualizacao> = { prateleira: "leque", leque: "estante", estante: "prateleira" };
-const ROTULO_PROXIMA_VISUALIZACAO: Record<Visualizacao, string> = {
-  prateleira: "ver como leque de capas ✧",
-  leque: "ver como estante de pé ✦",
-  estante: "ver como prateleiras",
-};
+const OPCOES_VISUALIZACAO: { id: Visualizacao; nome: string }[] = [
+  { id: "prateleira", nome: "prateleiras" },
+  { id: "leque", nome: "leque de capas ✧" },
+  { id: "estante", nome: "estante de pé ✦" },
+];
+
+/** mostra as 3 opções de visualização de uma vez, com a ativa destacada em bordô. */
+function SeletorVisualizacao({ vis, onChange, className }: { vis: Visualizacao; onChange: (v: Visualizacao) => void; className?: string }) {
+  return (
+    <span className={`font-accent text-[13px] text-cinza italic ${className ?? ""}`}>
+      ver como{" "}
+      {OPCOES_VISUALIZACAO.map((o, i) => (
+        <span key={o.id}>
+          {i > 0 ? " · " : " "}
+          <button
+            type="button"
+            onClick={() => onChange(o.id)}
+            className={
+              vis === o.id
+                ? "not-italic font-semibold text-bordo"
+                : "underline decoration-bege underline-offset-4 hover:text-bordo"
+            }
+          >
+            {o.nome}
+          </button>
+        </span>
+      ))}
+    </span>
+  );
+}
 
 function Etiqueta({ e, qtd }: { e: EstanteInfo; qtd: number }) {
   return (
@@ -235,13 +259,7 @@ function EstantesWeb({ estantes, livros, favoritos }: { estantes: EstanteInfo[];
             ))}
           </nav>
           <span className="flex items-center gap-5">
-            <button
-              type="button"
-              onClick={() => setVis(PROXIMA_VISUALIZACAO[vis])}
-              className="font-accent text-[13px] text-cinza italic underline decoration-bege underline-offset-4 hover:text-bordo"
-            >
-              {ROTULO_PROXIMA_VISUALIZACAO[vis]}
-            </button>
+            <SeletorVisualizacao vis={vis} onChange={setVis} />
             <Link
               href="/estantes/importar"
               className="font-accent text-[13px] text-cinza italic underline decoration-bege underline-offset-4 hover:text-bordo"
@@ -409,13 +427,7 @@ export default function EstantesPage() {
             </div>
 
             <p className="pb-6 text-center">
-              <button
-                type="button"
-                onClick={() => setVis(PROXIMA_VISUALIZACAO[vis])}
-                className="py-2 font-accent text-sm italic text-cinza underline decoration-bege underline-offset-4"
-              >
-                {ROTULO_PROXIMA_VISUALIZACAO[vis]}
-              </button>
+              <SeletorVisualizacao vis={vis} onChange={setVis} className="!text-sm" />
             </p>
           </>
         )}
