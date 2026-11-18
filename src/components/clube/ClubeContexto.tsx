@@ -16,6 +16,7 @@ import { ErroOuFalta, Vazio } from "@/components/social/Estados";
 import {
   clube,
   membrosDe,
+  sincronizarMinhaEstante,
   tirarMembro,
   type Clube,
   type Membro,
@@ -294,6 +295,10 @@ export function ClubeProvedor({
 }) {
   const eu = useMeuId();
   const pathname = usePathname();
+  // o que o clube está lendo vai para a estante pessoal (no máximo 1 vez por minuto)
+  useEffect(() => {
+    void sincronizarMinhaEstante();
+  }, [id]);
   const consulta = useConsulta(async () => {
     const [c, membros] = await Promise.all([clube(id), membrosDe(id)]);
     return c ? { c, membros } : null;

@@ -1,9 +1,12 @@
 "use client";
 
+import { nuvemPronta } from "@/lib/nuvem";
+import { usePerfil } from "@/lib/perfil-store";
 import {
   meuId,
   pessoasPorId,
   publicarAtividade,
+  semPublicar,
   type PessoaResumo,
 } from "@/lib/social";
 import { supabase } from "@/lib/supabase";
@@ -370,6 +373,8 @@ export async function comecarLeitura(
     .update({ estado: "lendo", rodada, prazo, iniciado_em })
     .eq("id", livroId);
   if (error) throw error;
+  // quem começou a leitura já vê o livro na própria estante
+  void sincronizarMinhaEstante(true);
   // aparece no feed de quem é do clube
   const livro = livros.find((l) => l.id === livroId)?.livro;
   if (livro)
@@ -532,4 +537,160 @@ export async function desmarcarEncontro(id: string) {
 /** Link de convite: abre a tela de entrar já com o código preenchido. */
 export function linkDeConvite(codigo: string) {
   return `${window.location.origin}/clubes/entrar?codigo=${codigo}`;
+}
+
+// ───────── histórico e estante pessoal ─────────
+
+/** Inclui no clube um livro que ele já leu (só quem modera): monta o histórico. */
+export async function adicionarLidoAoClube(
+  clubeId: string,
+  livro: LivroDoClube["livro"],
+  terminouEm: string,
+) {
+  const eu = meuId();
+  const { data, error } = await db()
+    .from("clube_livros")
+    .insert({
+      clube_id: clubeId,
+      livro,
+      sugerido_por: eu,
+      estado: "lido",
+      motivo: null,
+      encerrado_em: terminouEm,
+    })
+    .select("id")
+    .single();
+  if (error) throw error;
+  return data.id as string;
+}
+
+const SINCRONIZADOS = "bookside-clube-na-estante";
+const chaveLivro = (t: string) =>
+  t
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+let ultimaSincronizacao = 0;
+
+/**
+ * O que a pessoa lê no clube aparece na estante e nos números dela:
+ * - a leitura da vez entra como "lendo" (se ainda não estiver lá);
+ * - um livro que o clube terminou e em que ela escreveu ficha entra como "lido",
+ *   com a data em que o clube terminou e a nota da ficha.
+ * Cada livro do clube é levado uma vez só: se a pessoa tirar da estante depois, ele não volta.
+ */
+export async function sincronizarEstanteComClubes(
+  estante: {
+    livros: { id: string; titulo: string; status?: string; nota?: number }[];
+    editar: (
+      base: { id: string; titulo: string; autor: string; capa?: string },
+      dados: Record<string, unknown>,
+    ) => void;
+  },
+  forcar = false,
+) {
+  const eu = meuId();
+  if (!supabase || !eu) return;
+  if (!forcar && Date.now() - ultimaSincronizacao < 60_000) return;
+  ultimaSincronizacao = Date.now();
+
+  const { data: minhas } = await db()
+    .from("membros")
+    .select("clube_id")
+    .eq("usuario_id", eu);
+  const clubes = (minhas ?? []).map((m) => m.clube_id as string);
+  if (!clubes.length) return;
+  const [livros, fichas] = await Promise.all([
+    db()
+      .from("clube_livros")
+      .select(CAMPOS_LIVRO)
+      .in("clube_id", clubes)
+      .in("estado", ["lendo", "lido"]),
+    db().from("fichas").select("clube_livro_id,nota,criado_em").eq("autor", eu),
+  ]);
+  if (livros.error || fichas.error) return;
+
+  let feitos: string[] = [];
+  try {
+    feitos = JSON.parse(localStorage.getItem(SINCRONIZADOS) ?? "[]");
+  } catch {
+    /* sem localStorage */
+  }
+  const minhaFicha = new Map(
+    (fichas.data ?? []).map((f) => [f.clube_livro_id as string, f]),
+  );
+  const novos: string[] = [];
+
+  for (const l of (livros.data ?? []) as LivroDoClube[]) {
+    const ficha = minhaFicha.get(l.id);
+    const chave = `${l.id}:${l.estado === "lido" && ficha ? "lido" : "lendo"}`;
+    if (feitos.includes(chave)) continue;
+    // só leva o "lido" de quem escreveu ficha (não dá para saber se as outras terminaram)
+    if (l.estado === "lido" && !ficha) continue;
+    const meu = estante.livros.find(
+      (x) =>
+        x.id === l.livro.id ||
+        chaveLivro(x.titulo) === chaveLivro(l.livro.titulo),
+    );
+    const base = {
+      id: meu?.id ?? l.livro.id,
+      titulo: meu?.titulo ?? l.livro.titulo,
+      autor: l.livro.autor,
+      capa: l.livro.capa,
+    };
+    if (l.estado === "lendo") {
+      if (!meu || meu.status === "quero")
+        estante.editar(base, {
+          status: "lendo",
+          iniciadoEm: l.iniciado_em ?? new Date().toISOString(),
+          paginas: l.livro.paginas,
+        });
+    } else if (ficha && meu?.status !== "lido") {
+      estante.editar(base, {
+        status: "lido",
+        lidoEm: l.encerrado_em ?? (ficha.criado_em as string),
+        nota: meu?.nota ?? (ficha.nota ? Number(ficha.nota) : undefined),
+        paginas: l.livro.paginas,
+        paginaAtual: l.livro.paginas,
+      });
+    }
+    novos.push(chave);
+  }
+  if (novos.length)
+    try {
+      localStorage.setItem(
+        SINCRONIZADOS,
+        JSON.stringify([...feitos, ...novos].slice(-500)),
+      );
+    } catch {
+      /* sem localStorage */
+    }
+}
+
+/** Sincroniza a estante com os clubes usando o perfil local (sem publicar no feed: o clube já avisou). */
+export function sincronizarMinhaEstante(forcar = false) {
+  const estado = usePerfil.getState();
+  return sincronizarEstanteComClubes(
+    {
+      livros: estado.livros,
+      editar: (base, dados) =>
+        semPublicar(() => usePerfil.getState().editarLivro(base, dados)),
+    },
+    forcar,
+  ).catch(() => {});
+}
+
+/** Começa quando a conta e a nuvem estão prontas (o app acabou de abrir). */
+export function iniciarSincronizacaoClubes() {
+  let tentativas = 0;
+  const t = setInterval(() => {
+    tentativas++;
+    if (nuvemPronta() && meuId()) {
+      clearInterval(t);
+      void sincronizarMinhaEstante(true);
+    } else if (tentativas > 30) clearInterval(t);
+  }, 2000);
+  return () => clearInterval(t);
 }

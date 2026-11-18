@@ -2,6 +2,7 @@
 
 import { useEffect, useSyncExternalStore } from "react";
 import { iniciarCapas } from "@/lib/catalogo";
+import { iniciarSincronizacaoClubes } from "@/lib/clubes";
 import { iniciarNuvem } from "@/lib/nuvem";
 import { iniciarAtividades } from "@/lib/social";
 import { usePerfil } from "@/lib/perfil-store";
@@ -22,7 +23,9 @@ export function PerfilHidratacao() {
       const pararNuvem = iniciarNuvem();
       const pararCapas = iniciarCapas();
       const pararAtividades = iniciarAtividades();
+      const pararClubes = iniciarSincronizacaoClubes();
       parar = () => {
+        pararClubes();
         pararNuvem();
         pararCapas();
         pararAtividades();

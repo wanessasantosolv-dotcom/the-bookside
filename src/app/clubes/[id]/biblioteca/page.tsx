@@ -6,7 +6,12 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { useClube } from "@/components/clube/ClubeContexto";
 import { ErroOuFalta, Vazio } from "@/components/social/Estados";
-import { andamento, apagarLivroDoClube, livrosDoClube, type LivroDoClube } from "@/lib/clubes";
+import {
+  andamento,
+  apagarLivroDoClube,
+  livrosDoClube,
+  type LivroDoClube,
+} from "@/lib/clubes";
 import { useConsulta } from "@/lib/social";
 
 function Prateleira({
@@ -55,9 +60,7 @@ function Prateleira({
           {livros.map((l) => (
             <li key={l.id} className="relative w-[72px] flex-none lg:w-[84px]">
               <Link href={link(l)} aria-label={l.livro.titulo}>
-                <CapaAuto livro={l.livro}
-                  className="w-full"
-                />
+                <CapaAuto livro={l.livro} className="w-full" />
               </Link>
               {podeExcluir ? (
                 <button
@@ -73,9 +76,14 @@ function Prateleira({
           ))}
         </ul>
       ) : (
-        <div className="mt-3 pb-2 font-accent text-sm italic text-cinza">{vazio}</div>
+        <div className="mt-3 pb-2 font-accent text-sm italic text-cinza">
+          {vazio}
+        </div>
       )}
-      <div aria-hidden className="h-2.5 rounded-[3px] bg-gradient-to-b from-linha to-bege shadow-[0_2px_0_#C4AC93]" />
+      <div
+        aria-hidden
+        className="h-2.5 rounded-[3px] bg-gradient-to-b from-linha to-bege shadow-[0_2px_0_#C4AC93]"
+      />
     </section>
   );
 }
@@ -84,13 +92,25 @@ export default function BibliotecaPage() {
   const { clube, papel } = useClube();
   const consulta = useConsulta(() => livrosDoClube(clube.id), [clube.id]);
   if (consulta.carregando && !consulta.dados)
-    return <Animacao tipo="pilha" titulo="procurando na estante" sub="isso pode levar um instante" />;
-  if (consulta.erro) return <ErroOuFalta erro={consulta.erro} onTentar={consulta.recarregar} />;
+    return (
+      <Animacao
+        tipo="pilha"
+        titulo="procurando na estante"
+        sub="isso pode levar um instante"
+      />
+    );
+  if (consulta.erro)
+    return <ErroOuFalta erro={consulta.erro} onTentar={consulta.recarregar} />;
   const livros = consulta.dados!;
   const moderadora = papel === "moderadora";
 
   async function excluir(l: LivroDoClube) {
-    if (!confirm(`tirar "${l.livro.titulo}" da estante do clube? isso apaga também as fichas desse livro.`)) return;
+    if (
+      !confirm(
+        `tirar "${l.livro.titulo}" da estante do clube? isso apaga também as fichas desse livro.`,
+      )
+    )
+      return;
     await apagarLivroDoClube(l.id);
     consulta.recarregar();
   }
@@ -98,9 +118,13 @@ export default function BibliotecaPage() {
   const lidos = livros
     .filter((l) => l.estado === "lido")
     .sort((a, b) => (b.encerrado_em ?? "").localeCompare(a.encerrado_em ?? ""));
-  const sugeridos = livros.filter((l) => l.estado === "sugerido").sort((a, b) => b.votos.length - a.votos.length);
+  const sugeridos = livros
+    .filter((l) => l.estado === "sugerido")
+    .sort((a, b) => b.votos.length - a.votos.length);
   const ano = new Date().getFullYear();
-  const desteAno = lidos.filter((l) => l.encerrado_em?.startsWith(String(ano))).length;
+  const desteAno = lidos.filter((l) =>
+    l.encerrado_em?.startsWith(String(ano)),
+  ).length;
   const and = lendo[0] ? andamento(lendo[0]) : null;
   const base = `/clubes/${clube.id}`;
 
@@ -110,12 +134,22 @@ export default function BibliotecaPage() {
         <p className="text-[10px] font-semibold tracking-[.16em] text-cinza uppercase">
           todos · {livros.length} &nbsp; lidos · {lidos.length}
         </p>
-        <Link
-          href={`${base}/sugerir`}
-          className="flex min-h-9 items-center rounded-pill bg-bordo px-4 text-xs font-semibold text-creme"
-        >
-          + sugerir
-        </Link>
+        <span className="flex gap-2">
+          {papel === "moderadora" ? (
+            <Link
+              href={`${base}/adicionar-lido`}
+              className="flex min-h-9 items-center rounded-pill border border-bordo px-4 text-xs font-semibold text-bordo"
+            >
+              + já lido
+            </Link>
+          ) : null}
+          <Link
+            href={`${base}/sugerir`}
+            className="flex min-h-9 items-center rounded-pill bg-bordo px-4 text-xs font-semibold text-creme"
+          >
+            + sugerir
+          </Link>
+        </span>
       </div>
       {!livros.length ? (
         <Vazio
@@ -127,7 +161,13 @@ export default function BibliotecaPage() {
       ) : (
         <>
           <Prateleira
-            selo={and ? (and.faltam ? `faltam ${and.faltam} dias` : "último dia") : "agora"}
+            selo={
+              and
+                ? and.faltam
+                  ? `faltam ${and.faltam} dias`
+                  : "último dia"
+                : "agora"
+            }
             seloEscuro
             titulo="lendo agora"
             abrir={`${base}/leitura`}
@@ -140,7 +180,9 @@ export default function BibliotecaPage() {
           <Prateleira
             selo={`${desteAno} este ano`}
             titulo="lidos"
-            abrir={lidos[0] ? `${base}/livro/${lidos[0].id}` : `${base}/leitura`}
+            abrir={
+              lidos[0] ? `${base}/livro/${lidos[0].id}` : `${base}/leitura`
+            }
             livros={lidos}
             link={(l) => `${base}/livro/${l.id}`}
             vazio="o clube ainda não terminou nenhum livro."
@@ -154,7 +196,10 @@ export default function BibliotecaPage() {
             livros={sugeridos}
             link={() => `${base}/sugestoes`}
             vazio={
-              <Link href={`${base}/sugerir`} className="underline underline-offset-4">
+              <Link
+                href={`${base}/sugerir`}
+                className="underline underline-offset-4"
+              >
                 ninguém sugeriu nada. sugira o próximo →
               </Link>
             }

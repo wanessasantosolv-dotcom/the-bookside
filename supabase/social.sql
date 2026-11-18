@@ -172,11 +172,14 @@ alter table public.clube_livros enable row level security;
 drop policy if exists "membros veem os livros" on public.clube_livros;
 create policy "membros veem os livros" on public.clube_livros for select to authenticated using (public.e_membro(clube_id));
 -- membros sugerem (dentro da regra do mês); quem modera pode pôr o livro da vez direto
+-- e incluir livros que o clube já leu
 drop policy if exists "membros sugerem" on public.clube_livros;
 create policy "membros sugerem" on public.clube_livros for insert to authenticated
   with check (
     (public.e_moderadora(clube_id) or public.pode_sugerir(clube_id))
-    and sugerido_por = auth.uid() and estado = 'sugerido'
+    and sugerido_por = auth.uid()
+    -- sugestão (qualquer membro) ou um livro que o clube já leu (só quem modera, para o histórico)
+    and (estado = 'sugerido' or (estado = 'lido' and public.e_moderadora(clube_id)))
   );
 drop policy if exists "moderadora organiza a leitura" on public.clube_livros;
 create policy "moderadora organiza a leitura" on public.clube_livros for update to authenticated
