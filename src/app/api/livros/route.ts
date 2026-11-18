@@ -32,6 +32,8 @@ export async function GET(req: NextRequest) {
   const inicio = Number(req.nextUrl.searchParams.get("inicio"));
   if (inicio > 0 && inicio < 200)
     url.searchParams.set("startIndex", String(inicio));
+  if (req.nextUrl.searchParams.get("ordem") === "novos")
+    url.searchParams.set("orderBy", "newest");
   url.searchParams.set("key", chave);
 
   const r = await fetch(url, { next: { revalidate: 86400 } });

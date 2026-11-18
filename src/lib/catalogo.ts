@@ -177,8 +177,9 @@ export async function livrosDoGoogle(
   q: string,
   lang?: string,
   signal?: AbortSignal,
+  opcoes: { novos?: boolean; inicio?: number } = {},
 ): Promise<LivroBusca[]> {
-  const itens = await volumesDoGoogle(q, 20, signal, { lang });
+  const itens = await volumesDoGoogle(q, 20, signal, { lang, ...opcoes });
   return itens
     .map((v, i) => doGoogle(v, i))
     .filter((l): l is LivroBusca => !!l);
@@ -195,10 +196,10 @@ async function volumesDoGoogle(
   q: string,
   max: number,
   signal?: AbortSignal,
-  extra: { lang?: string; inicio?: number } = {},
+  extra: { lang?: string; inicio?: number; novos?: boolean } = {},
 ): Promise<VolumeGB[]> {
-  const mais = `${extra.lang ? `&lang=${extra.lang}` : ""}${extra.inicio ? `&inicio=${extra.inicio}` : ""}`;
-  const maisGoogle = `${extra.lang ? `&langRestrict=${extra.lang}` : ""}${extra.inicio ? `&startIndex=${extra.inicio}` : ""}`;
+  const mais = `${extra.lang ? `&lang=${extra.lang}` : ""}${extra.inicio ? `&inicio=${extra.inicio}` : ""}${extra.novos ? "&ordem=novos" : ""}`;
+  const maisGoogle = `${extra.lang ? `&langRestrict=${extra.lang}` : ""}${extra.inicio ? `&startIndex=${extra.inicio}` : ""}${extra.novos ? "&orderBy=newest" : ""}`;
   if (!semRota) {
     try {
       const r = await fetch(
@@ -751,7 +752,7 @@ export function useCapaDoLivro(
 }
 
 /** Gostos do perfil → assunto do Google Books (as categorias de lá são em inglês). */
-const assuntoDoGosto: Record<string, string> = {
+export const assuntoDoGosto: Record<string, string> = {
   romance: "romance",
   suspense: "thrillers",
   "ficção científica": "science fiction",
@@ -847,7 +848,7 @@ async function sugestoesPorGosto(
   return livros;
 }
 
-const chaveTitulo = (t: string) =>
+export const chaveTitulo = (t: string) =>
   t
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")

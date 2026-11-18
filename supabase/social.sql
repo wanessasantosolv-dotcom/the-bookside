@@ -340,3 +340,43 @@ language sql stable security invoker set search_path = public as $$
 $$;
 revoke all on function public.opinioes_do_livro(text, text) from anon, public;
 grant execute on function public.opinioes_do_livro(text, text) to authenticated;
+
+-- ───────────────────────── em alta no app ─────────────────────────
+-- lê uma data guardada no perfil; se estiver estragada, ignora (não derruba a consulta)
+create or replace function public.data_ou_nada(t text) returns timestamptz
+language plpgsql immutable as $$
+begin
+  return nullif(t, '')::timestamptz;
+exception when others then
+  return null;
+end $$;
+
+-- Os livros que mais gente pôs na estante (ou começou/terminou) nos últimos
+-- 60 dias, juntando o mesmo livro mesmo com códigos diferentes (pelo título).
+create or replace function public.livros_em_alta(p_dias int default 60)
+returns table (id text, titulo text, autor text, capa text, pessoas bigint)
+language sql stable security invoker set search_path = public as $$
+  with recentes as (
+    select p.id as pessoa, l
+    from public.perfis_publicos p
+    cross join lateral jsonb_array_elements(
+      case when jsonb_typeof(p.dados -> 'livros') = 'array' then p.dados -> 'livros' else '[]'::jsonb end
+    ) as l
+    where p.id <> auth.uid()
+      and greatest(
+        coalesce(public.data_ou_nada(l ->> 'adicionadoEm'), 'epoch'),
+        coalesce(public.data_ou_nada(l ->> 'iniciadoEm'), 'epoch'),
+        coalesce(public.data_ou_nada(l ->> 'lidoEm'), 'epoch')
+      ) > now() - make_interval(days => least(greatest(p_dias, 1), 365))
+  )
+  select (array_agg(l ->> 'id'))[1], (array_agg(l ->> 'titulo'))[1], (array_agg(l ->> 'autor'))[1],
+         (array_agg(l ->> 'capa') filter (where (l ->> 'capa') like 'http%'))[1],
+         count(distinct pessoa)
+  from recentes
+  where coalesce(l ->> 'titulo', '') <> ''
+  group by public.titulo_normalizado(l ->> 'titulo')
+  order by count(distinct pessoa) desc, max(l ->> 'adicionadoEm') desc
+  limit 20
+$$;
+revoke all on function public.livros_em_alta(int) from anon, public;
+grant execute on function public.livros_em_alta(int) to authenticated;
