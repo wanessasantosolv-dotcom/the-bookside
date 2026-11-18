@@ -110,44 +110,52 @@ function EstantesWeb({ estantes, livros, favoritos }: { estantes: EstanteInfo[];
 
   return (
     <div className="hidden min-h-dvh bg-creme font-sans text-ameixa lg:block">
-      <div className="flex items-end justify-between border-b border-linha px-14 pt-12 pb-8">
-        <div>
-          <h1 className="font-revista text-[44px] leading-none text-bordo italic">minhas estantes</h1>
-          <p className="mt-2.5 text-[13px] font-medium text-cinza">
-            {lidos.length} {lidos.length === 1 ? "livro lido" : "livros lidos"}
-            {paginas ? ` · ${paginas.toLocaleString("pt-BR")} páginas` : ""} · {livros.length} na estante
-          </p>
+      <div className="border-b border-linha px-14 pt-12 pb-6">
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="font-revista text-[44px] leading-none text-bordo italic">minhas estantes</h1>
+            <p className="mt-2.5 text-[13px] font-medium text-cinza">
+              {lidos.length} {lidos.length === 1 ? "livro lido" : "livros lidos"}
+              {paginas ? ` · ${paginas.toLocaleString("pt-BR")} páginas` : ""} · {livros.length} na estante
+            </p>
+          </div>
+          <Link
+            href="/estantes/nova"
+            className="rounded-pill border border-bordo px-5 py-2.5 text-[11px] font-bold tracking-[.1em] text-bordo uppercase hover:bg-bordo/5"
+          >
+            + nova estante
+          </Link>
         </div>
-        <div className="flex items-end gap-7">
-          <nav aria-label="filtrar estantes" className="flex gap-7">
+
+        <div className="mt-7 flex items-center justify-between">
+          <nav aria-label="filtrar estantes" className="flex flex-wrap gap-2">
             {[{ id: "todas", nome: "todas" }, ...linhas.map((l) => ({ id: l.id, nome: l.nome === "lendo agora" ? "lendo" : l.nome }))].map((t) => (
               <button
                 key={t.id}
                 type="button"
                 aria-pressed={aba === t.id}
                 onClick={() => setAba(t.id)}
-                className={`border-b-2 pb-2.5 text-[11px] font-bold tracking-[.1em] uppercase ${aba === t.id ? "border-bordo text-bordo" : "border-transparent text-cinza hover:text-ameixa"}`}
+                className={`flex h-9 items-center rounded-pill border px-4 text-[12px] font-semibold ${
+                  aba === t.id ? "border-bordo bg-bordo text-creme" : "border-linha bg-creme-quente text-ameixa hover:border-bordo"
+                }`}
               >
                 {t.nome}
               </button>
             ))}
           </nav>
-          <span className="mb-1.5 flex items-center gap-2.5">
+          <span className="flex items-center gap-5">
             <button
               type="button"
               onClick={() => setLeque((v) => !v)}
-              aria-pressed={leque}
-              className={`rounded-pill border px-4 py-2.5 text-[11px] font-bold tracking-[.1em] uppercase ${
-                leque ? "border-bordo bg-bordo text-creme" : "border-linha text-cinza hover:border-bordo hover:text-bordo"
-              }`}
+              className="font-accent text-[13px] text-cinza italic underline decoration-bege underline-offset-4 hover:text-bordo"
             >
-              {leque ? "ver prateleiras" : "ver como leque ✧"}
+              {leque ? "ver como prateleiras" : "ver como leque de capas ✧"}
             </button>
-            <Link href="/estantes/importar" className="rounded-pill border border-linha px-4 py-2.5 text-[11px] font-bold tracking-[.1em] text-cinza uppercase hover:border-bordo hover:text-bordo">
+            <Link
+              href="/estantes/importar"
+              className="font-accent text-[13px] text-cinza italic underline decoration-bege underline-offset-4 hover:text-bordo"
+            >
               importar lista
-            </Link>
-            <Link href="/estantes/nova" className="rounded-pill border border-bordo px-4 py-2.5 text-[11px] font-bold tracking-[.1em] text-bordo uppercase hover:bg-bordo/5">
-              + nova estante
             </Link>
           </span>
         </div>
@@ -174,23 +182,20 @@ function EstantesWeb({ estantes, livros, favoritos }: { estantes: EstanteInfo[];
               {leque ? (
                 <LequeLinhaWeb livros={linha.livros} />
               ) : (
-                <div>
-                  <ul className="grid grid-cols-8 items-end gap-4">
+                <div className="w-fit">
+                  <ul
+                    className="grid items-end gap-4"
+                    style={{ gridTemplateColumns: `repeat(${covers.length + (comMais ? 1 : 0)}, 104px)` }}
+                  >
                     {covers.map((l) => (
-                      <li key={l.id} className="flex flex-col">
-                        <Link href={`/livro/${l.id}`} className="block">
-                          <CapaLivro titulo={l.titulo} capa={l.capa} cor={corDoLivro(l.id)} className="w-full [&>span:last-child]:text-[11px]" />
-                        </Link>
-                        {covers.length ? (
-                          <span aria-hidden className="mt-[3px] block h-[9px] rounded-[3px] bg-gradient-to-b from-linha to-bege shadow-[0_2px_0_#c4ac93]" />
-                        ) : null}
-                        <Link href={`/livro/${l.id}`} className="block">
-                          <i className="mt-2 block text-center text-[11px] leading-[1.3] text-cinza not-italic">{l.titulo}</i>
+                      <li key={l.id}>
+                        <Link href={`/livro/${l.id}`} className="block" title={l.titulo}>
+                          <CapaLivro titulo={l.titulo} capa={l.capa} cor={corDoLivro(l.id)} className="w-full" />
                         </Link>
                       </li>
                     ))}
                     {comMais ? (
-                      <li className="flex flex-col">
+                      <li>
                         <Link
                           href={`/buscar?estante=${linha.id}`}
                           aria-label={`adicionar livro em ${linha.nome}`}
@@ -198,10 +203,15 @@ function EstantesWeb({ estantes, livros, favoritos }: { estantes: EstanteInfo[];
                         >
                           +
                         </Link>
-                        <span aria-hidden className="mt-[3px] block h-[9px] rounded-[3px] bg-gradient-to-b from-linha to-bege shadow-[0_2px_0_#c4ac93]" />
                       </li>
                     ) : null}
                   </ul>
+                  {covers.length ? (
+                    <span
+                      aria-hidden
+                      className="mt-[3px] block h-[9px] w-full rounded-[3px] bg-gradient-to-b from-linha to-bege shadow-[0_2px_0_#c4ac93]"
+                    />
+                  ) : null}
                 </div>
               )}
             </section>
