@@ -7,13 +7,7 @@ import { useState } from "react";
 import { Botao } from "@/components/ui/Botao";
 import { usePerfil } from "@/lib/perfil-store";
 
-const cores = [
-  { cor: "#6B0D24", nome: "bordô" },
-  { cor: "#8E1D3D", nome: "vinho" },
-  { cor: "#6B7A5E", nome: "oliva" },
-  { cor: "#A88B64", nome: "dourado" },
-  { cor: "#464052", nome: "ameixa" },
-];
+const COR_PADRAO = "#6B0D24";
 const rotulo =
   "mb-1.5 block text-[10px] leading-[14px] font-semibold tracking-[.12em] text-bordo uppercase";
 
@@ -21,7 +15,6 @@ export default function NovaEstantePage() {
   const router = useRouter();
   const criarEstante = usePerfil((s) => s.criarEstante);
   const [nome, setNome] = useState("");
-  const [cor, setCor] = useState(cores[0].cor);
   const [publica, setPublica] = useState(false);
 
   return (
@@ -59,37 +52,11 @@ export default function NovaEstantePage() {
           </label>
 
           <fieldset className="mt-[18px]">
-            <legend className={rotulo}>cor</legend>
-            <div className="mt-1 flex gap-1">
-              {cores.map((c) => (
-                <label
-                  key={c.cor}
-                  className="flex size-11 cursor-pointer items-center justify-center rounded-full has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-bordo"
-                >
-                  <input
-                    type="radio"
-                    name="cor"
-                    className="sr-only"
-                    checked={cor === c.cor}
-                    onChange={() => setCor(c.cor)}
-                  />
-                  <span className="sr-only">{c.nome}</span>
-                  <span
-                    aria-hidden
-                    className={`size-[34px] rounded-full border-2 ${cor === c.cor ? "border-ameixa ring-2 ring-creme-quente ring-inset" : "border-transparent"}`}
-                    style={{ background: c.cor }}
-                  />
-                </label>
-              ))}
-            </div>
-          </fieldset>
-
-          <fieldset className="mt-[18px]">
             <legend className={rotulo}>visibilidade</legend>
             <div className="mt-1 flex gap-2">
               {[
-                { v: false, t: "só eu vejo" },
-                { v: true, t: "amigas também" },
+                { v: false, t: "privada" },
+                { v: true, t: "pública" },
               ].map((o) => (
                 <label
                   key={o.t}
@@ -118,7 +85,7 @@ export default function NovaEstantePage() {
         <Botao
           disabled={!nome.trim()}
           onClick={() => {
-            const id = criarEstante({ nome: nome.trim(), cor, publica });
+            const id = criarEstante({ nome: nome.trim(), cor: COR_PADRAO, publica });
             router.push(`/estantes/${id}`);
           }}
         >
