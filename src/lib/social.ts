@@ -27,7 +27,13 @@ export type TipoAtividade =
   | "terminou"
   | "avaliou"
   | "quer"
-  | "ficha";
+  | "ficha"
+  /** progresso de leitura: texto = "página/total" */
+  | "progresso"
+  /** um trecho que ficou: texto = a citação */
+  | "trecho"
+  /** movimento de um clube: texto = o que aconteceu */
+  | "clube";
 export type Atividade = {
   id: string;
   autor: string;
@@ -36,6 +42,8 @@ export type Atividade = {
   nota: number | null;
   texto: string | null;
   clube_id: string | null;
+  /** nome do clube, nas atualizações de clube */
+  clube?: { id: string; nome: string } | null;
   criado_em: string;
   curtidas: { autor: string }[];
   comentarios: { count: number }[];
@@ -54,6 +62,9 @@ export const verbo: Record<TipoAtividade, string> = {
   avaliou: "avaliou",
   quer: "quer ler",
   ficha: "escreveu uma ficha de",
+  progresso: "está lendo",
+  trecho: "guardou um trecho de",
+  clube: "",
 };
 
 function db() {
@@ -220,22 +231,38 @@ export async function listaDeSeguidores(
 // ───────── feed ─────────
 
 const CAMPOS_ATIVIDADE =
-  "id,autor,tipo,livro,nota,texto,clube_id,criado_em,curtidas(autor),comentarios(count)";
+  "id,autor,tipo,livro,nota,texto,clube_id,criado_em,clube:clubes(id,nome),curtidas(autor),comentarios(count)";
 
 /** O feed: o que as amigas e você mesma andam lendo. */
 export async function feedDeAmigas(): Promise<Atividade[]> {
   const eu = meuId();
-  const sigo = [...(await idsQueSigo()), ...(eu ? [eu] : [])];
-  if (!sigo.length) return [];
+  const [sigoIds, meusClubes] = await Promise.all([
+    idsQueSigo(),
+    eu
+      ? db()
+          .from("membros")
+          .select("clube_id")
+          .eq("usuario_id", eu)
+          .then((r) => (r.data ?? []).map((m) => m.clube_id as string))
+      : Promise.resolve([] as string[]),
+  ]);
+  const sigo = [...sigoIds, ...(eu ? [eu] : [])];
+  if (!sigo.length && !meusClubes.length) return [];
+  // quem eu sigo (fora dos clubes) + tudo o que acontece nos meus clubes
+  const filtros = [
+    ...(sigo.length
+      ? [`and(autor.in.(${sigo.join(",")}),clube_id.is.null)`]
+      : []),
+    ...(meusClubes.length ? [`clube_id.in.(${meusClubes.join(",")})`] : []),
+  ];
   const { data, error } = await db()
     .from("atividades")
     .select(CAMPOS_ATIVIDADE)
-    .in("autor", sigo)
-    .is("clube_id", null)
+    .or(filtros.join(","))
     .order("criado_em", { ascending: false })
-    .limit(50);
+    .limit(60);
   if (error) throw error;
-  return semLivrosTirados((data ?? []) as Atividade[]);
+  return semLivrosTirados((data ?? []) as unknown as Atividade[]);
 }
 
 /**
@@ -250,7 +277,7 @@ function semLivrosTirados(lista: Atividade[]): Atividade[] {
   const tirados = lista.filter(
     (a) =>
       a.autor === eu &&
-      a.tipo !== "ficha" &&
+      !a.clube_id &&
       !livros.some((l) => l.id === a.livro?.id),
   );
   if (tirados.length)
@@ -304,7 +331,7 @@ export async function atividadesDe(
     .order("criado_em", { ascending: false })
     .limit(limite);
   if (error) throw error;
-  return semLivrosTirados((data ?? []) as Atividade[]);
+  return semLivrosTirados((data ?? []) as unknown as Atividade[]);
 }
 
 export async function atividadesDoClube(clube: string): Promise<Atividade[]> {
@@ -315,7 +342,7 @@ export async function atividadesDoClube(clube: string): Promise<Atividade[]> {
     .order("criado_em", { ascending: false })
     .limit(50);
   if (error) throw error;
-  return (data ?? []) as Atividade[];
+  return (data ?? []) as unknown as Atividade[];
 }
 
 export async function atividade(id: string): Promise<Atividade | null> {
@@ -329,6 +356,44 @@ export async function atividade(id: string): Promise<Atividade | null> {
 }
 
 /** Amigas lendo agora: o livro "lendo" mais recente de cada pessoa que você segue. */
+/** Quem eu sigo e está lendo um dos livros que eu estou lendo agora (mesmo id ou mesmo título). */
+export async function lendoOMesmo(
+  meus: { id: string; titulo: string }[],
+): Promise<{ pessoa: PessoaResumo; livro: LivroSalvo }[]> {
+  if (!meus.length) return [];
+  const sigo = [...(await idsQueSigo())];
+  if (!sigo.length) return [];
+  const { data, error } = await db()
+    .from("perfis_publicos")
+    .select("id,usuario,nome,foto,livros:dados->livros")
+    .in("id", sigo);
+  if (error) throw error;
+  const chave = (t: string) =>
+    t
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, " ")
+      .trim();
+  const resultado: { pessoa: PessoaResumo; livro: LivroSalvo }[] = [];
+  for (const p of data ?? []) {
+    const livros = (p as unknown as { livros?: LivroSalvo[] }).livros ?? [];
+    const igual = livros.find(
+      (l) =>
+        l.status === "lendo" &&
+        meus.some(
+          (m) => m.id === l.id || chave(m.titulo) === chave(l.titulo ?? ""),
+        ),
+    );
+    if (igual)
+      resultado.push({
+        pessoa: { id: p.id, usuario: p.usuario, nome: p.nome, foto: p.foto },
+        livro: igual,
+      });
+  }
+  return resultado;
+}
+
 export async function lendoEntreAmigas(): Promise<
   { pessoa: PessoaResumo; livro: LivroSalvo }[]
 > {
@@ -475,6 +540,9 @@ const prioridade: Record<TipoAtividade, number> = {
   terminou: 3,
   avaliou: 4,
   ficha: 5,
+  progresso: 0,
+  trecho: 0,
+  clube: 0,
 };
 
 /**
@@ -497,10 +565,60 @@ export function semPublicar(fazer: () => void) {
 export function iniciarAtividades() {
   if (!supabase) return () => {};
   const pendentes = new Map<string, TipoAtividade>();
+  /** livros com progresso novo e com trecho novo (publicados à parte) */
+  const progresso = new Set<string>();
+  const trechos = new Set<string>();
   let espera: ReturnType<typeof setTimeout> | undefined;
+
+  /** um só cartão de progresso/trecho por livro: o novo substitui o anterior */
+  async function trocar(tipo: "progresso" | "trecho", livroId: string) {
+    const eu = meuId();
+    if (!eu) return;
+    await db()
+      .from("atividades")
+      .delete()
+      .eq("autor", eu)
+      .eq("tipo", tipo)
+      .is("clube_id", null)
+      .eq("livro->>id", livroId);
+  }
 
   async function enviar() {
     const livros = usePerfil.getState().livros;
+    for (const id of [...progresso]) {
+      progresso.delete(id);
+      const l = livros.find((x) => x.id === id);
+      // terminou junto: o "terminou" já conta a história
+      if (
+        !l ||
+        l.status !== "lendo" ||
+        !l.paginas ||
+        !l.paginaAtual ||
+        pendentes.has(id)
+      )
+        continue;
+      try {
+        await trocar("progresso", id);
+        await publicarAtividade({
+          tipo: "progresso",
+          livro: l,
+          texto: `${l.paginaAtual}/${l.paginas}`,
+        });
+      } catch {
+        /* sem internet: o feed só não recebe esta */
+      }
+    }
+    for (const id of [...trechos]) {
+      trechos.delete(id);
+      const l = livros.find((x) => x.id === id);
+      if (!l?.citacao?.trim()) continue;
+      try {
+        await trocar("trecho", id);
+        await publicarAtividade({ tipo: "trecho", livro: l, texto: l.citacao });
+      } catch {
+        /* sem internet */
+      }
+    }
     const lote = [...pendentes];
     pendentes.clear();
     for (const [id, tipo] of lote) {
@@ -544,6 +662,20 @@ export function iniciarAtividades() {
     }
     for (const l of s.livros) {
       const a = antes.livros.find((x) => x.id === l.id);
+      // andou no livro (de pelo menos 5% ou 20 páginas desde a última vez)
+      if (
+        a &&
+        l.status === "lendo" &&
+        l.paginas &&
+        l.paginaAtual &&
+        l.paginaAtual !== a.paginaAtual
+      ) {
+        const andou = l.paginaAtual - (a.paginaAtual ?? 0);
+        if (Math.abs(andou) >= Math.min(20, l.paginas * 0.05))
+          progresso.add(l.id);
+      }
+      if ((l.citacao ?? "").trim() && (l.citacao ?? "") !== (a?.citacao ?? ""))
+        trechos.add(l.id);
       let tipo: TipoAtividade | null = null;
       if (
         l.nota &&
@@ -564,7 +696,7 @@ export function iniciarAtividades() {
       if (!atual || prioridade[tipo] >= prioridade[atual])
         pendentes.set(l.id, tipo);
     }
-    if (!pendentes.size) return;
+    if (!pendentes.size && !progresso.size && !trechos.size) return;
     clearTimeout(espera);
     espera = setTimeout(() => void enviar(), 4000);
   });

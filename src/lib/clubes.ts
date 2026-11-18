@@ -1,6 +1,11 @@
 "use client";
 
-import { meuId, pessoasPorId, publicarAtividade, type PessoaResumo } from "@/lib/social";
+import {
+  meuId,
+  pessoasPorId,
+  publicarAtividade,
+  type PessoaResumo,
+} from "@/lib/social";
 import { supabase } from "@/lib/supabase";
 
 /**
@@ -26,12 +31,24 @@ export type Clube = {
   tema: string | null;
 };
 export type Papel = "moderadora" | "membro";
-export type Membro = { usuario_id: string; papel: Papel; entrou_em: string; pessoa: PessoaResumo };
+export type Membro = {
+  usuario_id: string;
+  papel: Papel;
+  entrou_em: string;
+  pessoa: PessoaResumo;
+};
 
 export type LivroDoClube = {
   id: string;
   clube_id: string;
-  livro: { id: string; titulo: string; autor: string; capa?: string; paginas?: number; clima?: string[] };
+  livro: {
+    id: string;
+    titulo: string;
+    autor: string;
+    capa?: string;
+    paginas?: number;
+    clima?: string[];
+  };
   estado: "sugerido" | "lendo" | "lido";
   sugerido_por: string | null;
   motivo: string | null;
@@ -79,36 +96,61 @@ const CAMPOS_LIVRO =
 
 // ───────── clubes ─────────
 
-export type ResumoClube = Clube & { membros: string[]; lendo: LivroDoClube | null; sugestoes: number; votaram: number };
+export type ResumoClube = Clube & {
+  membros: string[];
+  lendo: LivroDoClube | null;
+  sugestoes: number;
+  votaram: number;
+};
 
 export async function meusClubes(): Promise<ResumoClube[]> {
   const eu = meuId();
   if (!eu) return [];
-  const { data: minhas, error } = await db().from("membros").select("clube_id").eq("usuario_id", eu);
+  const { data: minhas, error } = await db()
+    .from("membros")
+    .select("clube_id")
+    .eq("usuario_id", eu);
   if (error) throw error;
   const ids = (minhas ?? []).map((m) => m.clube_id);
   if (!ids.length) return [];
   const [clubes, membros, livros] = await Promise.all([
-    db().from("clubes").select("*").in("id", ids).order("criado_em", { ascending: false }),
+    db()
+      .from("clubes")
+      .select("*")
+      .in("id", ids)
+      .order("criado_em", { ascending: false }),
     db().from("membros").select("clube_id,usuario_id").in("clube_id", ids),
-    db().from("clube_livros").select(CAMPOS_LIVRO).in("clube_id", ids).in("estado", ["lendo", "sugerido"]),
+    db()
+      .from("clube_livros")
+      .select(CAMPOS_LIVRO)
+      .in("clube_id", ids)
+      .in("estado", ["lendo", "sugerido"]),
   ]);
   for (const r of [clubes, membros, livros]) if (r.error) throw r.error;
   return (clubes.data as Clube[]).map((c) => {
-    const ls = (livros.data as LivroDoClube[]).filter((l) => l.clube_id === c.id);
+    const ls = (livros.data as LivroDoClube[]).filter(
+      (l) => l.clube_id === c.id,
+    );
     const sug = ls.filter((l) => l.estado === "sugerido");
     return {
       ...c,
-      membros: (membros.data ?? []).filter((m) => m.clube_id === c.id).map((m) => m.usuario_id),
+      membros: (membros.data ?? [])
+        .filter((m) => m.clube_id === c.id)
+        .map((m) => m.usuario_id),
       lendo: ls.find((l) => l.estado === "lendo") ?? null,
       sugestoes: sug.length,
-      votaram: new Set(sug.flatMap((l) => l.votos.map((v) => v.usuario_id))).size,
+      votaram: new Set(sug.flatMap((l) => l.votos.map((v) => v.usuario_id)))
+        .size,
     };
   });
 }
 
 export async function clube(id: string): Promise<Clube | null> {
-  const { data, error } = await db().from("clubes").select("*").eq("id", id).maybeSingle();
+  const { data, error } = await db()
+    .from("clubes")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
   if (error) throw error;
   return data as Clube | null;
 }
@@ -121,11 +163,21 @@ export async function membrosDe(clubeId: string): Promise<Membro[]> {
     .order("entrou_em");
   if (error) throw error;
   const pessoas = await pessoasPorId((data ?? []).map((m) => m.usuario_id));
-  return (data ?? []).map((m) => ({ ...(m as Omit<Membro, "pessoa">), pessoa: pessoas.get(m.usuario_id)! }));
+  return (data ?? []).map((m) => ({
+    ...(m as Omit<Membro, "pessoa">),
+    pessoa: pessoas.get(m.usuario_id)!,
+  }));
 }
 
-export async function criarClube(nome: string, descricao: string, capa: string | null): Promise<string> {
-  const { data, error } = await db().rpc("criar_clube", { p_nome: nome, p_descricao: descricao });
+export async function criarClube(
+  nome: string,
+  descricao: string,
+  capa: string | null,
+): Promise<string> {
+  const { data, error } = await db().rpc("criar_clube", {
+    p_nome: nome,
+    p_descricao: descricao,
+  });
   if (error) throw error;
   const id = data as string;
   if (capa) await db().from("clubes").update({ capa }).eq("id", id);
@@ -136,11 +188,18 @@ export class ConviteInvalido extends Error {}
 
 /** Entra pelo código. Convite vencido ou clube cheio viram ConviteInvalido com a explicação. */
 export async function entrarNoClube(codigo: string): Promise<string | null> {
-  const { data, error } = await db().rpc("entrar_no_clube", { p_codigo: codigo });
+  const { data, error } = await db().rpc("entrar_no_clube", {
+    p_codigo: codigo,
+  });
   if (error) {
     if (/expirado/i.test(error.message))
-      throw new ConviteInvalido("esse convite venceu. peça um código novo para quem te chamou.");
-    if (/cheio/i.test(error.message)) throw new ConviteInvalido("esse clube já está com todas as vagas preenchidas.");
+      throw new ConviteInvalido(
+        "esse convite venceu. peça um código novo para quem te chamou.",
+      );
+    if (/cheio/i.test(error.message))
+      throw new ConviteInvalido(
+        "esse clube já está com todas as vagas preenchidas.",
+      );
     throw error;
   }
   return (data as string | null) ?? null;
@@ -154,7 +213,9 @@ export async function novoCodigo(clubeId: string): Promise<string> {
 }
 
 export function conviteVencido(c: Clube) {
-  return !!c.codigo_expira_em && new Date(c.codigo_expira_em).getTime() < Date.now();
+  return (
+    !!c.codigo_expira_em && new Date(c.codigo_expira_em).getTime() < Date.now()
+  );
 }
 
 /** Quantas sugestões você já fez neste clube no mês corrente. */
@@ -176,7 +237,17 @@ export async function minhasSugestoesNoMes(clubeId: string): Promise<number> {
 
 export async function editarClube(
   id: string,
-  dados: Partial<Pick<Clube, "nome" | "descricao" | "capa" | "limite_sugestoes" | "max_membros" | "tema">>,
+  dados: Partial<
+    Pick<
+      Clube,
+      | "nome"
+      | "descricao"
+      | "capa"
+      | "limite_sugestoes"
+      | "max_membros"
+      | "tema"
+    >
+  >,
 ) {
   const { error } = await db().from("clubes").update(dados).eq("id", id);
   if (error) throw error;
@@ -188,7 +259,11 @@ export async function apagarClube(id: string) {
 }
 
 export async function tirarMembro(clubeId: string, usuarioId: string) {
-  const { error } = await db().from("membros").delete().eq("clube_id", clubeId).eq("usuario_id", usuarioId);
+  const { error } = await db()
+    .from("membros")
+    .delete()
+    .eq("clube_id", clubeId)
+    .eq("usuario_id", usuarioId);
   if (error) throw error;
 }
 
@@ -205,16 +280,30 @@ export async function livrosDoClube(clubeId: string): Promise<LivroDoClube[]> {
 }
 
 export async function livroDoClube(id: string): Promise<LivroDoClube | null> {
-  const { data, error } = await db().from("clube_livros").select(CAMPOS_LIVRO).eq("id", id).maybeSingle();
+  const { data, error } = await db()
+    .from("clube_livros")
+    .select(CAMPOS_LIVRO)
+    .eq("id", id)
+    .maybeSingle();
   if (error) throw error;
   return data as LivroDoClube | null;
 }
 
-export async function sugerir(clubeId: string, livro: LivroDoClube["livro"], motivo: string) {
+export async function sugerir(
+  clubeId: string,
+  livro: LivroDoClube["livro"],
+  motivo: string,
+) {
   const eu = meuId();
   const { error } = await db()
     .from("clube_livros")
-    .insert({ clube_id: clubeId, livro, motivo: motivo.trim() || null, sugerido_por: eu, estado: "sugerido" });
+    .insert({
+      clube_id: clubeId,
+      livro,
+      motivo: motivo.trim() || null,
+      sugerido_por: eu,
+      estado: "sugerido",
+    });
   if (error) throw error;
 }
 
@@ -228,7 +317,13 @@ export async function escolherLivroDaVez(
   const eu = meuId();
   const { data, error } = await db()
     .from("clube_livros")
-    .insert({ clube_id: clubeId, livro, sugerido_por: eu, estado: "sugerido", motivo: null })
+    .insert({
+      clube_id: clubeId,
+      livro,
+      sugerido_por: eu,
+      estado: "sugerido",
+      motivo: null,
+    })
     .select("id")
     .single();
   if (error) throw error;
@@ -245,23 +340,45 @@ export async function votar(livroId: string, sim: boolean) {
   const eu = meuId();
   if (!eu) return;
   const r = sim
-    ? await db().from("votos").upsert({ clube_livro_id: livroId, usuario_id: eu })
-    : await db().from("votos").delete().eq("clube_livro_id", livroId).eq("usuario_id", eu);
+    ? await db()
+        .from("votos")
+        .upsert({ clube_livro_id: livroId, usuario_id: eu })
+    : await db()
+        .from("votos")
+        .delete()
+        .eq("clube_livro_id", livroId)
+        .eq("usuario_id", eu);
   if (r.error) throw r.error;
 }
 
 /** Começa a leitura da vez (só moderadora): encerra a anterior, numera a rodada e marca o prazo. */
-export async function comecarLeitura(clubeId: string, livroId: string, prazo: string, inicio?: string) {
+export async function comecarLeitura(
+  clubeId: string,
+  livroId: string,
+  prazo: string,
+  inicio?: string,
+) {
   const livros = await livrosDoClube(clubeId);
   const atual = livros.find((l) => l.estado === "lendo");
   if (atual) await encerrarLeitura(atual.id);
   const rodada = Math.max(0, ...livros.map((l) => l.rodada ?? 0)) + 1;
-  const iniciado_em = inicio ? new Date(`${inicio}T12:00:00`).toISOString() : new Date().toISOString();
+  const iniciado_em = inicio
+    ? new Date(`${inicio}T12:00:00`).toISOString()
+    : new Date().toISOString();
   const { error } = await db()
     .from("clube_livros")
     .update({ estado: "lendo", rodada, prazo, iniciado_em })
     .eq("id", livroId);
   if (error) throw error;
+  // aparece no feed de quem é do clube
+  const livro = livros.find((l) => l.id === livroId)?.livro;
+  if (livro)
+    await publicarAtividade({
+      tipo: "clube",
+      livro,
+      texto: `começou a leitura nº ${rodada}`,
+      clube_id: clubeId,
+    }).catch(() => {});
 }
 
 export async function encerrarLeitura(livroId: string) {
@@ -279,8 +396,14 @@ export function andamento(l: LivroDoClube) {
   inicio.setHours(0, 0, 0, 0);
   const fim = new Date(`${l.prazo}T23:59:59`);
   const dia = 864e5;
-  const total = Math.max(1, Math.round((fim.getTime() - inicio.getTime()) / dia));
-  const hoje = Math.min(total, Math.max(1, Math.ceil((Date.now() - inicio.getTime()) / dia)));
+  const total = Math.max(
+    1,
+    Math.round((fim.getTime() - inicio.getTime()) / dia),
+  );
+  const hoje = Math.min(
+    total,
+    Math.max(1, Math.ceil((Date.now() - inicio.getTime()) / dia)),
+  );
   const faltam = Math.max(0, Math.ceil((fim.getTime() - Date.now()) / dia));
   return { dia: hoje, total, faltam, inicio, fim };
 }
@@ -290,7 +413,9 @@ export function andamento(l: LivroDoClube) {
 export async function fichasDe(livroId: string): Promise<Ficha[]> {
   const { data, error } = await db()
     .from("fichas")
-    .select("id,clube_livro_id,autor,notas,nota,personagem,citacao,texto,spoiler,criado_em")
+    .select(
+      "id,clube_livro_id,autor,notas,nota,personagem,citacao,texto,spoiler,criado_em",
+    )
     .eq("clube_livro_id", livroId)
     .order("criado_em", { ascending: false });
   if (error) throw error;
@@ -301,7 +426,9 @@ export async function fichasDoClube(livroIds: string[]): Promise<Ficha[]> {
   if (!livroIds.length) return [];
   const { data, error } = await db()
     .from("fichas")
-    .select("id,clube_livro_id,autor,notas,nota,personagem,citacao,texto,spoiler,criado_em")
+    .select(
+      "id,clube_livro_id,autor,notas,nota,personagem,citacao,texto,spoiler,criado_em",
+    )
     .in("clube_livro_id", livroIds)
     .order("criado_em", { ascending: false })
     .limit(60);
@@ -318,7 +445,10 @@ export async function salvarFicha(
   if (!eu) return;
   const { error } = await db()
     .from("fichas")
-    .upsert({ ...f, clube_livro_id: l.id, autor: eu }, { onConflict: "clube_livro_id,autor" });
+    .upsert(
+      { ...f, clube_livro_id: l.id, autor: eu },
+      { onConflict: "clube_livro_id,autor" },
+    );
   if (error) throw error;
   if (!jaExistia) {
     try {
@@ -340,17 +470,25 @@ export function media(nums: (number | null | undefined)[]) {
   return v.length ? v.reduce((a, b) => a + Number(b), 0) / v.length : null;
 }
 
-export const virgula = (n: number | null, casas = 1) => (n === null ? "—" : n.toFixed(casas).replace(".", ","));
+export const virgula = (n: number | null, casas = 1) =>
+  n === null ? "—" : n.toFixed(casas).replace(".", ",");
 
 // ───────── agenda ─────────
 
 export async function encontrosDe(clubeId: string): Promise<Encontro[]> {
-  const { data, error } = await db().from("encontros").select("*").eq("clube_id", clubeId).order("quando");
+  const { data, error } = await db()
+    .from("encontros")
+    .select("*")
+    .eq("clube_id", clubeId)
+    .order("quando");
   if (error) throw error;
   return (data ?? []) as Encontro[];
 }
 
-export async function marcarEncontro(clubeId: string, e: { titulo: string; quando: string; local: string }) {
+export async function marcarEncontro(
+  clubeId: string,
+  e: { titulo: string; quando: string; local: string },
+) {
   const { error } = await db()
     .from("encontros")
     .insert({
@@ -361,6 +499,29 @@ export async function marcarEncontro(clubeId: string, e: { titulo: string; quand
       criado_por: meuId(),
     });
   if (error) throw error;
+  // aparece no feed de quem é do clube, com o livro da vez (se tiver)
+  const lendo = (await livrosDoClube(clubeId).catch(() => [])).find(
+    (l) => l.estado === "lendo",
+  );
+  const dia = new Date(e.quando).toLocaleDateString("pt-BR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
+  const hora = new Date(e.quando).toLocaleTimeString("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  await publicarAtividade({
+    tipo: "clube",
+    livro: lendo?.livro ?? {
+      id: `encontro-${clubeId}`,
+      titulo: e.titulo.trim(),
+      autor: "",
+    },
+    texto: `marcou um encontro: ${e.titulo.trim()} · ${dia} às ${hora}${e.local.trim() ? ` · ${e.local.trim()}` : ""}`,
+    clube_id: clubeId,
+  }).catch(() => {});
 }
 
 export async function desmarcarEncontro(id: string) {

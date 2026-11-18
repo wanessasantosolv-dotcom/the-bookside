@@ -182,7 +182,15 @@ export function CartaoAtividade({
   }
 
   const perfil = pessoa?.usuario ? `/u/${pessoa.usuario}` : "#";
-  const livroHref = `/livro/${a.livro.id}`;
+  const clubeHref = a.clube ? `/clubes/${a.clube.id}` : null;
+  // movimento do clube leva ao clube; o resto, ao livro
+  const livroHref =
+    a.tipo === "clube" && clubeHref ? clubeHref : `/livro/${a.livro.id}`;
+  const [pagina, totalPaginas] =
+    a.tipo === "progresso" ? (a.texto ?? "").split("/").map(Number) : [0, 0];
+  const pct = totalPaginas
+    ? Math.min(100, Math.round((pagina / totalPaginas) * 100))
+    : 0;
 
   return (
     <article className="rounded-xl border border-linha bg-creme-quente p-4 lg:rounded-[4px] lg:border-fio lg:bg-transparent lg:p-5">
@@ -193,7 +201,21 @@ export function CartaoAtividade({
         </Link>
         <p className="min-w-0 truncate text-xs font-semibold lg:text-[13px]">
           <Link href={perfil}>{a.autor === eu ? "você" : nomeDe(pessoa)}</Link>{" "}
-          <span className="font-normal text-cinza">{verbo[a.tipo]}</span>
+          {a.tipo !== "clube" ? (
+            <span className="font-normal text-cinza">{verbo[a.tipo]}</span>
+          ) : null}
+          {a.clube && clubeHref ? (
+            <span className="font-normal text-cinza">
+              {" "}
+              · no{" "}
+              <Link
+                href={clubeHref}
+                className="font-semibold text-bordo hover:underline"
+              >
+                {a.clube.nome}
+              </Link>
+            </span>
+          ) : null}
         </p>
         <span className="ml-auto flex-none text-[10px] font-semibold tracking-[.12em] text-cinza uppercase">
           {quandoFoi(a.criado_em)}
@@ -205,19 +227,44 @@ export function CartaoAtividade({
           onClick={() => lembrarLivros([a.livro])}
           className="flex-none"
         >
-          <CapaAuto
-            livro={a.livro}
-            className="w-[52px] lg:w-[58px] [&>span:last-child]:hidden"
-          />
+          {a.livro.id.startsWith("encontro-") ? (
+            <span
+              aria-hidden
+              className="flex aspect-[2/3] w-[52px] flex-col items-center justify-center rounded-[5px] border border-linha bg-rosa-fundo text-bordo lg:w-[58px]"
+            >
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                strokeLinecap="round"
+              >
+                <rect x="3.5" y="5" width="17" height="15" rx="2" />
+                <path d="M3.5 10h17M8 3v4M16 3v4" />
+              </svg>
+            </span>
+          ) : (
+            <CapaAuto
+              livro={a.livro}
+              className="w-[52px] lg:w-[58px] [&>span:last-child]:hidden"
+            />
+          )}
         </Link>
         <div className="min-w-0 flex-1">
-          <Link href={livroHref} onClick={() => lembrarLivros([a.livro])}>
-            <h3 className="font-display text-[17px] leading-[1.2] font-semibold italic text-ameixa lg:font-revista lg:text-lg lg:font-normal">
-              {a.livro.titulo}
-            </h3>
-          </Link>
+          {/* encontro sem livro da vez: só o texto do encontro */}
+          {a.livro.id.startsWith("encontro-") ? null : (
+            <>
+              <Link href={livroHref} onClick={() => lembrarLivros([a.livro])}>
+                <h3 className="font-display text-[17px] leading-[1.2] font-semibold italic text-ameixa lg:font-revista lg:text-lg lg:font-normal">
+                  {a.livro.titulo}
+                </h3>
+              </Link>
 
-          <p className="mt-0.5 text-xs text-cinza">{a.livro.autor}</p>
+              <p className="mt-0.5 text-xs text-cinza">{a.livro.autor}</p>
+            </>
+          )}
           {a.nota ? (
             <p
               className="mt-1.5 text-[12px] font-semibold tracking-[1px] text-bordo"
@@ -226,8 +273,28 @@ export function CartaoAtividade({
               {estrelas(Number(a.nota))}
             </p>
           ) : null}
-          {a.texto ? (
-            <blockquote className="mt-2 line-clamp-4 font-accent text-sm leading-[1.4] italic lg:font-revista">
+          {a.tipo === "progresso" && totalPaginas ? (
+            <div className="mt-2.5 max-w-[320px]">
+              <div className="h-1.5 rounded-full bg-rosa-fundo">
+                <i
+                  className="block h-full rounded-full bg-bordo"
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+              <p className="mt-1 text-[11px] text-cinza">
+                página {pagina} de {totalPaginas} · {pct}%
+              </p>
+            </div>
+          ) : a.tipo === "clube" && a.texto ? (
+            <p className="mt-2 text-[13px] leading-[1.45] text-tinta-suave">
+              {a.texto}
+            </p>
+          ) : a.texto ? (
+            <blockquote
+              className={`mt-2 line-clamp-4 font-accent leading-[1.4] italic lg:font-revista ${
+                a.tipo === "trecho" ? "text-[15px] text-bordo" : "text-sm"
+              }`}
+            >
               “{a.texto}”
             </blockquote>
           ) : null}
