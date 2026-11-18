@@ -4,7 +4,7 @@ import { CapaAuto } from "@/components/CapaAuto";
 import { Animacao } from "@/components/Animacao";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { useClube } from "@/components/clube/ClubeContexto";
 import { botaoContorno } from "@/components/clube/Pecas";
 import { ErroOuFalta, Vazio } from "@/components/social/Estados";
@@ -14,9 +14,11 @@ import {
   encerrarLeitura,
   fichasDe,
   livrosDoClube,
+  marcarMarca,
   marcarProgresso,
   progressoDe,
   type StatusLeitura,
+  type UnidadeMarca,
 } from "@/lib/clubes";
 import { nomeDe, useConsulta, useMeuId } from "@/lib/social";
 
@@ -24,6 +26,9 @@ export default function LeituraPage() {
   const { clube, membros, papel } = useClube();
   const eu = useMeuId();
   const router = useRouter();
+  const [unidadeMarca, setUnidadeMarca] = useState<UnidadeMarca>("pagina");
+  const [numeroMarca, setNumeroMarca] = useState<string>("");
+  const [editandoMarca, setEditandoMarca] = useState(false);
   const consulta = useConsulta(async () => {
     const livros = await livrosDoClube(clube.id);
     const lendo = livros.find((l) => l.estado === "lendo") ?? null;
@@ -113,6 +118,21 @@ export default function LeituraPage() {
       ),
     },
   ];
+  const meuProgresso = progresso.find((p) => p.usuario_id === eu);
+
+  function abrirMarca() {
+    setUnidadeMarca(meuProgresso?.unidade ?? "pagina");
+    setNumeroMarca(meuProgresso?.numero != null ? String(meuProgresso.numero) : "");
+    setEditandoMarca(true);
+  }
+
+  async function salvarMarca() {
+    const n = Number(numeroMarca);
+    if (!numeroMarca || Number.isNaN(n) || n < 0 || !lendo) return;
+    await marcarMarca(lendo.id, unidadeMarca, Math.round(n));
+    setEditandoMarca(false);
+    consulta.recarregar();
+  }
 
   return (
     <div className="px-6 pt-6 lg:grid lg:grid-cols-[minmax(0,1fr)_340px] xl:grid-cols-[minmax(0,1fr)_380px] lg:gap-10 lg:px-0">
@@ -211,6 +231,56 @@ export default function LeituraPage() {
             })}
           </fieldset>
 
+          {meuStatus === "lendo" ? (
+            <div className="mt-5 border-t border-linha pt-5">
+              {!editandoMarca ? (
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-[13px] text-cinza">
+                    {meuProgresso?.numero != null
+                      ? `você está n${meuProgresso.unidade === "capitulo" ? "o capítulo" : "a página"} ${meuProgresso.numero}`
+                      : "ainda não marcou em que página ou capítulo está"}
+                  </p>
+                  <button type="button" onClick={abrirMarca} className="shrink-0 text-xs font-semibold text-bordo underline underline-offset-4">
+                    {meuProgresso?.numero != null ? "atualizar" : "marcar"}
+                  </button>
+                </div>
+              ) : (
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <div className="flex rounded-full border border-linha p-0.5">
+                    {(["pagina", "capitulo"] as const).map((u) => (
+                      <button
+                        key={u}
+                        type="button"
+                        onClick={() => setUnidadeMarca(u)}
+                        className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
+                          unidadeMarca === u ? "bg-bordo text-creme" : "text-cinza"
+                        }`}
+                      >
+                        {u === "pagina" ? "página" : "capítulo"}
+                      </button>
+                    ))}
+                  </div>
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    min={0}
+                    autoFocus
+                    value={numeroMarca}
+                    onChange={(e) => setNumeroMarca(e.target.value)}
+                    placeholder={unidadeMarca === "pagina" ? "nº da página" : "nº do capítulo"}
+                    className="h-9 w-28 rounded-sm border border-bege bg-creme-quente px-2.5 text-sm outline-none focus:border-bordo focus:ring-1 focus:ring-bordo"
+                  />
+                  <button type="button" onClick={salvarMarca} className="rounded-sm bg-bordo px-3.5 py-1.5 text-xs font-semibold text-creme">
+                    salvar
+                  </button>
+                  <button type="button" onClick={() => setEditandoMarca(false)} className="text-xs font-semibold text-cinza">
+                    cancelar
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : null}
+
           {meuStatus === "terminei" ? (
             <Link
               href={`/clubes/${clube.id}/ficha/${lendo.id}`}
@@ -290,11 +360,15 @@ export default function LeituraPage() {
                 <ul className="mt-2 space-y-2">
                   {lista.map((m) => {
                     const f = fichas.find((x) => x.autor === m.usuario_id);
+                    const p = progresso.find((x) => x.usuario_id === m.usuario_id);
+                    const marca = chave === "lendo" && p?.numero != null ? `${p.unidade === "capitulo" ? "cap." : "pág."} ${p.numero}` : null;
                     return (
                       <li key={m.usuario_id} className="flex items-center gap-2.5 text-[13px]">
                         <Avatar pessoa={m.pessoa} tamanho={26} />
                         <span className="flex-1 truncate">{m.usuario_id === eu ? "você" : nomeDe(m.pessoa)}</span>
-                        <span className="font-revista text-xs text-cinza italic">{f ? "escreveu a ficha" : chave === "lendo" ? "lendo…" : ""}</span>
+                        <span className="font-revista text-xs text-cinza italic">
+                          {f ? "escreveu a ficha" : (marca ?? (chave === "lendo" ? "lendo…" : ""))}
+                        </span>
                       </li>
                     );
                   })}

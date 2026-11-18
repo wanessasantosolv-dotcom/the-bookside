@@ -81,10 +81,14 @@ export type Ficha = {
 
 export const statusLeitura = ["nao_comecei", "lendo", "terminei"] as const;
 export type StatusLeitura = (typeof statusLeitura)[number];
+export const unidadesMarca = ["pagina", "capitulo"] as const;
+export type UnidadeMarca = (typeof unidadesMarca)[number];
 export type Progresso = {
   clube_livro_id: string;
   usuario_id: string;
   status: StatusLeitura;
+  unidade: UnidadeMarca | null;
+  numero: number | null;
   atualizado_em: string;
 };
 
@@ -441,7 +445,7 @@ export async function fichasDe(livroId: string): Promise<Ficha[]> {
 export async function progressoDe(livroId: string): Promise<Progresso[]> {
   const { data, error } = await db()
     .from("progresso_leitura")
-    .select("clube_livro_id,usuario_id,status,atualizado_em")
+    .select("clube_livro_id,usuario_id,status,unidade,numero,atualizado_em")
     .eq("clube_livro_id", livroId);
   if (error) throw error;
   return (data ?? []) as Progresso[];
@@ -454,6 +458,19 @@ export async function marcarProgresso(livroId: string, status: StatusLeitura) {
     .from("progresso_leitura")
     .upsert(
       { clube_livro_id: livroId, usuario_id: eu, status, atualizado_em: new Date().toISOString() },
+      { onConflict: "clube_livro_id,usuario_id" },
+    );
+  if (error) throw error;
+}
+
+/** Marca em que página ou capítulo a pessoa está (e deixa o status como "lendo"). */
+export async function marcarMarca(livroId: string, unidade: UnidadeMarca, numero: number) {
+  const eu = meuId();
+  if (!eu) return;
+  const { error } = await db()
+    .from("progresso_leitura")
+    .upsert(
+      { clube_livro_id: livroId, usuario_id: eu, status: "lendo", unidade, numero, atualizado_em: new Date().toISOString() },
       { onConflict: "clube_livro_id,usuario_id" },
     );
   if (error) throw error;

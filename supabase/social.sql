@@ -406,3 +406,7 @@ create policy "marcar o próprio progresso" on public.progresso_leitura for inse
 drop policy if exists "atualizar o próprio progresso" on public.progresso_leitura;
 create policy "atualizar o próprio progresso" on public.progresso_leitura for update to authenticated
   using (usuario_id = auth.uid()) with check (usuario_id = auth.uid());
+
+-- onde cada um está na leitura em andamento (página ou capítulo)
+alter table public.progresso_leitura add column if not exists unidade text check (unidade in ('pagina', 'capitulo'));
+alter table public.progresso_leitura add column if not exists numero int check (numero >= 0);
