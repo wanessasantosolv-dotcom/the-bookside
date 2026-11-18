@@ -3,14 +3,30 @@
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { CapaLivro } from "@/components/CapaLivro";
+import { CadastroManual } from "@/components/clube/CadastroManual";
 import { useClube } from "@/components/clube/ClubeContexto";
-import { botaoPrincipal, campo, Rodape, rotuloCampo, TopoForm } from "@/components/clube/Pecas";
+import {
+  botaoPrincipal,
+  campo,
+  Rodape,
+  rotuloCampo,
+  TopoForm,
+} from "@/components/clube/Pecas";
 import { useBuscaLivros, type LivroBusca } from "@/lib/catalogo";
 import { minhasSugestoesNoMes, sugerir } from "@/lib/clubes";
 import { useConsulta } from "@/lib/social";
 import { corDoLivro } from "@/lib/cores";
 
-const climas = ["suspense", "ficção", "romance", "fantasia", "leve", "chorar", "clássico", "não ficção"];
+const climas = [
+  "suspense",
+  "ficção",
+  "romance",
+  "fantasia",
+  "leve",
+  "chorar",
+  "clássico",
+  "não ficção",
+];
 
 export default function SugerirPage() {
   const { clube } = useClube();
@@ -19,12 +35,16 @@ export default function SugerirPage() {
   const [livro, setLivro] = useState<LivroBusca | null>(null);
   const [motivo, setMotivo] = useState("");
   const [clima, setClima] = useState<string[]>([]);
+  const [cadastrar, setCadastrar] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const busca = useBuscaLivros(termo);
   const feitas = useConsulta(() => minhasSugestoesNoMes(clube.id), [clube.id]);
   const limite = clube.limite_sugestoes;
-  const restam = limite && feitas.dados !== undefined ? Math.max(0, limite - feitas.dados) : null;
+  const restam =
+    limite && feitas.dados !== undefined
+      ? Math.max(0, limite - feitas.dados)
+      : null;
   const esgotou = restam === 0;
 
   async function enviar(e: FormEvent) {
@@ -79,7 +99,9 @@ export default function SugerirPage() {
                 <span className="block truncate font-display text-base font-semibold italic lg:font-revista lg:font-normal">
                   {livro.titulo}
                 </span>
-                <span className="block truncate text-xs text-cinza">{livro.autor}</span>
+                <span className="block truncate text-xs text-cinza">
+                  {livro.autor}
+                </span>
               </span>
               <button
                 type="button"
@@ -92,7 +114,9 @@ export default function SugerirPage() {
           ) : (
             <>
               <label className="block">
-                <span className="sr-only">buscar o livro pelo título ou autoria</span>
+                <span className="sr-only">
+                  buscar o livro pelo título ou autoria
+                </span>
                 <input
                   type="search"
                   value={termo}
@@ -102,32 +126,70 @@ export default function SugerirPage() {
                   autoComplete="off"
                 />
               </label>
-              <ul className="mt-2 max-h-[280px] overflow-y-auto rounded-md border border-linha" aria-live="polite">
-                {busca.estado === "carregando" ? (
-                  <li className="px-4 py-3 font-accent text-sm italic text-cinza">procurando…</li>
-                ) : (
-                  busca.resultados.slice(0, 12).map((l) => (
-                    <li key={l.id}>
-                      <button
-                        type="button"
-                        onClick={() => setLivro(l)}
-                        className="flex w-full items-center gap-3 border-b border-linha/70 px-3 py-2 text-left hover:bg-rosa-fundo/50"
-                      >
-                        <CapaLivro
-                          titulo={l.titulo}
-                          capa={l.capa}
-                          cor={l.cor}
-                          className="w-8 [&>span:last-child]:hidden"
-                        />
-                        <span className="min-w-0">
-                          <span className="block truncate text-sm font-semibold">{l.titulo}</span>
-                          <span className="block truncate text-xs text-cinza">{l.autor}</span>
-                        </span>
-                      </button>
+              {busca.estado === "sugestoes" ? (
+                <p className="mt-2 font-accent text-[13px] italic text-cinza">
+                  digite o título ou o nome da autora para procurar.
+                </p>
+              ) : (
+                <ul
+                  className="mt-2 max-h-[280px] overflow-y-auto rounded-md border border-linha"
+                  aria-live="polite"
+                >
+                  {busca.estado === "carregando" ? (
+                    <li className="px-4 py-3 font-accent text-sm italic text-cinza">
+                      procurando…
                     </li>
-                  ))
-                )}
-              </ul>
+                  ) : (
+                    busca.resultados.slice(0, 12).map((l) => (
+                      <li key={l.id}>
+                        <button
+                          type="button"
+                          onClick={() => setLivro(l)}
+                          className="flex w-full items-center gap-3 border-b border-linha/70 px-3 py-2 text-left hover:bg-rosa-fundo/50"
+                        >
+                          <CapaLivro
+                            titulo={l.titulo}
+                            capa={l.capa}
+                            cor={l.cor}
+                            className="w-8 [&>span:last-child]:hidden"
+                          />
+                          <span className="min-w-0">
+                            <span className="block truncate text-sm font-semibold">
+                              {l.titulo}
+                            </span>
+                            <span className="block truncate text-xs text-cinza">
+                              {l.autor}
+                            </span>
+                          </span>
+                        </button>
+                      </li>
+                    ))
+                  )}
+                  {busca.estado !== "carregando" && !busca.resultados.length ? (
+                    <li className="px-4 py-3 font-accent text-sm italic text-cinza">
+                      não achamos esse livro.
+                    </li>
+                  ) : null}
+                </ul>
+              )}
+              {cadastrar ? (
+                <CadastroManual
+                  termoInicial={termo}
+                  onCancelar={() => setCadastrar(false)}
+                  onCadastrar={(l) => {
+                    setLivro(l);
+                    setCadastrar(false);
+                  }}
+                />
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setCadastrar(true)}
+                  className="mt-2 min-h-9 text-xs font-semibold text-bordo underline underline-offset-4"
+                >
+                  não achou? cadastrar o livro manualmente
+                </button>
+              )}
             </>
           )}
         </div>
@@ -154,7 +216,9 @@ export default function SugerirPage() {
                   key={c}
                   type="button"
                   aria-pressed={on}
-                  onClick={() => setClima((x) => (on ? x.filter((y) => y !== c) : [...x, c]))}
+                  onClick={() =>
+                    setClima((x) => (on ? x.filter((y) => y !== c) : [...x, c]))
+                  }
                   className={`min-h-9 rounded-pill px-3.5 text-xs font-semibold ${on ? "bg-bordo text-creme" : "border border-bege text-ameixa"}`}
                 >
                   {c}
@@ -170,7 +234,9 @@ export default function SugerirPage() {
               ? `cada pessoa pode sugerir ${limite} ${limite === 1 ? "livro" : "livros"} por mês.`
               : "pode sugerir quantos livros quiser."}
             {restam !== null ? (
-              <b className={`font-semibold ${esgotou ? "text-bordo" : "text-ameixa"}`}>
+              <b
+                className={`font-semibold ${esgotou ? "text-bordo" : "text-ameixa"}`}
+              >
                 {esgotou
                   ? " você já usou a sua deste mês ✦"
                   : ` você ainda tem ${restam} ${restam === 1 ? "disponível" : "disponíveis"} ✦`}
@@ -185,7 +251,11 @@ export default function SugerirPage() {
         ) : null}
       </div>
       <Rodape>
-        <button type="submit" disabled={enviando || !livro || esgotou} className={`${botaoPrincipal} lg:max-w-[640px]`}>
+        <button
+          type="submit"
+          disabled={enviando || !livro || esgotou}
+          className={`${botaoPrincipal} lg:max-w-[640px]`}
+        >
           {enviando ? "enviando…" : "enviar para as sugestões"}
         </button>
       </Rodape>

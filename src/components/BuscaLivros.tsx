@@ -58,10 +58,20 @@ export function BuscaLivros({
         {(estado === "carregando" ? [] : resultados).map((l) => {
           const naEstante = livros.some((x) => x.id === l.id);
           return (
-            <li key={l.id} className="flex items-center gap-3.5 border-b border-linha py-3">
-              <CapaLivro titulo={l.titulo} capa={l.capa} cor={l.cor} className="w-12" />
+            <li
+              key={l.id}
+              className="flex items-center gap-3.5 border-b border-linha py-3"
+            >
+              <CapaLivro
+                titulo={l.titulo}
+                capa={l.capa}
+                cor={l.cor}
+                className="w-12"
+              />
               <div className="min-w-0">
-                <h3 className="font-display text-[17px] leading-[1.2] font-semibold italic text-ameixa">{l.titulo}</h3>
+                <h3 className="font-display text-[17px] leading-[1.2] font-semibold italic text-ameixa">
+                  {l.titulo}
+                </h3>
                 <small className="mt-1 block text-xs text-cinza">
                   {l.autor}
                   {l.ano ? ` · ${l.ano}` : ""}
@@ -82,7 +92,9 @@ export function BuscaLivros({
                   })
                 }
                 className={`ml-auto flex h-11 flex-none items-center rounded-pill border px-3 text-[11px] font-semibold whitespace-nowrap transition-colors ${
-                  naEstante ? "border-linha bg-[#F1E4DC] text-cinza" : "border-bordo text-bordo hover:bg-rosa-fundo"
+                  naEstante
+                    ? "border-linha bg-[#F1E4DC] text-cinza"
+                    : "border-bordo text-bordo hover:bg-rosa-fundo"
                 }`}
               >
                 {naEstante ? "na estante" : "+ estante"}
@@ -91,7 +103,9 @@ export function BuscaLivros({
           );
         })}
       </ul>
-      {estado === "pronto" && resultados.length ? <LinkCadastrar termo={busca} /> : null}
+      {(estado === "pronto" && resultados.length) || estado === "sugestoes" ? (
+        <LinkCadastrar termo={busca} />
+      ) : null}
     </>
   );
 }

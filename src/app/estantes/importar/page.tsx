@@ -270,7 +270,7 @@ export default function ImportarPage() {
                                 {o.ano ? ` (${o.ano})` : ""}
                               </option>
                             ))}
-                            <option value={-1}>usar só o que escrevi, sem capa</option>
+                            <option value={-1}>cadastrar manualmente (só o que escrevi)</option>
                           </select>
                         </label>
                         {l.termo === undefined ? (

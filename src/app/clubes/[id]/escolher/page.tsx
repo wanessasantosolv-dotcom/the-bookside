@@ -2,9 +2,10 @@
 
 import { CapaAuto } from "@/components/CapaAuto";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useState, type FormEvent } from "react";
+import { Suspense, useState } from "react";
 import { Animacao } from "@/components/Animacao";
 import { CapaLivro } from "@/components/CapaLivro";
+import { CadastroManual } from "@/components/clube/CadastroManual";
 import { useClube } from "@/components/clube/ClubeContexto";
 import {
   botaoContorno,
@@ -40,94 +41,6 @@ const prazos = [
 type Escolha =
   | { tipo: "sugestao"; l: LivroDoClube }
   | { tipo: "busca"; l: LivroBusca };
-
-/** Cadastrar um livro na mão quando a busca não acha (título, autoria e páginas). */
-function CadastroManual({
-  termoInicial,
-  onCancelar,
-  onCadastrar,
-}: {
-  termoInicial: string;
-  onCancelar: () => void;
-  onCadastrar: (l: LivroBusca) => void;
-}) {
-  const [titulo, setTitulo] = useState(termoInicial);
-  const [autor, setAutor] = useState("");
-  const [paginas, setPaginas] = useState("");
-
-  function salvar(e: FormEvent) {
-    e.preventDefault();
-    const t = titulo.trim();
-    if (!t) return;
-    const id = `manual-${t
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .slice(0, 40)}-${Date.now().toString(36)}`;
-    onCadastrar({
-      id,
-      titulo: t,
-      autor: autor.trim() || "autoria desconhecida",
-      paginas: Number(paginas) || undefined,
-      cor: corDoLivro(id),
-    });
-  }
-
-  return (
-    <form
-      onSubmit={salvar}
-      className="mt-3 space-y-3 rounded-md border border-linha p-3.5 lg:border-fio"
-    >
-      <p className="font-accent text-sm italic text-cinza">
-        não achou na busca? cadastre ele do seu jeito ✦
-      </p>
-      <label className="block">
-        <span className={rotuloCampo}>título *</span>
-        <input
-          value={titulo}
-          onChange={(e) => setTitulo(e.target.value)}
-          required
-          maxLength={200}
-          className={campo}
-        />
-      </label>
-      <div className="grid grid-cols-2 gap-3">
-        <label className="block">
-          <span className={rotuloCampo}>autoria</span>
-          <input
-            value={autor}
-            onChange={(e) => setAutor(e.target.value)}
-            maxLength={200}
-            className={campo}
-          />
-        </label>
-        <label className="block">
-          <span className={rotuloCampo}>páginas</span>
-          <input
-            type="number"
-            inputMode="numeric"
-            min={1}
-            max={20000}
-            value={paginas}
-            onChange={(e) => setPaginas(e.target.value)}
-            className={campo}
-          />
-        </label>
-      </div>
-      <div className="flex gap-2.5">
-        <button type="submit" className={`${botaoPrincipal} min-h-11 flex-1`}>
-          cadastrar livro
-        </button>
-        <button
-          type="button"
-          onClick={onCancelar}
-          className={`${botaoContorno} min-h-11`}
-        >
-          cancelar
-        </button>
-      </div>
-    </form>
-  );
-}
 
 function Escolher() {
   const { clube, membros, papel } = useClube();
