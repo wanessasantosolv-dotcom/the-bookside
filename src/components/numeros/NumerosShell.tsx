@@ -35,10 +35,16 @@ export function NumerosShell({
   const frase = usePerfil((s) => s.frase);
   if (!hidratado) return <AppShell aba="numeros">{null}</AppShell>;
   const n = calcularNumeros(livros, meta);
+  const totalVidaToda = livros.filter((l) => l.status === "lido").length;
+  const anoInicio = livros.reduce<number | null>((min, l) => {
+    if (l.status !== "lido" || !l.lidoEm) return min;
+    const ano = new Date(l.lidoEm).getFullYear();
+    return min === null || ano < min ? ano : min;
+  }, null);
 
   return (
     <AppShell aba="numeros">
-      <NumerosWeb n={n} nome={nome} frase={frase} aba={aba} />
+      <NumerosWeb n={n} nome={nome} frase={frase} aba={aba} totalVidaToda={totalVidaToda} anoInicio={anoInicio} />
       <div className="flex flex-1 flex-col lg:hidden">
         <header className="flex items-center justify-between px-6 pt-2">
           <span className="flex min-h-11 items-center text-[13px] font-semibold">seus números</span>

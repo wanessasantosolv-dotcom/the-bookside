@@ -9,7 +9,21 @@ import { mediaTexto, numero, type Numeros } from "@/lib/numeros";
 const CORES_GENERO = ["#6B0D24", "#8E1D3D", "#B75A6B", "#A88B64", "#6B7A5E", "#464052"];
 
 /** Números na versão web: banner bordô + tudo numa tela só (exceto a retrospectiva, que vira um "wrapped" à parte). */
-export function NumerosWeb({ n, nome, frase, aba }: { n: Numeros; nome: string; frase: string; aba: "ano" | "generos" | "retro" }) {
+export function NumerosWeb({
+  n,
+  nome,
+  frase,
+  aba,
+  totalVidaToda,
+  anoInicio,
+}: {
+  n: Numeros;
+  nome: string;
+  frase: string;
+  aba: "ano" | "generos" | "retro";
+  totalVidaToda?: number;
+  anoInicio?: number | null;
+}) {
   const retro = aba === "retro";
   const eyebrow = retro ? `wrapped · ${n.ano}` : `seus números · ${n.ano}`;
   const h1 = retro ? `seu wrapped de ${n.ano}` : `sua leitura em ${n.ano}`;
@@ -23,13 +37,29 @@ export function NumerosWeb({ n, nome, frase, aba }: { n: Numeros; nome: string; 
         <h1 className="relative mt-2.5 font-revista text-[44px] leading-none text-creme italic">{h1}</h1>
       </div>
 
-      <div className="px-14 pt-12 pb-16">{retro ? <ConteudoRetro n={n} frase={frase} /> : <ConteudoUnificado n={n} frase={frase} />}</div>
+      <div className="px-14 pt-12 pb-16">
+        {retro ? (
+          <ConteudoRetro n={n} frase={frase} />
+        ) : (
+          <ConteudoUnificado n={n} frase={frase} totalVidaToda={totalVidaToda} anoInicio={anoInicio} />
+        )}
+      </div>
     </div>
   );
 }
 
 /** Tudo numa tela só: cartões, gêneros, meses, destaques (com capa) e autores — com um único botão pro wrapped. */
-function ConteudoUnificado({ n, frase }: { n: Numeros; frase: string }) {
+function ConteudoUnificado({
+  n,
+  frase,
+  totalVidaToda,
+  anoInicio,
+}: {
+  n: Numeros;
+  frase: string;
+  totalVidaToda?: number;
+  anoInicio?: number | null;
+}) {
   const destaques = [
     n.livroDoAno ? { l: n.livroDoAno, rot: "mais amado", info: "★".repeat(Math.round(n.livroDoAno.nota ?? 0)) } : null,
     n.maisLongo ? { l: n.maisLongo, rot: "mais longo", info: `${n.maisLongoPaginas} pág.` } : null,
@@ -42,18 +72,28 @@ function ConteudoUnificado({ n, frase }: { n: Numeros; frase: string }) {
 
   return (
     <>
-      <div className="mb-14 grid grid-cols-4 gap-6">
-        {[
-          { v: numero(n.total), r: n.total === 1 ? "livro lido" : "livros lidos" },
-          { v: numero(n.paginas), r: "páginas" },
-          { v: mediaTexto(n.media), r: "média de avaliação" },
-          { v: n.meta ? `${n.total}/${n.meta}` : "—", r: n.ritmo ?? "sem meta" },
-        ].map((c) => (
-          <div key={c.r} className="rounded-md border border-linha px-6 py-7 text-center">
-            <b className="block font-revista text-5xl leading-none font-normal text-bordo">{c.v}</b>
-            <span className="mt-2.5 block text-[10px] leading-[1.3] font-semibold tracking-[.14em] text-cinza uppercase">{c.r}</span>
+      <div className="mb-14 flex items-center gap-10 rounded-md border border-linha px-8 py-7">
+        {totalVidaToda && totalVidaToda > n.total ? (
+          <div className="flex h-[132px] w-[132px] flex-none flex-col items-center justify-center rounded-full bg-gradient-to-br from-rosa-antigo to-bordo text-center shadow-[0_14px_26px_-12px_rgba(107,13,36,0.3)]">
+            <b className="font-revista text-[34px] leading-none font-normal text-creme italic">{numero(totalVidaToda)}</b>
+            <span className="mt-1.5 px-3 text-[8.5px] leading-[1.3] font-semibold tracking-[.1em] text-rosa-claro uppercase">
+              livros{anoInicio ? ` desde ${anoInicio}` : " no total"}
+            </span>
           </div>
-        ))}
+        ) : null}
+        <div className="grid flex-1 grid-cols-4">
+          {[
+            { v: numero(n.total), r: n.total === 1 ? "livro lido" : "livros lidos" },
+            { v: numero(n.paginas), r: "páginas" },
+            { v: mediaTexto(n.media), r: "média de avaliação" },
+            { v: n.meta ? `${n.total}/${n.meta}` : "—", r: n.ritmo ?? "sem meta" },
+          ].map((c, i) => (
+            <div key={c.r} className={`px-5 text-center ${i > 0 ? "border-l border-linha" : ""}`}>
+              <b className="block font-revista text-[34px] leading-none font-normal text-bordo italic">{c.v}</b>
+              <span className="mt-2.5 block text-[9.5px] leading-[1.3] font-semibold tracking-[.1em] text-cinza uppercase">{c.r}</span>
+            </div>
+          ))}
+        </div>
       </div>
 
       <section className="mb-14">
