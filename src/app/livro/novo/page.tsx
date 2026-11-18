@@ -53,6 +53,7 @@ function Cadastro() {
     estado: "procurando" | "pronto" | "nada" | "erro";
     fonte?: string;
     emIngles?: boolean;
+    passos?: string[];
   } | null>(null);
 
   /** procura o livro (Google Books, BrasilAPI, Open Library, Wikipédia) e preenche o que estiver vazio */
@@ -69,7 +70,12 @@ function Cadastro() {
       setCapasAchadas(r.capas);
       // a capa achada só entra se a pessoa ainda não pôs uma foto dela
       if (r.capa && (!capa || capasAchadas.includes(capa))) setCapa(r.capa);
-      setIa({ estado: "pronto", fonte: r.fonte, emIngles: r.emIngles });
+      setIa({
+        estado: "pronto",
+        fonte: r.fonte,
+        emIngles: r.emIngles,
+        passos: r.passos,
+      });
     } catch {
       setIa({ estado: "erro" });
     }
@@ -218,6 +224,25 @@ function Cadastro() {
                     : "sem conexão agora. tente de novo."
                   : "procura o livro no Google Books, BrasilAPI, Open Library e Wikipédia, de preferência a edição brasileira, e preenche sinopse, páginas e capa."}
           </p>
+          {ia?.passos?.length ? (
+            <details className="mt-1.5 text-[11px] text-cinza">
+              <summary className="cursor-pointer select-none">
+                ver onde procurei
+              </summary>
+              <ul className="mt-1 list-disc space-y-0.5 pl-4">
+                {ia.passos.map((p) => (
+                  <li
+                    key={p}
+                    className={
+                      p.startsWith("⚠") ? "font-semibold text-bordo" : ""
+                    }
+                  >
+                    {p}
+                  </li>
+                ))}
+              </ul>
+            </details>
+          ) : null}
         </div>
 
         {capasAchadas.length ? (

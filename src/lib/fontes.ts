@@ -31,6 +31,8 @@ export type InfoDoLivro = {
   emIngles?: boolean;
   /** capas possíveis (edição brasileira primeiro), já conferidas */
   capas: string[];
+  /** onde procurou e o que cada fonte respondeu (para conferir quando não acha) */
+  passos: string[];
 };
 export type Citacao = { texto: string; idioma: "pt" | "en"; fonte: string };
 
@@ -192,8 +194,18 @@ export async function infoNaInternet(
   autor: string,
 ): Promise<InfoDoLivro | null> {
   const consulta = `intitle:${titulo}${autor ? ` inauthor:${autor}` : ""}`;
+  const passos: string[] = [];
+  let googleFalhou = false;
+  const google = (q: string, lang?: string) =>
+    livrosDoGoogle(q, lang, comTempo()).catch((e: Error) => {
+      googleFalhou = true;
+      passos.push(
+        `Google Books (${q.startsWith("isbn") ? "pelo ISBN" : "em português"}): não respondeu (${e.message})`,
+      );
+      return [] as LivroBusca[];
+    });
   const [googlePt, achados, br] = await Promise.all([
-    livrosDoGoogle(consulta, "pt", comTempo()).catch(() => [] as LivroBusca[]),
+    google(consulta, "pt"),
     acharLivro({ titulo, autor: autor || undefined }).catch(
       () => [] as LivroBusca[],
     ),
@@ -207,13 +219,16 @@ export async function infoNaInternet(
   let edicoesBR = googlePt.filter(confere);
   if (!edicoesBR.length)
     for (const isbn of br.isbns.slice(0, 2)) {
-      edicoesBR = await livrosDoGoogle(
-        `isbn:${isbn}`,
-        undefined,
-        comTempo(),
-      ).catch(() => []);
+      edicoesBR = await google(`isbn:${isbn}`);
       if (edicoesBR.length) break;
     }
+  if (!googleFalhou)
+    passos.push(
+      `Google Books: ${edicoesBR.length ? "achou a edição brasileira" : "não achou a edição brasileira"}`,
+    );
+  passos.push(
+    `Open Library: ${br.isbns.length ? `${br.isbns.length} edição(ões) brasileira(s)` : "nenhuma edição brasileira"}; busca geral: ${achados.filter(confere).length} resultado(s)`,
+  );
   const candidatos = [...edicoesBR, ...achados.filter(confere)].filter(
     (x, i, a) => a.findIndex((y) => y.id === x.id) === i,
   );
@@ -250,6 +265,19 @@ export async function infoNaInternet(
       paginas?: number;
       capa?: string;
     }>(`/api/isbn/${isbn}`);
+    passos.push(
+      `BrasilAPI (ISBN ${isbn}): ${
+        b
+          ? [
+              b.sinopse ? "sinopse" : "sem sinopse",
+              b.paginas ? "páginas" : "",
+              b.capa ? "capa" : "sem capa",
+            ]
+              .filter(Boolean)
+              .join(", ")
+          : "não achou"
+      }`,
+    );
     if (!b) continue;
     paginas ??= b.paginas;
     if (b.capa) capasPossiveis.unshift(b.capa);
@@ -263,6 +291,9 @@ export async function infoNaInternet(
   if (!emPt())
     for (const isbn of br.isbns.slice(0, 3)) {
       const t = await sinopsePeloIsbnNoOL(isbn);
+      passos.push(
+        `Open Library (ISBN ${isbn}): ${t ? "sinopse" : "sem sinopse"}`,
+      );
       if (t) achadas.push({ texto: t, fonte: "Open Library" });
       if (emPt()) break;
     }
@@ -280,6 +311,7 @@ export async function infoNaInternet(
       l?.autor ?? autor,
       "pt",
     );
+    passos.push(`Wikipédia: ${w ? "achou" : "não achou artigo do livro"}`);
     if (w) achadas.push({ texto: w, fonte: "Wikipédia" });
   }
   // último caso: em inglês, pelo título original
@@ -292,6 +324,7 @@ export async function infoNaInternet(
       original?.autor ?? autor,
       "en",
     );
+    passos.push(`Wikipédia em inglês: ${w ? "achou" : "não achou"}`);
     if (w) achadas.push({ texto: w, fonte: "Wikipédia em inglês" });
   }
 
@@ -302,6 +335,15 @@ export async function infoNaInternet(
     titulosBR[0] ?? titulo,
     l?.autor ?? autor,
   );
+  passos.push(`capas: ${capas.length} achada(s)`);
+  if (googleFalhou) {
+    // o Google não deixa mais buscar sem chave: confere se a chave está na Vercel
+    const r = await json<{ semChave?: boolean }>("/api/livros?q=livro&max=1");
+    if (r?.semChave)
+      passos.push(
+        "⚠ a chave do Google Books (GOOGLE_BOOKS_API_KEY) não está na Vercel — sem ela o Google Books não responde",
+      );
+  }
   const escolhida = emPt() ?? achadas[0];
   if (!l && !escolhida && !capas.length && !paginas) return null;
 
@@ -320,6 +362,7 @@ export async function infoNaInternet(
     capas,
     fonte: escolhida?.fonte,
     emIngles: escolhida ? pareceIngles(escolhida.texto) : undefined,
+    passos,
   };
 }
 
