@@ -53,10 +53,32 @@
 
 html {
   background: var(--color-mesa);
+  /* cara de app no celular: sem o cinza ao tocar, sem a página "elástica" */
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+  /* altura do menu inferior fixo (o AppShell define quando ele aparece) */
+  --altura-menu: 0px;
+}
+
+a,
+button,
+label,
+summary {
+  touch-action: manipulation;
+}
+
+/* no celular, campos com menos de 16px fazem o iPhone dar zoom ao tocar */
+@media (max-width: 63.99rem) {
+  input,
+  select,
+  textarea {
+    font-size: max(16px, 1em);
+  }
 }
 
 body {
   margin: 0;
+  overscroll-behavior-y: none;
   background: var(--color-mesa);
   color: var(--color-ameixa);
   font-family: var(--font-sans);

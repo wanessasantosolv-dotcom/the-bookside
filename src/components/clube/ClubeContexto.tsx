@@ -94,7 +94,9 @@ function Abas({ base, sublinhadas }: { base: string; sublinhadas?: boolean }) {
   return (
     <nav
       aria-label="seções do clube"
-      className={sublinhadas ? "flex gap-6" : "-mx-6 mt-4 flex gap-1.5 overflow-x-auto px-6 pb-1 lg:mx-0 lg:px-0"}
+      className={
+        sublinhadas ? "flex gap-6" : "-mx-6 mt-2 flex gap-1.5 overflow-x-auto px-6 pb-0.5 [scrollbar-width:none]"
+      }
     >
       {abas.map((a) => {
         const href = a.id ? `${base}/${a.id}` : base;
@@ -204,15 +206,14 @@ function Cabecalho({ c, papel, rodada }: { c: Clube; papel: Papel | null; rodada
           {c.descricao ? (
             <p className="mx-auto mt-2 max-w-[30em] font-accent text-sm italic text-cinza lg:mx-0">{c.descricao}</p>
           ) : null}
-          <div className="lg:mt-5 lg:border-b lg:border-fio">
-            <span className="lg:hidden">
-              <Abas base={base} />
-            </span>
-            <span className="hidden lg:block">
-              <Abas base={base} sublinhadas />
-            </span>
+          <div className="hidden lg:mt-5 lg:block lg:border-b lg:border-fio">
+            <Abas base={base} sublinhadas />
           </div>
         </div>
+      </div>
+      {/* celular: as abas do clube ficam presas no topo enquanto rola */}
+      <div className="sticky top-0 z-20 border-b border-linha/70 bg-creme/95 px-6 pt-0.5 pb-1.5 backdrop-blur-md lg:hidden">
+        <Abas base={base} />
       </div>
     </>
   );

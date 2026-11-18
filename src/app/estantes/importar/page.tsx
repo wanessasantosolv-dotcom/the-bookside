@@ -355,7 +355,7 @@ export default function ImportarPage() {
                 );
               })}
             </ul>
-            <div className="sticky bottom-[70px] mt-4 flex gap-2.5 bg-gradient-to-t from-creme via-creme to-creme/0 pt-5 pb-3 lg:static lg:bg-none">
+            <div className="sticky bottom-[var(--altura-menu)] mt-4 flex gap-2.5 bg-gradient-to-t from-creme via-creme to-creme/0 pt-5 pb-3 lg:static lg:bg-none">
               <button
                 type="button"
                 onClick={salvar}

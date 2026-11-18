@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { PainelLateral } from "@/components/ui/PainelLateral";
+import { LoginSocial } from "@/components/conta/LoginSocial";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { Botao } from "@/components/ui/Botao";
@@ -149,6 +150,7 @@ export default function EntrarPage() {
               {enviando ? "entrando…" : "entrar"}
             </Botao>
           </form>
+          <LoginSocial texto="entrar" />
 
           <p className="mt-4 text-center text-[13px] font-medium text-ameixa">
             ainda não tem conta?{" "}

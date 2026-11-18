@@ -47,7 +47,10 @@ export async function salvarPerfil(id: string) {
     atualizado_em: new Date().toISOString(),
   });
   if (error) {
-    const msg = error.code === "23505" ? "esse @usuário já está em uso. troque em editar perfil." : "não conseguimos salvar na nuvem agora.";
+    const msg =
+      error.code === "23505"
+        ? "esse @usuário já está em uso. troque em editar perfil."
+        : "não conseguimos salvar na nuvem agora.";
     useNuvem.setState({ estado: "erro", erro: msg });
   } else useNuvem.setState({ estado: "salvo", erro: null });
 }
@@ -66,7 +69,10 @@ export async function carregarPerfil(user: User): Promise<Perfil> {
     usePerfil.setState({ ...perfilInicial, ...(data.dados as Partial<Perfil>), email: user.email ?? null });
     useNuvem.setState({ estado: "salvo" });
   } else {
-    usePerfil.setState({ email: user.email ?? null });
+    // conta nova (por e-mail, Google ou Apple): aproveita o nome que veio do login
+    const meta = user.user_metadata as { full_name?: string; name?: string } | undefined;
+    const nomeDoLogin = (meta?.full_name || meta?.name || "").split(" ")[0]?.toLowerCase();
+    usePerfil.setState((s) => ({ email: user.email ?? null, nome: s.nome || nomeDoLogin || "" }));
     await salvarPerfil(user.id);
   }
   carregado = true;

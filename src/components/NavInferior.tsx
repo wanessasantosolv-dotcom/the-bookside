@@ -73,7 +73,7 @@ export function NavInferior({ ativa }: { ativa: Aba }) {
   return (
     <nav
       aria-label="Principal"
-      className="sticky bottom-0 z-30 mt-auto flex items-center justify-around border-t border-linha bg-creme-quente px-2.5 pt-2 pb-[max(10px,env(safe-area-inset-bottom))]"
+      className="fixed inset-x-0 bottom-0 z-30 mx-auto flex w-full max-w-[430px] items-center justify-around border-t border-linha bg-creme-quente/95 px-2.5 pt-2 pb-[max(10px,env(safe-area-inset-bottom))] backdrop-blur-md select-none"
     >
       {abas.map((a) => {
         const on = a.id === ativa;

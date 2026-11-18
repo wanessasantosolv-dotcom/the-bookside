@@ -58,7 +58,7 @@ export function TopoForm({
 /** Botão principal preso embaixo (no celular) / normal no computador. */
 export function Rodape({ children }: { children: ReactNode }) {
   return (
-    <div className="sticky bottom-[70px] z-10 mt-auto flex gap-2.5 bg-gradient-to-t from-creme via-creme to-creme/0 px-6 pt-6 pb-4 lg:static lg:bg-none lg:px-0">
+    <div className="sticky bottom-[var(--altura-menu)] z-10 mt-auto flex gap-2.5 bg-gradient-to-t from-creme via-creme to-creme/0 px-6 pt-6 pb-4 lg:static lg:bg-none lg:px-0">
       {children}
     </div>
   );

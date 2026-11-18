@@ -113,7 +113,7 @@ function Conversa({ id }: { id: string }) {
 
       <form
         onSubmit={enviar}
-        className="sticky bottom-0 flex items-center gap-2.5 border-t border-linha bg-creme px-6 pt-3 pb-[max(16px,env(safe-area-inset-bottom))] lg:static lg:border-0 lg:bg-transparent lg:px-0"
+        className="sticky bottom-[var(--altura-menu)] flex items-center gap-2.5 border-t border-linha bg-creme px-6 pt-3 pb-[max(16px,env(safe-area-inset-bottom))] lg:static lg:border-0 lg:bg-transparent lg:px-0"
       >
         <label className="min-w-0 flex-1">
           <span className="sr-only">escreva um comentário</span>

@@ -23,7 +23,12 @@ export function AppShell({
   style?: CSSProperties;
 }) {
   return (
-    <div style={style} className={`min-h-dvh lg:flex lg:bg-jornal ${className}`}>
+    <div
+      style={style}
+      className={`min-h-dvh lg:flex lg:bg-jornal ${
+        menuCelular ? "[--altura-menu:calc(52px+max(10px,env(safe-area-inset-bottom)))] lg:[--altura-menu:0px]" : ""
+      } ${className}`}
+    >
       <ExigeConta />
       <aside className="hidden lg:sticky lg:top-0 lg:block lg:h-dvh lg:w-[236px] lg:flex-none lg:border-r lg:border-fio lg:px-7 lg:py-8">
         <Link href="/inicio" aria-label="the bookside · início" className="mb-10 block">
@@ -51,9 +56,13 @@ export function AppShell({
       <main className="relative mx-auto flex min-h-dvh w-full max-w-[430px] flex-col bg-creme text-ameixa sm:shadow-[0_0_60px_-30px_rgba(43,20,32,.35)] lg:mx-0 lg:max-w-none lg:min-w-0 lg:flex-1 lg:shadow-none">
         <div className="flex flex-1 flex-col">{children}</div>
         {menuCelular ? (
-          <div className="lg:hidden">
-            <NavInferior ativa={aba} />
-          </div>
+          <>
+            {/* respiro do tamanho do menu, para o fim da página não ficar escondido atrás dele */}
+            <div aria-hidden className="h-[var(--altura-menu)] flex-none lg:hidden" />
+            <div className="lg:hidden">
+              <NavInferior ativa={aba} />
+            </div>
+          </>
         ) : null}
       </main>
     </div>
