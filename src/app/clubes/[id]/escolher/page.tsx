@@ -6,15 +6,30 @@ import { Suspense, useState, type FormEvent } from "react";
 import { Animacao } from "@/components/Animacao";
 import { CapaLivro } from "@/components/CapaLivro";
 import { useClube } from "@/components/clube/ClubeContexto";
-import { botaoContorno, botaoPrincipal, campo, Rodape, rotuloCampo, TopoForm } from "@/components/clube/Pecas";
+import {
+  botaoContorno,
+  botaoPrincipal,
+  campo,
+  Rodape,
+  rotuloCampo,
+  TopoForm,
+} from "@/components/clube/Pecas";
 import { ErroOuFalta, Vazio } from "@/components/social/Estados";
 import { useBuscaLivros, type LivroBusca } from "@/lib/catalogo";
-import { comecarLeitura, escolherLivroDaVez, livrosDoClube, type LivroDoClube } from "@/lib/clubes";
+import {
+  comecarLeitura,
+  escolherLivroDaVez,
+  livrosDoClube,
+  type LivroDoClube,
+} from "@/lib/clubes";
 import { corDoLivro } from "@/lib/cores";
 import { nomeDe, useConsulta } from "@/lib/social";
 
 const hoje = () => new Date().toISOString().slice(0, 10);
-const diasDepois = (base: string, n: number) => new Date(new Date(`${base}T12:00:00`).getTime() + n * 864e5).toISOString().slice(0, 10);
+const diasDepois = (base: string, n: number) =>
+  new Date(new Date(`${base}T12:00:00`).getTime() + n * 864e5)
+    .toISOString()
+    .slice(0, 10);
 const prazos = [
   { r: "2 semanas", d: 14 },
   { r: "3 semanas", d: 21 },
@@ -22,7 +37,9 @@ const prazos = [
   { r: "2 meses", d: 60 },
 ];
 
-type Escolha = { tipo: "sugestao"; l: LivroDoClube } | { tipo: "busca"; l: LivroBusca };
+type Escolha =
+  | { tipo: "sugestao"; l: LivroDoClube }
+  | { tipo: "busca"; l: LivroBusca };
 
 /** Cadastrar um livro na mão quando a busca não acha (título, autoria e páginas). */
 function CadastroManual({
@@ -42,7 +59,10 @@ function CadastroManual({
     e.preventDefault();
     const t = titulo.trim();
     if (!t) return;
-    const id = `manual-${t.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 40)}-${Date.now().toString(36)}`;
+    const id = `manual-${t
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .slice(0, 40)}-${Date.now().toString(36)}`;
     onCadastrar({
       id,
       titulo: t,
@@ -53,16 +73,32 @@ function CadastroManual({
   }
 
   return (
-    <form onSubmit={salvar} className="mt-3 space-y-3 rounded-md border border-linha p-3.5 lg:border-fio">
-      <p className="font-accent text-sm italic text-cinza">não achou na busca? cadastre ele do seu jeito ✦</p>
+    <form
+      onSubmit={salvar}
+      className="mt-3 space-y-3 rounded-md border border-linha p-3.5 lg:border-fio"
+    >
+      <p className="font-accent text-sm italic text-cinza">
+        não achou na busca? cadastre ele do seu jeito ✦
+      </p>
       <label className="block">
         <span className={rotuloCampo}>título *</span>
-        <input value={titulo} onChange={(e) => setTitulo(e.target.value)} required maxLength={200} className={campo} />
+        <input
+          value={titulo}
+          onChange={(e) => setTitulo(e.target.value)}
+          required
+          maxLength={200}
+          className={campo}
+        />
       </label>
       <div className="grid grid-cols-2 gap-3">
         <label className="block">
           <span className={rotuloCampo}>autoria</span>
-          <input value={autor} onChange={(e) => setAutor(e.target.value)} maxLength={200} className={campo} />
+          <input
+            value={autor}
+            onChange={(e) => setAutor(e.target.value)}
+            maxLength={200}
+            className={campo}
+          />
         </label>
         <label className="block">
           <span className={rotuloCampo}>páginas</span>
@@ -81,7 +117,11 @@ function CadastroManual({
         <button type="submit" className={`${botaoPrincipal} min-h-11 flex-1`}>
           cadastrar livro
         </button>
-        <button type="button" onClick={onCancelar} className={`${botaoContorno} min-h-11`}>
+        <button
+          type="button"
+          onClick={onCancelar}
+          className={`${botaoContorno} min-h-11`}
+        >
           cancelar
         </button>
       </div>
@@ -116,27 +156,45 @@ function Escolher() {
         <Vazio
           titulo="quem modera escolhe o livro da vez"
           texto="você pode sugerir um livro e votar nas sugestões do clube."
-          acao={{ href: `/clubes/${clube.id}/sugerir`, rotulo: "sugerir um livro" }}
+          acao={{
+            href: `/clubes/${clube.id}/sugerir`,
+            rotulo: "sugerir um livro",
+          }}
         />
       </div>
     );
   if (consulta.carregando && !consulta.dados)
-    return <Animacao tipo="pilha" titulo="procurando na estante" sub="trazendo as sugestões do clube" />;
-  if (consulta.erro) return <ErroOuFalta erro={consulta.erro} onTentar={consulta.recarregar} />;
+    return (
+      <Animacao
+        tipo="pilha"
+        titulo="procurando na estante"
+        sub="trazendo as sugestões do clube"
+      />
+    );
+  if (consulta.erro)
+    return <ErroOuFalta erro={consulta.erro} onTentar={consulta.recarregar} />;
 
   const livros = consulta.dados!;
   const atual = livros.find((l) => l.estado === "lendo");
-  const sugestoes = livros.filter((l) => l.estado === "sugerido").sort((a, b) => b.votos.length - a.votos.length);
+  const sugestoes = livros
+    .filter((l) => l.estado === "sugerido")
+    .sort((a, b) => b.votos.length - a.votos.length);
   const abaAtiva = aba ?? (sugestoes.length ? "sugestoes" : "busca");
-  const pessoa = (id: string | null) => (id ? (membros.find((m) => m.usuario_id === id)?.pessoa ?? null) : null);
+  const pessoa = (id: string | null) =>
+    id ? (membros.find((m) => m.usuario_id === id)?.pessoa ?? null) : null;
 
   async function comecar(e: Escolha | null = escolha) {
     if (!e) return setErro("escolha um livro primeiro.");
-    if (atual && !confirm(`isso encerra a leitura de ${atual.livro.titulo}. continuar?`)) return;
+    if (
+      atual &&
+      !confirm(`isso encerra a leitura de ${atual.livro.titulo}. continuar?`)
+    )
+      return;
     setOcupado(true);
     setErro(null);
     try {
-      if (e.tipo === "sugestao") await comecarLeitura(clube.id, e.l.id, prazo, inicio);
+      if (e.tipo === "sugestao")
+        await comecarLeitura(clube.id, e.l.id, prazo, inicio);
       else
         await escolherLivroDaVez(
           clube.id,
@@ -159,7 +217,9 @@ function Escolher() {
 
   function sortear() {
     // cada voto vale um bilhete a mais no sorteio
-    const bilhetes = sugestoes.flatMap((s) => Array(1 + s.votos.length).fill(s) as LivroDoClube[]);
+    const bilhetes = sugestoes.flatMap(
+      (s) => Array(1 + s.votos.length).fill(s) as LivroDoClube[],
+    );
     const sorteada = bilhetes[Math.floor(Math.random() * bilhetes.length)];
     setEscolha({ tipo: "sugestao", l: sorteada });
   }
@@ -192,11 +252,16 @@ function Escolher() {
       <div className="mt-6 space-y-6 px-6 lg:max-w-[720px] lg:px-0">
         {atual ? (
           <p className="rounded-md border border-linha px-4 py-3 text-[13px] text-cinza lg:border-fio">
-            o clube está lendo <i>{atual.livro.titulo}</i>. começar outro livro encerra essa leitura.
+            o clube está lendo <i>{atual.livro.titulo}</i>. começar outro livro
+            encerra essa leitura.
           </p>
         ) : null}
 
-        <div role="group" aria-label="de onde vem o livro" className="flex gap-1.5">
+        <div
+          role="group"
+          aria-label="de onde vem o livro"
+          className="flex gap-1.5"
+        >
           <button
             type="button"
             aria-pressed={abaAtiva === "sugestoes"}
@@ -220,7 +285,8 @@ function Escolher() {
             <div>
               <ul className="space-y-2">
                 {sugestoes.map((s) => {
-                  const on = escolha?.tipo === "sugestao" && escolha.l.id === s.id;
+                  const on =
+                    escolha?.tipo === "sugestao" && escolha.l.id === s.id;
                   return (
                     <li key={s.id}>
                       <button
@@ -229,7 +295,8 @@ function Escolher() {
                         onClick={() => setEscolha({ tipo: "sugestao", l: s })}
                         className={`flex w-full items-center gap-3 rounded-md border p-2.5 text-left ${on ? "border-bordo bg-rosa-fundo/50" : "border-linha hover:border-bordo"}`}
                       >
-                        <CapaAuto livro={s.livro}
+                        <CapaAuto
+                          livro={s.livro}
                           className="w-9 [&>span:last-child]:hidden"
                         />
                         <span className="min-w-0 flex-1">
@@ -237,8 +304,11 @@ function Escolher() {
                             {s.livro.titulo}
                           </span>
                           <span className="block truncate text-xs text-cinza">
-                            {s.livro.autor} · {s.votos.length} {s.votos.length === 1 ? "voto" : "votos"} · sugestão{" "}
-                            {s.sugerido_por ? `de ${nomeDe(pessoa(s.sugerido_por))}` : ""}
+                            {s.livro.autor} · {s.votos.length}{" "}
+                            {s.votos.length === 1 ? "voto" : "votos"} · sugestão{" "}
+                            {s.sugerido_por
+                              ? `de ${nomeDe(pessoa(s.sugerido_por))}`
+                              : ""}
                           </span>
                         </span>
                         {on ? <span className="text-bordo">✓</span> : null}
@@ -273,37 +343,59 @@ function Escolher() {
                 className={campo}
               />
             </label>
-            <ul className="mt-2 max-h-[320px] overflow-y-auto rounded-md border border-linha" aria-live="polite">
-              {busca.estado === "carregando" ? (
-                <li className="px-4 py-3 font-accent text-sm italic text-cinza">procurando…</li>
-              ) : (
-                busca.resultados.slice(0, 12).map((l) => {
-                  const on = escolha?.tipo === "busca" && escolha.l.id === l.id;
-                  return (
-                    <li key={l.id}>
-                      <button
-                        type="button"
-                        aria-pressed={on}
-                        onClick={() => setEscolha({ tipo: "busca", l })}
-                        className={`flex w-full items-center gap-3 border-b border-linha/70 px-3 py-2 text-left ${on ? "bg-rosa-fundo/60" : "hover:bg-rosa-fundo/40"}`}
-                      >
-                        <CapaLivro
-                          titulo={l.titulo}
-                          capa={l.capa}
-                          cor={l.cor}
-                          className="w-8 [&>span:last-child]:hidden"
-                        />
-                        <span className="min-w-0 flex-1">
-                          <span className="block truncate text-sm font-semibold">{l.titulo}</span>
-                          <span className="block truncate text-xs text-cinza">{l.autor}</span>
-                        </span>
-                        {on ? <span className="text-bordo">✓</span> : null}
-                      </button>
-                    </li>
-                  );
-                })
-              )}
-            </ul>
+            {/* sem nada digitado não mostra nada: as sugestões por gosto não fazem sentido aqui */}
+            {busca.estado === "sugestoes" ? (
+              <p className="mt-2 font-accent text-[13px] italic text-cinza">
+                digite o título ou o nome da autora para procurar.
+              </p>
+            ) : (
+              <ul
+                className="mt-2 max-h-[320px] overflow-y-auto rounded-md border border-linha"
+                aria-live="polite"
+              >
+                {busca.estado === "carregando" ? (
+                  <li className="px-4 py-3 font-accent text-sm italic text-cinza">
+                    procurando…
+                  </li>
+                ) : (
+                  busca.resultados.slice(0, 12).map((l) => {
+                    const on =
+                      escolha?.tipo === "busca" && escolha.l.id === l.id;
+                    return (
+                      <li key={l.id}>
+                        <button
+                          type="button"
+                          aria-pressed={on}
+                          onClick={() => setEscolha({ tipo: "busca", l })}
+                          className={`flex w-full items-center gap-3 border-b border-linha/70 px-3 py-2 text-left ${on ? "bg-rosa-fundo/60" : "hover:bg-rosa-fundo/40"}`}
+                        >
+                          <CapaLivro
+                            titulo={l.titulo}
+                            capa={l.capa}
+                            cor={l.cor}
+                            className="w-8 [&>span:last-child]:hidden"
+                          />
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-sm font-semibold">
+                              {l.titulo}
+                            </span>
+                            <span className="block truncate text-xs text-cinza">
+                              {l.autor}
+                            </span>
+                          </span>
+                          {on ? <span className="text-bordo">✓</span> : null}
+                        </button>
+                      </li>
+                    );
+                  })
+                )}
+                {busca.estado !== "carregando" && !busca.resultados.length ? (
+                  <li className="px-4 py-3 font-accent text-sm italic text-cinza">
+                    não achamos esse livro.
+                  </li>
+                ) : null}
+              </ul>
+            )}
             {cadastrar ? (
               <CadastroManual
                 termoInicial={termo}
@@ -340,7 +432,9 @@ function Escolher() {
               <span className="block truncate font-display text-lg font-semibold italic lg:font-revista lg:font-normal">
                 {escolhido.titulo}
               </span>
-              <span className="block truncate text-xs text-cinza">{escolhido.autor}</span>
+              <span className="block truncate text-xs text-cinza">
+                {escolhido.autor}
+              </span>
             </span>
           </div>
         ) : null}
@@ -404,7 +498,11 @@ function Escolher() {
           {ocupado ? "começando…" : "começar leitura"}
         </button>
         {depoisDeEncerrar ? (
-          <button type="button" onClick={() => router.push(`/clubes/${clube.id}`)} className={botaoContorno}>
+          <button
+            type="button"
+            onClick={() => router.push(`/clubes/${clube.id}`)}
+            className={botaoContorno}
+          >
             depois
           </button>
         ) : null}
