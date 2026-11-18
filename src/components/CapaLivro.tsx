@@ -22,7 +22,7 @@ export function CapaLivro({
   return (
     <div
       aria-hidden
-      className={`relative flex aspect-[2/3] flex-none items-end overflow-hidden rounded-[2px_4px_4px_2px] p-1.5 shadow-[inset_3px_0_0_rgba(0,0,0,.18),2px_4px_8px_-3px_rgba(43,20,32,.45)] ${className}`}
+      className={`relative flex aspect-[2/3] flex-none items-end overflow-hidden rounded-[2px_4px_4px_2px] p-1.5 shadow-[inset_2px_0_0_rgba(0,0,0,.08),2px_4px_8px_-3px_rgba(43,20,32,.3)] ${className}`}
       style={{ background: cor }}
     >
       {comImagem ? (
@@ -36,7 +36,7 @@ export function CapaLivro({
         />
       ) : null}
       {comImagem ? (
-        <span className="absolute inset-y-0 left-0 w-[5%] bg-gradient-to-r from-black/25 to-transparent" />
+        <span className="absolute inset-y-0 left-0 w-[4%] bg-gradient-to-r from-black/10 to-transparent" />
       ) : (
         <span className="absolute inset-x-1.5 top-2 h-px bg-ouro/70" />
       )}
