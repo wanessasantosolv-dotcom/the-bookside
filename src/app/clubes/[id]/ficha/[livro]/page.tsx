@@ -4,7 +4,13 @@ import { Animacao } from "@/components/Animacao";
 import { useParams, useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { useClube } from "@/components/clube/ClubeContexto";
-import { botaoPrincipal, Rodape, TopoForm } from "@/components/clube/Pecas";
+import {
+  botaoPrincipal,
+  campo,
+  Rodape,
+  rotuloCampo,
+  TopoForm,
+} from "@/components/clube/Pecas";
 import {
   FichaLeitura,
   fichaEmBranco,
@@ -19,6 +25,7 @@ import {
   type Ficha,
   type LivroDoClube,
 } from "@/lib/clubes";
+import { dataDoDia, diaDaData, diaLocal } from "@/lib/datas";
 import { notasCompletas } from "@/lib/estantes";
 import { usePerfil } from "@/lib/perfil-store";
 import { useConsulta, useMeuId } from "@/lib/social";
@@ -38,6 +45,10 @@ function Formulario({ l, minha }: { l: LivroDoClube; minha: Ficha | null }) {
     }),
   );
   const [naEstante, setNaEstante] = useState(!minha);
+  // quando terminou: o fim da rodada, se já encerrou; senão, hoje
+  const [dia, setDia] = useState(
+    diaDaData(l.encerrado_em ?? undefined) ?? diaLocal(),
+  );
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -71,7 +82,7 @@ function Formulario({ l, minha }: { l: LivroDoClube; minha: Ficha | null }) {
           },
           {
             status: "lido",
-            lidoEm: new Date().toISOString(),
+            lidoEm: dataDoDia(dia),
             nota,
             notas: notasCompletas(ficha.notas),
             personagem: ficha.personagem.trim() || undefined,
@@ -120,6 +131,18 @@ function Formulario({ l, minha }: { l: LivroDoClube; minha: Ficha | null }) {
                 className="size-5 accent-bordo"
               />
               marcar como lido na minha estante, com esta ficha
+            </label>
+          ) : null}
+          {!minha && naEstante ? (
+            <label className="block">
+              <span className={rotuloCampo}>terminei em</span>
+              <input
+                type="date"
+                value={dia}
+                max={diaLocal()}
+                onChange={(e) => e.target.value && setDia(e.target.value)}
+                className={campo}
+              />
             </label>
           ) : null}
         </FichaLeitura>

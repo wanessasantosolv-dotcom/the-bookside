@@ -1,5 +1,6 @@
 "use client";
 
+import { diaLocal } from "@/lib/datas";
 import { Voltar } from "@/components/Voltar";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
@@ -36,7 +37,7 @@ const rotuloNota = (n: number) =>
   n
     ? `${"★".repeat(Math.floor(n))}${n % 1 ? "½" : ""} (${String(n).replace(".", ",")})`
     : "sem nota";
-const hoje = () => new Date().toISOString().slice(0, 10);
+const hoje = () => diaLocal();
 const espera = (ms: number) => new Promise((ok) => setTimeout(ok, ms));
 
 /** Busca esperta para cada linha da lista (título, autoria e tradução do título). */

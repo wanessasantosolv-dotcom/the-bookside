@@ -3,6 +3,7 @@
 import { Voltar } from "@/components/Voltar";
 import Link from "next/link";
 import { useState } from "react";
+import { PerguntaTermino } from "@/components/PerguntaTermino";
 import { CapaLivro } from "@/components/CapaLivro";
 import { BotaoLink } from "@/components/ui/Botao";
 import { Tela } from "@/components/ui/Tela";
@@ -27,10 +28,13 @@ export function Descobrir({
     (a, b) => Number(!!b.sinopse) - Number(!!a.sinopse),
   );
   const [indice, setIndice] = useState(0);
+  const [perguntarTermino, setPerguntarTermino] = useState(false);
   const livro = fila[indice];
   const queroLer = livros.filter((l) => l.status === "quero").length;
 
-  function responder(status: StatusLivro | null) {
+  function responder(status: StatusLivro | null, lidoEm?: string) {
+    // "já li" pergunta quando a pessoa terminou
+    if (status === "lido" && !lidoEm) return setPerguntarTermino(true);
     if (status)
       guardarLivro({
         id: livro.id,
@@ -38,6 +42,7 @@ export function Descobrir({
         autor: livro.autor,
         capa: livro.capa,
         status,
+        ...(lidoEm ? { lidoEm } : {}),
       });
     setIndice((i) => i + 1);
   }
@@ -196,6 +201,16 @@ export function Descobrir({
           </BotaoLink>
         </div>
       )}
+      {perguntarTermino && livro ? (
+        <PerguntaTermino
+          titulo={livro.titulo}
+          onCancelar={() => setPerguntarTermino(false)}
+          onConfirmar={(lidoEm) => {
+            setPerguntarTermino(false);
+            responder("lido", lidoEm);
+          }}
+        />
+      ) : null}
     </Tela>
   );
 }

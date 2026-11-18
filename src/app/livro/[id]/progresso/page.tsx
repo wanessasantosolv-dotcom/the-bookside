@@ -7,6 +7,7 @@ import { useState } from "react";
 import { CapaLivro } from "@/components/CapaLivro";
 import { useHidratado } from "@/components/PerfilHidratacao";
 import { Botao } from "@/components/ui/Botao";
+import { PerguntaTermino } from "@/components/PerguntaTermino";
 import { livroLembrado } from "@/lib/catalogo";
 import { corDoLivro } from "@/lib/cores";
 import { infoDoLivro } from "@/lib/estantes";
@@ -22,6 +23,7 @@ function Progresso({ livro }: { livro: LivroSalvo }) {
   const editarLivro = usePerfil((s) => s.editarLivro);
   const [paginas, setPaginas] = useState(livro.paginas ?? 0);
   const [atual, setAtual] = useState(livro.paginaAtual ?? 0);
+  const [perguntarTermino, setPerguntarTermino] = useState(false);
   const iniciadoEm = livro.iniciadoEm ?? new Date().toISOString();
   const dias = Math.max(
     1,
@@ -37,13 +39,15 @@ function Progresso({ livro }: { livro: LivroSalvo }) {
   const mudar = (n: number) =>
     setAtual(Math.max(0, paginas ? Math.min(paginas, n) : n));
 
-  function salvar(terminou = false) {
+  function salvar(terminou = false, lidoEm?: string) {
+    // terminou: pergunta primeiro quando foi
+    if (terminou && !lidoEm) return setPerguntarTermino(true);
     editarLivro(base, {
       status: terminou ? "lido" : "lendo",
       iniciadoEm,
       paginas: paginas || undefined,
       paginaAtual: terminou ? paginas || atual : atual,
-      ...(terminou ? { lidoEm: new Date().toISOString() } : {}),
+      ...(terminou ? { lidoEm } : {}),
     });
     router.push(terminou ? `/livro/${livro.id}/avaliar` : `/livro/${livro.id}`);
   }
@@ -178,6 +182,14 @@ function Progresso({ livro }: { livro: LivroSalvo }) {
       <footer className="sticky bottom-0 bg-gradient-to-t from-creme from-70% to-transparent px-6 pt-4 pb-[max(24px,env(safe-area-inset-bottom))]">
         <Botao onClick={() => salvar(true)}>terminei de ler ✓</Botao>
       </footer>
+      {perguntarTermino ? (
+        <PerguntaTermino
+          titulo={livro.titulo}
+          inicial={livro.lidoEm}
+          onCancelar={() => setPerguntarTermino(false)}
+          onConfirmar={(lidoEm) => salvar(true, lidoEm)}
+        />
+      ) : null}
     </TelaApp>
   );
 }

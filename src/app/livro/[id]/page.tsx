@@ -9,6 +9,7 @@ import { CapaLivro } from "@/components/CapaLivro";
 import { TrocarCapa } from "@/components/TrocarCapa";
 import { lembrarRemovido } from "@/components/AvisoRemovido";
 import { AmigasComLivro } from "@/components/social/AmigasComLivro";
+import { PerguntaTermino } from "@/components/PerguntaTermino";
 import { OpinioesDoLivro } from "@/components/OpinioesDoLivro";
 import { useHidratado } from "@/components/PerfilHidratacao";
 import { livroLembrado, sinopseDaObra } from "@/lib/catalogo";
@@ -21,7 +22,14 @@ const acoes: { status: StatusLivro; rotulo: string; icone: ReactNode }[] = [
     status: "lendo",
     rotulo: "lendo",
     icone: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <svg
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+      >
         <path d="M4 19.5V5.5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v14" />
         <path d="M6.5 22a2 2 0 0 1-2-2v0a2 2 0 0 1 2-2H19" />
       </svg>
@@ -31,7 +39,14 @@ const acoes: { status: StatusLivro; rotulo: string; icone: ReactNode }[] = [
     status: "lido",
     rotulo: "já li",
     icone: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
+      <svg
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.4"
+      >
         <path d="M20 6 9 17l-5-5" />
       </svg>
     ),
@@ -60,6 +75,7 @@ export default function LivroPage() {
   const [trocandoCapa, setTrocandoCapa] = useState(false);
   // saindo da página depois de tirar o livro: não mostra "não encontrado" no meio do caminho
   const [saindo, setSaindo] = useState(false);
+  const [perguntarTermino, setPerguntarTermino] = useState(false);
 
   useEffect(() => {
     const c = new AbortController();
@@ -113,15 +129,15 @@ export default function LivroPage() {
     removerLivro(id);
   }
 
-  function marcar(s: StatusLivro) {
+  function marcar(s: StatusLivro, lidoEm?: string) {
+    // "já li" sempre pergunta quando a pessoa terminou
+    if (s === "lido" && !lidoEm) return setPerguntarTermino(true);
     const agora = new Date().toISOString();
     editarLivro(base, {
       status: s,
       paginas: livro!.paginas,
       ...(s === "lendo" ? { iniciadoEm: livro!.iniciadoEm ?? agora } : {}),
-      ...(s === "lido"
-        ? { lidoEm: livro!.lidoEm ?? agora, paginaAtual: livro!.paginas }
-        : {}),
+      ...(s === "lido" ? { lidoEm, paginaAtual: livro!.paginas } : {}),
     });
   }
 
@@ -256,12 +272,16 @@ export default function LivroPage() {
                   >
                     <span
                       className={`flex h-[46px] w-[46px] items-center justify-center rounded-full border-[1.5px] ${
-                        on ? "border-bordo bg-bordo text-creme" : "border-linha text-bordo"
+                        on
+                          ? "border-bordo bg-bordo text-creme"
+                          : "border-linha text-bordo"
                       }`}
                     >
                       {a.icone}
                     </span>
-                    <span className="text-[10.5px] font-semibold tracking-[.02em]">{a.rotulo}</span>
+                    <span className="text-[10.5px] font-semibold tracking-[.02em]">
+                      {a.rotulo}
+                    </span>
                   </button>
                 );
               })}
@@ -421,6 +441,17 @@ export default function LivroPage() {
           onEscolher={(capa) =>
             editarLivro(base, { capa, capaEscolhida: true })
           }
+        />
+      ) : null}
+      {perguntarTermino ? (
+        <PerguntaTermino
+          titulo={livro.titulo}
+          inicial={livro.lidoEm}
+          onCancelar={() => setPerguntarTermino(false)}
+          onConfirmar={(lidoEm) => {
+            setPerguntarTermino(false);
+            marcar("lido", lidoEm);
+          }}
         />
       ) : null}
     </AppShell>

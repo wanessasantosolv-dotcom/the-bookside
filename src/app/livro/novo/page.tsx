@@ -1,5 +1,6 @@
 "use client";
 
+import { diaLocal } from "@/lib/datas";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState, type FormEvent } from "react";
 import { TelaApp } from "@/components/AppShell";
@@ -20,7 +21,7 @@ import {
 import { normalizar } from "@/lib/importar";
 import { usePerfil, type StatusLivro } from "@/lib/perfil-store";
 
-const hoje = () => new Date().toISOString().slice(0, 10);
+const hoje = () => diaLocal();
 
 /** Cadastrar um livro que a busca não achou: o cadastro de livro do app + em qual estante. */
 function Cadastro() {
