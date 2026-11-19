@@ -7,6 +7,8 @@ import { AppShell } from "@/components/AppShell";
 import { useHidratado } from "@/components/PerfilHidratacao";
 import {
   estiloDoTema,
+  type EstiloStory,
+  type Mostrar,
   StoryLendo,
   StoryMes,
   StoryTerminei,
@@ -55,7 +57,8 @@ function Conteudo() {
   const hoje = new Date();
   // o mês em andamento só entra quando o review dele abre (penúltimo dia do mês)
   const review = mesDoReview(hoje);
-  const chaveMes = (a: number, m: number) => `${a}-${String(m + 1).padStart(2, "0")}`;
+  const chaveMes = (a: number, m: number) =>
+    `${a}-${String(m + 1).padStart(2, "0")}`;
   const mesAtual = chaveMes(hoje.getFullYear(), hoje.getMonth());
   const mesReview = review ? chaveMes(review.ano, review.mes) : null;
   const liberado = (m: string) => m < mesAtual || m === mesReview;
@@ -96,6 +99,41 @@ function Conteudo() {
   const [estiloId, setEstiloId] = useState(temaId || "biblioteca-classica");
   const e = estilos.find((x) => x.id === estiloId) ?? estilos[0];
 
+  const indice = Math.max(
+    0,
+    estilos.findIndex((x) => x.id === e.id),
+  );
+  const trilho = useRef<HTMLDivElement>(null);
+  function irPara(i: number) {
+    const el = trilho.current;
+    const alvo = el?.children[i] as HTMLElement | undefined;
+    if (!el || !alvo || !estilos[i]) return;
+    setEstiloId(estilos[i].id);
+    el.scrollTo({
+      left: alvo.offsetLeft - (el.clientWidth - alvo.clientWidth) / 2,
+      behavior: "smooth",
+    });
+  }
+  // ao arrastar com o dedo, o estilo do meio é o escolhido
+  const rolagem = useRef<ReturnType<typeof setTimeout>>(undefined);
+  function aoRolar() {
+    clearTimeout(rolagem.current);
+    rolagem.current = setTimeout(() => {
+      const el = trilho.current;
+      if (!el) return;
+      const meio = el.scrollLeft + el.clientWidth / 2;
+      let melhor = 0;
+      let dist = Infinity;
+      [...el.children].forEach((c, i) => {
+        const h = c as HTMLElement;
+        const d = Math.abs(h.offsetLeft + h.clientWidth / 2 - meio);
+        if (d < dist) [dist, melhor] = [d, i];
+      });
+      if (estilos[melhor]) setEstiloId(estilos[melhor].id);
+    }, 120);
+  }
+
+  const [mostrar, setMostrar] = useState<Mostrar>({});
   const quadro = useRef<HTMLDivElement>(null);
   const [gerando, setGerando] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
@@ -137,6 +175,52 @@ function Conteudo() {
     (tipo === "lendo" && !lendo.length) ||
     (tipo === "mes" && !doMes.length);
 
+  const opcoes: [keyof Mostrar, string][] =
+    tipo === "terminei"
+      ? [
+          ["data", "data"],
+          ["nota", "nota"],
+          ...(livro?.citacao
+            ? [["resenha", "trecho da resenha"] as [keyof Mostrar, string]]
+            : []),
+          ["detalhes", "dias e páginas"],
+        ]
+      : tipo === "lendo"
+        ? [["progresso", "progresso"]]
+        : [
+            ["numeros", "números do mês"],
+            ["favorito", "favorito do mês"],
+          ];
+
+  const historia = (est: EstiloStory, ref?: React.Ref<HTMLDivElement>) =>
+    tipo === "terminei" && livro ? (
+      <StoryTerminei
+        ref={ref}
+        e={est}
+        usuario={usuario}
+        livro={livro}
+        mostrar={mostrar}
+      />
+    ) : tipo === "lendo" ? (
+      <StoryLendo
+        ref={ref}
+        e={est}
+        usuario={usuario}
+        livros={lendo}
+        mostrar={mostrar}
+      />
+    ) : (
+      <StoryMes
+        ref={ref}
+        e={est}
+        usuario={usuario}
+        mes={MESES[mesNum - 1]}
+        ano={anoMes}
+        livros={doMes}
+        mostrar={mostrar}
+      />
+    );
+
   const pilula = (on: boolean) =>
     `flex h-9 items-center rounded-pill border px-[13px] text-xs font-semibold whitespace-nowrap ${
       on
@@ -156,7 +240,8 @@ function Conteudo() {
         compartilhar no story
       </h1>
       <p className="mt-1.5 font-accent text-sm italic text-cinza">
-        escolha o que mostrar e o estilo. a imagem sai no tamanho do story ✦
+        escolha o que mostrar e passe pelos estilos. a imagem sai no tamanho do
+        story ✦
       </p>
 
       <div className="mt-6 lg:grid lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start lg:gap-12">
@@ -226,34 +311,30 @@ function Conteudo() {
             </label>
           ) : null}
 
-          <div>
-            <span className="mb-1.5 block text-[11px] font-semibold tracking-[.12em] text-bordo uppercase">
-              estilo
-            </span>
-            <div className="grid max-w-[520px] grid-cols-4 gap-2.5">
-              {estilos.map((x) => {
-                const on = estiloId === x.id;
-                return (
-                  <button
-                    key={x.id}
-                    type="button"
-                    aria-pressed={on}
-                    onClick={() => setEstiloId(x.id)}
-                    className={`relative h-[84px] overflow-hidden rounded-[10px] text-left ${
-                      on ? "ring-2 ring-bordo ring-offset-2 ring-offset-creme" : "border border-linha"
-                    }`}
-                    style={{ background: x.fundo }}
-                  >
-                    <span className="absolute inset-x-0 top-0 h-5" style={{ background: x.destaque, opacity: 0.55 }} />
-                    <span className="absolute top-3 left-1/2 -ml-2 size-4 rounded-full border-2" style={{ background: x.destaque, borderColor: x.fundo }} />
-                    <span className="absolute inset-x-1 bottom-1.5 text-center font-display text-[10px] leading-[1.1] font-semibold italic" style={{ color: x.texto }}>
-                      {x.id === temaId ? "seu tema" : x.nome}
-                    </span>
-                  </button>
-                );
-              })}
+          {opcoes.length ? (
+            <div>
+              <span className="mb-1.5 block text-[11px] font-semibold tracking-[.12em] text-bordo uppercase">
+                o que aparece
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {opcoes.map(([k, r]) => {
+                  const on = mostrar[k] !== false;
+                  return (
+                    <button
+                      key={k}
+                      type="button"
+                      aria-pressed={on}
+                      onClick={() => setMostrar((m) => ({ ...m, [k]: !on }))}
+                      className={pilula(on)}
+                    >
+                      {on ? "✓ " : ""}
+                      {r}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          ) : null}
 
           <div className="hidden lg:block">
             <BotaoCompartilhar
@@ -278,31 +359,64 @@ function Conteudo() {
                   : `nenhum livro terminado em ${MESES[mesNum - 1]} de ${anoMes}.`}
             </div>
           ) : (
-            <div className="overflow-hidden rounded-[14px] shadow-[0_24px_50px_-24px_rgba(43,20,32,.6)]">
-              {tipo === "terminei" && livro ? (
-                <StoryTerminei
-                  ref={quadro}
-                  e={e}
-                  usuario={usuario}
-                  livro={livro}
-                />
-              ) : tipo === "lendo" ? (
-                <StoryLendo
-                  ref={quadro}
-                  e={e}
-                  usuario={usuario}
-                  livros={lendo}
-                />
-              ) : (
-                <StoryMes
-                  ref={quadro}
-                  e={e}
-                  usuario={usuario}
-                  mes={MESES[mesNum - 1]}
-                  ano={anoMes}
-                  livros={doMes}
-                />
-              )}
+            <div className="w-full">
+              <div className="relative">
+                <div
+                  ref={trilho}
+                  onScroll={aoRolar}
+                  className="flex snap-x snap-mandatory gap-4 overflow-x-auto px-[calc(50%-148px)] py-4 [scrollbar-width:none] lg:px-[calc(50%-162px)]"
+                >
+                  {estilos.map((x, i) => (
+                    <button
+                      key={x.id}
+                      type="button"
+                      aria-label={`estilo ${x.nome}`}
+                      aria-pressed={x.id === e.id}
+                      onClick={() => irPara(i)}
+                      className={`h-[525px] w-[295px] flex-none snap-center overflow-hidden rounded-[14px] text-left transition-opacity lg:h-[576px] lg:w-[324px] ${
+                        x.id === e.id
+                          ? "shadow-[0_24px_50px_-24px_rgba(43,20,32,.6)]"
+                          : "opacity-60"
+                      }`}
+                    >
+                      <div className="pointer-events-none origin-top-left scale-[.82] lg:scale-[.9]">
+                        {historia(x, x.id === e.id ? quadro : undefined)}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+                {(
+                  [
+                    [-1, "‹", "estilo anterior", "left-0"],
+                    [1, "›", "próximo estilo", "right-0"],
+                  ] as const
+                ).map(([d, seta, r, lado]) => (
+                  <button
+                    key={d}
+                    type="button"
+                    aria-label={r}
+                    disabled={indice + d < 0 || indice + d >= estilos.length}
+                    onClick={() => irPara(indice + d)}
+                    className={`absolute top-1/2 ${lado} flex size-11 -translate-y-1/2 items-center justify-center rounded-full border border-linha bg-creme text-2xl text-bordo shadow-md disabled:opacity-0`}
+                  >
+                    {seta}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-1 text-center font-display text-[15px] font-semibold italic text-ameixa lg:font-revista lg:font-normal">
+                {e.id === temaId ? "seu tema" : e.nome}
+              </p>
+              <div className="mt-2 flex justify-center gap-1.5">
+                {estilos.map((x, i) => (
+                  <button
+                    key={x.id}
+                    type="button"
+                    aria-label={x.nome}
+                    onClick={() => irPara(i)}
+                    className={`h-2 rounded-full transition-all ${x.id === e.id ? "w-5 bg-bordo" : "w-2 bg-bege"}`}
+                  />
+                ))}
+              </div>
             </div>
           )}
           <div className="mt-5 w-full max-w-[360px] lg:hidden">

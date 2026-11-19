@@ -373,3 +373,8 @@ body {
 }
 .tour-pulso { animation: tour-pulso 1.6s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .tour-pulso { animation: none; } }
+
+/* stories: nada encolhe (se não couber, a ficha se ajusta antes) */
+.story-conteudo > * {
+  flex-shrink: 0;
+}

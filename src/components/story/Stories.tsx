@@ -6,6 +6,21 @@ import { formatoDe } from "@/lib/formatos";
 import { diasDeLeitura } from "@/lib/numeros";
 import type { LivroSalvo } from "@/lib/perfil-store";
 
+/** o que entra no story (cada um liga/desliga; ausente = aparece) */
+export type Mostrar = Partial<
+  Record<
+    | "data"
+    | "nota"
+    | "resenha"
+    | "detalhes"
+    | "progresso"
+    | "numeros"
+    | "favorito",
+    boolean
+  >
+>;
+const ve = (m: Mostrar | undefined, k: keyof Mostrar) => m?.[k] !== false;
+
 /** Os estilos de story: cores e papel. */
 export type EstiloStory = {
   id: string;
@@ -74,7 +89,8 @@ export const tituloQueCabe = (
   linhas = 2,
 ): React.CSSProperties => {
   const n = texto.length;
-  const tam = n > 60 ? base * 0.62 : n > 40 ? base * 0.72 : n > 24 ? base * 0.85 : base;
+  const tam =
+    n > 60 ? base * 0.62 : n > 40 ? base * 0.72 : n > 24 ? base * 0.85 : base;
   return {
     fontSize: Math.round(tam),
     display: "-webkit-box",
@@ -220,6 +236,7 @@ const Moldura = forwardRef<
           minHeight: 0,
           overflow: "hidden",
         }}
+        className="story-conteudo"
       >
         {children}
       </div>
@@ -272,8 +289,20 @@ const dataLonga = (iso?: string) =>
 
 export const StoryTerminei = forwardRef<
   HTMLDivElement,
-  { e: EstiloStory; usuario: string; livro: LivroSalvo }
->(function StoryTerminei({ e, usuario, livro }, ref) {
+  { e: EstiloStory; usuario: string; livro: LivroSalvo; mostrar?: Mostrar }
+>(function StoryTerminei({ e, usuario, livro, mostrar }, ref) {
+  const comNota = ve(mostrar, "nota") && !!livro.nota;
+  const comResenha = ve(mostrar, "resenha") && !!livro.citacao;
+  const comData = ve(mostrar, "data") && !!livro.lidoEm;
+  const comDetalhes = ve(mostrar, "detalhes");
+  // a capa diminui quando tem mais coisa, para nada ficar cortado
+  const largura = Math.max(
+    112,
+    180 -
+      (comResenha ? 46 : 0) -
+      (comNota ? 10 : 0) -
+      (livro.titulo.length > 24 ? 12 : 0),
+  );
   const dias = diasDeLeitura(livro);
   const formato = formatoDe(livro.formato);
   const detalhes = [
@@ -286,25 +315,27 @@ export const StoryTerminei = forwardRef<
       <p style={{ ...eyebrow(e), marginTop: 30, textAlign: "center" }}>
         terminei ✦
       </p>
-      <p
-        style={{
-          textAlign: "center",
-          fontSize: 11,
-          color: e.suave,
-          marginTop: 6,
-          fontStyle: "italic",
-          fontFamily: "var(--font-fraunces), Georgia, serif",
-        }}
-      >
-        {dataLonga(livro.lidoEm)}
-      </p>
+      {comData ? (
+        <p
+          style={{
+            textAlign: "center",
+            fontSize: 11,
+            color: e.suave,
+            marginTop: 6,
+            fontStyle: "italic",
+            fontFamily: "var(--font-fraunces), Georgia, serif",
+          }}
+        >
+          {dataLonga(livro.lidoEm)}
+        </p>
+      ) : null}
       <div style={{ display: "flex", justifyContent: "center", marginTop: 22 }}>
-        <Capa l={livro} largura={170} girar={-2} />
+        <Capa l={livro} largura={largura} girar={-2} />
       </div>
       <p
         style={{
           ...tituloStyle(30),
-          ...tituloQueCabe(livro.titulo, 30, 3),
+          ...tituloQueCabe(livro.titulo, 30, comResenha ? 2 : 3),
           textAlign: "center",
           marginTop: 22,
         }}
@@ -327,7 +358,7 @@ export const StoryTerminei = forwardRef<
       >
         {livro.autor}
       </p>
-      {livro.nota ? (
+      {comNota ? (
         <p
           style={{
             textAlign: "center",
@@ -340,7 +371,7 @@ export const StoryTerminei = forwardRef<
           {estrelasTexto(livro.nota)}
         </p>
       ) : null}
-      {livro.citacao ? (
+      {comResenha ? (
         <p
           style={{
             margin: "14px 8px 0",
@@ -360,20 +391,22 @@ export const StoryTerminei = forwardRef<
           “{livro.citacao}”
         </p>
       ) : null}
-      <p
-        style={{
-          marginTop: "auto",
-          marginBottom: 14,
-          textAlign: "center",
-          fontSize: 10,
-          letterSpacing: ".14em",
-          textTransform: "uppercase",
-          color: e.suave,
-          fontWeight: 600,
-        }}
-      >
-        {detalhes.join(" · ")}
-      </p>
+      {comDetalhes && detalhes.length ? (
+        <p
+          style={{
+            marginTop: "auto",
+            marginBottom: 14,
+            textAlign: "center",
+            fontSize: 10,
+            letterSpacing: ".14em",
+            textTransform: "uppercase",
+            color: e.suave,
+            fontWeight: 600,
+          }}
+        >
+          {detalhes.join(" · ")}
+        </p>
+      ) : null}
     </Moldura>
   );
 });
@@ -382,8 +415,9 @@ export const StoryTerminei = forwardRef<
 
 export const StoryLendo = forwardRef<
   HTMLDivElement,
-  { e: EstiloStory; usuario: string; livros: LivroSalvo[] }
->(function StoryLendo({ e, usuario, livros }, ref) {
+  { e: EstiloStory; usuario: string; livros: LivroSalvo[]; mostrar?: Mostrar }
+>(function StoryLendo({ e, usuario, livros, mostrar }, ref) {
+  const comProgresso = ve(mostrar, "progresso");
   const lista = livros.slice(0, 3);
   return (
     <Moldura ref={ref} e={e} usuario={usuario}>
@@ -403,7 +437,7 @@ export const StoryLendo = forwardRef<
       >
         {lista.map((l, i) => {
           const pct =
-            l.paginas && l.paginaAtual
+            comProgresso && l.paginas && l.paginaAtual
               ? Math.min(100, Math.round((l.paginaAtual / l.paginas) * 100))
               : null;
           return (
@@ -513,8 +547,9 @@ export const StoryMes = forwardRef<
     mes: string;
     ano: number;
     livros: LivroSalvo[];
+    mostrar?: Mostrar;
   }
->(function StoryMes({ e, usuario, mes, ano, livros }, ref) {
+>(function StoryMes({ e, usuario, mes, ano, livros, mostrar }, ref) {
   const paginas = livros.reduce((t, l) => t + (l.paginas ?? 0), 0);
   const notas = livros.map((l) => l.nota).filter((n): n is number => !!n);
   const media = notas.length
@@ -556,50 +591,55 @@ export const StoryMes = forwardRef<
         {ano}
       </p>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
-          marginTop: 20,
-          borderTop: `1px solid ${e.fio}`,
-          borderBottom: `1px solid ${e.fio}`,
-          padding: "12px 0",
-        }}
-      >
-        {[
-          {
-            v: String(livros.length),
-            r: livros.length === 1 ? "livro" : "livros",
-          },
-          { v: paginas ? paginas.toLocaleString("pt-BR") : "—", r: "páginas" },
-          {
-            v: media ? `${media.toFixed(1).replace(".", ",")}★` : "—",
-            r: "média",
-          },
-        ].map((c, i) => (
-          <div
-            key={c.r}
-            style={{
-              textAlign: "center",
-              borderLeft: i ? `1px solid ${e.fio}` : undefined,
-            }}
-          >
-            <p style={{ ...tituloStyle(28), color: e.destaque }}>{c.v}</p>
-            <p
+      {ve(mostrar, "numeros") ? (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(3, 1fr)",
+            marginTop: 20,
+            borderTop: `1px solid ${e.fio}`,
+            borderBottom: `1px solid ${e.fio}`,
+            padding: "12px 0",
+          }}
+        >
+          {[
+            {
+              v: String(livros.length),
+              r: livros.length === 1 ? "livro" : "livros",
+            },
+            {
+              v: paginas ? paginas.toLocaleString("pt-BR") : "—",
+              r: "páginas",
+            },
+            {
+              v: media ? `${media.toFixed(1).replace(".", ",")}★` : "—",
+              r: "média",
+            },
+          ].map((c, i) => (
+            <div
+              key={c.r}
               style={{
-                fontSize: 9,
-                letterSpacing: ".18em",
-                textTransform: "uppercase",
-                color: e.suave,
-                marginTop: 4,
-                fontWeight: 600,
+                textAlign: "center",
+                borderLeft: i ? `1px solid ${e.fio}` : undefined,
               }}
             >
-              {c.r}
-            </p>
-          </div>
-        ))}
-      </div>
+              <p style={{ ...tituloStyle(28), color: e.destaque }}>{c.v}</p>
+              <p
+                style={{
+                  fontSize: 9,
+                  letterSpacing: ".18em",
+                  textTransform: "uppercase",
+                  color: e.suave,
+                  marginTop: 4,
+                  fontWeight: 600,
+                }}
+              >
+                {c.r}
+              </p>
+            </div>
+          ))}
+        </div>
+      ) : null}
 
       <div
         style={{
@@ -633,7 +673,7 @@ export const StoryMes = forwardRef<
       ) : null}
 
       <div style={{ marginTop: "auto", marginBottom: 12 }}>
-        {melhor ? (
+        {melhor && ve(mostrar, "favorito") ? (
           <p
             style={{
               fontFamily: "var(--font-fraunces), Georgia, serif",
