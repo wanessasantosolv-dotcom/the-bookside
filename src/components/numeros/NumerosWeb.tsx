@@ -8,6 +8,7 @@ import { usePerfil } from "@/lib/perfil-store";
 import { ExtremosDoAno } from "@/components/numeros/Extremos";
 import { FormatosDoAno } from "@/components/numeros/Formatos";
 import { MesAMes } from "@/components/numeros/MesAMes";
+import { Nacionalidades } from "@/components/numeros/Nacionalidades";
 import { MesEmRevista } from "@/components/numeros/MesEmRevista";
 import { corDoLivro } from "@/lib/cores";
 import {
@@ -237,27 +238,25 @@ function ConteudoUnificado({
         </span>
         <span className="text-sm font-semibold text-bordo">ver →</span>
       </Link>
-
       <Link
         href="/desafios"
         className="inverso mb-8 flex items-center gap-5 rounded-[4px] bg-gradient-to-br from-[#2B4C7E] to-[#2b1420] px-7 py-5 text-creme"
       >
         <span className="text-3xl">🏆</span>
         <span className="min-w-0 flex-1">
-          <span className="block font-revista text-2xl italic">desafios de leitura</span>
+          <span className="block font-revista text-2xl italic">
+            desafios de leitura
+          </span>
           <span className="block text-[13px] text-rosa-claro">
             maratonas, bingo, zerar a pilha — sozinha, com amigos ou com o clube
           </span>
         </span>
         <span className="text-sm font-semibold">ver →</span>
       </Link>
-
       <MesEmRevista web />
-
       <ExtremosDoAno n={n} web />
-
       <FormatosDoAno n={n} web />
-
+      <Nacionalidades web />
       <MesAMes n={n} web />
       <section className="mb-14">
         <h2 className="mb-[18px] border-b border-ameixa pb-2 font-revista text-[22px] leading-none text-ameixa italic">

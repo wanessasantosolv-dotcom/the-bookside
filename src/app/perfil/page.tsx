@@ -1,11 +1,15 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { CSSProperties } from "react";
 import { CapaLivro } from "@/components/CapaLivro";
 import { AppShell } from "@/components/AppShell";
-import { AbasPerfil } from "@/components/perfil/AbasPerfil";
+import { AbasPerfil, type AbaPerfil } from "@/components/perfil/AbasPerfil";
+import { JornadaNoPerfil } from "@/components/perfil/JornadaNoPerfil";
+import { ResenhasLista } from "@/components/perfil/ResenhasLista";
 import { VitrineFavoritos } from "@/components/VitrineFavoritos";
 import { PerfilWeb } from "@/components/perfil/PerfilWeb";
 import { MeusSeguidores } from "@/components/social/Pessoas";
@@ -21,11 +25,23 @@ const iconeBotao = "flex size-11 items-center justify-center rounded-full";
 export default function PerfilPage() {
   const router = useRouter();
   const hidratado = useHidratado();
+  const [aba, setAba] = useState<AbaPerfil>("geral");
+  // abriu com ?aba=jornada (ex.: links antigos)
+  useEffect(() => {
+    const a = new URLSearchParams(window.location.search).get("aba");
+    if (a === "jornada" || a === "resenhas") setAba(a);
+  }, []);
   const p = usePerfil();
   const tema = temas.find((t) => t.id === p.tema) ?? temas[0];
   const escuro = "escuro" in tema;
 
   if (!hidratado) return <AppShell aba="perfil">{null}</AppShell>;
+  const conteudoAba =
+    aba === "jornada" ? (
+      <JornadaNoPerfil />
+    ) : aba === "resenhas" ? (
+      <ResenhasLista />
+    ) : null;
 
   const lidos = p.livros.filter((l) => l.status === "lido");
   const lendo = p.livros.filter((l) => !l.status || l.status === "lendo");
@@ -35,7 +51,9 @@ export default function PerfilPage() {
     .map((id) => p.livros.find((l) => l.id === id))
     .filter((l) => l !== undefined)
     .slice(0, 4);
-  const arquetipo = p.bookside ? arquetipos[p.bookside.principal as ArquetipoId] : null;
+  const arquetipo = p.bookside
+    ? arquetipos[p.bookside.principal as ArquetipoId]
+    : null;
 
   function abrirResultado() {
     if (!p.bookside) return router.push("/teste");
@@ -48,19 +66,51 @@ export default function PerfilPage() {
   const estilo = {
     "--papel": escuro ? tema.papel : "var(--color-creme)",
     "--tinta": escuro ? "#F5EFE6" : "var(--color-ameixa)",
-    "--acc-base": escuro ? tema.texto : tema.id === "biblioteca-classica" ? "#6B0D24" : tema.texto,
+    "--acc-base": escuro
+      ? tema.texto
+      : tema.id === "biblioteca-classica"
+        ? "#6B0D24"
+        : tema.texto,
     "--suave": escuro ? "#CFC3B8" : "var(--color-cinza)",
     "--linha": escuro ? "rgba(245,239,230,.18)" : "var(--color-linha)",
   } as CSSProperties;
 
   const estantes = [
-    { id: "lidos", nome: "lidos", qtd: lidos.length, fundo: "#D8C3AA", titulo: "#2B1420", num: "var(--acc)", livro: lidos[0] },
-    { id: "quero-ler", nome: "quero ler", qtd: quero.length, fundo: "var(--acc)", titulo: "#F9F5EE", num: "#E8B4BF", livro: quero[0] },
-    { id: "lendo", nome: "lendo", qtd: lendo.length, fundo: "#E8B4BF", titulo: "var(--acc)", num: "var(--acc)", livro: lendo[0] },
+    {
+      id: "lidos",
+      nome: "lidos",
+      qtd: lidos.length,
+      fundo: "#D8C3AA",
+      titulo: "#2B1420",
+      num: "var(--acc)",
+      livro: lidos[0],
+    },
+    {
+      id: "quero-ler",
+      nome: "quero ler",
+      qtd: quero.length,
+      fundo: "var(--acc)",
+      titulo: "#F9F5EE",
+      num: "#E8B4BF",
+      livro: quero[0],
+    },
+    {
+      id: "lendo",
+      nome: "lendo",
+      qtd: lendo.length,
+      fundo: "#E8B4BF",
+      titulo: "var(--acc)",
+      num: "var(--acc)",
+      livro: lendo[0],
+    },
   ];
 
   return (
-    <AppShell aba="perfil" style={estilo} className="acc-tema [&_main]:!bg-[var(--papel)] [&_main]:!text-[var(--tinta)]">
+    <AppShell
+      aba="perfil"
+      style={estilo}
+      className="acc-tema [&_main]:!bg-[var(--papel)] [&_main]:!text-[var(--tinta)]"
+    >
       <PerfilWeb
         perfil={p}
         tema={tema}
@@ -70,7 +120,12 @@ export default function PerfilPage() {
         quero={quero}
         favoritos={favoritos}
         abrirResultado={abrirResultado}
-        detalhe={<MeusSeguidores usuario={p.usuario} className="!justify-start" />}
+        detalhe={
+          <MeusSeguidores usuario={p.usuario} className="!justify-start" />
+        }
+        aba={aba}
+        onAba={setAba}
+        conteudoAba={conteudoAba}
       />
       <div className="flex min-h-dvh flex-col bg-[var(--papel)] text-[var(--tinta)] lg:hidden">
         {/* barra do app */}
@@ -79,14 +134,42 @@ export default function PerfilPage() {
             the bookside <span className="text-ouro">✦</span>
           </span>
           <span className="-mr-3 flex">
-            <Link href="/perfil/editar" aria-label="editar perfil" className={`${iconeBotao} text-[var(--acc)]`}>
-              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <Link
+              href="/perfil/editar"
+              aria-label="editar perfil"
+              className={`${iconeBotao} text-[var(--acc)]`}
+            >
+              <svg
+                width="19"
+                height="19"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden
+              >
                 <path d="M12 20h9" />
                 <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
               </svg>
             </Link>
-            <Link href="/perfil/configuracoes" aria-label="configurações" className={`${iconeBotao} text-[var(--acc)]`}>
-              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <Link
+              href="/perfil/configuracoes"
+              aria-label="configurações"
+              className={`${iconeBotao} text-[var(--acc)]`}
+            >
+              <svg
+                width="19"
+                height="19"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden
+              >
                 <circle cx="12" cy="12" r="3" />
                 <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.2.6.76 1 1.4 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
               </svg>
@@ -97,7 +180,11 @@ export default function PerfilPage() {
         {/* capa */}
         <div
           className={`relative h-[198px] bg-cover bg-center ${p.capaImagem ? "" : `pat-${p.capa}`}`}
-          style={p.capaImagem ? { backgroundImage: `url("${p.capaImagem}")` } : undefined}
+          style={
+            p.capaImagem
+              ? { backgroundImage: `url("${p.capaImagem}")` }
+              : undefined
+          }
         />
 
         <section className="relative -mt-8 rounded-t-[34px] bg-[var(--papel)] px-6 pb-8">
@@ -106,7 +193,11 @@ export default function PerfilPage() {
             <div className="size-full overflow-hidden rounded-full border-4 border-[var(--papel)] bg-linha">
               {p.foto ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={p.foto} alt="sua foto" className="size-full object-cover object-[50%_30%]" />
+                <img
+                  src={p.foto}
+                  alt="sua foto"
+                  className="size-full object-cover object-[50%_30%]"
+                />
               ) : (
                 <span className="flex size-full items-center justify-center font-display text-4xl font-semibold italic text-bordo">
                   {(p.nome || "?").slice(0, 1).toLowerCase()}
@@ -118,7 +209,10 @@ export default function PerfilPage() {
               className="absolute top-[74px] left-[76px] flex size-7 items-center justify-center rounded-full border-2 border-[var(--papel)] bg-bordo"
             >
               <svg width="12" height="12" viewBox="0 0 24 24">
-                <path d="M12 2 L14.6 9.4 L22 12 L14.6 14.6 L12 22 L9.4 14.6 L2 12 L9.4 9.4 Z" fill="#F9F5EE" />
+                <path
+                  d="M12 2 L14.6 9.4 L22 12 L14.6 14.6 L12 22 L9.4 14.6 L2 12 L9.4 9.4 Z"
+                  fill="#F9F5EE"
+                />
               </svg>
             </span>
           </div>
@@ -126,8 +220,13 @@ export default function PerfilPage() {
           <h1 className="mt-4 animate-subir text-center font-display text-[32px] leading-none font-semibold italic text-[var(--acc)] [animation-delay:.12s]">
             {p.nome || "sem nome"}
           </h1>
-          <p className="mt-2.5 text-center text-xs font-medium text-[var(--suave)]">@{p.usuario || "seu.nome"}</p>
-          <MeusSeguidores usuario={p.usuario} className="mt-1.5 text-xs text-[var(--suave)]" />
+          <p className="mt-2.5 text-center text-xs font-medium text-[var(--suave)]">
+            @{p.usuario || "seu.nome"}
+          </p>
+          <MeusSeguidores
+            usuario={p.usuario}
+            className="mt-1.5 text-xs text-[var(--suave)]"
+          />
           {p.frase ? (
             <p className="mx-4 mt-3 animate-subir text-center font-accent text-[15px] leading-5 italic text-[var(--acc)] [animation-delay:.24s]">
               {p.frase}
@@ -146,63 +245,104 @@ export default function PerfilPage() {
             </button>
           </div>
 
-          <AbasPerfil ativa="geral" className="mx-4 mt-5" />
+          <AbasPerfil ativa={aba} onChange={setAba} className="mx-4 mt-5" />
 
-          {/* números */}
-          <Link href="/numeros" aria-label="ver sua jornada" className="relative mt-5 flex border-y border-[var(--linha)]">
-            {[
-              { n: lidos.length, r: "lidos" },
-              { n: lendo.length, r: "lendo" },
-              { n: quero.length, r: "quero ler" },
-              { n: p.meta ?? "—", r: `meta ${new Date().getFullYear()}` },
-            ].map((s, i) => (
-              <span key={s.r} className={`flex h-14 flex-1 flex-col items-center justify-center ${i ? "border-l border-[var(--linha)]" : ""}`}>
-                <b className="font-display text-[23px] leading-none font-semibold italic text-[var(--acc)]">{s.n}</b>
-                <i className="mt-1.5 text-[10px] leading-none font-medium not-italic text-[var(--suave)]">{s.r}</i>
-              </span>
-            ))}
-          </Link>
+          {conteudoAba ? (
+            <div className="mt-6 px-4">{conteudoAba}</div>
+          ) : (
+            <>
+              {/* números */}
+              <Link
+                href="/numeros"
+                aria-label="ver sua jornada"
+                className="relative mt-5 flex border-y border-[var(--linha)]"
+              >
+                {[
+                  { n: lidos.length, r: "lidos" },
+                  { n: lendo.length, r: "lendo" },
+                  { n: quero.length, r: "quero ler" },
+                  { n: p.meta ?? "—", r: `meta ${new Date().getFullYear()}` },
+                ].map((s, i) => (
+                  <span
+                    key={s.r}
+                    className={`flex h-14 flex-1 flex-col items-center justify-center ${i ? "border-l border-[var(--linha)]" : ""}`}
+                  >
+                    <b className="font-display text-[23px] leading-none font-semibold italic text-[var(--acc)]">
+                      {s.n}
+                    </b>
+                    <i className="mt-1.5 text-[10px] leading-none font-medium not-italic text-[var(--suave)]">
+                      {s.r}
+                    </i>
+                  </span>
+                ))}
+              </Link>
 
-          {/* favoritos: a vitrine, com destaque */}
-          <div className="mt-6">
-            <VitrineFavoritos
-              titulo="meus favoritos"
-              acao={{ href: "/perfil/favoritos", rotulo: "escolher →" }}
-              itens={favoritos.map((l) => ({
-                id: l.id,
-                titulo: l.titulo,
-                capa: l.capa,
-                href: `/livro/${l.id}`,
-              }))}
-            />
-          </div>
+              {/* favoritos: a vitrine, com destaque */}
+              <div className="mt-6">
+                <VitrineFavoritos
+                  titulo="meus favoritos"
+                  acao={{ href: "/perfil/favoritos", rotulo: "escolher →" }}
+                  itens={favoritos.map((l) => ({
+                    id: l.id,
+                    titulo: l.titulo,
+                    capa: l.capa,
+                    href: `/livro/${l.id}`,
+                  }))}
+                />
+              </div>
 
-          {/* estantes */}
-          <div className="mt-6 flex items-baseline justify-between">
-            <h2 className="font-display text-[22px] leading-[1.15] font-semibold italic text-[var(--acc)]">estantes</h2>
-            <Link href="/estantes" className="py-2 text-[10px] font-semibold tracking-[.12em] text-[var(--acc)] uppercase">
-              ver todas →
-            </Link>
-          </div>
-          <ul className="mt-2 grid grid-cols-3 gap-[9px]">
-            {estantes.map((e) => (
-              <li key={e.nome}>
-                <Link href={`/estantes/${e.id}`} className="block rounded-md px-2 py-2.5 text-center" style={{ background: e.fundo }}>
-                  {e.livro ? (
-                    <CapaLivro titulo={e.livro.titulo} capa={e.livro.capa} cor={corDoLivro(e.livro.id)} className="mx-auto w-[38px] [&>span:last-child]:hidden" />
-                  ) : (
-                    <span aria-hidden className="mx-auto block aspect-[2/3] w-[38px] rounded-[3px] border border-dashed opacity-60" style={{ borderColor: e.titulo }} />
-                  )}
-                  <b className="mt-[7px] block font-display text-sm leading-[1.1] font-semibold italic" style={{ color: e.titulo }}>
-                    {e.nome}
-                  </b>
-                  <i className="mt-[3px] block text-[10px] leading-none font-semibold tracking-[.1em] not-italic" style={{ color: e.num }}>
-                    {e.qtd}
-                  </i>
+              {/* estantes */}
+              <div className="mt-6 flex items-baseline justify-between">
+                <h2 className="font-display text-[22px] leading-[1.15] font-semibold italic text-[var(--acc)]">
+                  estantes
+                </h2>
+                <Link
+                  href="/estantes"
+                  className="py-2 text-[10px] font-semibold tracking-[.12em] text-[var(--acc)] uppercase"
+                >
+                  ver todas →
                 </Link>
-              </li>
-            ))}
-          </ul>
+              </div>
+              <ul className="mt-2 grid grid-cols-3 gap-[9px]">
+                {estantes.map((e) => (
+                  <li key={e.nome}>
+                    <Link
+                      href={`/estantes/${e.id}`}
+                      className="block rounded-md px-2 py-2.5 text-center"
+                      style={{ background: e.fundo }}
+                    >
+                      {e.livro ? (
+                        <CapaLivro
+                          titulo={e.livro.titulo}
+                          capa={e.livro.capa}
+                          cor={corDoLivro(e.livro.id)}
+                          className="mx-auto w-[38px] [&>span:last-child]:hidden"
+                        />
+                      ) : (
+                        <span
+                          aria-hidden
+                          className="mx-auto block aspect-[2/3] w-[38px] rounded-[3px] border border-dashed opacity-60"
+                          style={{ borderColor: e.titulo }}
+                        />
+                      )}
+                      <b
+                        className="mt-[7px] block font-display text-sm leading-[1.1] font-semibold italic"
+                        style={{ color: e.titulo }}
+                      >
+                        {e.nome}
+                      </b>
+                      <i
+                        className="mt-[3px] block text-[10px] leading-none font-semibold tracking-[.1em] not-italic"
+                        style={{ color: e.num }}
+                      >
+                        {e.qtd}
+                      </i>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
         </section>
       </div>
     </AppShell>

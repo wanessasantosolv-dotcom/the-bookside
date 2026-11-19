@@ -4,7 +4,7 @@ import { Voltar } from "@/components/Voltar";
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import { CapaLivro } from "@/components/CapaLivro";
-import { AbasPerfil } from "@/components/perfil/AbasPerfil";
+import { AbasPerfil, type AbaPerfil } from "@/components/perfil/AbasPerfil";
 import { VitrineFavoritos } from "@/components/VitrineFavoritos";
 import { corDoLivro } from "@/lib/cores";
 import type { Tema } from "@/lib/dados";
@@ -75,6 +75,9 @@ export function PerfilWeb({
   acoes,
   detalhe,
   links = {},
+  aba = "geral",
+  onAba,
+  conteudoAba,
 }: {
   perfil: Perfil;
   tema: Tema;
@@ -88,6 +91,10 @@ export function PerfilWeb({
   acoes?: ReactNode;
   /** linha extra embaixo do @usuário (ex.: seguidores) */
   detalhe?: ReactNode;
+  aba?: AbaPerfil;
+  onAba?: (a: AbaPerfil) => void;
+  /** conteúdo da aba (jornada, resenhas) no lugar da visão geral */
+  conteudoAba?: ReactNode;
   links?: {
     numeros?: string;
     favoritos?: string;
@@ -225,133 +232,152 @@ export function PerfilWeb({
         </div>
 
         {!outra ? (
-          <AbasPerfil ativa="geral" className="mx-auto mb-8 max-w-[640px]" />
+          <AbasPerfil
+            ativa={aba}
+            onChange={(a) => onAba?.(a)}
+            className="mx-auto mb-8 max-w-[640px]"
+          />
         ) : null}
 
-        <Link
-          href={href.numeros}
-          aria-label={outra ? "ver os lidos" : "ver sua jornada"}
-          className="mb-10 grid grid-cols-4 border-y border-fio"
-        >
-          {[
-            { n: lidos.length, r: "lidos" },
-            { n: lendo.length, r: "lendo" },
-            { n: quero.length, r: "quero ler" },
-            { n: p.meta ?? "—", r: `meta ${new Date().getFullYear()}` },
-          ].map((s, i) => (
-            <span
-              key={s.r}
-              className={`py-4 text-center ${i ? "border-l border-fio" : ""}`}
+        {conteudoAba ? (
+          <div className="mx-auto max-w-[1000px]">{conteudoAba}</div>
+        ) : (
+          <>
+            <Link
+              href={href.numeros}
+              aria-label={outra ? "ver os lidos" : "ver sua jornada"}
+              className="mb-10 grid grid-cols-4 border-y border-fio"
             >
-              <b className="block font-revista text-[28px] leading-none font-normal">
-                {s.n}
-              </b>
-              <span className={rotulo}>{s.r}</span>
-            </span>
-          ))}
-        </Link>
+              {[
+                { n: lidos.length, r: "lidos" },
+                { n: lendo.length, r: "lendo" },
+                { n: quero.length, r: "quero ler" },
+                { n: p.meta ?? "—", r: `meta ${new Date().getFullYear()}` },
+              ].map((s, i) => (
+                <span
+                  key={s.r}
+                  className={`py-4 text-center ${i ? "border-l border-fio" : ""}`}
+                >
+                  <b className="block font-revista text-[28px] leading-none font-normal">
+                    {s.n}
+                  </b>
+                  <span className={rotulo}>{s.r}</span>
+                </span>
+              ))}
+            </Link>
 
-        {/* favoritos: a vitrine, com destaque */}
-        <div className="mx-auto mb-12 max-w-[760px]">
-          <VitrineFavoritos
-            grande
-            titulo={outra ? "favoritos" : "meus favoritos"}
-            acao={outra ? undefined : { href: href.favoritos, rotulo: "escolher →" }}
-            vagas={outra ? Math.max(1, favoritos.length) : 4}
-            vazio={outra ? "nenhum favorito escolhido ainda." : undefined}
-            itens={favoritos.slice(0, 4).map((l) => ({
-              id: l.id,
-              titulo: l.titulo,
-              capa: l.capa,
-              href: `/livro/${l.id}`,
-            }))}
-          />
-        </div>
+            {/* favoritos: a vitrine, com destaque */}
+            <div className="mx-auto mb-12 max-w-[760px]">
+              <VitrineFavoritos
+                grande
+                titulo={outra ? "favoritos" : "meus favoritos"}
+                acao={
+                  outra
+                    ? undefined
+                    : { href: href.favoritos, rotulo: "escolher →" }
+                }
+                vagas={outra ? Math.max(1, favoritos.length) : 4}
+                vazio={outra ? "nenhum favorito escolhido ainda." : undefined}
+                itens={favoritos.slice(0, 4).map((l) => ({
+                  id: l.id,
+                  titulo: l.titulo,
+                  capa: l.capa,
+                  href: `/livro/${l.id}`,
+                }))}
+              />
+            </div>
 
-        <div className="grid grid-cols-2 gap-10">
-          <Coluna
-            titulo={`lidos · ${lidos.length}`}
-            href={href.lidos}
-            livros={lidos}
-            vazio="nenhum livro lido por aqui ainda."
-          />
-          <Coluna
-            titulo="quero ler"
-            href={href.quero}
-            livros={quero}
-            vazio={
-              outra
-                ? "a lista de quero ler está vazia."
-                : "sua lista de quero ler está vazia."
-            }
-          />
-        </div>
+            <div className="grid grid-cols-2 gap-10">
+              <Coluna
+                titulo={`lidos · ${lidos.length}`}
+                href={href.lidos}
+                livros={lidos}
+                vazio="nenhum livro lido por aqui ainda."
+              />
+              <Coluna
+                titulo="quero ler"
+                href={href.quero}
+                livros={quero}
+                vazio={
+                  outra
+                    ? "a lista de quero ler está vazia."
+                    : "sua lista de quero ler está vazia."
+                }
+              />
+            </div>
 
-        <section className="mt-9 border-t border-fio pt-7">
-          <h2 className="mb-4 border-b border-tinta pb-2 font-revista text-[19px] leading-none italic">
-            lendo agora
-          </h2>
-          {lendo.length ? (
-            <ul className="grid grid-cols-2 gap-x-8 gap-y-6 xl:grid-cols-3">
-              {lendo.map((l) => {
-                const total = l.paginas;
-                const pct =
-                  total && l.paginaAtual
-                    ? Math.min(100, Math.round((l.paginaAtual / total) * 100))
-                    : null;
-                return (
-                  <li key={l.id}>
-                    <Link
-                      href={
-                        outra ? `/livro/${l.id}` : `/livro/${l.id}/progresso`
-                      }
-                      className="group flex gap-4"
-                    >
-                      <CapaLivro
-                        titulo={l.titulo}
-                        capa={l.capa}
-                        cor={corDoLivro(l.id)}
-                        className="w-[72px] flex-none transition-transform group-hover:-translate-y-1 [&>span:last-child]:text-[9px]"
-                      />
-                      <div className="min-w-0 flex-1 pt-1">
-                        <h3 className="line-clamp-2 font-revista text-[17px] leading-[1.15] italic">
-                          {l.titulo}
-                        </h3>
-                        <p className="mt-1 truncate text-[11px] text-grafite">
-                          {l.autor}
-                        </p>
-                        {pct !== null ? (
-                          <>
-                            <span className="mt-3 block h-1 overflow-hidden rounded-full bg-fio">
-                              <span
-                                className="block h-full rounded-full bg-[var(--acc-web)]"
-                                style={{ width: `${pct}%` }}
-                              />
-                            </span>
-                            <p className="mt-1.5 text-[10px] font-semibold tracking-[.08em] text-grafite uppercase">
-                              pág. {l.paginaAtual} de {total} · {pct}%
+            <section className="mt-9 border-t border-fio pt-7">
+              <h2 className="mb-4 border-b border-tinta pb-2 font-revista text-[19px] leading-none italic">
+                lendo agora
+              </h2>
+              {lendo.length ? (
+                <ul className="grid grid-cols-2 gap-x-8 gap-y-6 xl:grid-cols-3">
+                  {lendo.map((l) => {
+                    const total = l.paginas;
+                    const pct =
+                      total && l.paginaAtual
+                        ? Math.min(
+                            100,
+                            Math.round((l.paginaAtual / total) * 100),
+                          )
+                        : null;
+                    return (
+                      <li key={l.id}>
+                        <Link
+                          href={
+                            outra
+                              ? `/livro/${l.id}`
+                              : `/livro/${l.id}/progresso`
+                          }
+                          className="group flex gap-4"
+                        >
+                          <CapaLivro
+                            titulo={l.titulo}
+                            capa={l.capa}
+                            cor={corDoLivro(l.id)}
+                            className="w-[72px] flex-none transition-transform group-hover:-translate-y-1 [&>span:last-child]:text-[9px]"
+                          />
+                          <div className="min-w-0 flex-1 pt-1">
+                            <h3 className="line-clamp-2 font-revista text-[17px] leading-[1.15] italic">
+                              {l.titulo}
+                            </h3>
+                            <p className="mt-1 truncate text-[11px] text-grafite">
+                              {l.autor}
                             </p>
-                          </>
-                        ) : (
-                          <p className="mt-3 text-[10px] font-semibold tracking-[.08em] text-grafite uppercase">
-                            {l.iniciadoEm
-                              ? `desde ${new Date(l.iniciadoEm).toLocaleDateString("pt-BR", { day: "numeric", month: "short" })}`
-                              : "começou a ler"}
-                            {outra ? "" : " · marcar página →"}
-                          </p>
-                        )}
-                      </div>
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          ) : (
-            <p className="font-revista text-[13px] italic text-grafite">
-              nenhuma leitura em andamento.
-            </p>
-          )}
-        </section>
+                            {pct !== null ? (
+                              <>
+                                <span className="mt-3 block h-1 overflow-hidden rounded-full bg-fio">
+                                  <span
+                                    className="block h-full rounded-full bg-[var(--acc-web)]"
+                                    style={{ width: `${pct}%` }}
+                                  />
+                                </span>
+                                <p className="mt-1.5 text-[10px] font-semibold tracking-[.08em] text-grafite uppercase">
+                                  pág. {l.paginaAtual} de {total} · {pct}%
+                                </p>
+                              </>
+                            ) : (
+                              <p className="mt-3 text-[10px] font-semibold tracking-[.08em] text-grafite uppercase">
+                                {l.iniciadoEm
+                                  ? `desde ${new Date(l.iniciadoEm).toLocaleDateString("pt-BR", { day: "numeric", month: "short" })}`
+                                  : "começou a ler"}
+                                {outra ? "" : " · marcar página →"}
+                              </p>
+                            )}
+                          </div>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : (
+                <p className="font-revista text-[13px] italic text-grafite">
+                  nenhuma leitura em andamento.
+                </p>
+              )}
+            </section>
+          </>
+        )}
       </div>
     </div>
   );

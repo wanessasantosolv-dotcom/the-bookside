@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ExtremosDoAno } from "@/components/numeros/Extremos";
 import { FormatosDoAno } from "@/components/numeros/Formatos";
 import { MesAMes } from "@/components/numeros/MesAMes";
+import { Nacionalidades } from "@/components/numeros/Nacionalidades";
 import { MesEmRevista } from "@/components/numeros/MesEmRevista";
 import {
   bloco,
@@ -192,6 +193,7 @@ export default function NumerosAnoPage() {
               </Link>
               <ExtremosDoAno n={n} />
               <FormatosDoAno n={n} />
+              <Nacionalidades />
               <MesAMes n={n} />
 
               {wrappedLiberado() ? (
