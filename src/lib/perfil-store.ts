@@ -59,6 +59,8 @@ export type LivroSalvo = {
   personagem?: string;
   /** trecho favorito */
   citacao?: string;
+  /** quando este livro foi mudado pela última vez (para juntar celular e computador) */
+  atualizadoEm?: string;
   /** trechos marcados (ex.: destaques importados do Kindle) */
   trechos?: { texto: string; em?: string; origem?: "kindle" | "app" }[];
   /** ids das estantes criadas pela pessoa onde o livro está */
@@ -111,6 +113,8 @@ export type Perfil = {
   temaSoNoPerfil: boolean;
   /** as leituras (comecei, terminei, notas, progresso) aparecem no feed dos amigos */
   publicarNoFeed: boolean;
+  /** livros tirados da estante (para não voltarem quando outro aparelho sincronizar) */
+  removidos: { id: string; em: string }[];
   /** livros em que a pessoa tocou "passar" no descobrir (títulos normalizados): não voltam, em nenhum aparelho */
   passados: string[];
 };
@@ -152,6 +156,7 @@ export const perfilInicial: Perfil = {
   tourVisto: false,
   novidadesVistasEm: null,
   passados: [],
+  removidos: [],
   aparencia: "claro",
   temaNoApp: false,
   temaSoNoPerfil: false,
@@ -175,8 +180,15 @@ export const usePerfil = create<Perfil & Acoes>()(
             ? s.livros.filter((l) => l.id !== livro.id)
             : [
                 ...s.livros,
-                { adicionadoEm: new Date().toISOString(), ...livro },
+                {
+                  adicionadoEm: new Date().toISOString(),
+                  ...livro,
+                  atualizadoEm: new Date().toISOString(),
+                },
               ],
+          removidos: s.livros.some((l) => l.id === livro.id)
+            ? tirarDaLista(s.removidos, livro.id)
+            : (s.removidos ?? []).filter((r) => r.id !== livro.id),
         })),
       guardarLivro: (livro) =>
         set((s) => {
@@ -188,8 +200,10 @@ export const usePerfil = create<Perfil & Acoes>()(
                 ...antigo,
                 adicionadoEm: antigo?.adicionadoEm ?? new Date().toISOString(),
                 ...livro,
+                atualizadoEm: new Date().toISOString(),
               },
             ],
+            removidos: (s.removidos ?? []).filter((r) => r.id !== livro.id),
           };
         }),
       editarLivro: (base, dados) =>
@@ -200,17 +214,20 @@ export const usePerfil = create<Perfil & Acoes>()(
             ...base,
             ...antigo,
             ...dados,
+            atualizadoEm: new Date().toISOString(),
           };
           return {
             livros: antigo
               ? s.livros.map((l) => (l.id === base.id ? novo : l))
               : [...s.livros, novo],
+            removidos: (s.removidos ?? []).filter((r) => r.id !== base.id),
           };
         }),
       removerLivro: (id) =>
         set((s) => ({
           livros: s.livros.filter((l) => l.id !== id),
           favoritos: s.favoritos.filter((f) => f !== id),
+          removidos: tirarDaLista(s.removidos, id),
         })),
       criarEstante: (e) => {
         const id = `${sugerirUsuario(e.nome).replace(/\./g, "-") || "estante"}-${Date.now().toString(36)}`;
@@ -222,7 +239,12 @@ export const usePerfil = create<Perfil & Acoes>()(
         }));
         return id;
       },
-      esvaziarEstante: () => set({ livros: [], favoritos: [] }),
+      esvaziarEstante: () =>
+        set((s) => ({
+          livros: [],
+          favoritos: [],
+          removidos: s.livros.reduce((r, l) => tirarDaLista(r, l.id), s.removidos),
+        })),
       sair: () => set({ ...perfilInicial }),
     }),
     {
@@ -234,6 +256,14 @@ export const usePerfil = create<Perfil & Acoes>()(
 );
 
 /** gera um @usuario a partir do nome: "Ana Clara" → "ana.clara" */
+/** marca um livro como tirado da estante (guarda os 800 mais recentes) */
+function tirarDaLista(lista: { id: string; em: string }[] | undefined, id: string) {
+  return [
+    ...(lista ?? []).filter((r) => r.id !== id),
+    { id, em: new Date().toISOString() },
+  ].slice(-800);
+}
+
 export function sugerirUsuario(nome: string) {
   return nome
     .normalize("NFD")
