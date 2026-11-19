@@ -87,6 +87,8 @@ export type Perfil = {
   onboardingConcluido: boolean;
   /** última vez que abriu as novidades (para marcar o que é novo) */
   novidadesVistasEm: string | null;
+  /** livros em que a pessoa tocou "passar" no descobrir (títulos normalizados): não voltam, em nenhum aparelho */
+  passados: string[];
 };
 
 type Acoes = {
@@ -124,6 +126,7 @@ export const perfilInicial: Perfil = {
   bookside: null,
   onboardingConcluido: false,
   novidadesVistasEm: null,
+  passados: [],
 };
 
 export const usePerfil = create<Perfil & Acoes>()(

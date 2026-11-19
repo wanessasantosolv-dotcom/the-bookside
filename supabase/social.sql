@@ -467,3 +467,29 @@ begin
   update clubes set favoritos = coalesce(p_ids, '[]'::jsonb) where id = p_clube;
 end $$;
 grant execute on function public.definir_favoritos_do_clube(uuid, jsonb) to authenticated;
+
+
+-- os mais lidos do ano no the bookside: quantas pessoas marcaram como lido em p_ano
+create or replace function public.mais_lidos_do_ano(p_ano int default extract(year from now())::int)
+returns table (id text, titulo text, autor text, capa text, pessoas bigint)
+language sql stable security invoker set search_path = public as $$
+  with lidos as (
+    select p.id as pessoa, l
+    from public.perfis_publicos p
+    cross join lateral jsonb_array_elements(
+      case when jsonb_typeof(p.dados -> 'livros') = 'array' then p.dados -> 'livros' else '[]'::jsonb end
+    ) as l
+    where l ->> 'status' = 'lido'
+      and extract(year from public.data_ou_nada(l ->> 'lidoEm')) = p_ano
+  )
+  select (array_agg(l ->> 'id'))[1], (array_agg(l ->> 'titulo'))[1], (array_agg(l ->> 'autor'))[1],
+         (array_agg(l ->> 'capa') filter (where (l ->> 'capa') like 'http%'))[1],
+         count(distinct pessoa)
+  from lidos
+  where coalesce(l ->> 'titulo', '') <> ''
+  group by public.titulo_normalizado(l ->> 'titulo')
+  order by count(distinct pessoa) desc, max(l ->> 'lidoEm') desc
+  limit 20
+$$;
+revoke all on function public.mais_lidos_do_ano(int) from anon, public;
+grant execute on function public.mais_lidos_do_ano(int) to authenticated;

@@ -28,25 +28,39 @@ export type Indicacao = LivroBusca & { motivo: string };
 const SESSAO = "bookside-indicacoes-v1";
 const PASSADOS = "bookside-passados";
 
-/** livros que a pessoa tocou em "passar": não voltam a aparecer */
+/** livros que a pessoa tocou em "passar": não voltam a aparecer (fica no perfil, vale em todo aparelho) */
 export function lembrarPassado(titulo: string) {
+  const { passados = [], atualizar } = usePerfil.getState();
+  atualizar({
+    passados: [...new Set([...passados, chaveTitulo(titulo)])].slice(-500),
+  });
+}
+function passados(): Set<string> {
+  const doPerfil = usePerfil.getState().passados ?? [];
+  // os que ficaram só neste navegador (versão antiga) entram também
+  let antigos: string[] = [];
   try {
-    const l = JSON.parse(localStorage.getItem(PASSADOS) ?? "[]") as string[];
-    localStorage.setItem(
-      PASSADOS,
-      JSON.stringify([...l, chaveTitulo(titulo)].slice(-300)),
-    );
+    antigos = JSON.parse(localStorage.getItem(PASSADOS) ?? "[]") as string[];
   } catch {
     /* sem localStorage */
   }
+  return new Set([...doPerfil, ...antigos]);
 }
-function passados(): Set<string> {
+
+/** leva os "passar" antigos (só deste navegador) para o perfil, uma vez */
+export function migrarPassados() {
   try {
-    return new Set(
-      JSON.parse(localStorage.getItem(PASSADOS) ?? "[]") as string[],
-    );
+    const antigos = JSON.parse(
+      localStorage.getItem(PASSADOS) ?? "[]",
+    ) as string[];
+    if (!antigos.length) return;
+    const { passados: atuais = [], atualizar } = usePerfil.getState();
+    atualizar({
+      passados: [...new Set([...atuais, ...antigos])].slice(-500),
+    });
+    localStorage.removeItem(PASSADOS);
   } catch {
-    return new Set();
+    /* sem localStorage */
   }
 }
 
@@ -196,11 +210,13 @@ export function useIndicacoes() {
   const favoritos = usePerfil((s) => s.favoritos);
   const gostos = usePerfil((s) => s.gostos);
   const [lista, setLista] = useState<Indicacao[] | null>(null);
+  const [rodada, setRodada] = useState(0);
   // muda quando a pessoa avalia/adiciona livros (não a cada página lida)
   const assinatura =
     livros.map((l) => `${l.id}:${l.nota ?? ""}`).join("|") +
     favoritos.join(",") +
-    gostos.join(",");
+    gostos.join(",") +
+    `#${rodada}`;
 
   useEffect(() => {
     let vivo = true;
@@ -248,5 +264,198 @@ export function useIndicacoes() {
     lista: (lista ?? []).filter(
       (l) => !tenho(l) && !fora.has(chaveTitulo(l.titulo)),
     ),
+    /** busca outra leva (a anterior acabou) */
+    maisUmaRodada: () => {
+      setLista(null);
+      setRodada((r) => r + 1);
+    },
   };
+}
+
+/* ───────────── as seções da tela "descobrir" ───────────── */
+
+export type Secao = {
+  id: string;
+  titulo: string;
+  sub?: string;
+  livros: Indicacao[];
+};
+
+/** o tipo de leitora (teste) → os assuntos para procurar */
+const ASSUNTOS_DO_TIPO: Record<string, string[]> = {
+  coruja: ["thrillers", "adventure"],
+  detetive: ["mystery", "thrillers"],
+  coracao: ["romance", "drama"],
+  viajante: ["fantasy", "science fiction"],
+  guardia: ["classics", "historical fiction"],
+  curiosa: ["literary fiction", "biography"],
+  aconchego: ["romance", "humor"],
+  entrelinhas: ["poetry", "literary fiction"],
+};
+
+const google = (q: string, motivo: string, novos = false) =>
+  livrosDoGoogle(q, "pt", undefined, {
+    novos,
+    inicio: novos ? 0 : Math.floor(Math.random() * 3) * 10,
+  })
+    .then((l) =>
+      l.filter((x) => x.capa && emPortugues(x)).map((x) => ({ ...x, motivo })),
+    )
+    .catch(() => [] as Indicacao[]);
+
+/** livros mais lidos no the bookside neste ano (marcados como lidos em {ano}) */
+async function maisLidosDoAno(ano: number): Promise<Indicacao[]> {
+  if (!supabase) return [];
+  const { data, error } = await supabase.rpc("mais_lidos_do_ano", {
+    p_ano: ano,
+  });
+  if (error || !data) return [];
+  return (
+    data as {
+      id: string;
+      titulo: string;
+      autor: string;
+      capa: string | null;
+      pessoas: number;
+    }[]
+  )
+    .map((x) => ({ ...x, titulo: parteEmPortugues(x.titulo) }))
+    .filter((x) => !pareceIngles(x.titulo))
+    .map((x) => ({
+      id: x.id,
+      titulo: x.titulo,
+      autor: x.autor || "autoria desconhecida",
+      capa: x.capa ?? undefined,
+      cor: corDoLivro(x.id),
+      motivo: `${x.pessoas} ${x.pessoas === 1 ? "leitor" : "leitores"} em ${ano}`,
+    }));
+}
+
+/** os livros do resultado do teste, achados no catálogo (com capa e edição em português) */
+async function livrosDoTipo(
+  lista: { titulo: string; autor: string; porque: string }[],
+): Promise<Indicacao[]> {
+  const achados = await Promise.all(
+    lista.map((l) =>
+      livrosDoGoogle(`intitle:"${l.titulo}" inauthor:"${l.autor}"`, "pt")
+        .then((r) => r.find((x) => x.capa))
+        .then(
+          (x): Indicacao =>
+            x
+              ? { ...x, titulo: l.titulo, motivo: l.porque }
+              : {
+                  id: `tipo-${chaveTitulo(l.titulo).replace(/ /g, "-")}`,
+                  titulo: l.titulo,
+                  autor: l.autor,
+                  cor: corDoLivro(l.titulo),
+                  motivo: l.porque,
+                },
+        )
+        .catch(
+          (): Indicacao => ({
+            id: `tipo-${chaveTitulo(l.titulo).replace(/ /g, "-")}`,
+            titulo: l.titulo,
+            autor: l.autor,
+            cor: corDoLivro(l.titulo),
+            motivo: l.porque,
+          }),
+        ),
+    ),
+  );
+  return achados;
+}
+
+/** Monta as prateleiras do "descobrir": cada uma com um motivo claro. */
+export async function secoesDoDescobrir(estado: {
+  livros: LivroSalvo[];
+  favoritos: string[];
+  gostos: string[];
+  tipo: {
+    id: string;
+    nome: string;
+    livros: { titulo: string; autor: string; porque: string }[];
+  } | null;
+}): Promise<Secao[]> {
+  const ano = new Date().getFullYear();
+  const autoras = autorasQueAma(estado.livros, estado.favoritos).slice(0, 2);
+  const generos = generosQueLe(estado.livros, estado.gostos)
+    .map((g) => ({ g, assunto: assuntoDe(g) }))
+    .filter((x): x is { g: string; assunto: string } => !!x.assunto)
+    .slice(0, 2);
+  const assuntosDoTipo = estado.tipo
+    ? (ASSUNTOS_DO_TIPO[estado.tipo.id] ?? [])
+    : [];
+
+  const [doTipo, ...resto] = await Promise.all([
+    estado.tipo
+      ? Promise.all([
+          livrosDoTipo(estado.tipo.livros),
+          ...assuntosDoTipo.map((a) =>
+            google(
+              `subject:"${a}"`,
+              `pra ${estado.tipo!.nome.replace(/^a /, "")}`,
+            ),
+          ),
+        ]).then((ls) => ls.flat())
+      : Promise.resolve([] as Indicacao[]),
+    maisLidosDoAno(ano).catch(() => [] as Indicacao[]),
+    emAltaNoApp().catch(() => [] as Indicacao[]),
+    ...autoras.map((a) => google(`inauthor:"${a}"`, `de ${a}`)),
+    ...generos.map((x) => google(`subject:"${x.assunto}"`, x.g, true)),
+  ]);
+  const [maisLidos, emAlta, ...outros] = resto;
+  const daAutora = outros.slice(0, autoras.length);
+  const lancamentos = outros.slice(autoras.length);
+
+  const secoes: Secao[] = [];
+  if (estado.tipo)
+    secoes.push({
+      id: "tipo",
+      titulo: `para ${estado.tipo.nome}`,
+      sub: "pelo seu resultado no teste de leitora",
+      livros: doTipo,
+    });
+  secoes.push({
+    id: "ano",
+    titulo: `os mais lidos de ${ano}`,
+    sub: "o que mais gente terminou este ano no the bookside",
+    livros: maisLidos,
+  });
+  secoes.push({
+    id: "alta",
+    titulo: "em alta agora",
+    sub: "o que está entrando nas estantes nos últimos 60 dias",
+    livros: emAlta,
+  });
+  autoras.forEach((a, i) =>
+    secoes.push({
+      id: `autora-${i}`,
+      titulo: `porque você gosta de ${a}`,
+      livros: daAutora[i] ?? [],
+    }),
+  );
+  generos.forEach((x, i) =>
+    secoes.push({
+      id: `lancamentos-${i}`,
+      titulo: `lançamentos em ${x.g}`,
+      livros: lancamentos[i] ?? [],
+    }),
+  );
+  lembrarLivros(secoes.flatMap((x) => x.livros));
+  return secoes;
+}
+
+/** tira da prateleira o que a pessoa já tem ou já passou, sem repetir títulos */
+export function limparSecao(
+  livros: Indicacao[],
+  tenho: (l: { id?: string; titulo: string }) => boolean,
+) {
+  const fora = passados();
+  const vistos = new Set<string>();
+  return livros.filter((l) => {
+    const k = chaveTitulo(l.titulo);
+    if (vistos.has(k) || tenho(l) || fora.has(k)) return false;
+    vistos.add(k);
+    return true;
+  });
 }

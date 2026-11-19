@@ -26,6 +26,17 @@ export const abas = [
     ),
   },
   {
+    id: "descobrir",
+    href: "/descobrir",
+    rotulo: "descobrir",
+    icone: (
+      <>
+        <circle cx="12" cy="12" r="9" />
+        <path d="m15.5 8.5-2 5-5 2 2-5z" />
+      </>
+    ),
+  },
+  {
     id: "clubes",
     href: "/clubes",
     rotulo: "clubes",
@@ -68,7 +79,7 @@ export const abas = [
 
 export type Aba = (typeof abas)[number]["id"];
 
-/** Menu inferior do app: início · estantes · clubes · jornada · perfil. */
+/** Menu inferior do app: início · estantes · descobrir · clubes · jornada · perfil. */
 export function NavInferior({ ativa }: { ativa: Aba }) {
   return (
     <nav
@@ -82,7 +93,7 @@ export function NavInferior({ ativa }: { ativa: Aba }) {
             key={a.id}
             href={a.href}
             aria-current={on ? "page" : undefined}
-            className={`flex min-h-11 min-w-14 flex-col items-center justify-center gap-[5px] text-[10px] leading-none ${
+            className={`flex min-h-11 min-w-[52px] flex-col items-center justify-center gap-[5px] text-[10px] leading-none ${
               on ? "font-bold text-bordo" : "font-medium text-cinza"
             }`}
           >
