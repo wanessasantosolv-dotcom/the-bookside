@@ -375,6 +375,28 @@ export default function LivroPage() {
               </Link>
             ) : null}
 
+            {status === "lendo" ? (
+              <Link
+                href={`/foco?livro=${livro.id}`}
+                className="mx-6 mt-3 flex min-h-11 items-center justify-between rounded-md bg-[#1c1418] px-4 text-creme lg:mx-0"
+              >
+                <span className="text-[13px] font-semibold">
+                  ler em modo foco ⏱
+                </span>
+                <span className="text-xs text-rosa-claro">
+                  {(() => {
+                    const min = (livro.sessoes ?? []).reduce(
+                      (t, x) => t + x.minutos,
+                      0,
+                    );
+                    return min
+                      ? `${min >= 60 ? `${Math.floor(min / 60)}h${String(min % 60).padStart(2, "0")}` : `${min} min`} lidos`
+                      : "cronômetro →";
+                  })()}
+                </span>
+              </Link>
+            ) : null}
+
             {livro.trechos?.length ? (
               <TrechosMarcados trechos={livro.trechos} />
             ) : null}

@@ -232,6 +232,12 @@ function Linha({
                 atualizar
               </button>
               <Link
+                href={`/foco?livro=${l.id}`}
+                className={`min-h-8 content-center font-semibold ${escura ? "text-rosa-claro" : "text-rosa-antigo"}`}
+              >
+                foco ⏱
+              </Link>
+              <Link
                 href={`/livro/${l.id}`}
                 className={
                   escura
