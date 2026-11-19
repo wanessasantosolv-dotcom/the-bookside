@@ -149,6 +149,21 @@ function Lista() {
             acao={{ href: "/clubes/novo", rotulo: "criar um clube" }}
           />
         )}
+        <Link
+          href="/ler-junto"
+          className="mt-5 flex items-center gap-4 rounded-xl border border-dashed border-bordo/40 px-5 py-4 hover:border-bordo lg:max-w-[560px] lg:rounded-[6px]"
+        >
+          <span className="text-2xl">📖</span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-display text-lg font-semibold italic text-bordo lg:font-revista lg:font-normal">
+              ler junto com um amigo
+            </span>
+            <span className="block text-xs text-cinza">
+              o mesmo livro, cada um na sua página — sem precisar de clube
+            </span>
+          </span>
+          <span className="text-sm font-semibold text-bordo">→</span>
+        </Link>
         <p className="mt-6 text-center lg:text-left">
           <Link
             href="/clubes/entrar"

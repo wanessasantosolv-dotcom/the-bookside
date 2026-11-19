@@ -638,3 +638,86 @@ grant execute on function public.entrar_no_desafio(text) to authenticated;
 
 -- foto (avatar) do clube, além da capa
 alter table public.clubes add column if not exists foto text;
+
+-- ───────── ler junto (leitura conjunta com amigos, sem clube) ─────────
+create table if not exists public.leituras_juntas (
+  id uuid primary key default gen_random_uuid(),
+  livro jsonb not null,
+  prazo date,
+  codigo text unique,
+  criado_por uuid not null references auth.users (id) on delete cascade default auth.uid(),
+  criado_em timestamptz not null default now()
+);
+create table if not exists public.leitura_junta_pessoas (
+  leitura_id uuid not null references public.leituras_juntas (id) on delete cascade,
+  usuario_id uuid not null references auth.users (id) on delete cascade,
+  pagina int not null default 0,
+  terminou boolean not null default false,
+  entrou_em timestamptz not null default now(),
+  atualizado_em timestamptz not null default now(),
+  primary key (leitura_id, usuario_id)
+);
+create table if not exists public.leitura_junta_recados (
+  id uuid primary key default gen_random_uuid(),
+  leitura_id uuid not null references public.leituras_juntas (id) on delete cascade,
+  autor uuid not null references auth.users (id) on delete cascade default auth.uid(),
+  texto text not null check (char_length(texto) between 1 and 1000),
+  -- até que página o recado fala (quem está antes vê como spoiler escondido)
+  pagina int,
+  criado_em timestamptz not null default now()
+);
+
+create or replace function public.le_junto(l uuid) returns boolean
+  language sql stable security definer set search_path = public as $$
+  select exists (select 1 from leitura_junta_pessoas where leitura_id = l and usuario_id = auth.uid())
+      or exists (select 1 from leituras_juntas where id = l and criado_por = auth.uid());
+$$;
+
+alter table public.leituras_juntas enable row level security;
+drop policy if exists "ver leitura junta" on public.leituras_juntas;
+create policy "ver leitura junta" on public.leituras_juntas for select to authenticated using (criado_por = auth.uid() or public.le_junto(id));
+drop policy if exists "criar leitura junta" on public.leituras_juntas;
+create policy "criar leitura junta" on public.leituras_juntas for insert to authenticated with check (criado_por = auth.uid());
+drop policy if exists "apagar leitura junta" on public.leituras_juntas;
+create policy "apagar leitura junta" on public.leituras_juntas for delete to authenticated using (criado_por = auth.uid());
+drop policy if exists "editar leitura junta" on public.leituras_juntas;
+create policy "editar leitura junta" on public.leituras_juntas for update to authenticated
+  using (criado_por = auth.uid()) with check (criado_por = auth.uid());
+
+alter table public.leitura_junta_pessoas enable row level security;
+drop policy if exists "ver quem le junto" on public.leitura_junta_pessoas;
+create policy "ver quem le junto" on public.leitura_junta_pessoas for select to authenticated using (public.le_junto(leitura_id));
+-- entra você mesma; ou quem criou chama alguém que ela segue
+drop policy if exists "entrar na leitura junta" on public.leitura_junta_pessoas;
+create policy "entrar na leitura junta" on public.leitura_junta_pessoas for insert to authenticated
+  with check (
+    (usuario_id = auth.uid() and exists (select 1 from leituras_juntas where id = leitura_id and criado_por = auth.uid()))
+    or exists (select 1 from leituras_juntas l join seguidores s on s.seguidor = auth.uid() and s.seguido = usuario_id
+               where l.id = leitura_id and l.criado_por = auth.uid())
+  );
+drop policy if exists "meu progresso na leitura junta" on public.leitura_junta_pessoas;
+create policy "meu progresso na leitura junta" on public.leitura_junta_pessoas for update to authenticated
+  using (usuario_id = auth.uid()) with check (usuario_id = auth.uid());
+drop policy if exists "sair da leitura junta" on public.leitura_junta_pessoas;
+create policy "sair da leitura junta" on public.leitura_junta_pessoas for delete to authenticated
+  using (usuario_id = auth.uid());
+
+alter table public.leitura_junta_recados enable row level security;
+drop policy if exists "ver recados" on public.leitura_junta_recados;
+create policy "ver recados" on public.leitura_junta_recados for select to authenticated using (public.le_junto(leitura_id));
+drop policy if exists "mandar recado" on public.leitura_junta_recados;
+create policy "mandar recado" on public.leitura_junta_recados for insert to authenticated
+  with check (autor = auth.uid() and public.le_junto(leitura_id));
+drop policy if exists "apagar meu recado" on public.leitura_junta_recados;
+create policy "apagar meu recado" on public.leitura_junta_recados for delete to authenticated using (autor = auth.uid());
+
+create or replace function public.entrar_na_leitura_junta(p_codigo text) returns uuid
+  language plpgsql security definer set search_path = public as $$
+declare v uuid;
+begin
+  select id into v from leituras_juntas where codigo = upper(btrim(p_codigo));
+  if v is null then return null; end if;
+  insert into leitura_junta_pessoas (leitura_id, usuario_id) values (v, auth.uid()) on conflict do nothing;
+  return v;
+end $$;
+grant execute on function public.entrar_na_leitura_junta(text) to authenticated;

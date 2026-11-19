@@ -440,6 +440,18 @@ export default function LivroPage() {
               </Link>
             ) : null}
 
+            {status === "lendo" || status === "quero" ? (
+              <Link
+                href={`/ler-junto/novo?livro=${livro.id}`}
+                className="mx-6 mt-3 flex min-h-11 items-center justify-between rounded-md border border-linha bg-creme-quente px-4 lg:mx-0"
+              >
+                <span className="text-[13px] font-semibold">
+                  ler junto com um amigo 📖
+                </span>
+                <span className="text-sm text-bordo">→</span>
+              </Link>
+            ) : null}
+
             {status === "lendo" ? (
               <Link
                 href={`/foco?livro=${livro.id}`}
