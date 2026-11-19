@@ -203,12 +203,6 @@ function ConteudoUnificado({
         </section>
       </div>
 
-      {frase ? (
-        <div className="mb-10 border-y border-ameixa py-6 text-center">
-          <p className="font-revista text-[22px] text-bordo italic">&ldquo;{frase}&rdquo;</p>
-        </div>
-      ) : null}
-
       <Link
         href="/numeros/retrospectiva"
         className="flex h-[58px] items-center justify-between rounded-md bg-ameixa px-7 text-sm font-semibold text-creme hover:bg-bordo-escuro"
