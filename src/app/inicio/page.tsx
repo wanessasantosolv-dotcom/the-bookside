@@ -131,10 +131,32 @@ function Topo({ nome }: { nome: string }) {
 }
 
 /** "pra você ✦": a primeira indicação do dia, que leva à tela de indicações. */
-function IndicacaoDoDia() {
+function IndicacaoDoDia({ compacto = false }: { compacto?: boolean } = {}) {
   const { lista, carregando } = useIndicacoes();
   const livro = lista[0];
   if (carregando || !livro) return null;
+  if (compacto)
+    return (
+      <Link
+        href="/descobrir"
+        className="flex w-[168px] flex-none items-center gap-2.5 rounded-[14px] border border-linha bg-creme-quente p-3"
+      >
+        <CapaLivro
+          titulo={livro.titulo}
+          capa={livro.capa}
+          cor={livro.cor}
+          className="w-9 flex-none [&>span:last-child]:hidden"
+        />
+        <span className="min-w-0">
+          <span className="block text-[9.5px] font-semibold tracking-[.16em] text-bordo uppercase">
+            pra você ✦
+          </span>
+          <span className="mt-0.5 block truncate font-display text-[13px] font-semibold italic">
+            {livro.titulo}
+          </span>
+        </span>
+      </Link>
+    );
   return (
     <Link
       href="/descobrir"
@@ -165,7 +187,13 @@ function IndicacaoDoDia() {
 }
 
 /** O convite para o teste "que tipo de leitora você é?" (ou, depois de feito, o resultado). */
-function BannerTeste({ principal }: { principal?: string }) {
+function BannerTeste({
+  principal,
+  compacto = false,
+}: {
+  principal?: string;
+  compacto?: boolean;
+}) {
   const arq = principal
     ? arquetipos[principal as keyof typeof arquetipos]
     : null;
@@ -173,24 +201,66 @@ function BannerTeste({ principal }: { principal?: string }) {
     return (
       <Link
         href="/teste/resultado"
-        className="flex items-center gap-3 rounded-xl border border-linha bg-creme-quente p-4 hover:border-bordo lg:rounded-[4px] lg:bg-transparent lg:hover:bg-[#F3ECDF]"
+        className={
+          compacto
+            ? "flex w-[168px] flex-none flex-col rounded-[14px] border border-linha bg-creme-quente p-3"
+            : "flex items-center gap-3 rounded-xl border border-linha bg-creme-quente p-4 hover:border-bordo lg:rounded-[4px] lg:bg-transparent lg:hover:bg-[#F3ECDF]"
+        }
       >
         <span
           aria-hidden
-          className="flex size-10 flex-none items-center justify-center rounded-full bg-rosa-fundo font-display text-lg text-bordo"
+          className={
+            compacto
+              ? "mb-1.5 flex size-6 items-center justify-center rounded-full bg-rosa-fundo font-display text-xs text-bordo"
+              : "flex size-10 flex-none items-center justify-center rounded-full bg-rosa-fundo font-display text-lg text-bordo"
+          }
         >
           ✦
         </span>
         <span className="min-w-0">
-          <span className="block text-[10px] font-semibold tracking-[.16em] text-bordo uppercase">
+          <span
+            className={
+              compacto
+                ? "block text-[9.5px] font-semibold tracking-[.16em] text-bordo uppercase"
+                : "block text-[10px] font-semibold tracking-[.16em] text-bordo uppercase"
+            }
+          >
             seu tipo de leitora
           </span>
-          <span className="mt-0.5 block truncate font-display text-[17px] font-semibold italic lg:font-revista lg:font-normal">
+          <span
+            className={
+              compacto
+                ? "mt-0.5 block truncate font-display text-[13px] font-semibold italic"
+                : "mt-0.5 block truncate font-display text-[17px] font-semibold italic lg:font-revista lg:font-normal"
+            }
+          >
             {arq.nome}
           </span>
-          <span className="block text-xs text-cinza">
-            resultado do teste · ver ou refazer →
-          </span>
+          {!compacto ? (
+            <span className="block text-xs text-cinza">
+              resultado do teste · ver ou refazer →
+            </span>
+          ) : null}
+        </span>
+      </Link>
+    );
+  if (compacto)
+    return (
+      <Link
+        href="/teste"
+        className="flex w-[168px] flex-none flex-col rounded-[14px] border border-linha bg-creme-quente p-3"
+      >
+        <span
+          aria-hidden
+          className="mb-1.5 flex size-6 items-center justify-center rounded-full bg-rosa-fundo font-display text-xs text-bordo"
+        >
+          ✦
+        </span>
+        <span className="block text-[9.5px] font-semibold tracking-[.16em] text-bordo uppercase">
+          teste · 3 min
+        </span>
+        <span className="mt-0.5 block font-display text-[13px] font-semibold italic">
+          que tipo de leitora você é?
         </span>
       </Link>
     );
@@ -355,7 +425,7 @@ function Destaques({
     .sort((x, y) => y.d.getTime() - x.d.getTime())[0];
 
   const cartao =
-    "flex items-center gap-3.5 rounded-xl border border-linha bg-creme-quente p-3.5 hover:border-bordo lg:rounded-[4px] lg:border-fio lg:bg-transparent lg:p-4 lg:hover:bg-[#F3ECDF]";
+    "flex w-[220px] flex-none items-center gap-3.5 rounded-xl border border-linha bg-creme-quente p-3.5 hover:border-bordo lg:w-auto lg:rounded-[4px] lg:border-fio lg:bg-transparent lg:p-4 lg:hover:bg-[#F3ECDF]";
   const rotulo =
     "block text-[10px] font-semibold tracking-[.16em] text-bordo uppercase";
 
@@ -408,7 +478,7 @@ function Destaques({
     );
   if (!itens.length) return null;
   return (
-    <div className="mt-5 grid gap-2.5 px-6 sm:grid-cols-2 lg:mt-0 lg:mb-6 lg:px-0">
+    <div className="mt-5 flex gap-2.5 overflow-x-auto px-6 pb-1 lg:mt-0 lg:mb-6 lg:grid lg:grid-cols-2 lg:overflow-visible lg:px-0 lg:pb-0">
       {itens}
     </div>
   );
@@ -600,12 +670,43 @@ export default function InicioPage() {
 
         <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start lg:gap-10">
           <div>
-            {/* citação do dia */}
-            <figure className="mx-6 mt-3 animate-subir rounded-xl bg-bordo px-[18px] py-4 text-creme lg:mx-0 lg:mt-0 lg:mb-7 lg:rounded-[4px] lg:bg-vinho lg:px-7 lg:py-6">
+            {/* ===== hoje (celular): citação + lendo num card só, e uma trilha pro resto ===== */}
+            <div className="lg:hidden">
+              <div className="relative mx-6 mt-3 animate-subir overflow-hidden rounded-xl bg-gradient-to-br from-bordo to-bordo-escuro px-[18px] py-4 text-creme">
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute -top-5 right-1 font-display text-[92px] leading-none text-rosa-claro/15 italic"
+                >
+                  “
+                </span>
+                <p className="flex items-center gap-1.5 text-[10px] font-semibold tracking-[.16em] text-rosa-claro uppercase">
+                  <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-ouro" />
+                  citação do dia
+                </p>
+                <blockquote className="relative mt-2.5 font-accent text-[21px] leading-[1.3] italic">
+                  “{citacao.texto}”
+                </blockquote>
+                <figcaption className="relative mt-2.5 flex items-center gap-1.5 text-[10px] font-semibold tracking-[.1em] text-rosa-claro">
+                  <span aria-hidden className="h-px w-3.5 bg-rosa-claro/50" />
+                  {citacao.livro} · {citacao.autor}
+                </figcaption>
+                <div className="relative mt-4 border-t border-creme/15 pt-4">
+                  <LendoAgora tema="escura" semCartao />
+                </div>
+              </div>
+
+              <div className="mt-3.5 flex gap-2.5 overflow-x-auto px-6 pb-1">
+                <IndicacaoDoDia compacto />
+                <BannerTeste compacto principal={bookside?.principal} />
+              </div>
+            </div>
+
+            {/* ===== citação + lendo (computador) — mantém a identidade "jornal" já estabelecida ===== */}
+            <figure className="hidden rounded-[4px] bg-vinho px-7 py-6 text-creme lg:mb-7 lg:block">
               <p className="text-[10px] font-semibold tracking-[.16em] text-rosa-claro uppercase">
                 citação do dia
               </p>
-              <blockquote className="mt-2.5 font-accent text-[21px] leading-[1.3] italic lg:font-revista lg:text-[26px]">
+              <blockquote className="mt-2.5 font-revista text-[26px] leading-[1.3] italic">
                 “{citacao.texto}”
               </blockquote>
               <figcaption className="mt-2.5 text-[10px] font-semibold tracking-[.1em] text-rosa-claro">
@@ -614,25 +715,18 @@ export default function InicioPage() {
             </figure>
 
             {!bookside ? (
-              <div className="mx-6 mt-4 animate-subir lg:mx-0 lg:mt-0 lg:mb-7">
+              <div className="hidden lg:mb-7 lg:block">
                 <BannerTeste />
               </div>
             ) : null}
 
-            <div className="mx-6 mt-4 lg:mx-0 lg:mt-0 lg:mb-7">
+            <div className="hidden lg:mb-7 lg:block">
               <LendoAgora />
             </div>
 
-            <div className="mx-6 mt-4 lg:hidden">
-              <IndicacaoDoDia />
-            </div>
-
-            {bookside ? (
-              <div className="mx-6 mt-5 lg:hidden">
-                <BannerTeste principal={bookside.principal} />
-              </div>
-            ) : null}
-
+            <p className="mt-5 mb-3 px-6 text-[10px] font-semibold tracking-[.18em] text-bordo uppercase lg:hidden">
+              feed
+            </p>
             <p className="mb-3.5 hidden text-[10px] font-semibold tracking-[.18em] text-grafite uppercase lg:block">
               feed
             </p>
