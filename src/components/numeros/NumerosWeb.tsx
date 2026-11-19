@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import { CapaLivro } from "@/components/CapaLivro";
+import { temas } from "@/lib/dados";
+import { usePerfil } from "@/lib/perfil-store";
 import { ExtremosDoAno } from "@/components/numeros/Extremos";
 import { corDoLivro } from "@/lib/cores";
 import {
@@ -37,25 +39,18 @@ export function NumerosWeb({
   totalVidaToda?: number;
   anoInicio?: number | null;
 }) {
+  const temaId = usePerfil((s) => s.tema);
   const retro = aba === "retro";
   const eyebrow = retro ? `wrapped · ${n.ano}` : `sua jornada · ${n.ano}`;
   const h1 = retro ? `seu wrapped de ${n.ano}` : `sua leitura em ${n.ano}`;
   void nome;
 
   return (
-    <div className="hidden min-h-dvh bg-creme font-sans text-ameixa lg:block">
-      <div className="relative flex h-[200px] flex-col justify-center bg-gradient-to-br from-bordo to-bordo-escuro px-14">
-        <div
-          aria-hidden
-          className="absolute inset-0 bg-[repeating-linear-gradient(115deg,transparent,transparent_38px,rgba(255,255,255,.03)_38px,rgba(255,255,255,.03)_76px)]"
-        />
-        <p className="relative text-[10px] font-semibold tracking-[.2em] text-rosa-claro uppercase">
-          {eyebrow}
-        </p>
-        <h1 className="relative mt-2.5 font-revista text-[44px] leading-none text-creme italic">
-          {h1}
-        </h1>
-      </div>
+    <div
+      className="hidden min-h-dvh bg-creme font-sans text-ameixa lg:block"
+      style={coresDaJornada(temaId)}
+    >
+      <Cabecalho eyebrow={eyebrow} h1={h1} frase={frase} />
 
       <div className="px-14 pt-12 pb-16">
         {retro ? (
@@ -126,45 +121,72 @@ function ConteudoUnificado({
 
   return (
     <>
-      <div className="mb-14 flex items-center gap-10 rounded-md border border-linha px-8 py-7">
-        {totalVidaToda && totalVidaToda > n.total ? (
-          <div className="flex h-[132px] w-[132px] flex-none flex-col items-center justify-center rounded-full bg-gradient-to-br from-rosa-antigo to-bordo text-center shadow-[0_14px_26px_-12px_rgba(107,13,36,0.3)]">
-            <b className="font-revista text-[34px] leading-none font-normal text-creme italic">
-              {numero(totalVidaToda)}
-            </b>
-            <span className="mt-1.5 px-3 text-[8.5px] leading-[1.3] font-semibold tracking-[.1em] text-rosa-claro uppercase">
-              livros{anoInicio ? ` desde ${anoInicio}` : " no total"}
-            </span>
-          </div>
-        ) : null}
-        <div className="grid flex-1 grid-cols-4">
-          {[
-            {
-              v: numero(n.total),
-              r: n.total === 1 ? "livro lido" : "livros lidos",
-            },
-            { v: numero(n.paginas), r: "páginas" },
-            { v: mediaTexto(n.media), r: "média de avaliação" },
-            {
-              v: n.meta ? `${n.total}/${n.meta}` : "—",
-              r: n.ritmo ?? "sem meta",
-            },
-          ].map((c, i) => (
-            <div
-              key={c.r}
-              className={`px-5 text-center ${i > 0 ? "border-l border-linha" : ""}`}
-            >
-              <b className="block font-revista text-[34px] leading-none font-normal text-bordo italic">
-                {c.v}
+      <div className="mb-14 grid grid-cols-2 gap-4 xl:grid-cols-4">
+        <Cartao
+          icone={ICONE.livro}
+          valor={numero(n.total)}
+          rotulo={n.total === 1 ? "livro lido" : "livros lidos"}
+          extra={
+            totalVidaToda && totalVidaToda > n.total
+              ? `${numero(totalVidaToda)} ${anoInicio ? `desde ${anoInicio}` : "no total"}`
+              : undefined
+          }
+        />
+        <Cartao
+          icone={ICONE.paginas}
+          valor={n.paginasConhecidas ? numero(n.paginas) : "—"}
+          rotulo="páginas"
+          extra={
+            n.paginasPorLivro
+              ? `${numero(n.paginasPorLivro)} por livro, em média`
+              : undefined
+          }
+        />
+        <Cartao
+          icone={ICONE.estrela}
+          valor={mediaTexto(n.media)}
+          rotulo="sua nota média"
+          extra={n.livroDoAno ? `a maior: ${n.livroDoAno.titulo}` : undefined}
+        />
+        <div className="rounded-[6px] border border-linha bg-[var(--acc-fundo)] p-5">
+          <span className="flex size-9 items-center justify-center rounded-full bg-[var(--acc)] text-creme">
+            <Icone d={ICONE.alvo} />
+          </span>
+          {n.meta ? (
+            <>
+              <b className="mt-3 block font-revista text-[34px] leading-none font-normal text-[var(--acc)] italic">
+                {n.total}
+                <span className="text-[20px] text-cinza"> de {n.meta}</span>
               </b>
-              <span className="mt-2.5 block text-[9.5px] leading-[1.3] font-semibold tracking-[.1em] text-cinza uppercase">
-                {c.r}
+              <span className="mt-3 block h-1.5 overflow-hidden rounded-full bg-[var(--acc-claro)]">
+                <span
+                  className="block h-full rounded-full bg-[var(--acc)]"
+                  style={{
+                    width: `${Math.min(100, (n.total / n.meta) * 100)}%`,
+                  }}
+                />
               </span>
-            </div>
-          ))}
+              <span className="mt-2 block text-[11px] leading-snug text-cinza">
+                {n.faltam
+                  ? `faltam ${n.faltam} · uns ${n.porSemana.toLocaleString("pt-BR")} por semana`
+                  : "meta batida ✦ tudo agora é bônus"}
+              </span>
+            </>
+          ) : (
+            <>
+              <b className="mt-3 block font-revista text-[26px] leading-none font-normal text-[var(--acc)] italic">
+                sem meta
+              </b>
+              <Link
+                href="/perfil/editar"
+                className="mt-3 block text-[11px] font-semibold text-[var(--acc)]"
+              >
+                definir uma meta →
+              </Link>
+            </>
+          )}
         </div>
-      </div>
-
+      </div>{" "}
       <section className="mb-14">
         <h2 className="mb-[18px] border-b border-ameixa pb-2 font-revista text-[22px] leading-none text-ameixa italic">
           destaques do ano
@@ -198,9 +220,7 @@ function ConteudoUnificado({
           </p>
         )}
       </section>
-
       <ExtremosDoAno n={n} web />
-
       <section className="mb-14">
         <h2 className="mb-[18px] border-b border-ameixa pb-2 font-revista text-[22px] leading-none text-ameixa italic">
           gêneros
@@ -234,7 +254,6 @@ function ConteudoUnificado({
           </p>
         )}
       </section>
-
       <div className="mb-14 grid grid-cols-2 gap-12">
         <section>
           <h2 className="mb-[18px] border-b border-ameixa pb-2 font-revista text-[22px] leading-none text-ameixa italic">
@@ -273,7 +292,6 @@ function ConteudoUnificado({
           </ol>
         </section>
       </div>
-
       {wrappedLiberado() ? (
         <Link
           href="/numeros/retrospectiva"
@@ -463,4 +481,133 @@ export function GraficoMeses({ n, alto = 88 }: { n: Numeros; alto?: number }) {
       </div>
     </figure>
   );
+}
+
+const ICONE = {
+  livro: "M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2V5z M8 7h7",
+  paginas: "M6 3h9l4 4v14H6z M14 3v5h5 M9 13h7 M9 17h5",
+  estrela:
+    "M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z",
+  alvo: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M12 12h.01",
+};
+
+function Icone({ d }: { d: string }) {
+  return (
+    <svg
+      aria-hidden
+      width="17"
+      height="17"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      {d.split(" M").map((p, i) => (
+        <path key={i} d={i ? `M${p}` : p} />
+      ))}
+    </svg>
+  );
+}
+
+function Cartao({
+  icone,
+  valor,
+  rotulo,
+  extra,
+}: {
+  icone: string;
+  valor: string;
+  rotulo: string;
+  extra?: string;
+}) {
+  return (
+    <div className="rounded-[6px] border border-linha bg-[var(--acc-fundo)] p-5">
+      <span className="flex size-9 items-center justify-center rounded-full bg-[var(--acc)] text-creme">
+        <Icone d={icone} />
+      </span>
+      <b className="mt-3 block font-revista text-[34px] leading-none font-normal text-[var(--acc)] italic">
+        {valor}
+      </b>
+      <span className="mt-2 block text-[10px] font-semibold tracking-[.1em] text-cinza uppercase">
+        {rotulo}
+      </span>
+      {extra ? (
+        <span className="mt-1.5 block truncate text-[11px] text-cinza">
+          {extra}
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
+/** O topo da jornada com a cara do perfil: a capa, a foto e a cor do tema. */
+function Cabecalho({
+  eyebrow,
+  h1,
+  frase,
+}: {
+  eyebrow: string;
+  h1: string;
+  frase: string;
+}) {
+  const p = usePerfil();
+  const tema = temas.find((t) => t.id === p.tema) ?? temas[0];
+  return (
+    <div>
+      {/* só a imagem na capa; o texto fica embaixo, sempre legível */}
+      <div
+        className={`h-[170px] bg-cover bg-center ${p.capaImagem ? "" : `pat-${p.capa}`}`}
+        style={
+          p.capaImagem
+            ? { backgroundImage: `url("${p.capaImagem}")` }
+            : undefined
+        }
+      />
+      <div className="flex items-end gap-6 px-14">
+        <span className="-mt-12 block size-[104px] flex-none overflow-hidden rounded-full border-4 border-creme bg-linha shadow-[0_10px_24px_-10px_rgba(43,20,32,.45)]">
+          {p.foto ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={p.foto}
+              alt=""
+              className="size-full object-cover object-[50%_30%]"
+            />
+          ) : (
+            <span
+              className="flex size-full items-center justify-center font-revista text-4xl text-creme italic"
+              style={{ background: tema.destaque }}
+            >
+              {(p.nome || "?").slice(0, 1)}
+            </span>
+          )}
+        </span>
+        <div className="min-w-0 pt-4">
+          <p className="text-[10px] font-semibold tracking-[.2em] text-[var(--acc)] uppercase">
+            {eyebrow}
+          </p>
+          <h1 className="mt-1.5 font-revista text-[40px] leading-none text-ameixa italic">
+            {h1}
+          </h1>
+          {frase || p.frase ? (
+            <p className="mt-1.5 truncate font-revista text-[15px] text-cinza italic">
+              “{frase || p.frase}”
+            </p>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** as cores dos cartões vêm do tema do perfil */
+function coresDaJornada(id: string): CSSProperties {
+  const t = temas.find((x) => x.id === id) ?? temas[0];
+  const acc = "escuro" in t && t.escuro ? "#8A6A43" : t.destaque;
+  return {
+    ["--acc" as string]: acc,
+    ["--acc-fundo" as string]: `${acc}0F`,
+    ["--acc-claro" as string]: `${acc}2E`,
+  };
 }

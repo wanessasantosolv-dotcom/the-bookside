@@ -173,19 +173,6 @@ export function PerfilWeb({
               </span>
             )}
           </div>
-          <div className="pb-16">
-            <h1 className="mb-1.5 font-revista text-4xl leading-none text-jornal italic [text-shadow:0_1px_12px_rgba(0,0,0,.55),0_1px_2px_rgba(0,0,0,.45)]">
-              {p.nome || "sem nome"}
-            </h1>
-            <p className="text-xs font-semibold text-white/90 [text-shadow:0_1px_6px_rgba(0,0,0,.6)]">
-              @{p.usuario || "seu.nome"}
-            </p>
-            {detalhe ? (
-              <div className="mt-1.5 text-xs text-white/90 [text-shadow:0_1px_6px_rgba(0,0,0,.6)]">
-                {detalhe}
-              </div>
-            ) : null}
-          </div>
           <div className="ml-auto flex gap-3.5 pb-[70px]">
             {acoes ?? (
               <>
@@ -208,7 +195,24 @@ export function PerfilWeb({
         </div>
       </div>
 
-      <div className="mx-auto max-w-[1200px] px-14 pt-[84px] pb-16">
+      {/* o nome fica fora da capa: sempre fácil de ler, qualquer que seja a foto */}
+      <div className="px-14">
+        <div className="ml-[156px] pt-4">
+          <div className="min-w-0">
+            <h1 className="mb-1.5 font-revista text-4xl leading-none text-tinta italic">
+              {p.nome || "sem nome"}
+            </h1>
+            <p className="text-xs font-semibold text-[var(--acc-web)]">
+              @{p.usuario || "seu.nome"}
+            </p>
+            {detalhe ? (
+              <div className="mt-1.5 text-xs text-grafite">{detalhe}</div>
+            ) : null}
+          </div>
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-[1200px] px-14 pt-10 pb-16">
         {p.frase ? (
           <p className="mb-4 text-center font-revista text-xl leading-[1.4] italic text-[var(--acc-web)]">
             “{p.frase}”
@@ -321,7 +325,9 @@ export function PerfilWeb({
                 return (
                   <li key={l.id}>
                     <Link
-                      href={outra ? `/livro/${l.id}` : `/livro/${l.id}/progresso`}
+                      href={
+                        outra ? `/livro/${l.id}` : `/livro/${l.id}/progresso`
+                      }
                       className="group flex gap-4"
                     >
                       <CapaLivro
