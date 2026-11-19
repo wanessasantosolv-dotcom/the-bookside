@@ -99,17 +99,11 @@ export function JornadaNoPerfil() {
 
       <MesEmRevista />
 
-      {/* atalhos */}
-      <div className="flex gap-3">
-        <Link href="/numeros/calendario" className={atalho}>
-          <span className="text-xl">📅</span>
-          <span className="text-[13px] font-semibold">calendário</span>
-        </Link>
-        <Link href="/desafios" className={atalho}>
-          <span className="text-xl">🏆</span>
-          <span className="text-[13px] font-semibold">desafios</span>
-        </Link>
-      </div>
+      {/* atalho: desafios agora mora no início */}
+      <Link href="/numeros/calendario" className={atalho}>
+        <span className="text-xl">📅</span>
+        <span className="text-[13px] font-semibold">calendário</span>
+      </Link>
 
       {/* as partes */}
       <div

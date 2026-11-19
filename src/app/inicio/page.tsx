@@ -189,6 +189,29 @@ function IndicacaoDoDia({ compacto = false }: { compacto?: boolean } = {}) {
   );
 }
 
+/** Atalho para os desafios de leitura (sozinha, com amigas ou com o clube). */
+function BannerDesafios() {
+  return (
+    <Link
+      href="/desafios"
+      className="flex w-[172px] flex-none flex-col rounded-[14px] border border-linha bg-creme-quente p-3 hover:border-bordo"
+    >
+      <span
+        aria-hidden
+        className="mb-1.5 flex size-6 items-center justify-center rounded-full bg-rosa-fundo text-xs"
+      >
+        🏆
+      </span>
+      <span className="block text-[9.5px] font-semibold tracking-[.16em] text-bordo uppercase">
+        desafios de leitura
+      </span>
+      <span className="mt-0.5 block text-[13px] leading-snug font-semibold italic">
+        sozinha, com amigas ou com o clube
+      </span>
+    </Link>
+  );
+}
+
 /** O convite para o teste "que tipo de leitora você é?" (ou, depois de feito, o resultado). */
 function BannerTeste({
   principal,
@@ -631,6 +654,7 @@ export default function InicioPage() {
             {/* ===== trilha "pra você" (celular e computador) ===== */}
             <div className="mt-3.5 flex gap-2.5 overflow-x-auto px-6 pb-1 lg:mx-0 lg:mb-7 lg:px-0 lg:pb-0">
               <IndicacaoDoDia compacto />
+              <BannerDesafios />
               {/* depois de feito, o resultado fica no perfil (não no feed) */}
               {!bookside ? <BannerTeste compacto /> : null}
             </div>
