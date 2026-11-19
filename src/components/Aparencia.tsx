@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { usePerfil } from "@/lib/perfil-store";
+import { temas } from "@/lib/dados";
 import { coresDoTema } from "@/lib/tema";
 
 /** Mantém o modo escuro/claro do app em dia com a escolha da pessoa (e com o sistema, no "automático"). */
@@ -27,6 +28,9 @@ export function Aparencia() {
   const temaNoApp = usePerfil((s) => !s.temaSoNoPerfil);
   useEffect(() => {
     const raiz = document.documentElement;
+    const t = temas.find((x) => x.id === tema);
+    if (temaNoApp && t && "escuro" in t) raiz.dataset.temaEscuro = "1";
+    else delete raiz.dataset.temaEscuro;
     const cores = (temaNoApp ? coresDoTema(tema) : undefined) ?? {};
     const nomes = Object.keys(cores);
     for (const [k, v] of Object.entries(cores))

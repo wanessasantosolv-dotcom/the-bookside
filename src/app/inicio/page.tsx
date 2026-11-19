@@ -552,20 +552,25 @@ function AmigasLendoWeb() {
       </p>
       <ul className="flex flex-wrap gap-3.5">
         {lendo.dados.map(({ pessoa, livro }) => (
-          <li key={pessoa.id} className="w-12 text-center">
+          <li key={pessoa.id} className="w-14 text-center">
             <Link
               href={`/livro/${livro.id}`}
               onClick={() => lembrarLivros([livro])}
               aria-label={`${nomeDe(pessoa)} está lendo ${livro.titulo}`}
+              className="relative block"
             >
               <CapaAuto
                 livro={livro}
                 className="w-full [&>span:last-child]:hidden"
               />
+              {/* a fotinha de quem está lendo, no cantinho da capa */}
+              <span className="absolute -right-2 -bottom-2 rounded-full ring-2 ring-jornal">
+                <Avatar pessoa={pessoa} tamanho={26} />
+              </span>
             </Link>
             <Link
               href={pessoa.usuario ? `/u/${pessoa.usuario}` : "#"}
-              className="mt-1.5 block truncate font-revista text-xs italic"
+              className="mt-2.5 block truncate font-revista text-xs italic"
             >
               {pessoa.nome || pessoa.usuario}
             </Link>

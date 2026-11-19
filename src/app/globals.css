@@ -117,7 +117,8 @@ html[data-modo="escuro"] .acc-web-tema { --acc-web: color-mix(in srgb, var(--acc
 html[data-modo="escuro"] .jornada-tema { --acc: color-mix(in srgb, var(--acc-base) 45%, #f3e9e6); }
 
 /* o logo bordô fica creme no modo escuro */
-html[data-modo="escuro"] img[src$="logo-bordo.png"] { filter: brightness(0) invert(93%) sepia(14%); }
+html[data-modo="escuro"] img[src$="logo-bordo.png"],
+html[data-tema-escuro] img[src$="logo-bordo.png"] { filter: brightness(0) invert(1); }
 
 /* os desenhos das capas, com fundo escuro */
 html[data-modo="escuro"] .pat-linhas { background: repeating-linear-gradient(90deg, #5a2a36 0 2px, transparent 2px 12px), #241c1f; }
