@@ -74,13 +74,13 @@ export function AppShell({
 /**
  * Telas de formulário do app (avaliar, progresso, editar perfil…): no celular,
  * a coluna de sempre sem o menu inferior; no computador, menu lateral e uma
- * coluna central de 640px, como no canvas.
+ * coluna de até 720px alinhada à esquerda, como as outras telas do app.
  */
 export function TelaApp({ aba, children }: { aba: Aba; children: ReactNode }) {
   return (
     <AppShell aba={aba} menuCelular={false}>
-      <div className="flex flex-1 flex-col lg:bg-jornal lg:py-10">
-        <div className="flex flex-1 flex-col lg:mx-auto lg:w-full lg:max-w-[640px] lg:flex-none">{children}</div>
+      <div className="flex flex-1 flex-col lg:bg-jornal lg:px-12 lg:py-8">
+        <div className="flex flex-1 flex-col lg:w-full lg:max-w-[720px] lg:flex-none">{children}</div>
       </div>
     </AppShell>
   );

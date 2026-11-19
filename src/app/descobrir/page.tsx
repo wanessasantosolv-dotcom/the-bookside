@@ -239,7 +239,7 @@ function UmaPorVez() {
           <p className="mt-1.5 font-accent text-sm italic text-cinza">
             {fila.length
               ? "os que você passou não voltam. quer mais?"
-              : "pode ser a internet ou o limite de buscas do dia. tente outra leva — ou veja as prateleiras aqui embaixo."}
+              : "pode ser a internet ou o limite de buscas do dia. tente outra leva daqui a pouco."}
           </p>
           <button
             type="button"

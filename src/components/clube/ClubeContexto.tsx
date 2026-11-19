@@ -198,7 +198,7 @@ function Cabecalho({
               <Voltar
                 padrao={base}
                 rotulo="voltar"
-                className="-ml-2 flex min-h-11 items-center px-2 text-[11px] font-bold tracking-[.1em] text-grafite uppercase hover:text-vinho"
+                className="-ml-2 flex min-h-11 items-center px-2 text-[13px] font-semibold text-bordo"
               />
               <Link
                 href={base}
@@ -238,7 +238,7 @@ function Cabecalho({
             <Voltar
               padrao={inicio ? "/clubes" : base}
               rotulo={inicio ? "clubes" : "voltar"}
-              className="flex min-h-11 items-center rounded-pill bg-creme/85 px-3 text-[11px] font-semibold tracking-[.14em] text-bordo uppercase"
+              className="flex min-h-10 items-center rounded-pill bg-creme/90 px-4 text-[13px] font-semibold text-bordo"
             />
             <span className="rounded-pill bg-creme/85">
               <Menu c={c} papel={papel} />

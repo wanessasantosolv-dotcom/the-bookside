@@ -34,6 +34,8 @@ export function NumerosShell({
   const meta = usePerfil((s) => s.meta);
   const nome = usePerfil((s) => s.nome);
   const frase = usePerfil((s) => s.frase);
+  const capa = usePerfil((s) => s.capa);
+  const capaImagem = usePerfil((s) => s.capaImagem);
   if (!hidratado) return <AppShell aba="numeros">{null}</AppShell>;
   const n = calcularNumeros(livros, meta);
   const totalVidaToda = livros.filter((l) => l.status === "lido").length;
@@ -54,6 +56,14 @@ export function NumerosShell({
         anoInicio={anoInicio}
       />
       <div className="flex flex-1 flex-col lg:hidden">
+        {/* a capa do perfil, como no computador */}
+        <div
+          aria-hidden
+          className={`h-[96px] bg-cover bg-center ${capaImagem ? "" : `pat-${capa ?? "linhas"}`}`}
+          style={
+            capaImagem ? { backgroundImage: `url("${capaImagem}")` } : undefined
+          }
+        />
         <header className="flex items-center justify-between px-6 pt-2">
           <span className="flex min-h-11 items-center text-[13px] font-semibold">
             sua jornada

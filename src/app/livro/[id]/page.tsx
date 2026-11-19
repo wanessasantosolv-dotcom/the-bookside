@@ -163,7 +163,7 @@ export default function LivroPage() {
           {/* volta para a tela de onde a pessoa veio; aberto direto pelo link, vai para a estante */}
           <Voltar
             padrao={voltar.href}
-            className="-ml-2 flex min-h-11 items-center px-2 text-[13px] font-semibold text-bordo lg:text-[11px] lg:font-bold lg:tracking-[.1em] lg:uppercase"
+            className="-ml-2 flex min-h-11 items-center px-2 text-[13px] font-semibold text-bordo"
           />
           <span className="eyebrow !text-[10px] text-cinza">o livro</span>
         </header>

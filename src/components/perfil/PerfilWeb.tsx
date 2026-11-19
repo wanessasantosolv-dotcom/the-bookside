@@ -9,15 +9,6 @@ import type { Tema } from "@/lib/dados";
 import type { LivroSalvo, Perfil } from "@/lib/perfil-store";
 import type { Arquetipo } from "@/lib/teste";
 
-/** Escurece uma cor hex (para o degradê do topo). */
-function escurecer(hex: string, fator = 0.45, alfa = 1) {
-  const n = parseInt(hex.slice(1), 16);
-  const c = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) =>
-    Math.round(v * fator),
-  );
-  return `rgba(${c.join(",")},${alfa})`;
-}
-
 const rotulo =
   "text-[9px] leading-[1.2] font-semibold tracking-[.14em] uppercase text-grafite";
 
@@ -130,7 +121,7 @@ export function PerfilWeb({
   }
 
   const botaoHero =
-    "flex min-h-10 items-center rounded-pill border border-white/50 bg-black/25 px-4 text-[11px] font-bold tracking-[.1em] text-jornal uppercase backdrop-blur-sm hover:bg-black/35";
+    "flex min-h-10 items-center rounded-pill bg-creme/90 px-4 text-[13px] font-semibold text-bordo shadow-sm backdrop-blur-sm hover:bg-creme";
 
   return (
     <div
@@ -139,25 +130,19 @@ export function PerfilWeb({
     >
       {/* topo */}
       <div
-        className="relative flex h-[280px] items-end bg-cover bg-center px-14"
-        style={{
-          backgroundImage: p.capaImagem
-            ? `url("${p.capaImagem}")` // a foto com as cores originais, sem camada por cima
-            : `linear-gradient(135deg, ${base}, ${escurecer(base)})`,
-        }}
+        className={`relative flex h-[280px] items-end bg-cover bg-center px-14 ${p.capaImagem ? "" : `pat-${p.capa ?? "linhas"}`}`}
+        style={
+          p.capaImagem
+            ? { backgroundImage: `url("${p.capaImagem}")` } // a foto com as cores originais, sem camada por cima
+            : undefined
+        }
       >
         {outra ? (
           <Voltar
             padrao="/inicio"
-            className="absolute top-5 left-14 z-10 flex min-h-10 items-center rounded-pill bg-black/25 px-4 text-[11px] font-bold tracking-[.1em] text-jornal uppercase hover:bg-black/35"
+            className="absolute top-5 left-14 z-10 flex min-h-10 items-center rounded-pill bg-creme/90 px-4 text-[13px] font-semibold text-bordo hover:bg-creme"
           />
         ) : null}
-        {p.capaImagem ? null : (
-          <div
-            aria-hidden
-            className="absolute inset-0 bg-[repeating-linear-gradient(115deg,transparent,transparent_38px,rgba(255,255,255,.03)_38px,rgba(255,255,255,.03)_76px)]"
-          />
-        )}
         <div className="relative flex w-full translate-y-14 items-end gap-7">
           <div className="size-32 flex-none overflow-hidden rounded-full border-[5px] border-jornal bg-rosa-fundo">
             {p.foto ? (

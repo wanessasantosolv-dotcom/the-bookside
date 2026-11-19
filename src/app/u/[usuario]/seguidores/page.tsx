@@ -35,7 +35,7 @@ function Lista({ usuario }: { usuario: string }) {
             key={t.id}
             href={t.href}
             aria-current={aba === t.id ? "page" : undefined}
-            className={`flex min-h-11 flex-1 items-center justify-center text-[10px] font-semibold tracking-[.12em] uppercase ${
+            className={`flex min-h-11 flex-1 items-center justify-center text-xs font-semibold ${
               aba === t.id ? "rounded-pill bg-bordo text-creme" : "text-cinza"
             }`}
           >

@@ -101,7 +101,7 @@ function Escolha({ inicial }: { inicial: string[] }) {
 
   return (
     <TelaApp aba="perfil">
-      <div className="mx-auto flex w-full max-w-[640px] flex-1 flex-col">
+      <div className="mx-auto flex w-full max-w-[640px] flex-1 flex-col lg:mx-0 lg:max-w-[720px]">
         <header className="flex items-center justify-between px-6 pt-2 lg:px-0">
           <Voltar
             padrao="/perfil"

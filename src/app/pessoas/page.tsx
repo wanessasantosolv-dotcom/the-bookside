@@ -66,10 +66,10 @@ export default function PessoasPage() {
             buscar pessoas
           </h1>
           <nav aria-label="o que buscar" className="mt-4 flex gap-1.5 px-6 lg:px-0">
-            <Link href="/buscar" className="flex min-h-9 items-center rounded-pill border border-bege px-3.5 text-[10px] font-semibold tracking-[.12em] text-cinza uppercase">
+            <Link href="/buscar" className="flex h-9 items-center rounded-pill border border-bege bg-creme-quente px-[13px] text-xs font-semibold text-ameixa">
               livros
             </Link>
-            <span aria-current="page" className="flex min-h-9 items-center rounded-pill bg-bordo px-3.5 text-[10px] font-semibold tracking-[.12em] text-creme uppercase">
+            <span aria-current="page" className="flex h-9 items-center rounded-pill border border-bordo bg-bordo px-[13px] text-xs font-semibold text-creme">
               pessoas
             </span>
           </nav>

@@ -42,7 +42,7 @@ export function ContaShell({
           <Voltar
             padrao={voltar.href}
             rotulo={voltar.rotulo}
-            className="mb-4 hidden text-[11px] font-bold tracking-[.1em] text-grafite uppercase hover:text-vinho lg:inline-block"
+            className="mb-4 hidden text-[13px] font-semibold text-bordo lg:inline-block"
           />
           <h1 className="animate-subir font-display text-[28px] leading-8 font-semibold italic text-bordo lg:font-revista lg:text-[34px] lg:leading-[1.1] lg:font-normal lg:text-tinta">
             {titulo}

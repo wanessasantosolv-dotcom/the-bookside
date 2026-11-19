@@ -162,7 +162,7 @@ function PerfilDela({ usuario }: { usuario: string }) {
         >
           <Voltar
             padrao="/inicio"
-            className="absolute top-3 left-4 flex min-h-11 items-center rounded-pill bg-black/25 px-3 text-[13px] font-semibold text-white"
+            className="absolute top-3 left-4 flex min-h-10 items-center rounded-pill bg-creme/90 px-4 text-[13px] font-semibold text-bordo"
           />
         </div>
         <section className="relative -mt-8 rounded-t-[34px] bg-[var(--papel)] px-6 pb-8">
