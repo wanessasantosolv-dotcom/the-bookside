@@ -18,11 +18,13 @@ function Coluna({
   href,
   livros,
   vazio,
+  rotuloAcao = "ver todos →",
 }: {
   titulo: string;
-  href: string;
+  href?: string;
   livros: LivroSalvo[];
   vazio: string;
+  rotuloAcao?: string;
 }) {
   return (
     <section>
@@ -30,12 +32,14 @@ function Coluna({
         <h2 className="font-revista text-[19px] leading-none italic">
           {titulo}
         </h2>
-        <Link
-          href={href}
-          className="text-[9px] font-bold tracking-[.1em] text-[var(--acc-web)] uppercase"
-        >
-          ver todos →
-        </Link>
+        {href ? (
+          <Link
+            href={href}
+            className="text-[9px] font-bold tracking-[.1em] text-[var(--acc-web)] uppercase"
+          >
+            {rotuloAcao}
+          </Link>
+        ) : null}
       </div>
       {livros.length ? (
         <ul className="flex gap-2.5">
@@ -270,46 +274,18 @@ export function PerfilWeb({
               ))}
             </Link>
 
-            {/* favoritos: sem destaque, igual às outras colunas */}
-            <section className="mb-9">
-              <div className="mb-3.5 flex items-baseline justify-between border-b border-tinta pb-2">
-                <h2 className="font-revista text-[19px] leading-none italic">
-                  {outra ? "favoritos" : "meus favoritos"}
-                </h2>
-                {!outra ? (
-                  <Link
-                    href={href.favoritos}
-                    className="text-[9px] font-bold tracking-[.1em] text-[var(--acc-web)] uppercase"
-                  >
-                    escolher →
-                  </Link>
-                ) : null}
-              </div>
-              {favoritos.length ? (
-                <ul className="flex gap-4">
-                  {favoritos.slice(0, 4).map((l) => (
-                    <li key={l.id} className="w-[110px]">
-                      <Link href={`/livro/${l.id}`} className="block">
-                        <CapaLivro
-                          titulo={l.titulo}
-                          capa={l.capa}
-                          cor={corDoLivro(l.id)}
-                          className="w-full"
-                        />
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="font-revista text-[13px] leading-[1.4] italic text-grafite">
-                  {outra
+            <div className="grid grid-cols-3 gap-8">
+              <Coluna
+                titulo={outra ? "favoritos" : "meus favoritos"}
+                href={outra ? undefined : href.favoritos}
+                rotuloAcao="escolher →"
+                livros={favoritos}
+                vazio={
+                  outra
                     ? "nenhum favorito escolhido ainda."
-                    : "você ainda não escolheu seus favoritos."}
-                </p>
-              )}
-            </section>
-
-            <div className="grid grid-cols-2 gap-10">
+                    : "você ainda não escolheu seus favoritos."
+                }
+              />
               <Coluna
                 titulo={`lidos · ${lidos.length}`}
                 href={href.lidos}
