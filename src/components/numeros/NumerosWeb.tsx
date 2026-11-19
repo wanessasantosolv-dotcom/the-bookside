@@ -18,9 +18,9 @@ import {
 } from "@/lib/numeros";
 
 const CORES_GENERO = [
-  "#6B0D24",
-  "#8E1D3D",
-  "#B75A6B",
+  "var(--color-bordo)",
+  "var(--color-bordo-suave)",
+  "var(--color-rosa-antigo)",
   "#A88B64",
   "#6B7A5E",
   "#464052",
@@ -500,8 +500,8 @@ export function GraficoMeses({ n, alto = 88 }: { n: Numeros; alto?: number }) {
                 background: !m.livros
                   ? "#E6D5CE"
                   : m === n.maisForte
-                    ? "#6B0D24"
-                    : "#B75A6B",
+                    ? "var(--color-bordo)"
+                    : "var(--color-rosa-antigo)",
               }}
             />
           </span>

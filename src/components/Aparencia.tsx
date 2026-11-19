@@ -24,7 +24,7 @@ export function Aparencia() {
   }, [aparencia]);
   // o tema do perfil no app todo (se a pessoa ligou em configurações)
   const tema = usePerfil((s) => s.tema);
-  const temaNoApp = usePerfil((s) => s.temaNoApp ?? false);
+  const temaNoApp = usePerfil((s) => !s.temaSoNoPerfil);
   useEffect(() => {
     const raiz = document.documentElement;
     const cores = (temaNoApp ? coresDoTema(tema) : undefined) ?? {};

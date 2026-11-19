@@ -12,7 +12,7 @@ const opcoes: { id: EscolhaEstante; href: string; rotulo: string; titulo: string
     rotulo: "estou lendo um",
     titulo: "já comecei um livro",
     icone: (
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#6B0D24" strokeWidth="1.7" strokeLinejoin="round" aria-hidden>
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--color-bordo)" strokeWidth="1.7" strokeLinejoin="round" aria-hidden>
         <path d="M6 3h12v18l-6-4-6 4z" />
       </svg>
     ),
@@ -23,7 +23,7 @@ const opcoes: { id: EscolhaEstante; href: string; rotulo: string; titulo: string
     rotulo: "quero ler",
     titulo: "quero começar um agora",
     icone: (
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#6B0D24" strokeWidth="1.7" strokeLinejoin="round" aria-hidden>
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--color-bordo)" strokeWidth="1.7" strokeLinejoin="round" aria-hidden>
         <path d="M12 6c-2-2-5-2-8-1v13c3-1 6-1 8 1 2-2 5-2 8-1V5c-3-1-6-1-8 1z" />
         <path d="M12 6v13" />
       </svg>
@@ -35,7 +35,7 @@ const opcoes: { id: EscolhaEstante; href: string; rotulo: string; titulo: string
     rotulo: "só olhando",
     titulo: "a estante fica vazia por enquanto",
     icone: (
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#B75A6B" strokeWidth="1.5" aria-hidden>
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--color-rosa-antigo)" strokeWidth="1.5" aria-hidden>
         <rect x="4" y="4" width="16" height="16" rx="4" strokeDasharray="3 3" />
       </svg>
     ),

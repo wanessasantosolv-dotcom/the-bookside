@@ -102,6 +102,8 @@ export type Perfil = {
   aparencia: "claro" | "escuro" | "sistema";
   /** as cores do tema do perfil valem para o app inteiro */
   temaNoApp: boolean;
+  /** o tema do perfil fica só no perfil (padrão: vale no app todo) */
+  temaSoNoPerfil: boolean;
   /** as leituras (comecei, terminei, notas, progresso) aparecem no feed dos amigos */
   publicarNoFeed: boolean;
   /** livros em que a pessoa tocou "passar" no descobrir (títulos normalizados): não voltam, em nenhum aparelho */
@@ -147,6 +149,7 @@ export const perfilInicial: Perfil = {
   passados: [],
   aparencia: "claro",
   temaNoApp: false,
+  temaSoNoPerfil: false,
   publicarNoFeed: true,
 };
 

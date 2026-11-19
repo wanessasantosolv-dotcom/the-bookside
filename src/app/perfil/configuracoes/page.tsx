@@ -23,7 +23,7 @@ export default function ConfiguracoesPage() {
   const esvaziarEstante = usePerfil((s) => s.esvaziarEstante);
   const aparencia = usePerfil((s) => s.aparencia ?? "claro");
   const atualizar = usePerfil((s) => s.atualizar);
-  const temaNoApp = usePerfil((s) => s.temaNoApp ?? false);
+  const temaNoApp = usePerfil((s) => !s.temaSoNoPerfil);
   const publicarNoFeed = usePerfil((s) => s.publicarNoFeed ?? true);
   const usuario = usePerfil((s) => s.usuario);
   const [avisoSenha, setAvisoSenha] = useState<string | null>(null);
@@ -226,7 +226,7 @@ export default function ConfiguracoesPage() {
               </fieldset>
               <Interruptor
                 ligado={temaNoApp}
-                onChange={(v) => atualizar({ temaNoApp: v })}
+                onChange={(v) => atualizar({ temaSoNoPerfil: !v })}
                 titulo="usar o tema do perfil no app todo"
                 texto={`as cores de “${temaAtual.nome}” nos botões, títulos e menus de todas as telas.${"escuro" in temaAtual ? " como é um tema escuro, o app todo escurece." : ""}`}
               />

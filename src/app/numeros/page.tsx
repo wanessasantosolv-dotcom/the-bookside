@@ -56,7 +56,7 @@ function AnelMeta({ n }: { n: Numeros }) {
           cy="62"
           r={r}
           fill="none"
-          stroke="#6B0D24"
+          stroke="var(--color-bordo)"
           strokeWidth="12"
           strokeLinecap="round"
           strokeDasharray={volta}
@@ -72,7 +72,7 @@ function AnelMeta({ n }: { n: Numeros }) {
         fontStyle="italic"
         fontWeight="700"
         fontSize="30"
-        fill="#6B0D24"
+        fill="var(--color-bordo)"
       >
         {n.total}
       </text>

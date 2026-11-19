@@ -67,7 +67,7 @@ export function FormatosDoAno({ n, web }: { n: Numeros; web?: boolean }) {
               className="block h-full"
               style={{
                 width: `${(f.qtd / total) * 100}%`,
-                background: ["#6B0D24", "#B75A6B", "#C9A46A"][i % 3],
+                background: ["var(--color-bordo)", "var(--color-rosa-antigo)", "#C9A46A"][i % 3],
               }}
             />
           ))}
@@ -79,7 +79,7 @@ export function FormatosDoAno({ n, web }: { n: Numeros; web?: boolean }) {
             <li key={f.id} className="flex items-center gap-3">
               <span
                 className="flex size-9 flex-none items-center justify-center rounded-full text-creme"
-                style={{ background: ["#6B0D24", "#B75A6B", "#C9A46A"][i % 3] }}
+                style={{ background: ["var(--color-bordo)", "var(--color-rosa-antigo)", "#C9A46A"][i % 3] }}
               >
                 <svg
                   aria-hidden

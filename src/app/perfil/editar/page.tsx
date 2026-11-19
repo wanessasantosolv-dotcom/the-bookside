@@ -40,7 +40,7 @@ function Formulario({ inicial }: { inicial: Rascunho }) {
   const router = useRouter();
   const atualizar = usePerfil((s) => s.atualizar);
   const atualizarJa = atualizar;
-  const temaNoApp = usePerfil((s) => s.temaNoApp ?? false);
+  const temaNoApp = usePerfil((s) => !s.temaSoNoPerfil);
   const livrosLidos = usePerfil(
     (s) => s.livros.filter((l) => l.status === "lido").length,
   );
@@ -457,7 +457,7 @@ function Formulario({ inicial }: { inicial: Rascunho }) {
               <input
                 type="checkbox"
                 checked={temaNoApp}
-                onChange={(e) => atualizarJa({ temaNoApp: e.target.checked })}
+                onChange={(e) => atualizarJa({ temaSoNoPerfil: !e.target.checked })}
                 className="size-5 flex-none accent-bordo"
               />
               <span>

@@ -3,7 +3,7 @@
 import { bloco, NumerosShell, SemLeituras } from "@/components/numeros/NumerosShell";
 import { mediaTexto } from "@/lib/numeros";
 
-const cores = ["#6B0D24", "#8E1D3D", "#B75A6B", "#A88B64", "#6B7A5E", "#464052"];
+const cores = ["var(--color-bordo)", "var(--color-bordo-suave)", "var(--color-rosa-antigo)", "#A88B64", "#6B7A5E", "#464052"];
 const extenso = ["nenhum", "um", "dois", "três", "quatro", "cinco", "seis", "sete", "oito", "nove", "dez"];
 
 export default function NumerosGenerosPage() {

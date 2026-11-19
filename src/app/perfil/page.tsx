@@ -54,9 +54,9 @@ export default function PerfilPage() {
   } as CSSProperties;
 
   const estantes = [
-    { id: "lidos", nome: "lidos", qtd: lidos.length, fundo: "#D8C3AA", titulo: "#2B1420", num: "#6B0D24", livro: lidos[0] },
-    { id: "quero-ler", nome: "quero ler", qtd: quero.length, fundo: "#6B0D24", titulo: "#F9F5EE", num: "#E8B4BF", livro: quero[0] },
-    { id: "lendo", nome: "lendo", qtd: lendo.length, fundo: "#E8B4BF", titulo: "#6B0D24", num: "#6B0D24", livro: lendo[0] },
+    { id: "lidos", nome: "lidos", qtd: lidos.length, fundo: "#D8C3AA", titulo: "#2B1420", num: "var(--acc)", livro: lidos[0] },
+    { id: "quero-ler", nome: "quero ler", qtd: quero.length, fundo: "var(--acc)", titulo: "#F9F5EE", num: "#E8B4BF", livro: quero[0] },
+    { id: "lendo", nome: "lendo", qtd: lendo.length, fundo: "#E8B4BF", titulo: "var(--acc)", num: "var(--acc)", livro: lendo[0] },
   ];
 
   return (
