@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import { CapaLivro } from "@/components/CapaLivro";
 import { AbasPerfil, type AbaPerfil } from "@/components/perfil/AbasPerfil";
-import { VitrineFavoritos } from "@/components/VitrineFavoritos";
 import { corDoLivro } from "@/lib/cores";
 import type { Tema } from "@/lib/dados";
 import type { LivroSalvo, Perfil } from "@/lib/perfil-store";
@@ -271,26 +270,44 @@ export function PerfilWeb({
               ))}
             </Link>
 
-            {/* favoritos: a vitrine, com destaque */}
-            <div className="mx-auto mb-12 max-w-[760px]">
-              <VitrineFavoritos
-                grande
-                titulo={outra ? "favoritos" : "meus favoritos"}
-                acao={
-                  outra
-                    ? undefined
-                    : { href: href.favoritos, rotulo: "escolher →" }
-                }
-                vagas={outra ? Math.max(1, favoritos.length) : 4}
-                vazio={outra ? "nenhum favorito escolhido ainda." : undefined}
-                itens={favoritos.slice(0, 4).map((l) => ({
-                  id: l.id,
-                  titulo: l.titulo,
-                  capa: l.capa,
-                  href: `/livro/${l.id}`,
-                }))}
-              />
-            </div>
+            {/* favoritos: sem destaque, igual às outras colunas */}
+            <section className="mb-9">
+              <div className="mb-3.5 flex items-baseline justify-between border-b border-tinta pb-2">
+                <h2 className="font-revista text-[19px] leading-none italic">
+                  {outra ? "favoritos" : "meus favoritos"}
+                </h2>
+                {!outra ? (
+                  <Link
+                    href={href.favoritos}
+                    className="text-[9px] font-bold tracking-[.1em] text-[var(--acc-web)] uppercase"
+                  >
+                    escolher →
+                  </Link>
+                ) : null}
+              </div>
+              {favoritos.length ? (
+                <ul className="flex gap-4">
+                  {favoritos.slice(0, 4).map((l) => (
+                    <li key={l.id} className="w-[110px]">
+                      <Link href={`/livro/${l.id}`} className="block">
+                        <CapaLivro
+                          titulo={l.titulo}
+                          capa={l.capa}
+                          cor={corDoLivro(l.id)}
+                          className="w-full"
+                        />
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="font-revista text-[13px] leading-[1.4] italic text-grafite">
+                  {outra
+                    ? "nenhum favorito escolhido ainda."
+                    : "você ainda não escolheu seus favoritos."}
+                </p>
+              )}
+            </section>
 
             <div className="grid grid-cols-2 gap-10">
               <Coluna
