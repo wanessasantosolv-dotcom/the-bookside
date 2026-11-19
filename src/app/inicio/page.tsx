@@ -593,24 +593,21 @@ export default function InicioPage() {
         <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start lg:gap-10">
           <div>
             {/* ===== citação do dia (celular e computador) ===== */}
-            <figure className="relative mx-6 mt-3 animate-subir overflow-hidden rounded-xl bg-gradient-to-br from-bordo to-bordo-escuro px-[18px] py-4 text-creme lg:mx-0 lg:mt-0 lg:rounded-[4px] lg:px-8 lg:py-7">
+            <figure className="relative mx-6 mt-3 flex animate-subir items-center gap-3 overflow-hidden rounded-xl bg-gradient-to-br from-bordo to-bordo-escuro px-4 py-3 text-creme lg:mx-0 lg:mt-0 lg:rounded-[4px] lg:px-6 lg:py-4">
               <span
                 aria-hidden
-                className="pointer-events-none absolute -top-5 right-1 font-display text-[92px] leading-none text-rosa-claro/15 italic lg:-top-9 lg:text-[140px]"
+                className="font-display text-[26px] leading-none text-rosa-claro/40 italic lg:text-[32px]"
               >
                 “
               </span>
-              <p className="flex items-center gap-1.5 text-[10px] font-semibold tracking-[.16em] text-rosa-claro uppercase">
-                <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-ouro" />
-                citação do dia
-              </p>
-              <blockquote className="relative mt-2.5 font-accent text-[21px] leading-[1.3] italic lg:font-revista lg:text-[28px]">
-                “{citacao.texto}”
-              </blockquote>
-              <figcaption className="relative mt-2.5 flex items-center gap-1.5 text-[10px] font-semibold tracking-[.1em] text-rosa-claro">
-                <span aria-hidden className="h-px w-3.5 bg-rosa-claro/50" />
-                {citacao.livro} · {citacao.autor}
-              </figcaption>
+              <div className="min-w-0">
+                <blockquote className="truncate font-accent text-[13px] italic lg:font-revista lg:text-[15px]">
+                  {citacao.texto}
+                </blockquote>
+                <figcaption className="mt-0.5 truncate text-[10px] font-semibold tracking-[.08em] text-rosa-claro">
+                  {citacao.livro} · {citacao.autor}
+                </figcaption>
+              </div>
             </figure>
 
             {/* ===== você está lendo (celular e computador, card próprio) ===== */}

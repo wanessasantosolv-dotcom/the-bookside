@@ -1,6 +1,5 @@
 "use client";
 
-import { CartaoAnoDoClube } from "@/components/clube/AnoDoClube";
 import { FeedDoClube } from "@/components/clube/FeedDoClube";
 import { CapaAuto } from "@/components/CapaAuto";
 import Link from "next/link";
@@ -73,9 +72,6 @@ export default function ClubeInicioPage() {
   const quemSugeriu = lendo?.sugerido_por
     ? membros.find((m) => m.usuario_id === lendo.sugerido_por)?.pessoa
     : null;
-  const proximo = encontros.find(
-    (e) => new Date(e.quando).getTime() > Date.now(),
-  );
   // "o que a gente amou": os escolhidos (se houver) ou os de nota mais alta
   const comNota = livros
     .filter((l) => l.estado === "lido")
@@ -97,9 +93,6 @@ export default function ClubeInicioPage() {
 
   return (
     <div className="space-y-7 px-6 pt-6 lg:mx-auto lg:max-w-[760px] lg:space-y-7 lg:px-0">
-      {/* a retrospectiva e a revista do clube, à vista */}
-      <CartaoAnoDoClube clubeId={clube.id} />
-
       {/* ===== lendo agora + a turma, num card só ===== */}
       <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-bordo to-bordo-escuro px-5 py-5 text-creme lg:rounded-[4px] lg:px-7 lg:py-6">
         <div className="flex items-center justify-between gap-3">
@@ -222,71 +215,42 @@ export default function ClubeInicioPage() {
         </ul>
       </section>
 
-      {/* ===== próximo encontro + o que a gente amou, lado a lado ===== */}
-      <div className="grid grid-cols-2 gap-3">
-        <Link
-          href={`/clubes/${clube.id}/agenda`}
-          className="rounded-xl border border-linha bg-creme-quente p-3.5 hover:border-bordo lg:rounded-[4px] lg:border-fio lg:bg-transparent"
-        >
-          <span className="block text-[9.5px] font-semibold tracking-[.14em] text-bordo uppercase">
-            próximo encontro
-          </span>
-          {proximo ? (
-            <>
-              <span className="mt-1.5 block truncate font-display text-[15px] font-semibold italic lg:font-revista lg:font-normal">
-                {proximo.titulo}
-              </span>
-              <span className="mt-0.5 block text-[11px] text-cinza">
-                {new Date(proximo.quando).toLocaleDateString("pt-BR", {
-                  weekday: "short",
-                  day: "numeric",
-                  month: "short",
-                })}
-              </span>
-            </>
-          ) : (
-            <span className="mt-1.5 block font-accent text-[13px] italic text-cinza">
-              nada marcado →
+      {/* ===== o que a gente amou ===== */}
+      <Link
+        href={
+          organiza(papel)
+            ? `/clubes/${clube.id}/favoritos`
+            : `/clubes/${clube.id}/biblioteca`
+        }
+        className="block rounded-xl border border-linha bg-creme-quente p-3.5 hover:border-bordo lg:rounded-[4px] lg:border-fio lg:bg-transparent"
+      >
+        <span className="block text-[9.5px] font-semibold tracking-[.14em] text-bordo uppercase">
+          o que a gente amou
+        </span>
+        {amados.length ? (
+          <span className="mt-1.5 flex items-center gap-3">
+            <span className="flex -space-x-2">
+              {amados.slice(0, 3).map(({ l }) => (
+                <CapaAuto
+                  key={l.id}
+                  livro={l.livro}
+                  className="w-7 rounded-[3px] ring-2 ring-creme-quente [&>span:last-child]:hidden"
+                />
+              ))}
             </span>
-          )}
-        </Link>
-
-        <Link
-          href={
-            organiza(papel)
-              ? `/clubes/${clube.id}/favoritos`
-              : `/clubes/${clube.id}/biblioteca`
-          }
-          className="rounded-xl border border-linha bg-creme-quente p-3.5 hover:border-bordo lg:rounded-[4px] lg:border-fio lg:bg-transparent"
-        >
-          <span className="block text-[9.5px] font-semibold tracking-[.14em] text-bordo uppercase">
-            o que a gente amou
-          </span>
-          {amados.length ? (
-            <>
-              <span className="mt-1.5 flex -space-x-2">
-                {amados.slice(0, 3).map(({ l }) => (
-                  <CapaAuto
-                    key={l.id}
-                    livro={l.livro}
-                    className="w-7 rounded-[3px] ring-2 ring-creme-quente [&>span:last-child]:hidden"
-                  />
-                ))}
+            {fichas.length ? (
+              <span className="text-[11px] text-cinza">
+                {virgula(media(fichas.map((f) => f.nota)))}★ em {fichas.length}{" "}
+                {fichas.length === 1 ? "ficha" : "fichas"}
               </span>
-              {fichas.length ? (
-                <span className="mt-1.5 block text-[11px] text-cinza">
-                  {virgula(media(fichas.map((f) => f.nota)))}★ em{" "}
-                  {fichas.length} {fichas.length === 1 ? "ficha" : "fichas"}
-                </span>
-              ) : null}
-            </>
-          ) : (
-            <span className="mt-1.5 block font-accent text-[13px] italic text-cinza">
-              ainda nada →
-            </span>
-          )}
-        </Link>
-      </div>
+            ) : null}
+          </span>
+        ) : (
+          <span className="mt-1.5 block font-accent text-[13px] italic text-cinza">
+            ainda nada →
+          </span>
+        )}
+      </Link>
 
       <SugerirRapido
         clubeId={clube.id}
@@ -421,10 +385,10 @@ function SugerirRapido({
     );
   return (
     <section>
-      <div className={secao}>
-        <h2 className={tituloSecao}>
+      <div className="flex items-baseline justify-between">
+        <p className="text-[10px] font-semibold tracking-[.16em] text-bordo uppercase">
           {votacao ? "sugestões" : "próximas leituras"}
-        </h2>
+        </p>
         {fila.length ? (
           <Link href={`/clubes/${clubeId}/sugestoes`} className={linkSecao}>
             {votacao ? "votar →" : "ver a fila →"}
@@ -436,7 +400,7 @@ function SugerirRapido({
           e.preventDefault();
           ir();
         }}
-        className="mt-4 flex gap-2"
+        className="mt-2.5 flex h-11 items-center gap-1.5 rounded-pill border border-linha pr-1.5 pl-4 lg:rounded-[4px] lg:border-fio"
       >
         <label className="min-w-0 flex-1">
           <span className="sr-only">que livro você quer sugerir?</span>
@@ -444,19 +408,19 @@ function SugerirRapido({
             type="search"
             value={termo}
             onChange={(e) => setTermo(e.target.value)}
-            placeholder="que livro você quer sugerir?"
-            className="h-12 w-full rounded-[12px] border border-bege bg-creme-quente px-4 text-[15px] outline-none focus:border-bordo focus:ring-1 focus:ring-bordo lg:rounded-[4px]"
+            placeholder="sugerir um livro…"
+            className="w-full bg-transparent text-[13px] outline-none placeholder:text-cinza"
           />
         </label>
         <button
           type="submit"
-          className="h-12 flex-none rounded-pill bg-bordo px-5 text-[13px] font-semibold text-creme hover:bg-bordo-suave"
+          className="flex h-8 flex-none items-center rounded-pill bg-bordo px-3.5 text-[11px] font-semibold text-creme hover:bg-bordo-suave"
         >
           sugerir
         </button>
       </form>
       {fila.length ? (
-        <ul className="mt-4 flex gap-3 overflow-x-auto pb-1 [scrollbar-width:none]">
+        <ul className="mt-3 flex gap-3 overflow-x-auto pb-1 [scrollbar-width:none]">
           {fila.slice(0, 6).map((l) => (
             <li key={l.id} className="w-[64px] flex-none">
               <Link href={`/clubes/${clubeId}/livro/${l.id}`}>
@@ -474,11 +438,7 @@ function SugerirRapido({
             </li>
           ))}
         </ul>
-      ) : (
-        <p className="mt-2 font-accent text-[13px] italic text-cinza">
-          ninguém sugeriu nada ainda. que tal começar?
-        </p>
-      )}
+      ) : null}
     </section>
   );
 }
