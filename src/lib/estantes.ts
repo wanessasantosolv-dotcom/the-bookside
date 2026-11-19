@@ -35,6 +35,18 @@ export const ESTANTES_FIXAS: EstanteInfo[] = [
     status: "quero",
     etiqueta: { fundo: "#E8B4BF", texto: "#6B0D24" },
   },
+  {
+    id: "pausados",
+    nome: "pausados",
+    status: "pausado",
+    etiqueta: { fundo: "#C9A46A", texto: "#2B1420" },
+  },
+  {
+    id: "abandonados",
+    nome: "abandonados",
+    status: "abandonado",
+    etiqueta: { fundo: "#7A6A6E", texto: "#F9F5EE" },
+  },
 ];
 
 export function todasAsEstantes(proprias: EstantePropria[]): EstanteInfo[] {

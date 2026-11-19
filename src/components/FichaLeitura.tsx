@@ -1,5 +1,8 @@
 "use client";
 
+import { reacoes } from "@/lib/reacoes";
+import type { Reacao } from "@/lib/perfil-store";
+
 /**
  * A ficha de leitura do app — a MESMA em todo lugar (avaliar um livro da
  * estante e a ficha do clube): nota, os quatro critérios, personagem favorita,
@@ -41,6 +44,8 @@ export function FichaLeitura({
   onMudar,
   comSpoiler,
   children,
+  reacao,
+  onReacao,
 }: {
   livro: {
     id: string;
@@ -57,6 +62,9 @@ export function FichaLeitura({
   comSpoiler?: boolean;
   /** opções extras no fim da ficha (ex.: marcar como lido na estante) */
   children?: ReactNode;
+  /** o veredito (só na ficha pessoal) */
+  reacao?: Reacao;
+  onReacao?: (r: Reacao | undefined) => void;
 }) {
   const mudar = (parte: Partial<ValoresFicha>) =>
     onMudar({ ...valores, ...parte });
@@ -105,6 +113,36 @@ export function FichaLeitura({
           </li>
         ))}
       </ul>
+
+      {onReacao ? (
+        <fieldset className="mt-5">
+          <legend className={rotuloCampo}>seu veredito</legend>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {reacoes.map((r) => {
+              const on = reacao === r.id;
+              return (
+                <button
+                  key={r.id}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => onReacao(on ? undefined : r.id)}
+                  className={`flex h-10 items-center gap-2 rounded-pill border px-3.5 text-[13px] font-semibold transition-transform active:scale-95 ${
+                    on ? "text-creme" : "border-bege bg-creme text-ameixa"
+                  }`}
+                  style={
+                    on ? { background: r.cor, borderColor: r.cor } : undefined
+                  }
+                >
+                  <span aria-hidden style={on ? undefined : { color: r.cor }}>
+                    {r.emoji}
+                  </span>
+                  {r.nome}
+                </button>
+              );
+            })}
+          </div>
+        </fieldset>
+      ) : null}
 
       <div className="mt-5 space-y-5">
         <label className="block">

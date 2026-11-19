@@ -158,12 +158,19 @@ function EstantesWeb({
   const lidos = livros.filter((l) => l.status === "lido");
   const paginas = lidos.reduce((t, l) => t + (l.paginas ?? 0), 0);
   const linhas = [
-    ...estantes.map((e) => ({
-      id: e.id,
-      nome: e.nome,
-      livros: livrosDaEstante(e, livros),
-      link: `/estantes/${e.id}`,
-    })),
+    ...estantes
+      // pausados e abandonados só aparecem quando têm livro
+      .filter(
+        (e) =>
+          !["pausados", "abandonados"].includes(e.id) ||
+          livrosDaEstante(e, livros).length,
+      )
+      .map((e) => ({
+        id: e.id,
+        nome: e.nome,
+        livros: livrosDaEstante(e, livros),
+        link: `/estantes/${e.id}`,
+      })),
     {
       id: "favoritos",
       nome: "favoritos",
@@ -347,7 +354,10 @@ export default function EstantesPage() {
     .map((id) => livros.find((l) => l.id === id))
     .filter((l) => l !== undefined);
   const comLivros = estantes.filter(
-    (e) => e.propria || livrosDaEstante(e, livros).length || e.id !== "lendo",
+    (e) =>
+      e.propria ||
+      livrosDaEstante(e, livros).length ||
+      !["lendo", "pausados", "abandonados"].includes(e.id),
   );
   const visiveis =
     filtro === "todos" ? comLivros : comLivros.filter((e) => e.id === filtro);

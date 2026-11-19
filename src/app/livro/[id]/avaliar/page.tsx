@@ -20,7 +20,7 @@ import { useHidratado } from "@/components/PerfilHidratacao";
 import { livroLembrado } from "@/lib/catalogo";
 import { infoDoLivro, notasCompletas } from "@/lib/estantes";
 import { dataDoDia, diaDaData, diaLocal } from "@/lib/datas";
-import { usePerfil, type LivroSalvo } from "@/lib/perfil-store";
+import { usePerfil, type LivroSalvo, type Reacao } from "@/lib/perfil-store";
 
 /** Avaliar um livro da estante: a mesma ficha de leitura dos clubes. */
 function Formulario({ livro }: { livro: LivroSalvo & { paginas?: number } }) {
@@ -32,7 +32,7 @@ function Formulario({ livro }: { livro: LivroSalvo & { paginas?: number } }) {
   );
   const [ficha, setFicha] = useState<ValoresFicha>(
     fichaEmBranco({
-      nota: livro.nota ? Math.round(livro.nota) : 0,
+      nota: livro.nota ?? 0,
       notas,
       personagem: livro.personagem ?? "",
       citacao: livro.citacao ?? "",
@@ -40,13 +40,16 @@ function Formulario({ livro }: { livro: LivroSalvo & { paginas?: number } }) {
     }),
   );
   const [erro, setErro] = useState<string | null>(null);
+  const [reacao, setReacao] = useState<Reacao | undefined>(livro.reacao);
   const [dia, setDia] = useState(diaDaData(livro.lidoEm) ?? diaLocal());
   const lidoEm = dataDoDia(dia);
 
   function salvar(e: FormEvent) {
     e.preventDefault();
     const nota = notaDaFicha(ficha);
-    if (!nota) return setErro("dê pelo menos a sua nota.");
+    const abandonou = reacao === "abandonei";
+    if (!nota && !reacao)
+      return setErro("dê a sua nota ou escolha um veredito.");
     editarLivro(
       {
         id: livro.id,
@@ -55,15 +58,17 @@ function Formulario({ livro }: { livro: LivroSalvo & { paginas?: number } }) {
         capa: livro.capa,
       },
       {
-        status: "lido",
-        lidoEm,
-        nota,
+        status: abandonou ? "abandonado" : "lido",
+        ...(abandonou ? { paradoEm: lidoEm } : { lidoEm }),
+        nota: nota || undefined,
+        reacao,
+        ...(reacao === "favoritado" ? { amei: true } : {}),
         notas: notasCompletas(ficha.notas),
         personagem: ficha.personagem.trim() || undefined,
         citacao: ficha.citacao.trim() || undefined,
         resenha: ficha.texto.trim() || undefined,
         paginas: livro.paginas,
-        paginaAtual: livro.paginas,
+        ...(abandonou ? {} : { paginaAtual: livro.paginas }),
       },
     );
     router.push(`/livro/${livro.id}`);
@@ -79,9 +84,17 @@ function Formulario({ livro }: { livro: LivroSalvo & { paginas?: number } }) {
           frase={livro.nota ? "editando sua ficha ✎" : "como foi a leitura? ✓"}
         />
         <div className="mx-6 mt-5 flex-1 lg:mx-0">
-          <FichaLeitura livro={livro} valores={ficha} onMudar={setFicha}>
+          <FichaLeitura
+            livro={livro}
+            valores={ficha}
+            onMudar={setFicha}
+            reacao={reacao}
+            onReacao={setReacao}
+          >
             <label className="block">
-              <span className={rotuloCampo}>terminei em</span>
+              <span className={rotuloCampo}>
+                {reacao === "abandonei" ? "parei em" : "terminei em"}
+              </span>
               <input
                 type="date"
                 value={dia}

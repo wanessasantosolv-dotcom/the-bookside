@@ -12,7 +12,9 @@ import { createJSONStorage, persist } from "zustand/middleware";
 export type PadraoCapa = "linhas" | "bolinhas" | "ondas" | "estrelas";
 export type EscolhaEstante = "lendo" | "quero" | "vazia";
 
-export type StatusLivro = "lendo" | "quero" | "lido";
+export type StatusLivro = "lendo" | "quero" | "lido" | "pausado" | "abandonado";
+/** a reação da ficha: o "veredito" do livro */
+export type Reacao = "favoritado" | "adorei" | "gostei" | "neutro" | "nao" | "abandonei";
 export type FormatoLivro = "fisico" | "ebook" | "audio";
 export type NotasDetalhe = {
   personagens: number;
@@ -45,6 +47,9 @@ export type LivroSalvo = {
   nota?: number;
   /** sessões do modo foco: quando começou, quantos minutos e quantas páginas */
   sessoes?: { em: string; minutos: number; paginas?: number }[];
+  reacao?: Reacao;
+  /** quando pausou/abandonou (ISO) */
+  paradoEm?: string;
   /** o coraçãozinho de "amei" (diferente dos 4 favoritos do perfil) */
   amei?: boolean;
   notas?: NotasDetalhe;

@@ -7,12 +7,13 @@ import { useHidratado } from "@/components/PerfilHidratacao";
 import { corDoLivro } from "@/lib/cores";
 import { estrelas } from "@/lib/estantes";
 import { criterios } from "@/lib/clubes";
+import { reacaoDe } from "@/lib/reacoes";
 import { usePerfil, type LivroSalvo } from "@/lib/perfil-store";
 
 type Filtro = "todas" | "resenha" | "trecho";
 
 const temFicha = (l: LivroSalvo) =>
-  !!(l.nota || l.resenha || l.citacao || l.personagem || l.amei);
+  !!(l.nota || l.resenha || l.citacao || l.personagem || l.amei || l.reacao);
 
 /** As fichas de leitura da pessoa, juntas: nota, critérios, resenha, trecho e personagem (aba "resenhas" do perfil). */
 export function ResenhasLista() {

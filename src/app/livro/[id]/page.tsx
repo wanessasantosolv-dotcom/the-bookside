@@ -325,6 +325,64 @@ export default function LivroPage() {
               </div>
             </fieldset>
 
+            {/* pausar / abandonar (e voltar a ler) */}
+            {status ? (
+              <div className="mx-6 mt-3 flex flex-wrap items-center gap-2 lg:mx-0">
+                {status === "pausado" || status === "abandonado" ? (
+                  <>
+                    <span className="rounded-pill bg-linha/70 px-3 py-1.5 text-xs font-semibold text-ameixa">
+                      {status === "pausado" ? "⏸ pausado" : "🍂 abandonado"}
+                      {livro.paradoEm
+                        ? ` desde ${new Date(livro.paradoEm).toLocaleDateString("pt-BR", { day: "numeric", month: "short" })}`
+                        : ""}
+                      {livro.paginaAtual ? ` · pág. ${livro.paginaAtual}` : ""}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => marcar("lendo")}
+                      className="min-h-9 text-xs font-semibold text-bordo underline underline-offset-4"
+                    >
+                      voltar a ler
+                    </button>
+                  </>
+                ) : status === "lendo" ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        editarLivro(base, {
+                          status: "pausado",
+                          paradoEm: new Date().toISOString(),
+                        })
+                      }
+                      className="flex min-h-9 items-center gap-1.5 rounded-pill border border-bege px-3.5 text-xs font-semibold text-ameixa hover:border-bordo"
+                    >
+                      ⏸ pausar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (
+                          !confirm(
+                            "marcar como abandonado? ele sai do lendo agora e vai para os abandonados.",
+                          )
+                        )
+                          return;
+                        editarLivro(base, {
+                          status: "abandonado",
+                          reacao: "abandonei",
+                          paradoEm: new Date().toISOString(),
+                        });
+                      }}
+                      className="flex min-h-9 items-center gap-1.5 rounded-pill border border-bege px-3.5 text-xs font-semibold text-ameixa hover:border-bordo"
+                    >
+                      🍂 abandonei
+                    </button>
+                  </>
+                ) : null}
+              </div>
+            ) : null}
+
             {status ? (
               <SeletorFormato
                 valor={livro.formato}
