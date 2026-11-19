@@ -1,5 +1,7 @@
 "use client";
 
+import { celebrar } from "@/lib/celebrar";
+
 import { Voltar } from "@/components/Voltar";
 import { TelaApp } from "@/components/AppShell";
 import { useMemo, useState } from "react";
@@ -60,6 +62,8 @@ function Escolha({ inicial }: { inicial: string[] }) {
 
   function alternar(id: string) {
     setSalvo(false);
+    if (!escolhidos.includes(id) && escolhidos.length < MAXIMO)
+      celebrar({ tipo: "favorito", titulo: "favorito" });
     setEscolhidos((e) =>
       e.includes(id)
         ? e.filter((x) => x !== id)

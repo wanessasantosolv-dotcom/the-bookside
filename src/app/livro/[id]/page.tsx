@@ -3,6 +3,7 @@
 import { Voltar } from "@/components/Voltar";
 import Link from "next/link";
 import { SeletorFormato } from "@/components/SeletorFormato";
+import { celebrar, celebrarTermino } from "@/lib/celebrar";
 import { TrechosMarcados } from "@/components/TrechosMarcados";
 import { notFound, useParams, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
@@ -141,6 +142,9 @@ export default function LivroPage() {
       ...(s === "lendo" ? { iniciadoEm: livro!.iniciadoEm ?? agora } : {}),
       ...(s === "lido" ? { lidoEm, paginaAtual: livro!.paginas } : {}),
     });
+    // terminou agora (não era lido antes): comemora
+    if (s === "lido" && livro!.status !== "lido")
+      celebrarTermino(livro!, usePerfil.getState());
   }
 
   function alternarEstante(eid: string) {
@@ -290,13 +294,16 @@ export default function LivroPage() {
                   aria-pressed={!!livro.amei}
                   aria-label={livro.amei ? "tirar o amei" : "marcar que amei"}
                   title={livro.amei ? "você amou este livro" : "amei"}
-                  onClick={() =>
+                  onClick={() => {
                     editarLivro(base, {
                       status: livro.status ?? "lido",
                       amei: !livro.amei,
-                    })
-                  }
-                  className={`flex h-11 w-11 flex-none items-center justify-center rounded-full border-[1.5px] transition-transform active:scale-90 ${
+                    });
+                    if (!livro.amei)
+                      celebrar({ tipo: "amei", titulo: livro.titulo });
+                  }}
+                  key={livro.amei ? "amei" : "nao"}
+                  className={`flex h-11 w-11 flex-none items-center justify-center rounded-full border-[1.5px] transition-transform active:scale-90 ${livro.amei ? "pulo-coracao" : ""} ${
                     livro.amei
                       ? "border-bordo bg-bordo text-creme"
                       : "border-bordo text-bordo"

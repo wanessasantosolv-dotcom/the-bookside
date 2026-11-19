@@ -1,5 +1,7 @@
 "use client";
 
+import { celebrarTermino } from "@/lib/celebrar";
+
 import { Voltar } from "@/components/Voltar";
 import { TelaApp } from "@/components/AppShell";
 import { notFound, useParams, useRouter } from "next/navigation";
@@ -49,6 +51,7 @@ function Progresso({ livro }: { livro: LivroSalvo }) {
       paginaAtual: terminou ? paginas || atual : atual,
       ...(terminou ? { lidoEm } : {}),
     });
+    if (terminou) celebrarTermino(livro, usePerfil.getState());
     router.push(terminou ? `/livro/${livro.id}/avaliar` : `/livro/${livro.id}`);
   }
 

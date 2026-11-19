@@ -1,4 +1,5 @@
 import { Aparencia } from "@/components/Aparencia";
+import { Celebracao } from "@/components/Celebracao";
 import { scriptAparencia } from "@/lib/aparencia";
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
@@ -149,6 +150,7 @@ export default function RootLayout({
       <body>
         <PerfilHidratacao />
         <Aparencia />
+        <Celebracao />
         <AvisoOffline />
         <RastroNavegacao />
         {children}

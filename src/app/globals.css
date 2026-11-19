@@ -334,3 +334,33 @@ body {
   .ld-carimbo, .ld-media, .ld-durex { animation: none; opacity: 1; clip-path: none; }
   .ld-texto { animation: none; width: auto; }
 }
+
+/* ───── celebrações (terminar livro, meta, desafio, amei) ───── */
+@keyframes celebra-cai {
+  0% { transform: translate(0, 0) rotate(0deg); opacity: 0; }
+  10% { opacity: 1; }
+  100% { transform: translate(var(--deriva), 110vh) rotate(var(--giro)); opacity: 0.9; }
+}
+.celebra-cai { animation: celebra-cai 2.4s cubic-bezier(.25,.6,.4,1) both; }
+@keyframes celebra-estouro {
+  0% { transform: translate(-50%, -50%) scale(.3); opacity: 1; }
+  100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1); opacity: 0; }
+}
+.celebra-estouro { animation: celebra-estouro .9s cubic-bezier(.2,.8,.3,1) both; }
+@keyframes celebra-cartao {
+  0% { transform: translateY(30px) scale(.9); opacity: 0; }
+  60% { transform: translateY(-4px) scale(1.02); opacity: 1; }
+  100% { transform: none; opacity: 1; }
+}
+.celebra-cartao { animation: celebra-cartao .6s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes pulo-coracao {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.35); }
+  70% { transform: scale(.92); }
+  100% { transform: scale(1); }
+}
+.pulo-coracao { animation: pulo-coracao .45s ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .celebra-cai, .celebra-estouro { display: none; }
+  .celebra-cartao, .pulo-coracao { animation: none; }
+}
