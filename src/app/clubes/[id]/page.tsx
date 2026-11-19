@@ -24,6 +24,7 @@ import {
   virgula,
   organiza,
 } from "@/lib/clubes";
+import { estrelas } from "@/lib/estantes";
 import { nomeDe, useConsulta, useMeuId } from "@/lib/social";
 
 const secao =
@@ -92,182 +93,201 @@ export default function ClubeInicioPage() {
         .slice(0, 4);
 
   return (
-    <div className="space-y-7 px-6 pt-6 lg:mx-auto lg:max-w-[760px] lg:space-y-7 lg:px-0">
-      {/* ===== lendo agora + a turma, num card só ===== */}
-      <div className="inverso relative overflow-hidden rounded-xl bg-gradient-to-br from-bordo to-bordo-escuro px-5 py-5 text-creme lg:rounded-[4px] lg:px-7 lg:py-6">
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-[10px] font-semibold tracking-[.16em] text-rosa-claro uppercase">
-            lendo agora{lendo?.rodada ? ` · nº ${lendo.rodada}` : ""}
-          </span>
-          {and ? (
-            <span className="flex-none rounded-pill bg-creme/15 px-2.5 py-1 text-[10px] font-semibold text-rosa-claro">
-              {and.faltam
-                ? `faltam ${and.faltam} ${and.faltam === 1 ? "dia" : "dias"}`
-                : "último dia!"}
+    <div className="space-y-8 px-6 pt-6 lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:grid-rows-[auto_auto_1fr] lg:items-start lg:gap-x-12 lg:gap-y-8 lg:space-y-0 lg:px-0 xl:grid-cols-[minmax(0,1fr)_360px]">
+      <div className="lg:col-start-1 lg:row-start-1">
+        {/* ===== lendo agora + a turma, num card só ===== */}
+        <div className="relative overflow-hidden rounded-xl border border-rosa-claro/70 bg-rosa-fundo px-5 py-5 lg:rounded-[6px] lg:px-7 lg:py-6">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-[10px] font-semibold tracking-[.16em] text-bordo uppercase">
+              lendo agora{lendo?.rodada ? ` · nº ${lendo.rodada}` : ""}
             </span>
-          ) : null}
-        </div>
-
-        {lendo ? (
-          <>
-            <Link
-              href={`/clubes/${clube.id}/leitura`}
-              className="mt-4 flex gap-4"
-            >
-              <CapaAuto
-                livro={lendo.livro}
-                className="w-[72px] -rotate-1 [&>span:last-child]:text-xs"
-              />
-              <span className="min-w-0 pt-1">
-                <span className="block font-display text-xl leading-tight font-semibold italic lg:font-revista lg:font-normal">
-                  {lendo.livro.titulo}
-                </span>
-                <span className="mt-1.5 block text-[10px] font-semibold tracking-[.16em] text-rosa-claro/80 uppercase">
-                  {lendo.livro.autor}
-                </span>
-                {quemSugeriu ? (
-                  <span className="mt-2.5 block font-accent text-sm italic text-rosa-claro/90">
-                    {quemSugeriu.id === eu
-                      ? "sugestão sua"
-                      : `escolha da ${nomeDe(quemSugeriu)}`}
-                  </span>
-                ) : null}
+            {and ? (
+              <span className="flex-none rounded-pill bg-creme px-2.5 py-1 text-[10px] font-semibold text-bordo">
+                {and.faltam
+                  ? `faltam ${and.faltam} ${and.faltam === 1 ? "dia" : "dias"}`
+                  : "último dia!"}
               </span>
-            </Link>
-            <div className="mt-4 border-t border-creme/15 pt-4">
-              <Turma
-                membros={membros}
-                turma={consulta.dados!.turma}
-                eu={eu}
-                escura
-              />
-            </div>
-          </>
-        ) : (
-          <div className="mt-4 rounded-xl border border-dashed border-creme/30 p-4">
-            <p className="font-display text-lg font-semibold italic lg:font-revista lg:font-normal">
-              nenhuma leitura rolando
-            </p>
-            <p className="mt-1 text-[13px] text-rosa-claro/80">
-              {sugestoes.length
-                ? `${sugestoes.length} ${sugestoes.length === 1 ? "sugestão esperando" : "sugestões esperando"} ${modoDe(clube) === "votacao" ? "a votação" : "a vez"}.`
-                : organiza(papel)
-                  ? "escolha qualquer livro para começar a primeira rodada."
-                  : "sugira um livro para começar a primeira rodada."}
-            </p>
-            <Link
-              href={`/clubes/${clube.id}/${organiza(papel) ? "escolher" : sugestoes.length ? "sugestoes" : "sugerir"}`}
-              className="mt-3 inline-flex min-h-11 items-center rounded-pill bg-creme px-5 text-[13px] font-semibold text-bordo"
-            >
-              {organiza(papel)
-                ? "escolher o livro da vez"
-                : sugestoes.length
-                  ? modoDe(clube) === "votacao"
-                    ? "ver e votar"
-                    : "ver a fila"
-                  : "sugerir um livro"}
-            </Link>
+            ) : null}
           </div>
-        )}
-      </div>
 
-      {/* ===== quem tá no clube — rolagem horizontal, bem mais em cima ===== */}
-      <section>
-        <div className={secao}>
-          <h2 className={tituloSecao}>quem tá no clube</h2>
-          <span className="text-[10px] font-semibold tracking-[.12em] text-rosa-antigo uppercase">
-            {membros.length} {membros.length === 1 ? "pessoa" : "pessoas"}
-          </span>
-        </div>
-        <ul className="mt-4 flex gap-4 overflow-x-auto pb-1">
-          {membros.map((m) => (
-            <li key={m.usuario_id} className="flex-none">
+          {lendo ? (
+            <>
               <Link
-                href={
-                  m.pessoa.usuario
-                    ? `/clubes/${clube.id}/membro/${m.pessoa.usuario}`
-                    : "#"
-                }
+                href={`/clubes/${clube.id}/leitura`}
+                className="mt-4 flex gap-4"
+              >
+                <CapaAuto
+                  livro={lendo.livro}
+                  className="w-[72px] -rotate-1 lg:w-[96px] [&>span:last-child]:text-xs"
+                />
+                <span className="min-w-0 pt-1">
+                  <span className="block font-display text-xl leading-tight font-semibold italic text-ameixa lg:font-revista lg:text-2xl lg:font-normal">
+                    {lendo.livro.titulo}
+                  </span>
+                  <span className="mt-1.5 block text-[10px] font-semibold tracking-[.16em] text-cinza uppercase">
+                    {lendo.livro.autor}
+                  </span>
+                  {quemSugeriu ? (
+                    <span className="mt-2.5 block font-accent text-sm italic text-bordo">
+                      {quemSugeriu.id === eu
+                        ? "sugestão sua"
+                        : `escolha da ${nomeDe(quemSugeriu)}`}
+                    </span>
+                  ) : null}
+                </span>
+              </Link>
+              <div className="mt-4 border-t border-bordo/15 pt-4">
+                <Turma
+                  membros={membros}
+                  turma={consulta.dados!.turma}
+                  eu={eu}
+                />
+              </div>
+            </>
+          ) : (
+            <div className="mt-4 rounded-xl border border-dashed border-bordo/30 p-4">
+              <p className="font-display text-lg font-semibold italic text-ameixa lg:font-revista lg:font-normal">
+                nenhuma leitura rolando
+              </p>
+              <p className="mt-1 text-[13px] text-cinza">
+                {sugestoes.length
+                  ? `${sugestoes.length} ${sugestoes.length === 1 ? "sugestão esperando" : "sugestões esperando"} ${modoDe(clube) === "votacao" ? "a votação" : "a vez"}.`
+                  : organiza(papel)
+                    ? "escolha qualquer livro para começar a primeira rodada."
+                    : "sugira um livro para começar a primeira rodada."}
+              </p>
+              <Link
+                href={`/clubes/${clube.id}/${organiza(papel) ? "escolher" : sugestoes.length ? "sugestoes" : "sugerir"}`}
+                className="mt-3 inline-flex min-h-11 items-center rounded-pill bg-bordo px-5 text-[13px] font-semibold text-creme"
+              >
+                {organiza(papel)
+                  ? "escolher o livro da vez"
+                  : sugestoes.length
+                    ? modoDe(clube) === "votacao"
+                      ? "ver e votar"
+                      : "ver a fila"
+                    : "sugerir um livro"}
+              </Link>
+            </div>
+          )}
+        </div>
+      </div>
+      {/* no celular logo depois do "lendo agora"; no computador, a coluna da direita */}
+      <div className="space-y-8 lg:col-start-2 lg:row-span-3 lg:row-start-1">
+        {/* ===== quem tá no clube — rolagem horizontal, bem mais em cima ===== */}
+        <section>
+          <div className={secao}>
+            <h2 className={tituloSecao}>quem tá no clube</h2>
+            <span className="text-[10px] font-semibold tracking-[.12em] text-rosa-antigo uppercase">
+              {membros.length} {membros.length === 1 ? "pessoa" : "pessoas"}
+            </span>
+          </div>
+          <ul className="mt-4 flex gap-4 overflow-x-auto pb-1 lg:flex-wrap lg:overflow-visible">
+            {membros.map((m) => (
+              <li key={m.usuario_id} className="flex-none">
+                <Link
+                  href={
+                    m.pessoa.usuario
+                      ? `/clubes/${clube.id}/membro/${m.pessoa.usuario}`
+                      : "#"
+                  }
+                  className="flex w-14 flex-col items-center gap-1.5 text-center"
+                >
+                  <Avatar pessoa={m.pessoa} tamanho={48} />
+                  <span className="w-full truncate font-accent text-xs italic">
+                    {m.usuario_id === eu
+                      ? "você"
+                      : m.pessoa.nome || m.pessoa.usuario}
+                  </span>
+                </Link>
+              </li>
+            ))}
+            <li className="flex-none">
+              <Link
+                href={`/clubes/${clube.id}/convidar`}
                 className="flex w-14 flex-col items-center gap-1.5 text-center"
               >
-                <Avatar pessoa={m.pessoa} tamanho={48} />
-                <span className="w-full truncate font-accent text-xs italic">
-                  {m.usuario_id === eu
-                    ? "você"
-                    : m.pessoa.nome || m.pessoa.usuario}
+                <span className="flex size-12 items-center justify-center rounded-full border border-dashed border-rosa-antigo text-xl text-rosa-antigo">
+                  +
+                </span>
+                <span className="font-accent text-xs italic text-cinza">
+                  convidar
                 </span>
               </Link>
             </li>
-          ))}
-          <li className="flex-none">
+          </ul>
+        </section>
+
+        <SugerirRapido
+          clubeId={clube.id}
+          votacao={modoDe(clube) === "votacao"}
+          fila={sugestoes}
+          membros={membros}
+          eu={eu}
+        />
+      </div>
+      <div className="lg:col-start-1 lg:row-start-2">
+        {/* ===== o que a gente amou: capas como os favoritos do perfil ===== */}
+        <section>
+          <div className={secao}>
+            <h2 className={tituloSecao}>o que a gente amou</h2>
             <Link
-              href={`/clubes/${clube.id}/convidar`}
-              className="flex w-14 flex-col items-center gap-1.5 text-center"
+              href={
+                organiza(papel)
+                  ? `/clubes/${clube.id}/favoritos`
+                  : `/clubes/${clube.id}/biblioteca`
+              }
+              className={linkSecao}
             >
-              <span className="flex size-12 items-center justify-center rounded-full border border-dashed border-rosa-antigo text-xl text-rosa-antigo">
-                +
-              </span>
-              <span className="font-accent text-xs italic text-cinza">
-                convidar
-              </span>
+              {organiza(papel) ? "escolher →" : "ver a estante →"}
             </Link>
-          </li>
-        </ul>
-      </section>
-
-      {/* ===== o que a gente amou ===== */}
-      <Link
-        href={
-          organiza(papel)
-            ? `/clubes/${clube.id}/favoritos`
-            : `/clubes/${clube.id}/biblioteca`
-        }
-        className="block rounded-xl border border-linha bg-creme-quente p-3.5 hover:border-bordo lg:rounded-[4px] lg:border-fio lg:bg-transparent"
-      >
-        <span className="block text-[9.5px] font-semibold tracking-[.14em] text-bordo uppercase">
-          o que a gente amou
-        </span>
-        {amados.length ? (
-          <span className="mt-1.5 flex items-center gap-3">
-            <span className="flex -space-x-2">
-              {amados.slice(0, 3).map(({ l }) => (
-                <CapaAuto
-                  key={l.id}
-                  livro={l.livro}
-                  className="w-7 rounded-[3px] ring-2 ring-creme-quente [&>span:last-child]:hidden"
-                />
+          </div>
+          {amados.length ? (
+            <ul className="mt-4 grid grid-cols-4 gap-3 lg:gap-4">
+              {amados.slice(0, 4).map(({ l, m }) => (
+                <li key={l.id}>
+                  <Link
+                    href={`/clubes/${clube.id}/livro/${l.id}`}
+                    className="group block"
+                  >
+                    <CapaAuto
+                      livro={l.livro}
+                      className="w-full transition-transform group-hover:-translate-y-1 [&>span:last-child]:text-[10px]"
+                    />
+                    <span className="mt-1.5 block text-center text-[11px] text-bordo">
+                      {m ? estrelas(Math.round(m * 2) / 2) : "♡"}
+                    </span>
+                  </Link>
+                </li>
               ))}
-            </span>
-            {fichas.length ? (
-              <span className="text-[11px] text-cinza">
-                {virgula(media(fichas.map((f) => f.nota)))}★ em {fichas.length}{" "}
-                {fichas.length === 1 ? "ficha" : "fichas"}
-              </span>
-            ) : null}
-          </span>
-        ) : (
-          <span className="mt-1.5 block font-accent text-[13px] italic text-cinza">
-            ainda nada →
-          </span>
-        )}
-      </Link>
-
-      <SugerirRapido
-        clubeId={clube.id}
-        votacao={modoDe(clube) === "votacao"}
-        fila={sugestoes}
-        membros={membros}
-        eu={eu}
-      />
-
-      <section id="novidades" className="scroll-mt-24">
-        <div className={secao}>
-          <h2 className={tituloSecao}>o que está rolando</h2>
-        </div>
-        <div className="mt-4">
-          <FeedDoClube />
-        </div>
-      </section>
+            </ul>
+          ) : (
+            <p className="mt-3 font-accent text-sm italic text-cinza">
+              quando o clube terminar um livro e escrever as fichas, os
+              preferidos aparecem aqui.
+            </p>
+          )}
+          {fichas.length ? (
+            <p className="mt-3 text-[12px] text-cinza">
+              média do clube:{" "}
+              <b className="text-bordo">
+                {virgula(media(fichas.map((f) => f.nota)))}★
+              </b>{" "}
+              em {fichas.length} {fichas.length === 1 ? "ficha" : "fichas"}
+            </p>
+          ) : null}
+        </section>
+      </div>
+      <div className="lg:col-start-1 lg:row-start-3">
+        <section id="novidades" className="scroll-mt-24">
+          <div className={secao}>
+            <h2 className={tituloSecao}>o que está rolando</h2>
+          </div>
+          <div className="mt-4">
+            <FeedDoClube />
+          </div>
+        </section>
+      </div>
     </div>
   );
 }
@@ -331,13 +351,13 @@ function Turma({
               className="flex w-[64px] flex-col items-center gap-1.5 text-center"
             >
               <span
-                className={`relative rounded-full ring-2 ring-offset-2 ${escura ? "ring-offset-bordo-escuro" : "ring-offset-creme"} ${cor}`}
+                className={`relative rounded-full ring-2 ring-offset-2 ${escura ? "ring-offset-bordo-escuro" : "ring-offset-rosa-fundo"} ${cor}`}
               >
                 <Avatar pessoa={m.pessoa} tamanho={44} />
                 {a?.estado === "terminou" ? (
                   <span
                     aria-hidden
-                    className={`absolute -right-1 -bottom-1 flex size-5 items-center justify-center rounded-full border-2 text-[10px] font-bold ${escura ? "border-bordo-escuro bg-creme text-bordo" : "border-creme bg-bordo text-creme"}`}
+                    className={`absolute -right-1 -bottom-1 flex size-5 items-center justify-center rounded-full border-2 text-[10px] font-bold ${escura ? "border-bordo-escuro bg-creme text-bordo" : "border-rosa-fundo bg-bordo text-creme"}`}
                   >
                     ✓
                   </span>
