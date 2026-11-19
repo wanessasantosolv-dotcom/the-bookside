@@ -139,7 +139,7 @@ export default function PerfilPage() {
               className="flex min-h-7 items-center rounded-pill border border-[var(--acc)] px-4 py-1 text-[10px] font-semibold tracking-[.1em] text-[var(--acc)] uppercase"
             >
               {arquetipo
-                ? `♡ ${arquetipo.nome.replace(/^a /, "")} · ${tema.nome}`
+                ? arquetipo.nome.replace(/^a /, "")
                 : "✧ descubra seu tipo de leitora →"}
             </button>
           </div>

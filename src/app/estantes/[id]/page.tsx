@@ -42,6 +42,7 @@ export default function EstanteAbertaPage() {
   const proprias = usePerfil((s) => s.estantesProprias);
   const [vista, setVista] = useState<"lista" | "grade">("lista");
   const [filtro, setFiltro] = useState<Filtro>("todos");
+  const [busca, setBusca] = useState("");
 
   if (!hidratado) return <AppShell aba="estantes">{null}</AppShell>;
   const estante = todasAsEstantes(proprias ?? []).find((e) => e.id === id);
@@ -49,7 +50,21 @@ export default function EstanteAbertaPage() {
 
   const ano = new Date().getFullYear();
   const todos = livrosDaEstante(estante, livros);
+  const termo = busca
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
   const lista = todos.filter((l) => {
+    if (
+      termo &&
+      !`${l.titulo} ${l.autor}`
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .includes(termo)
+    )
+      return false;
     if (filtro === "ano")
       return (l.lidoEm ?? l.iniciadoEm ?? l.adicionadoEm ?? "").startsWith(
         String(ano),
@@ -108,6 +123,33 @@ export default function EstanteAbertaPage() {
             {subtitulo}
           </p>
         </div>
+
+        {todos.length > 4 ? (
+          <label className="mx-6 mt-4 flex h-11 items-center gap-2 rounded-pill border border-bege bg-creme-quente px-4 focus-within:border-bordo lg:mx-0 lg:max-w-[420px]">
+            <svg
+              aria-hidden
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.9"
+              strokeLinecap="round"
+              className="flex-none text-cinza"
+            >
+              <circle cx="11" cy="11" r="7" />
+              <path d="m20 20-3.5-3.5" />
+            </svg>
+            <span className="sr-only">buscar nesta estante</span>
+            <input
+              type="search"
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              placeholder="buscar nesta estante"
+              className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-cinza"
+            />
+          </label>
+        ) : null}
 
         <div className="mt-5 flex items-center justify-between gap-2 px-6 lg:border-b lg:border-fio lg:px-0 lg:pb-6">
           <div className="flex gap-1.5 overflow-x-auto [scrollbar-width:none]">

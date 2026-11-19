@@ -203,7 +203,7 @@ function PerfilDela({ usuario }: { usuario: string }) {
           </div>
           {arquetipo ? (
             <p className="mt-3 text-center text-[10px] font-semibold tracking-[.1em] text-[var(--acc)] uppercase">
-              ♡ {arquetipo.nome.replace(/^a /, "")} · {tema.nome}
+              {arquetipo.nome.replace(/^a /, "")}
             </p>
           ) : null}
 

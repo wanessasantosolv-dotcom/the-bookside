@@ -215,7 +215,7 @@ export function PerfilWeb({
             className="min-h-8 rounded-pill border border-[var(--acc-web)] px-4 text-[10px] font-bold tracking-[.12em] text-[var(--acc-web)] uppercase hover:bg-[var(--acc-web)]/5"
           >
             {arquetipo
-              ? `♡ ${arquetipo.nome.replace(/^a /, "")} · ${tema.nome}`
+              ? arquetipo.nome.replace(/^a /, "")
               : outra
                 ? `✧ ${tema.nome}`
                 : "✧ descubra seu tipo de leitora →"}

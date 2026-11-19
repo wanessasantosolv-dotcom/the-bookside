@@ -196,8 +196,8 @@ function hashLombada(id: string, semente: number) {
 
 function larguraLombada(l: ItemVitrine) {
   if (l.paginas)
-    return Math.max(20, Math.min(36, Math.round(20 + (l.paginas / 500) * 16)));
-  return 22 + (hashLombada(l.id, 7) % 14);
+    return Math.max(26, Math.min(42, Math.round(26 + (l.paginas / 500) * 16)));
+  return 28 + (hashLombada(l.id, 7) % 12);
 }
 
 function alturaLombada(l: ItemVitrine, base: number) {
@@ -225,14 +225,31 @@ function LombadaLivro({
       style={{ width: largura, height: altura, background: cor }}
     >
       {comImagem ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={l.capa}
-          alt=""
-          loading="lazy"
-          onError={() => setFalhou(true)}
-          className="absolute top-0 left-0 h-full w-auto max-w-none"
-        />
+        <>
+          {/* a arte da capa vira a lombada, com o título em pé por cima */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={l.capa}
+            alt=""
+            loading="lazy"
+            onError={() => setFalhou(true)}
+            className="absolute inset-0 h-full w-full scale-[1.6] object-cover"
+          />
+          <span
+            aria-hidden
+            className="absolute inset-0 bg-gradient-to-r from-black/35 via-black/10 to-black/35"
+          />
+          <span
+            className="absolute inset-x-0 top-2.5 bottom-2.5 flex justify-center overflow-hidden"
+          >
+            <span
+              className="font-texto text-[10px] font-bold whitespace-nowrap text-white [text-shadow:0_1px_3px_rgba(0,0,0,.7)]"
+              style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
+            >
+              {l.titulo}
+            </span>
+          </span>
+        </>
       ) : (
         <span
           className="absolute inset-x-0 bottom-2.5 flex justify-center overflow-hidden"
