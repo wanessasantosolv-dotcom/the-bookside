@@ -43,6 +43,8 @@ export type LivroSalvo = {
   lidoEm?: string;
   /** 0,5 a 5 */
   nota?: number;
+  /** o coraçãozinho de "amei" (diferente dos 4 favoritos do perfil) */
+  amei?: boolean;
   notas?: NotasDetalhe;
   resenha?: string;
   anotacao?: string;

@@ -20,7 +20,7 @@ import {
 } from "@/lib/estantes";
 import { usePerfil, type LivroSalvo } from "@/lib/perfil-store";
 
-type Filtro = "todos" | "ano" | "4mais";
+type Filtro = "todos" | "ano" | "4mais" | "amei";
 
 function meta(l: LivroSalvo) {
   const data = l.lidoEm ?? l.iniciadoEm ?? l.adicionadoEm;
@@ -70,6 +70,7 @@ export default function EstanteAbertaPage() {
         String(ano),
       );
     if (filtro === "4mais") return (l.nota ?? 0) >= 4;
+    if (filtro === "amei") return !!l.amei;
     return true;
   });
   const grupos = lista.reduce<{ mes: string; livros: LivroSalvo[] }[]>(
@@ -177,6 +178,16 @@ export default function EstanteAbertaPage() {
                 className={pill(filtro === "4mais")}
               >
                 ★ 4+
+              </button>
+            ) : null}
+            {todos.some((l) => l.amei) ? (
+              <button
+                type="button"
+                aria-pressed={filtro === "amei"}
+                onClick={() => setFiltro("amei")}
+                className={pill(filtro === "amei")}
+              >
+                ♥ amei
               </button>
             ) : null}
           </div>

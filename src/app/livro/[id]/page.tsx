@@ -262,26 +262,59 @@ export default function LivroPage() {
             {/* status */}
             <fieldset className="mt-5 px-6 lg:mt-0 lg:px-0">
               <legend className="sr-only">status do livro</legend>
-              <div className="flex overflow-hidden rounded-pill border-[1.5px] border-bordo">
-                {acoes.map((a, i) => {
-                  const on = status === a.status;
-                  return (
-                    <button
-                      key={a.status}
-                      type="button"
-                      aria-pressed={on}
-                      onClick={() => marcar(a.status)}
-                      className={`flex h-11 flex-1 items-center justify-center gap-1.5 text-[12.5px] font-semibold ${
-                        i ? "border-l border-bordo/25" : ""
-                      } ${on ? "bg-bordo text-creme" : "bg-transparent text-bordo"}`}
-                    >
-                      <span className="flex h-[16px] w-[16px] flex-none items-center justify-center [&_svg]:h-full [&_svg]:w-full">
-                        {a.icone}
-                      </span>
-                      {a.rotulo}
-                    </button>
-                  );
-                })}
+              <div className="flex items-center gap-2.5">
+                <div className="flex flex-1 overflow-hidden rounded-pill border-[1.5px] border-bordo">
+                  {acoes.map((a, i) => {
+                    const on = status === a.status;
+                    return (
+                      <button
+                        key={a.status}
+                        type="button"
+                        aria-pressed={on}
+                        onClick={() => marcar(a.status)}
+                        className={`flex h-11 flex-1 items-center justify-center gap-1.5 text-[12.5px] font-semibold ${
+                          i ? "border-l border-bordo/25" : ""
+                        } ${on ? "bg-bordo text-creme" : "bg-transparent text-bordo"}`}
+                      >
+                        <span className="flex h-[16px] w-[16px] flex-none items-center justify-center [&_svg]:h-full [&_svg]:w-full">
+                          {a.icone}
+                        </span>
+                        {a.rotulo}
+                      </button>
+                    );
+                  })}
+                </div>
+                {/* o coraçãozinho de "amei" (não mexe nos favoritos do perfil) */}
+                <button
+                  type="button"
+                  aria-pressed={!!livro.amei}
+                  aria-label={livro.amei ? "tirar o amei" : "marcar que amei"}
+                  title={livro.amei ? "você amou este livro" : "amei"}
+                  onClick={() =>
+                    editarLivro(base, {
+                      status: livro.status ?? "lido",
+                      amei: !livro.amei,
+                    })
+                  }
+                  className={`flex h-11 w-11 flex-none items-center justify-center rounded-full border-[1.5px] transition-transform active:scale-90 ${
+                    livro.amei
+                      ? "border-bordo bg-bordo text-creme"
+                      : "border-bordo text-bordo"
+                  }`}
+                >
+                  <svg
+                    aria-hidden
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill={livro.amei ? "currentColor" : "none"}
+                    stroke="currentColor"
+                    strokeWidth="1.9"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.5-7 10-7 10z" />
+                  </svg>
+                </button>
               </div>
             </fieldset>
 

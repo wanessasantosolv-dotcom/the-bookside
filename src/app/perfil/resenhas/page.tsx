@@ -14,7 +14,7 @@ import { usePerfil, type LivroSalvo } from "@/lib/perfil-store";
 type Filtro = "todas" | "resenha" | "trecho";
 
 const temFicha = (l: LivroSalvo) =>
-  !!(l.nota || l.resenha || l.citacao || l.personagem);
+  !!(l.nota || l.resenha || l.citacao || l.personagem || l.amei);
 
 /** As fichas de leitura da pessoa, juntas: nota, critérios, resenha, trecho e personagem. */
 export default function ResenhasPage() {
@@ -119,9 +119,14 @@ export default function ResenhasPage() {
                           ? ` · ${new Date(l.lidoEm).toLocaleDateString("pt-BR", { day: "numeric", month: "short", year: "numeric" })}`
                           : ""}
                       </p>
-                      {l.nota ? (
+                      {l.nota || l.amei ? (
                         <p className="mt-1.5 text-sm text-bordo">
-                          {estrelas(l.nota)}
+                          {l.nota ? estrelas(l.nota) : null}
+                          {l.amei ? (
+                            <span className="ml-2" title="amei">
+                              ♥
+                            </span>
+                          ) : null}
                         </p>
                       ) : null}
                       {l.notas && Object.values(l.notas).some(Boolean) ? (
