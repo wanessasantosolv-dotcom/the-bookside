@@ -50,6 +50,8 @@ export type LivroSalvo = {
   personagem?: string;
   /** trecho favorito */
   citacao?: string;
+  /** trechos marcados (ex.: destaques importados do Kindle) */
+  trechos?: { texto: string; em?: string; origem?: "kindle" | "app" }[];
   /** ids das estantes criadas pela pessoa onde o livro está */
   estantes?: string[];
 };

@@ -3,6 +3,7 @@
 import { Voltar } from "@/components/Voltar";
 import Link from "next/link";
 import { SeletorFormato } from "@/components/SeletorFormato";
+import { TrechosMarcados } from "@/components/TrechosMarcados";
 import { notFound, useParams, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { AppShell } from "@/components/AppShell";
@@ -339,6 +340,10 @@ export default function LivroPage() {
                 </span>
                 <span className="text-sm text-bordo">→</span>
               </Link>
+            ) : null}
+
+            {livro.trechos?.length ? (
+              <TrechosMarcados trechos={livro.trechos} />
             ) : null}
 
             {livro.sinopse ? (

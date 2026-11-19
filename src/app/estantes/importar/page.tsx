@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import { diaLocal } from "@/lib/datas";
 import { Voltar } from "@/components/Voltar";
 import { useRouter } from "next/navigation";
@@ -213,6 +215,20 @@ export default function ImportarPage() {
             <p className="mt-1.5 font-accent text-sm italic text-cinza">
               cole sua lista e o app acha cada livro, com capa ✦
             </p>
+            <Link
+              href="/estantes/kindle"
+              className="mt-4 flex items-center justify-between gap-3 rounded-[12px] border border-dashed border-bege px-4 py-3 text-[13px] hover:border-bordo lg:rounded-[4px]"
+            >
+              <span>
+                <b className="font-semibold text-ameixa">lê no kindle?</b>{" "}
+                <span className="text-cinza">
+                  traga os livros e os trechos marcados de lá.
+                </span>
+              </span>
+              <span className="flex-none text-xs font-semibold text-bordo">
+                kindle →
+              </span>
+            </Link>
             <label className="mt-6 block">
               <span className={rotuloCampo}>um livro por linha</span>
               <textarea
