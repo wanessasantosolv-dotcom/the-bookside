@@ -4,15 +4,9 @@ import Link from "next/link";
 import { useState } from "react";
 import { CapaLivro } from "@/components/CapaLivro";
 import { corDoLivro } from "@/lib/cores";
-import { mediaTexto, numero, type Numeros } from "@/lib/numeros";
+import { generoDoLivro, mediaTexto, numero, paginasDoLivro, type Numeros } from "@/lib/numeros";
 
 const CORES_GENERO = ["#6B0D24", "#8E1D3D", "#B75A6B", "#A88B64", "#6B7A5E", "#464052"];
-
-function hashNumero(id: string) {
-  let h = 11;
-  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
-  return h;
-}
 
 /** Números na versão web: banner bordô + tudo numa tela só (exceto a retrospectiva, que vira um "wrapped" à parte). */
 export function NumerosWeb({
@@ -144,19 +138,44 @@ function ConteudoUnificado({
       {n.lidos.length ? (
         <section className="mb-14">
           <h2 className="mb-[18px] border-b border-ameixa pb-2 font-revista text-[22px] leading-none text-ameixa italic">sua estante do ano, lado a lado</h2>
-          <div className="rounded-md bg-gradient-to-b from-[#F6EDE4] to-[#F0E2D7] px-5 pt-[22px]">
-            <div className="flex min-h-[70px] items-end gap-[3px] pb-3.5">
-              {n.lidos.map((l) => (
-                <div
-                  key={l.id}
-                  className="flex-1 rounded-t-[3px]"
-                  style={{ height: 40 + (hashNumero(l.id) % 26), background: corDoLivro(l.id) }}
-                  title={l.titulo}
-                />
-              ))}
-            </div>
-            <div className="h-2.5 rounded-[3px] bg-gradient-to-b from-bege to-[#C19A6C]" />
-          </div>
+          {(() => {
+            const corPorGenero = new Map(n.generos.map((g, i) => [g.nome, CORES_GENERO[i % CORES_GENERO.length]]));
+            const paginas = n.lidos.map(paginasDoLivro).filter((p): p is number => !!p);
+            const minP = paginas.length ? Math.min(...paginas) : 0;
+            const maxP = paginas.length ? Math.max(...paginas) : 0;
+            const alturaPor = (p: number | undefined) => (!p || maxP === minP ? 56 : 42 + Math.round(((p - minP) / (maxP - minP)) * 40));
+            return (
+              <>
+                <div className="rounded-md bg-gradient-to-b from-[#F6EDE4] to-[#F0E2D7] px-5 pt-[22px]">
+                  <div className="flex min-h-[82px] items-end gap-[3px] pb-3.5">
+                    {n.lidos.map((l) => {
+                      const genero = generoDoLivro(l) ?? "sem gênero";
+                      const paginas = paginasDoLivro(l);
+                      return (
+                        <div
+                          key={l.id}
+                          className="flex-1 rounded-t-[3px]"
+                          style={{ height: alturaPor(paginas), background: corPorGenero.get(genero) ?? "#D8C3AA" }}
+                          title={`${l.titulo} · ${genero}${paginas ? ` · ${paginas} pág.` : ""}`}
+                        />
+                      );
+                    })}
+                  </div>
+                  <div className="h-2.5 rounded-[3px] bg-gradient-to-b from-bege to-[#C19A6C]" />
+                </div>
+                <p className="mt-2.5 flex flex-wrap gap-x-4 gap-y-1 text-[10.5px] text-cinza">
+                  <span className="mr-1">cor = gênero</span>
+                  {n.generos.slice(0, 6).map((g, i) => (
+                    <span key={g.nome} className="flex items-center gap-1.5">
+                      <i aria-hidden className="inline-block h-2 w-2 rounded-full" style={{ background: CORES_GENERO[i % CORES_GENERO.length] }} />
+                      {g.nome}
+                    </span>
+                  ))}
+                  <span className="ml-1">· altura = páginas</span>
+                </p>
+              </>
+            );
+          })()}
         </section>
       ) : null}
 

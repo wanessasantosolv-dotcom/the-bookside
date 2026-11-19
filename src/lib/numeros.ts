@@ -7,7 +7,7 @@ export function generoDoLivro(l: LivroSalvo) {
   return l.genero ?? sugestoesDeLivros.find((c) => c.id === l.id)?.genero;
 }
 
-function paginasDoLivro(l: LivroSalvo) {
+export function paginasDoLivro(l: LivroSalvo) {
   return l.paginas ?? sugestoesDeLivros.find((c) => c.id === l.id)?.paginas;
 }
 
