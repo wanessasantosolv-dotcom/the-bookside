@@ -1,101 +1,50 @@
 "use client";
 
-import { CapaAuto } from "@/components/CapaAuto";
-import { Animacao } from "@/components/Animacao";
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { useState } from "react";
+import { Animacao } from "@/components/Animacao";
+import { CartaoAnoDoClube } from "@/components/clube/AnoDoClube";
 import { useClube } from "@/components/clube/ClubeContexto";
+import {
+  EstanteDeVerdadeFila,
+  LequeLinhaWeb,
+  PrateleiraCapas,
+  SeletorVisualizacao,
+  type ItemVitrine,
+  type Visualizacao,
+} from "@/components/estantes/Vitrine";
 import { ErroOuFalta, Vazio } from "@/components/social/Estados";
 import {
   andamento,
   apagarLivroDoClube,
   livrosDoClube,
+  modoDe,
+  quemTrouxe,
   type LivroDoClube,
 } from "@/lib/clubes";
-import { useConsulta } from "@/lib/social";
+import { useConsulta, useMeuId } from "@/lib/social";
 
-function Prateleira({
-  selo,
-  seloEscuro,
-  titulo,
-  abrir,
-  livros,
-  link,
-  vazio,
-  podeExcluir,
-  aoExcluir,
-}: {
+type Linha = {
+  id: string;
+  nome: string;
   selo: string;
-  seloEscuro?: boolean;
-  titulo: string;
-  abrir: string;
   livros: LivroDoClube[];
-  link: (l: LivroDoClube) => string;
-  vazio: ReactNode;
-  podeExcluir?: boolean;
-  aoExcluir?: (l: LivroDoClube) => void;
-}) {
-  return (
-    <section className="mt-7">
-      <div className="flex items-center gap-2.5">
-        <span
-          className={`inline-flex min-h-6 items-center rounded-pill px-2.5 text-[9px] font-semibold tracking-[.12em] uppercase ${
-            seloEscuro ? "bg-bordo text-creme" : "bg-bege/60 text-ameixa"
-          }`}
-        >
-          {selo}
-        </span>
-        <h2 className="font-display text-xl font-semibold italic text-bordo lg:font-revista lg:font-normal lg:text-tinta">
-          {titulo}
-        </h2>
-        <Link
-          href={abrir}
-          className="ml-auto text-[10px] font-semibold tracking-[.12em] text-cinza uppercase hover:text-bordo"
-        >
-          abrir →
-        </Link>
-      </div>
-      {livros.length ? (
-        <ul className="mt-3 flex gap-3 overflow-x-auto px-1 pb-0">
-          {livros.map((l) => (
-            <li key={l.id} className="relative w-[72px] flex-none lg:w-[84px]">
-              <Link href={link(l)} aria-label={l.livro.titulo}>
-                <CapaAuto livro={l.livro} className="w-full" />
-              </Link>
-              {podeExcluir ? (
-                <button
-                  type="button"
-                  aria-label={`excluir ${l.livro.titulo} da estante`}
-                  onClick={() => aoExcluir?.(l)}
-                  className="absolute -top-1.5 -right-1.5 flex size-6 items-center justify-center rounded-full border border-creme bg-bordo text-xs leading-none text-creme shadow-[0_2px_6px_rgba(43,20,32,.35)]"
-                >
-                  ×
-                </button>
-              ) : null}
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <div className="mt-3 pb-2 font-accent text-sm italic text-cinza">
-          {vazio}
-        </div>
-      )}
-      <div
-        aria-hidden
-        className="h-2.5 rounded-[3px] bg-gradient-to-b from-linha to-bege shadow-[0_2px_0_#C4AC93]"
-      />
-    </section>
-  );
-}
+  link?: string;
+  mais?: string;
+};
 
+/** A biblioteca do clube: o mesmo formato das estantes pessoais (prateleiras, leque, estante de pé). */
 export default function BibliotecaPage() {
-  const { clube, papel } = useClube();
+  const { clube, membros, papel } = useClube();
+  const eu = useMeuId();
+  const [filtro, setFiltro] = useState("todas");
+  const [vis, setVis] = useState<Visualizacao>("prateleira");
   const consulta = useConsulta(() => livrosDoClube(clube.id), [clube.id]);
   if (consulta.carregando && !consulta.dados)
     return (
       <Animacao
         tipo="pilha"
-        titulo="procurando na estante"
+        titulo="abrindo a biblioteca"
         sub="isso pode levar um instante"
       />
     );
@@ -103,119 +52,246 @@ export default function BibliotecaPage() {
     return <ErroOuFalta erro={consulta.erro} onTentar={consulta.recarregar} />;
   const livros = consulta.dados!;
   const moderadora = papel === "moderadora";
+  const base = `/clubes/${clube.id}`;
+  const votacao = modoDe(clube) === "votacao";
 
   async function excluir(l: LivroDoClube) {
     if (
       !confirm(
-        `tirar "${l.livro.titulo}" da estante do clube? isso apaga também as fichas desse livro.`,
+        `tirar "${l.livro.titulo}" da biblioteca do clube? isso apaga também as fichas desse livro.`,
       )
     )
       return;
     await apagarLivroDoClube(l.id);
     consulta.recarregar();
   }
+
   const lendo = livros.filter((l) => l.estado === "lendo");
   const lidos = livros
     .filter((l) => l.estado === "lido")
     .sort((a, b) => (b.encerrado_em ?? "").localeCompare(a.encerrado_em ?? ""));
-  const sugeridos = livros
+  const proximas = livros
     .filter((l) => l.estado === "sugerido")
-    .sort((a, b) => b.votos.length - a.votos.length);
+    .sort((a, b) =>
+      votacao
+        ? b.votos.length - a.votos.length
+        : a.criado_em.localeCompare(b.criado_em),
+    );
   const ano = new Date().getFullYear();
   const desteAno = lidos.filter((l) =>
     l.encerrado_em?.startsWith(String(ano)),
   ).length;
+  const paginas = lidos.reduce((t, l) => t + (l.livro.paginas ?? 0), 0);
   const and = lendo[0] ? andamento(lendo[0]) : null;
-  const base = `/clubes/${clube.id}`;
+
+  const linhas: Linha[] = [
+    {
+      id: "lendo",
+      nome: "lendo agora",
+      selo: and
+        ? and.faltam
+          ? `faltam ${and.faltam} dias`
+          : "último dia"
+        : "agora",
+      livros: lendo,
+      link: `${base}/leitura`,
+      mais: moderadora ? `${base}/escolher` : undefined,
+    },
+    {
+      id: "lidos",
+      nome: "lidos",
+      selo: `${desteAno} este ano`,
+      livros: lidos,
+      mais: moderadora ? `${base}/adicionar-lido` : undefined,
+    },
+    {
+      id: "proximas",
+      nome: votacao ? "sugestões" : "próximas leituras",
+      selo: votacao ? "votação aberta" : `${proximas.length} na fila`,
+      livros: proximas,
+      link: `${base}/sugestoes`,
+      mais: `${base}/sugerir`,
+    },
+  ];
+  const visiveis =
+    filtro === "todas" ? linhas : linhas.filter((l) => l.id === filtro);
+
+  const itens = (ls: LivroDoClube[]): ItemVitrine[] =>
+    ls.map((l) => ({
+      id: l.id,
+      titulo: l.livro.titulo,
+      autor: l.livro.autor,
+      capa: l.livro.capa,
+      paginas: l.livro.paginas,
+      href: `${base}/livro/${l.id}`,
+      legenda: quemTrouxe(l, membros, eu),
+      acao: moderadora ? (
+        <button
+          type="button"
+          aria-label={`tirar ${l.livro.titulo} da biblioteca`}
+          onClick={() => excluir(l)}
+          className="flex size-6 items-center justify-center rounded-full border border-creme bg-bordo text-xs leading-none text-creme shadow-[0_2px_6px_rgba(43,20,32,.35)]"
+        >
+          ×
+        </button>
+      ) : undefined,
+    }));
+
+  const acao =
+    "flex min-h-9 items-center rounded-pill border border-bordo px-4 text-xs font-semibold text-bordo hover:bg-bordo/5 lg:text-[11px] lg:font-bold lg:tracking-[.1em] lg:uppercase";
 
   return (
-    <div className="px-6 pt-5 pb-4 lg:px-0">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-[10px] font-semibold tracking-[.16em] text-cinza uppercase">
-          todos · {livros.length} &nbsp; lidos · {lidos.length}
-        </p>
+    <div className="px-6 pt-5 pb-6 lg:px-0">
+      <CartaoAnoDoClube clubeId={clube.id} />
+
+      <div className="mt-6 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h2 className="font-display text-[28px] leading-[1.1] font-semibold italic text-bordo lg:font-revista lg:text-[36px] lg:font-normal">
+            biblioteca do clube
+          </h2>
+          <p className="mt-1.5 text-[13px] text-cinza">
+            {lidos.length} {lidos.length === 1 ? "livro lido" : "livros lidos"}
+            {paginas
+              ? ` · ${paginas.toLocaleString("pt-BR")} páginas`
+              : ""} · {livros.length} na biblioteca
+          </p>
+        </div>
         <span className="flex flex-wrap gap-2">
-          {papel === "moderadora" ? (
+          {moderadora ? (
             <>
-              <Link
-                href={`${base}/importar`}
-                className="flex min-h-9 items-center rounded-pill border border-bordo px-4 text-xs font-semibold text-bordo"
-              >
-                importar
+              <Link href={`${base}/importar`} className={acao}>
+                importar lista
               </Link>
-              <Link
-                href={`${base}/adicionar-lido`}
-                className="flex min-h-9 items-center rounded-pill border border-bordo px-4 text-xs font-semibold text-bordo"
-              >
+              <Link href={`${base}/adicionar-lido`} className={acao}>
                 + já lido
               </Link>
             </>
           ) : null}
           <Link
             href={`${base}/sugerir`}
-            className="flex min-h-9 items-center rounded-pill bg-bordo px-4 text-xs font-semibold text-creme"
+            className={`${acao} border-bordo bg-bordo text-creme hover:bg-bordo`}
           >
             + sugerir
           </Link>
         </span>
       </div>
+
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+        <nav
+          aria-label="filtrar a biblioteca"
+          className="-mx-6 flex gap-[7px] overflow-x-auto px-6 [scrollbar-width:none] lg:mx-0 lg:px-0"
+        >
+          {[
+            { id: "todas", nome: `todas · ${livros.length}` },
+            ...linhas.map((l) => ({
+              id: l.id,
+              nome: `${l.nome} · ${l.livros.length}`,
+            })),
+          ].map((f) => (
+            <button
+              key={f.id}
+              type="button"
+              aria-pressed={filtro === f.id}
+              onClick={() => setFiltro(f.id)}
+              className={`flex h-9 flex-none items-center rounded-pill border px-[13px] text-xs font-semibold whitespace-nowrap ${
+                filtro === f.id
+                  ? "border-bordo bg-bordo text-creme"
+                  : "border-bege bg-creme-quente text-ameixa"
+              }`}
+            >
+              {f.nome}
+            </button>
+          ))}
+        </nav>
+        <SeletorVisualizacao
+          vis={vis}
+          onChange={setVis}
+          className="hidden lg:inline"
+        />
+      </div>
+
       {!livros.length ? (
         <Vazio
-          className="mt-5"
+          className="mt-6"
           titulo="a biblioteca do clube está em branco"
-          texto="sugira o primeiro livro. o mais votado vira a leitura da vez."
+          texto="sugira o primeiro livro, ou importe os livros que o clube já leu."
           acao={{ href: `${base}/sugerir`, rotulo: "sugerir um livro" }}
         />
       ) : (
-        <>
-          <Prateleira
-            selo={
-              and
-                ? and.faltam
-                  ? `faltam ${and.faltam} dias`
-                  : "último dia"
-                : "agora"
-            }
-            seloEscuro
-            titulo="lendo agora"
-            abrir={`${base}/leitura`}
-            livros={lendo}
-            link={() => `${base}/leitura`}
-            vazio="nenhuma leitura rolando."
-            podeExcluir={moderadora}
-            aoExcluir={excluir}
-          />
-          <Prateleira
-            selo={`${desteAno} este ano`}
-            titulo="lidos"
-            abrir={
-              lidos[0] ? `${base}/livro/${lidos[0].id}` : `${base}/leitura`
-            }
-            livros={lidos}
-            link={(l) => `${base}/livro/${l.id}`}
-            vazio="o clube ainda não terminou nenhum livro."
-            podeExcluir={moderadora}
-            aoExcluir={excluir}
-          />
-          <Prateleira
-            selo="votação aberta"
-            titulo="sugestões"
-            abrir={`${base}/sugestoes`}
-            livros={sugeridos}
-            link={() => `${base}/sugestoes`}
-            vazio={
-              <Link
-                href={`${base}/sugerir`}
-                className="underline underline-offset-4"
-              >
-                ninguém sugeriu nada. sugira o próximo →
-              </Link>
-            }
-            podeExcluir={moderadora}
-            aoExcluir={excluir}
-          />
-        </>
+        <div
+          className={`mt-7 flex flex-col ${vis === "prateleira" ? "gap-10" : "gap-8"}`}
+        >
+          {visiveis.map((linha) => (
+            <section key={linha.id} className="animate-subir">
+              <div className="mb-3.5 flex items-baseline justify-between gap-3 border-b border-ameixa/70 pb-2">
+                <span className="flex items-center gap-2">
+                  <span
+                    className={`inline-flex h-[22px] items-center rounded-pill px-2.5 text-[9px] font-semibold tracking-[.1em] uppercase ${
+                      linha.id === "lendo"
+                        ? "bg-bordo text-creme"
+                        : "bg-bege/60 text-ameixa"
+                    }`}
+                  >
+                    {linha.selo}
+                  </span>
+                  <h3 className="font-display text-xl leading-none font-semibold italic text-bordo lg:font-revista lg:text-2xl lg:font-normal lg:text-ameixa">
+                    {linha.nome}
+                    <span className="ml-2 font-sans text-[11px] font-semibold text-cinza not-italic">
+                      · {linha.livros.length}
+                    </span>
+                  </h3>
+                </span>
+                {linha.link ? (
+                  <Link
+                    href={linha.link}
+                    className="text-[10px] font-bold tracking-[.12em] text-bordo uppercase"
+                  >
+                    abrir →
+                  </Link>
+                ) : null}
+              </div>
+              {!linha.livros.length ? (
+                <p className="font-accent text-sm italic text-cinza">
+                  {linha.id === "lendo"
+                    ? "nenhuma leitura rolando."
+                    : linha.id === "lidos"
+                      ? "o clube ainda não terminou nenhum livro."
+                      : "ninguém sugeriu nada ainda."}{" "}
+                  {linha.mais ? (
+                    <Link
+                      href={linha.mais}
+                      className="text-bordo underline underline-offset-4"
+                    >
+                      {linha.id === "lendo"
+                        ? "escolher o livro da vez →"
+                        : linha.id === "lidos"
+                          ? "incluir um já lido →"
+                          : "sugerir →"}
+                    </Link>
+                  ) : null}
+                </p>
+              ) : vis === "leque" ? (
+                <LequeLinhaWeb livros={itens(linha.livros)} />
+              ) : vis === "estante" ? (
+                <EstanteDeVerdadeFila
+                  livros={itens(linha.livros)}
+                  alturaBase={150}
+                />
+              ) : (
+                <PrateleiraCapas
+                  livros={itens(linha.livros)}
+                  maisHref={linha.mais}
+                  maisRotulo={`adicionar em ${linha.nome}`}
+                />
+              )}
+            </section>
+          ))}
+        </div>
       )}
+
+      <p className="pt-8 text-center lg:hidden">
+        <SeletorVisualizacao vis={vis} onChange={setVis} className="!text-sm" />
+      </p>
     </div>
   );
 }

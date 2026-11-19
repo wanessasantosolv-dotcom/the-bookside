@@ -3,18 +3,41 @@
 import { CapaAuto } from "@/components/CapaAuto";
 import Link from "next/link";
 import { useClube } from "@/components/clube/ClubeContexto";
-import { Avatares, botaoPrincipal, Rodape, TopoForm } from "@/components/clube/Pecas";
+import {
+  Avatares,
+  botaoPrincipal,
+  Rodape,
+  TopoForm,
+} from "@/components/clube/Pecas";
 import { Carregando, ErroOuFalta, Vazio } from "@/components/social/Estados";
-import { apagarLivroDoClube, livrosDoClube, votar, type LivroDoClube } from "@/lib/clubes";
+import {
+  apagarLivroDoClube,
+  type LivroDoClube,
+  livrosDoClube,
+  modoDe,
+  modosDeEscolha,
+  vezDe,
+  votar,
+} from "@/lib/clubes";
 import { nomeDe, useConsulta, useMeuId } from "@/lib/social";
 
 export default function SugestoesPage() {
   const { clube, membros, papel } = useClube();
   const eu = useMeuId();
   const consulta = useConsulta(
-    async () => (await livrosDoClube(clube.id)).filter((l) => l.estado === "sugerido"),
+    async () =>
+      (await livrosDoClube(clube.id)).filter((l) => l.estado === "sugerido"),
     [clube.id],
   );
+  // rodízio: precisa de todos os livros para saber quem escolheu por último
+  const todos = useConsulta(
+    () =>
+      modoDe(clube) === "rodizio"
+        ? livrosDoClube(clube.id)
+        : Promise.resolve([] as LivroDoClube[]),
+    [clube.id, clube.escolha],
+  );
+  const todosOsLivros = todos.dados;
 
   async function alternarVoto(l: LivroDoClube) {
     if (!eu || !consulta.dados) return;
@@ -23,7 +46,12 @@ export default function SugestoesPage() {
     consulta.definir(
       antes.map((x) =>
         x.id === l.id
-          ? { ...x, votos: sim ? [...x.votos, { usuario_id: eu }] : x.votos.filter((v) => v.usuario_id !== eu) }
+          ? {
+              ...x,
+              votos: sim
+                ? [...x.votos, { usuario_id: eu }]
+                : x.votos.filter((v) => v.usuario_id !== eu),
+            }
           : x,
       ),
     );
@@ -40,18 +68,28 @@ export default function SugestoesPage() {
     consulta.recarregar();
   }
 
-  const lista = [...(consulta.dados ?? [])].sort((a, b) => b.votos.length - a.votos.length);
-  const pessoa = (id: string) => membros.find((m) => m.usuario_id === id)?.pessoa ?? null;
+  const modo = modoDe(clube);
+  const votacao = modo === "votacao";
+  // rodízio: de quem é a vez de escolher
+  const vez = modo === "rodizio" ? vezDe(todosOsLivros ?? [], membros) : null;
+  // com votação: as mais votadas primeiro; sem votação: a fila, na ordem em que foram sugeridas
+  const lista = [...(consulta.dados ?? [])].sort((a, b) =>
+    votacao
+      ? b.votos.length - a.votos.length
+      : a.criado_em.localeCompare(b.criado_em),
+  );
+  const pessoa = (id: string) =>
+    membros.find((m) => m.usuario_id === id)?.pessoa ?? null;
 
   return (
     <div className="flex min-h-[70dvh] flex-col">
       <TopoForm
         voltar={{ href: `/clubes/${clube.id}/biblioteca`, r: "livros" }}
         rotulo={clube.nome}
-        titulo="sugestões"
+        titulo={votacao ? "sugestões" : "próximas leituras"}
         frase={
           consulta.dados
-            ? `${lista.length} ${lista.length === 1 ? "livro esperando" : "livros esperando"} a vez · votação aberta ✦`
+            ? `${lista.length} ${lista.length === 1 ? "livro esperando" : "livros esperando"} a vez${votacao ? " · votação aberta" : ""}${vez ? ` · vez de ${vez.usuario_id === eu ? "você" : nomeDe(vez.pessoa)} escolher` : ""} ✦`
             : undefined
         }
       />
@@ -70,18 +108,24 @@ export default function SugestoesPage() {
                   key={l.id}
                   className="flex gap-3.5 rounded-xl border border-linha bg-creme-quente p-3.5 lg:rounded-[4px] lg:border-fio lg:bg-transparent"
                 >
-                  <CapaAuto livro={l.livro}
+                  <CapaAuto
+                    livro={l.livro}
                     className="w-[64px] self-start [&>span:last-child]:hidden"
                   />
                   <div className="min-w-0 flex-1">
                     <p className="text-[9px] font-semibold tracking-[.14em] text-rosa-antigo uppercase">
-                      sugerido {l.sugerido_por === eu ? "por você" : `pela ${nomeDe(quem)}`}
+                      sugerido por{" "}
+                      {l.sugerido_por === eu ? "você" : nomeDe(quem)}
                     </p>
                     <h2 className="mt-1 font-display text-lg leading-tight font-semibold italic text-ameixa lg:font-revista lg:font-normal">
                       {l.livro.titulo}
                     </h2>
                     <p className="text-xs text-cinza">{l.livro.autor}</p>
-                    {l.motivo ? <p className="mt-1.5 font-accent text-[13px] italic text-cinza">“{l.motivo}”</p> : null}
+                    {l.motivo ? (
+                      <p className="mt-1.5 font-accent text-[13px] italic text-cinza">
+                        “{l.motivo}”
+                      </p>
+                    ) : null}
                     {l.livro.clima?.length ? (
                       <p className="mt-1.5 flex flex-wrap gap-1">
                         {l.livro.clima.map((c) => (
@@ -94,25 +138,32 @@ export default function SugestoesPage() {
                         ))}
                       </p>
                     ) : null}
-                    <div className="mt-2.5 flex items-center gap-2">
-                      <Avatares
-                        pessoas={l.votos.map((v) => pessoa(v.usuario_id)).filter((p) => p !== null)}
-                        tamanho={22}
-                      />
-                      <span className="text-[10px] font-semibold tracking-[.1em] text-cinza uppercase">
-                        {l.votos.length} {l.votos.length === 1 ? "voto" : "votos"}
-                      </span>
-                      <button
-                        type="button"
-                        aria-pressed={votei}
-                        onClick={() => alternarVoto(l)}
-                        className={`ml-auto flex min-h-9 items-center rounded-pill px-3.5 text-xs font-semibold ${
-                          votei ? "bg-bordo text-creme" : "border border-bordo text-bordo"
-                        }`}
-                      >
-                        {votei ? "votei ♥" : "votar ♡"}
-                      </button>
-                    </div>
+                    {votacao ? (
+                      <div className="mt-2.5 flex items-center gap-2">
+                        <Avatares
+                          pessoas={l.votos
+                            .map((v) => pessoa(v.usuario_id))
+                            .filter((p) => p !== null)}
+                          tamanho={22}
+                        />
+                        <span className="text-[10px] font-semibold tracking-[.1em] text-cinza uppercase">
+                          {l.votos.length}{" "}
+                          {l.votos.length === 1 ? "voto" : "votos"}
+                        </span>
+                        <button
+                          type="button"
+                          aria-pressed={votei}
+                          onClick={() => alternarVoto(l)}
+                          className={`ml-auto flex min-h-9 items-center rounded-pill px-3.5 text-xs font-semibold ${
+                            votei
+                              ? "bg-bordo text-creme"
+                              : "border border-bordo text-bordo"
+                          }`}
+                        >
+                          {votei ? "votei ♥" : "votar ♡"}
+                        </button>
+                      </div>
+                    ) : null}
                     {papel === "moderadora" || l.sugerido_por === eu ? (
                       <button
                         type="button"
@@ -128,14 +179,23 @@ export default function SugestoesPage() {
             })}
           </ul>
         ) : (
-          <Vazio titulo="ninguém sugeriu nada ainda" texto="seja a primeira a sugerir o próximo livro do clube." />
+          <Vazio
+            titulo="ninguém sugeriu nada ainda"
+            texto="seja a primeira a sugerir o próximo livro do clube."
+          />
         )}
         <div className="mt-6 rounded-md border border-linha px-4 py-3 lg:border-fio">
-          <p className="text-[10px] font-semibold tracking-[.16em] text-bordo uppercase">como funciona</p>
+          <p className="text-[10px] font-semibold tracking-[.16em] text-bordo uppercase">
+            como funciona
+          </p>
           <p className="mt-1 text-[13px] text-cinza">
-            cada pessoa sugere livros e vota nos que quer ler. quem modera escolhe a mais votada (ou sorteia) e ela vira
-            a{" "}
-            <Link href={`/clubes/${clube.id}/leitura`} className="underline underline-offset-2">
+            {modosDeEscolha.find((m) => m.id === modo)?.nome}:{" "}
+            {modosDeEscolha.find((m) => m.id === modo)?.descricao}. a escolhida
+            vira a{" "}
+            <Link
+              href={`/clubes/${clube.id}/leitura`}
+              className="underline underline-offset-2"
+            >
               leitura da vez
             </Link>
             .
@@ -143,7 +203,10 @@ export default function SugestoesPage() {
         </div>
       </div>
       <Rodape>
-        <Link href={`/clubes/${clube.id}/sugerir`} className={`${botaoPrincipal} lg:max-w-[720px]`}>
+        <Link
+          href={`/clubes/${clube.id}/sugerir`}
+          className={`${botaoPrincipal} lg:max-w-[720px]`}
+        >
           + sugerir um livro
         </Link>
       </Rodape>

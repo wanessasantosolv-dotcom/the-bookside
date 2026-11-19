@@ -17,9 +17,11 @@ import { buscaDoApp, type LivroBusca } from "@/lib/catalogo";
 import {
   adicionarLidoAoClube,
   livrosDoClube,
+  primeiroNome,
   salvarFicha,
   type LivroDoClube,
 } from "@/lib/clubes";
+import { notasCompletas } from "@/lib/estantes";
 import { corDoLivro } from "@/lib/cores";
 import { dataDoDia, diaLocal } from "@/lib/datas";
 import {
@@ -54,6 +56,20 @@ const temFicha = (i: ItemImport) =>
     (i.notas && Object.keys(i.notas).length)
   );
 
+/** a pessoa do arquivo que parece ser você ("wane" ↔ "Wanessa") */
+function pareceVoce(nomes: string[], meus: (string | null | undefined)[]) {
+  const eu = meus.map((m) => primeiroNome(m)).filter((m) => m.length >= 3);
+  return nomes.find((n) => {
+    const x = primeiroNome(n);
+    return eu.some(
+      (m) =>
+        m === x ||
+        (m.length >= 4 && x.startsWith(m)) ||
+        (x.length >= 4 && m.startsWith(x)),
+    );
+  });
+}
+
 /**
  * Importar de uma vez os livros que o clube já leu (só quem modera), como na estante
  * pessoal: uma lista colada ("título - 14/04", um por linha) ou um arquivo .json.
@@ -63,6 +79,10 @@ export default function ImportarNoClubePage() {
   const { clube, papel, recarregar } = useClube();
   const router = useRouter();
   const editarLivro = usePerfil((s) => s.editarLivro);
+  const meuNome = usePerfil((s) => s.nome);
+  const meuUsuario = usePerfil((s) => s.usuario);
+  /** qual das pessoas das fichas do arquivo é você ("" = nenhuma; null = o arquivo não tem fichas de várias pessoas) */
+  const [voce, setVoce] = useState<string | null>(null);
   const [texto, setTexto] = useState("");
   const [linhas, setLinhas] = useState<Linha[] | null>(null);
   const [progresso, setProgresso] = useState<{
@@ -121,6 +141,12 @@ export default function ImportarNoClubePage() {
     }
     setProgresso(null);
     setLinhas(resultado);
+    const nomes = [
+      ...new Set(itens.flatMap((i) => (i.fichas ?? []).map((f) => f.pessoa))),
+    ];
+    setVoce(
+      nomes.length ? (pareceVoce(nomes, [meuNome, meuUsuario]) ?? "") : null,
+    );
   }
 
   async function abrirArquivo(f: File | undefined) {
@@ -171,18 +197,38 @@ export default function ImportarNoClubePage() {
         paginas: achado?.paginas ?? l.item.paginas,
       };
       const terminouEm = dataDoDia(l.dia);
+      // fichas de várias pessoas (revista do clube): a sua vira ficha de verdade; as outras, fichas antigas
+      const minhaDoArquivo = voce
+        ? l.item.fichas?.find((f) => f.pessoa === voce)
+        : undefined;
+      const item: ItemImport = minhaDoArquivo
+        ? { ...l.item, ...minhaDoArquivo, titulo: l.item.titulo }
+        : l.item;
+      const antigas = (l.item.fichas ?? [])
+        .filter((f) => f.pessoa !== voce)
+        .map((f) => ({
+          ...f,
+          iniciadoEm: f.iniciadoEm ?? null,
+          lidoEm: f.lidoEm ?? null,
+        }));
       try {
-        const id = await adicionarLidoAoClube(clube.id, livro, terminouEm);
+        const id = await adicionarLidoAoClube(clube.id, livro, terminouEm, {
+          iniciadoEm: l.item.iniciadoEm
+            ? dataDoDia(l.item.iniciadoEm)
+            : undefined,
+          rodada: l.item.rodada,
+          fichasAntigas: antigas,
+        });
         // a lista trouxe nota/ficha: vira a ficha de quem importou (sem avisar no feed)
-        if (temFicha(l.item))
+        if (temFicha(item))
           await salvarFicha(
             { id, clube_id: clube.id, livro } as LivroDoClube,
             {
-              notas: l.item.notas ?? {},
-              nota: l.item.nota ?? null,
-              personagem: l.item.personagem ?? null,
-              citacao: l.item.citacao ?? null,
-              texto: l.item.resenha ?? null,
+              notas: item.notas ?? {},
+              nota: item.nota ?? null,
+              personagem: item.personagem ?? null,
+              citacao: item.citacao ?? null,
+              texto: item.resenha ?? null,
               spoiler: false,
             },
             true,
@@ -201,10 +247,14 @@ export default function ImportarNoClubePage() {
                 lidoEm: terminouEm,
                 paginas: livro.paginas,
                 paginaAtual: livro.paginas,
-                ...(l.item.nota ? { nota: l.item.nota } : {}),
-                ...(l.item.personagem ? { personagem: l.item.personagem } : {}),
-                ...(l.item.citacao ? { citacao: l.item.citacao } : {}),
-                ...(l.item.resenha ? { resenha: l.item.resenha } : {}),
+                ...(item.iniciadoEm
+                  ? { iniciadoEm: dataDoDia(item.iniciadoEm) }
+                  : {}),
+                ...(item.nota ? { nota: item.nota } : {}),
+                ...(item.notas ? { notas: notasCompletas(item.notas) } : {}),
+                ...(item.personagem ? { personagem: item.personagem } : {}),
+                ...(item.citacao ? { citacao: item.citacao } : {}),
+                ...(item.resenha ? { resenha: item.resenha } : {}),
               },
             ),
           );
@@ -327,7 +377,11 @@ export default function ImportarNoClubePage() {
                               · já está no clube
                             </span>
                           ) : null}
-                          {temFicha(l.item) ? (
+                          {l.item.fichas?.length ? (
+                            <span className="ml-1 text-bordo">
+                              · {l.item.fichas.length} fichas ✎
+                            </span>
+                          ) : temFicha(l.item) ? (
                             <span className="ml-1 text-bordo">
                               · com a sua ficha ✎
                             </span>
@@ -419,6 +473,35 @@ export default function ImportarNoClubePage() {
             })}
           </ul>
           <div className="mt-2 px-6 lg:px-0">
+            {voce !== null ? (
+              <label className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-md border border-linha px-4 py-3 text-sm lg:max-w-[560px] lg:border-fio">
+                <span className="min-w-0 flex-1">
+                  qual dessas pessoas é você?
+                  <span className="block text-xs text-cinza">
+                    a sua ficha entra como ficha de verdade; as das outras ficam
+                    como “fichas da revista” até elas escreverem a delas no app.
+                  </span>
+                </span>
+                <select
+                  value={voce}
+                  onChange={(e) => setVoce(e.target.value)}
+                  className="min-h-11 rounded-md border border-linha bg-creme-quente px-3"
+                >
+                  <option value="">nenhuma</option>
+                  {[
+                    ...new Set(
+                      linhas.flatMap((l) =>
+                        (l.item.fichas ?? []).map((f) => f.pessoa),
+                      ),
+                    ),
+                  ].map((n) => (
+                    <option key={n} value={n}>
+                      {n}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
             <label className="flex min-h-11 items-center gap-3 text-sm">
               <input
                 type="checkbox"

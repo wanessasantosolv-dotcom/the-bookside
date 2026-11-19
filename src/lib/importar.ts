@@ -18,6 +18,21 @@ export type ItemImport = {
   personagem?: string;
   citacao?: string;
   resenha?: string;
+  /** clube: número da leitura */
+  rodada?: number;
+  /** clube: as fichas de cada pessoa (da revista do clube) */
+  fichas?: FichaImport[];
+};
+
+export type FichaImport = {
+  pessoa: string;
+  nota?: number;
+  notas?: Partial<NotasDetalhe>;
+  personagem?: string;
+  citacao?: string;
+  resenha?: string;
+  iniciadoEm?: string;
+  lidoEm?: string;
 };
 
 export function normalizar(t: string) {
@@ -107,12 +122,34 @@ export function lerArquivo(conteudo: string): ItemImport[] {
       const o = x as Record<string, unknown>;
       const titulo = texto(o.titulo, 200);
       if (!titulo) return null;
-      const n = (o.notas ?? {}) as Record<string, unknown>;
-      const notas = Object.fromEntries(
-        (["personagens", "plot", "escrita", "final"] as const)
-          .map((c) => [c, numero(n[c], 0.5, 5)])
-          .filter(([, v]) => v !== undefined),
-      ) as Partial<NotasDetalhe>;
+      const lerNotas = (bruto: unknown) => {
+        const n = (bruto ?? {}) as Record<string, unknown>;
+        const r = Object.fromEntries(
+          (["personagens", "plot", "escrita", "final"] as const)
+            .map((c) => [c, numero(n[c], 0.5, 5)])
+            .filter(([, v]) => v !== undefined),
+        ) as Partial<NotasDetalhe>;
+        return Object.keys(r).length ? r : undefined;
+      };
+      const notas = lerNotas(o.notas) ?? {};
+      const fichas = Array.isArray(o.fichas)
+        ? (o.fichas as Record<string, unknown>[])
+            .map((f): FichaImport | null => {
+              const pessoa = texto(f?.pessoa, 60);
+              if (!pessoa) return null;
+              return {
+                pessoa,
+                nota: numero(f.nota, 0.5, 5),
+                notas: lerNotas(f.notas),
+                personagem: texto(f.personagem, 120),
+                citacao: texto(f.citacao, 1000),
+                resenha: texto(f.resenha),
+                iniciadoEm: data(f.iniciadoEm),
+                lidoEm: data(f.lidoEm),
+              };
+            })
+            .filter((f): f is FichaImport => f !== null)
+        : undefined;
       return {
         titulo,
         autor: texto(o.autor, 200),
@@ -124,6 +161,8 @@ export function lerArquivo(conteudo: string): ItemImport[] {
         personagem: texto(o.personagem, 120),
         citacao: texto(o.citacao, 1000),
         resenha: texto(o.resenha),
+        rodada: numero(o.rodada, 1, 999),
+        fichas: fichas?.length ? fichas : undefined,
       };
     })
     .filter((x) => x !== null);

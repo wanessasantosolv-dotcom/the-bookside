@@ -6,6 +6,7 @@ import { Suspense, useEffect, useRef, useState, type ReactNode } from "react";
 import { CapaAuto } from "@/components/CapaAuto";
 import {
   anoDoClube,
+  pessoaDaFicha,
   criterios,
   media,
   type AnoDoClube,
@@ -462,7 +463,7 @@ function PaginasReview({ d }: { d: AnoDoClube }) {
     const pessoas = fichas.length
       ? fichas.map((f) => ({
           f,
-          p: d.membros.find((m) => m.usuario_id === f.autor)?.pessoa ?? null,
+          p: pessoaDaFicha(f.autor, d.membros),
         }))
       : d.membros.map((m) => ({ f: null as Ficha | null, p: m.pessoa }));
     const paginas: (typeof pessoas)[] = [];

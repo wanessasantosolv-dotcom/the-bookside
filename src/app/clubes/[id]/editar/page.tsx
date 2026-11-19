@@ -5,9 +5,21 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { CampoCapa } from "@/components/clube/CampoCapa";
 import { useClube } from "@/components/clube/ClubeContexto";
-import { botaoPrincipal, campo, Rodape, rotuloCampo, TopoForm } from "@/components/clube/Pecas";
+import {
+  botaoPrincipal,
+  campo,
+  Rodape,
+  rotuloCampo,
+  TopoForm,
+} from "@/components/clube/Pecas";
 import { Vazio } from "@/components/social/Estados";
-import { apagarClube, editarClube } from "@/lib/clubes";
+import {
+  apagarClube,
+  editarClube,
+  modoDe,
+  modosDeEscolha,
+  type ModoEscolha,
+} from "@/lib/clubes";
 import { temas } from "@/lib/dados";
 
 export default function EditarClubePage() {
@@ -17,8 +29,13 @@ export default function EditarClubePage() {
   const [descricao, setDescricao] = useState(clube.descricao ?? "");
   const [capa, setCapa] = useState<string | null>(clube.capa);
   const [tema, setTema] = useState<string>(clube.tema ?? temas[0].id);
-  const [limite, setLimite] = useState<string>(clube.limite_sugestoes ? String(clube.limite_sugestoes) : "");
-  const [maximo, setMaximo] = useState<string>(clube.max_membros ? String(clube.max_membros) : "");
+  const [limite, setLimite] = useState<string>(
+    clube.limite_sugestoes ? String(clube.limite_sugestoes) : "",
+  );
+  const [maximo, setMaximo] = useState<string>(
+    clube.max_membros ? String(clube.max_membros) : "",
+  );
+  const [escolha, setEscolha] = useState<ModoEscolha>(modoDe(clube));
   const [ocupado, setOcupado] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -45,13 +62,18 @@ export default function EditarClubePage() {
         tema,
         limite_sugestoes: limite ? Number(limite) : null,
         max_membros: maximo ? Math.max(Number(maximo), membros.length) : null,
+        // só manda quando muda (clubes sem a coluna nova continuam salvando o resto)
+        ...(escolha !== modoDe(clube) ? { escolha } : {}),
       });
       recarregar();
       router.push(`/clubes/${clube.id}`);
     } catch (x) {
       const e = x as { code?: string; message?: string };
       // campo novo que ainda não existe no banco: falta rodar o supabase/social.sql atualizado
-      const faltaCampo = e?.code === "PGRST204" || e?.code === "42703" || /column/i.test(e?.message ?? "");
+      const faltaCampo =
+        e?.code === "PGRST204" ||
+        e?.code === "42703" ||
+        /column/i.test(e?.message ?? "");
       setErro(
         faltaCampo
           ? "o banco ainda não tem esse campo. rode de novo o arquivo supabase/social.sql no SQL Editor do Supabase."
@@ -72,15 +94,26 @@ export default function EditarClubePage() {
     router.push("/clubes");
   }
 
-  const linha = "flex min-h-[52px] items-center justify-between border-b border-linha text-sm lg:border-fio";
+  const linha =
+    "flex min-h-[52px] items-center justify-between border-b border-linha text-sm lg:border-fio";
 
   return (
     <form onSubmit={salvar} className="flex min-h-[70dvh] flex-col">
-      <TopoForm voltar={{ href: `/clubes/${clube.id}`, r: "cancelar" }} rotulo="editar clube" titulo="sobre o clube" />
+      <TopoForm
+        voltar={{ href: `/clubes/${clube.id}`, r: "cancelar" }}
+        rotulo="editar clube"
+        titulo="sobre o clube"
+      />
       <div className="mt-6 space-y-6 px-6 lg:max-w-[560px] lg:px-0">
         <label className="block">
           <span className={rotuloCampo}>nome</span>
-          <input value={nome} onChange={(e) => setNome(e.target.value)} maxLength={60} required className={campo} />
+          <input
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
+            maxLength={60}
+            required
+            className={campo}
+          />
         </label>
         <label className="block">
           <span className={rotuloCampo}>descrição</span>
@@ -95,7 +128,9 @@ export default function EditarClubePage() {
         <CampoCapa valor={capa} onMudar={setCapa} />
         <fieldset>
           <legend className={rotuloCampo}>tema do clube</legend>
-          <p className="mt-1 font-accent text-[13px] italic text-cinza">define a cor de destaque do cabeçalho do clube.</p>
+          <p className="mt-1 font-accent text-[13px] italic text-cinza">
+            define a cor de destaque do cabeçalho do clube.
+          </p>
           <div className="mt-2 grid grid-cols-4 gap-2.5">
             {temas.map((t) => {
               const marcado = t.id === tema;
@@ -111,12 +146,24 @@ export default function EditarClubePage() {
                   <span
                     aria-label={t.nome}
                     className={`flex aspect-square w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-md border-2 p-1 text-center ${
-                      marcado ? "shadow-[0_6px_14px_-8px_rgba(43,20,32,.5)]" : "border-transparent"
+                      marcado
+                        ? "shadow-[0_6px_14px_-8px_rgba(43,20,32,.5)]"
+                        : "border-transparent"
                     }`}
-                    style={{ background: t.papel, borderColor: marcado ? t.destaque : "transparent" }}
+                    style={{
+                      background: t.papel,
+                      borderColor: marcado ? t.destaque : "transparent",
+                    }}
                   >
-                    <span aria-hidden className="size-4 rounded-full" style={{ background: t.destaque }} />
-                    <span className="text-[9px] leading-tight font-semibold" style={{ color: t.texto }}>
+                    <span
+                      aria-hidden
+                      className="size-4 rounded-full"
+                      style={{ background: t.destaque }}
+                    />
+                    <span
+                      className="text-[9px] leading-tight font-semibold"
+                      style={{ color: t.texto }}
+                    >
                       {t.nome}
                     </span>
                   </span>
@@ -159,15 +206,37 @@ export default function EditarClubePage() {
                 ))}
             </select>
           </label>
+          <label className="block text-sm">
+            como o clube escolhe os livros
+            <select
+              value={escolha}
+              onChange={(e) => setEscolha(e.target.value as ModoEscolha)}
+              className="mt-2 min-h-11 w-full rounded-md border border-linha bg-creme-quente px-3"
+            >
+              {modosDeEscolha.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.nome}
+                </option>
+              ))}
+            </select>
+            <span className="mt-1 block text-xs text-cinza">
+              {modosDeEscolha.find((m) => m.id === escolha)?.descricao}
+            </span>
+          </label>
         </fieldset>
         <div className="border-t border-linha lg:border-fio">
           <Link href={`/clubes/${clube.id}/convidar`} className={linha}>
-            membros e papéis <span className="text-cinza">{membros.length} ›</span>
+            membros e papéis{" "}
+            <span className="text-cinza">{membros.length} ›</span>
           </Link>
           <Link href={`/clubes/${clube.id}/leitura`} className={linha}>
             leitura e prazos <span className="text-cinza">›</span>
           </Link>
-          <button type="button" onClick={apagar} className={`${linha} w-full text-bordo`}>
+          <button
+            type="button"
+            onClick={apagar}
+            className={`${linha} w-full text-bordo`}
+          >
             apagar o clube <span>›</span>
           </button>
         </div>
@@ -178,7 +247,11 @@ export default function EditarClubePage() {
         ) : null}
       </div>
       <Rodape>
-        <button type="submit" disabled={ocupado} className={`${botaoPrincipal} lg:max-w-[560px]`}>
+        <button
+          type="submit"
+          disabled={ocupado}
+          className={`${botaoPrincipal} lg:max-w-[560px]`}
+        >
           {ocupado ? "salvando…" : "salvar alterações"}
         </button>
       </Rodape>

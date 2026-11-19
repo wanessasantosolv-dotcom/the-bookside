@@ -1,39 +1,75 @@
 "use client";
 
+import { CartaoAnoDoClube } from "@/components/clube/AnoDoClube";
 import { CapaAuto } from "@/components/CapaAuto";
 import Link from "next/link";
 import { useClube } from "@/components/clube/ClubeContexto";
 import { Carregando, ErroOuFalta } from "@/components/social/Estados";
 import { Avatar } from "@/components/social/Pessoas";
-import { andamento, encontrosDe, fichasDoClube, livrosDoClube, media, virgula } from "@/lib/clubes";
+import {
+  andamento,
+  encontrosDe,
+  fichasComAntigas,
+  fichasDoClube,
+  livrosDoClube,
+  media,
+  modoDe,
+  virgula,
+} from "@/lib/clubes";
 import { estrelas } from "@/lib/estantes";
 import { nomeDe, useConsulta, useMeuId } from "@/lib/social";
 
-const secao = "flex items-baseline justify-between border-b border-linha pb-2 lg:border-tinta";
+const secao =
+  "flex items-baseline justify-between border-b border-linha pb-2 lg:border-tinta";
 const tituloSecao =
   "font-display text-[22px] leading-none font-semibold italic text-bordo lg:font-revista lg:text-[19px] lg:font-normal lg:text-tinta";
-const linkSecao = "text-[10px] font-semibold tracking-[.12em] text-bordo uppercase";
+const linkSecao =
+  "text-[10px] font-semibold tracking-[.12em] text-bordo uppercase";
 
 export default function ClubeInicioPage() {
   const { clube, membros, papel } = useClube();
   const eu = useMeuId();
   const consulta = useConsulta(async () => {
-    const [livros, encontros] = await Promise.all([livrosDoClube(clube.id), encontrosDe(clube.id)]);
-    const fichas = await fichasDoClube(livros.filter((l) => l.estado !== "sugerido").map((l) => l.id));
+    const [livros, encontros] = await Promise.all([
+      livrosDoClube(clube.id),
+      encontrosDe(clube.id),
+    ]);
+    const fichas = await fichasDoClube(
+      livros.filter((l) => l.estado !== "sugerido").map((l) => l.id),
+    );
     return { livros, encontros, fichas };
   }, [clube.id]);
 
-  if (consulta.carregando && !consulta.dados) return <Carregando texto="abrindo o clube…" linhas={2} />;
-  if (consulta.erro) return <ErroOuFalta erro={consulta.erro} onTentar={consulta.recarregar} />;
-  const { livros, encontros, fichas } = consulta.dados!;
+  if (consulta.carregando && !consulta.dados)
+    return <Carregando texto="abrindo o clube…" linhas={2} />;
+  if (consulta.erro)
+    return <ErroOuFalta erro={consulta.erro} onTentar={consulta.recarregar} />;
+  const { livros, encontros } = consulta.dados!;
+  // as fichas do app + as antigas (da revista) de quem ainda não escreveu aqui
+  const fichas = livros.flatMap((l) =>
+    fichasComAntigas(
+      l,
+      consulta.dados!.fichas.filter((f) => f.clube_livro_id === l.id),
+      membros,
+    ),
+  );
   const lendo = livros.find((l) => l.estado === "lendo");
   const and = lendo ? andamento(lendo) : null;
   const sugestoes = livros.filter((l) => l.estado === "sugerido");
-  const quemSugeriu = lendo?.sugerido_por ? membros.find((m) => m.usuario_id === lendo.sugerido_por)?.pessoa : null;
-  const proximo = encontros.find((e) => new Date(e.quando).getTime() > Date.now());
+  const quemSugeriu = lendo?.sugerido_por
+    ? membros.find((m) => m.usuario_id === lendo.sugerido_por)?.pessoa
+    : null;
+  const proximo = encontros.find(
+    (e) => new Date(e.quando).getTime() > Date.now(),
+  );
   const amados = livros
     .filter((l) => l.estado === "lido")
-    .map((l) => ({ l, m: media(fichas.filter((f) => f.clube_livro_id === l.id).map((f) => f.nota)) }))
+    .map((l) => ({
+      l,
+      m: media(
+        fichas.filter((f) => f.clube_livro_id === l.id).map((f) => f.nota),
+      ),
+    }))
     .filter((x) => x.m !== null)
     .sort((a, b) => b.m! - a.m!)
     .slice(0, 4);
@@ -41,6 +77,8 @@ export default function ClubeInicioPage() {
   return (
     <div className="space-y-8 px-6 pt-6 lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-12 xl:grid-cols-[minmax(0,1fr)_380px] lg:space-y-0 lg:px-0">
       <div className="space-y-8">
+        {/* a retrospectiva e a revista do clube, à vista */}
+        <CartaoAnoDoClube clubeId={clube.id} />
         <section>
           <div className={secao}>
             <h2 className={tituloSecao}>lendo agora</h2>
@@ -51,8 +89,12 @@ export default function ClubeInicioPage() {
             ) : null}
           </div>
           {lendo ? (
-            <Link href={`/clubes/${clube.id}/leitura`} className="mt-4 flex gap-4">
-              <CapaAuto livro={lendo.livro}
+            <Link
+              href={`/clubes/${clube.id}/leitura`}
+              className="mt-4 flex gap-4"
+            >
+              <CapaAuto
+                livro={lendo.livro}
                 className="w-[92px] -rotate-1 [&>span:last-child]:text-xs"
               />
               <span className="min-w-0 pt-1">
@@ -64,12 +106,16 @@ export default function ClubeInicioPage() {
                 </span>
                 {quemSugeriu ? (
                   <span className="mt-2.5 block font-accent text-sm italic text-cinza">
-                    {quemSugeriu.id === eu ? "sugestão sua" : `escolha da ${nomeDe(quemSugeriu)}`}
+                    {quemSugeriu.id === eu
+                      ? "sugestão sua"
+                      : `escolha da ${nomeDe(quemSugeriu)}`}
                   </span>
                 ) : null}
                 {and ? (
                   <span className="mt-2.5 inline-flex min-h-6 items-center rounded-pill bg-rosa-fundo px-2.5 text-[10px] font-semibold tracking-[.1em] text-bordo uppercase">
-                    {and.faltam ? `faltam ${and.faltam} ${and.faltam === 1 ? "dia" : "dias"}` : "último dia!"}
+                    {and.faltam
+                      ? `faltam ${and.faltam} ${and.faltam === 1 ? "dia" : "dias"}`
+                      : "último dia!"}
                   </span>
                 ) : null}
               </span>
@@ -81,7 +127,7 @@ export default function ClubeInicioPage() {
               </p>
               <p className="mt-1 text-[13px] text-cinza">
                 {sugestoes.length
-                  ? `${sugestoes.length} ${sugestoes.length === 1 ? "sugestão esperando" : "sugestões esperando"} a votação.`
+                  ? `${sugestoes.length} ${sugestoes.length === 1 ? "sugestão esperando" : "sugestões esperando"} ${modoDe(clube) === "votacao" ? "a votação" : "a vez"}.`
                   : papel === "moderadora"
                     ? "escolha qualquer livro para começar a primeira rodada."
                     : "sugira um livro para começar a primeira rodada."}
@@ -93,7 +139,9 @@ export default function ClubeInicioPage() {
                 {papel === "moderadora"
                   ? "escolher o livro da vez"
                   : sugestoes.length
-                    ? "ver e votar"
+                    ? modoDe(clube) === "votacao"
+                      ? "ver e votar"
+                      : "ver a fila"
                     : "sugerir um livro"}
               </Link>
             </div>
@@ -112,9 +160,7 @@ export default function ClubeInicioPage() {
               {amados.map(({ l, m }) => (
                 <li key={l.id}>
                   <Link href={`/clubes/${clube.id}/livro/${l.id}`}>
-                    <CapaAuto livro={l.livro}
-                      className="w-full"
-                    />
+                    <CapaAuto livro={l.livro} className="w-full" />
                     <span className="mt-1.5 block text-center text-[10px] text-bordo">
                       {estrelas(Math.round(m! * 2) / 2)}
                     </span>
@@ -124,7 +170,8 @@ export default function ClubeInicioPage() {
             </ul>
           ) : (
             <p className="mt-3 font-accent text-sm italic text-cinza">
-              quando o clube terminar um livro e escrever as fichas, os preferidos aparecem aqui.
+              quando o clube terminar um livro e escrever as fichas, os
+              preferidos aparecem aqui.
             </p>
           )}
         </section>
@@ -142,12 +189,18 @@ export default function ClubeInicioPage() {
             {membros.map((m) => (
               <li key={m.usuario_id}>
                 <Link
-                  href={m.pessoa.usuario ? `/clubes/${clube.id}/membro/${m.pessoa.usuario}` : "#"}
+                  href={
+                    m.pessoa.usuario
+                      ? `/clubes/${clube.id}/membro/${m.pessoa.usuario}`
+                      : "#"
+                  }
                   className="flex w-14 flex-col items-center gap-1.5 text-center"
                 >
                   <Avatar pessoa={m.pessoa} tamanho={48} />
                   <span className="w-full truncate font-accent text-xs italic">
-                    {m.usuario_id === eu ? "você" : m.pessoa.nome || m.pessoa.usuario}
+                    {m.usuario_id === eu
+                      ? "você"
+                      : m.pessoa.nome || m.pessoa.usuario}
                   </span>
                 </Link>
               </li>
@@ -160,7 +213,9 @@ export default function ClubeInicioPage() {
                 <span className="flex size-12 items-center justify-center rounded-full border border-dashed border-rosa-antigo text-xl text-rosa-antigo">
                   +
                 </span>
-                <span className="font-accent text-xs italic text-cinza">convidar</span>
+                <span className="font-accent text-xs italic text-cinza">
+                  convidar
+                </span>
               </Link>
             </li>
           </ul>
@@ -190,20 +245,29 @@ export default function ClubeInicioPage() {
               </span>
             </p>
           ) : (
-            <p className="mt-3 font-accent text-sm italic text-cinza">nada marcado ainda.</p>
+            <p className="mt-3 font-accent text-sm italic text-cinza">
+              nada marcado ainda.
+            </p>
           )}
           {lendo && and ? (
             <p className="mt-3 text-[13px] text-cinza">
               a leitura de <i>{lendo.livro.titulo}</i> termina em{" "}
-              {and.fim.toLocaleDateString("pt-BR", { day: "numeric", month: "long" })}.
+              {and.fim.toLocaleDateString("pt-BR", {
+                day: "numeric",
+                month: "long",
+              })}
+              .
             </p>
           ) : null}
         </section>
 
         {fichas.length ? (
           <p className="text-[13px] text-cinza">
-            média geral do clube: <b className="text-bordo">{virgula(media(fichas.map((f) => f.nota)))}★</b> em{" "}
-            {fichas.length} {fichas.length === 1 ? "ficha" : "fichas"}
+            média geral do clube:{" "}
+            <b className="text-bordo">
+              {virgula(media(fichas.map((f) => f.nota)))}★
+            </b>{" "}
+            em {fichas.length} {fichas.length === 1 ? "ficha" : "fichas"}
           </p>
         ) : null}
       </div>

@@ -318,6 +318,15 @@ create policy "apagar comentário" on public.comentarios for delete to authentic
 
 -- tema visual do clube (mesmas opções do tema do perfil, em lib/dados.ts)
 alter table public.clubes add column if not exists tema text;
+-- como o clube escolhe os livros:
+--   fila (cada uma sugere e todos são lidos, na ordem) · votacao · rodizio (cada vez uma escolhe)
+--   moderadora (quem modera escolhe) · sorteio (sorteia entre as sugestões)
+alter table public.clubes add column if not exists escolha text not null default 'fila';
+alter table public.clubes drop constraint if exists clubes_escolha_check;
+alter table public.clubes add constraint clubes_escolha_check
+  check (escolha in ('fila', 'votacao', 'rodizio', 'moderadora', 'sorteio'));
+-- fichas de antes do app (ex.: da revista em PDF do clube), de quem ainda não escreveu a ficha aqui
+alter table public.clube_livros add column if not exists fichas_antigas jsonb not null default '[]'::jsonb;
 
 -- ───────────────────────── opiniões sobre um livro ─────────────────────────
 -- Notas e resenhas de quem usa o app e tem o livro na estante (os perfis já são

@@ -4,15 +4,27 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { AppShell } from "@/components/AppShell";
 import { CampoCapa } from "@/components/clube/CampoCapa";
-import { botaoPrincipal, campo, Rodape, rotuloCampo, TopoForm } from "@/components/clube/Pecas";
+import {
+  botaoPrincipal,
+  campo,
+  Rodape,
+  rotuloCampo,
+  TopoForm,
+} from "@/components/clube/Pecas";
 import { ComConta, faltaTabela } from "@/components/social/Estados";
-import { criarClube } from "@/lib/clubes";
+import {
+  criarClube,
+  editarClube,
+  modosDeEscolha,
+  type ModoEscolha,
+} from "@/lib/clubes";
 
 function Formulario() {
   const router = useRouter();
   const [nome, setNome] = useState("");
   const [descricao, setDescricao] = useState("");
   const [capa, setCapa] = useState<string | null>(null);
+  const [escolha, setEscolha] = useState<ModoEscolha>("fila");
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -23,6 +35,9 @@ function Formulario() {
     setErro(null);
     try {
       const id = await criarClube(nome, descricao, capa);
+      // como o clube escolhe os livros (se o banco ainda não tiver o campo, o clube é criado mesmo assim)
+      if (escolha !== "fila")
+        await editarClube(id, { escolha }).catch(() => {});
       router.push(`/clubes/${id}/convidar?novo=1`);
     } catch (x) {
       setErro(
@@ -60,6 +75,40 @@ function Formulario() {
           />
         </label>
         <CampoCapa valor={capa} onMudar={setCapa} />
+        <fieldset>
+          <legend className="text-[10px] font-semibold tracking-[.16em] text-bordo uppercase">
+            como vocês escolhem os livros?
+          </legend>
+          <div className="mt-2 space-y-2">
+            {modosDeEscolha.map((m) => (
+              <label
+                key={m.id}
+                className={`flex cursor-pointer gap-3 rounded-md border p-3 ${
+                  escolha === m.id
+                    ? "border-bordo bg-rosa-fundo/50"
+                    : "border-linha"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="escolha"
+                  checked={escolha === m.id}
+                  onChange={() => setEscolha(m.id)}
+                  className="mt-1 size-4 accent-bordo"
+                />
+                <span>
+                  <span className="block text-sm font-semibold">{m.nome}</span>
+                  <span className="block text-xs text-cinza">
+                    {m.descricao}
+                  </span>
+                </span>
+              </label>
+            ))}
+          </div>
+          <p className="mt-1.5 text-xs text-cinza">
+            dá para mudar depois em “informações do clube”.
+          </p>
+        </fieldset>
         {erro ? (
           <p role="alert" className="text-[13px] text-bordo">
             {erro}
@@ -67,7 +116,11 @@ function Formulario() {
         ) : null}
       </div>
       <Rodape>
-        <button type="submit" disabled={enviando} className={`${botaoPrincipal} lg:max-w-[560px]`}>
+        <button
+          type="submit"
+          disabled={enviando}
+          className={`${botaoPrincipal} lg:max-w-[560px]`}
+        >
           {enviando ? "criando…" : "criar clube ✧"}
         </button>
       </Rodape>

@@ -32,7 +32,49 @@ export type Clube = {
   codigo_expira_em: string | null;
   /** id do tema (mesmas opções de @/lib/dados → temas) */
   tema: string | null;
+  /** como o clube escolhe os livros (ver modosDeEscolha) */
+  escolha?: ModoEscolha | null;
 };
+
+export type ModoEscolha = "fila" | "votacao" | "rodizio" | "moderadora" | "sorteio";
+
+/** os jeitos de um clube escolher o próximo livro (o app se adapta a cada um) */
+export const modosDeEscolha: { id: ModoEscolha; nome: string; descricao: string }[] = [
+  { id: "fila", nome: "fila de sugestões", descricao: "cada pessoa sugere e todos os livros são lidos, na ordem em que foram sugeridos" },
+  { id: "votacao", nome: "votação", descricao: "cada pessoa sugere e o clube vota: a mais votada vira a próxima leitura" },
+  { id: "rodizio", nome: "rodízio", descricao: "cada vez uma pessoa escolhe o livro, na ordem de quem entrou no clube" },
+  { id: "moderadora", nome: "quem modera escolhe", descricao: "a moderação escolhe a próxima leitura (as sugestões são ideias)" },
+  { id: "sorteio", nome: "sorteio", descricao: "o app sorteia a próxima leitura entre as sugestões" },
+];
+
+/** "sugerido por irla" / "escolhido por wane" (nada para livros do histórico) */
+export function quemTrouxe(l: LivroDoClube, membros: Membro[], eu: string | null): string | null {
+  if (!l.sugerido_por || l.livro.historico) return null;
+  const nome =
+    l.sugerido_por === eu
+      ? "você"
+      : (membros.find((m) => m.usuario_id === l.sugerido_por)?.pessoa?.nome ??
+        membros.find((m) => m.usuario_id === l.sugerido_por)?.pessoa?.usuario ??
+        "alguém");
+  // escolhido direto como leitura da vez (entrou e começou na mesma hora) ou sugerido antes
+  const direto =
+    l.estado !== "sugerido" &&
+    !!l.iniciado_em &&
+    Math.abs(new Date(l.iniciado_em).getTime() - new Date(l.criado_em).getTime()) < 15 * 60e3;
+  return `${direto ? "escolhido" : "sugerido"} por ${nome}`;
+}
+
+export const modoDe = (c: Pick<Clube, "escolha">): ModoEscolha => c.escolha ?? "fila";
+
+/** rodízio: de quem é a vez de escolher (a pessoa seguinte a quem escolheu a última leitura) */
+export function vezDe(livros: LivroDoClube[], membros: Membro[]): Membro | null {
+  if (!membros.length) return null;
+  const ultima = [...livros]
+    .filter((l) => l.estado !== "sugerido")
+    .sort((a, b) => (b.iniciado_em ?? b.criado_em).localeCompare(a.iniciado_em ?? a.criado_em))[0];
+  const i = ultima ? membros.findIndex((m) => m.usuario_id === ultima.sugerido_por) : -1;
+  return membros[(i + 1) % membros.length];
+}
 export type Papel = "moderadora" | "membro";
 export type Membro = {
   usuario_id: string;
@@ -51,6 +93,8 @@ export type LivroDoClube = {
     capa?: string;
     paginas?: number;
     clima?: string[];
+    /** entrou pelo histórico (importado/“já lido”): não dá para saber quem sugeriu */
+    historico?: boolean;
   };
   estado: "sugerido" | "lendo" | "lido";
   sugerido_por: string | null;
@@ -61,7 +105,84 @@ export type LivroDoClube = {
   encerrado_em: string | null;
   criado_em: string;
   votos: { usuario_id: string }[];
+  /** fichas de antes do app (da revista do clube), de quem ainda não escreveu a ficha aqui */
+  fichas_antigas?: FichaAntiga[] | null;
 };
+
+/** uma ficha que veio de fora (ex.: a revista em PDF), com o nome da pessoa no lugar da conta */
+export type FichaAntiga = {
+  pessoa: string;
+  nota?: number | null;
+  notas?: Partial<Record<Criterio, number>>;
+  personagem?: string | null;
+  citacao?: string | null;
+  resenha?: string | null;
+  iniciadoEm?: string | null;
+  lidoEm?: string | null;
+};
+
+export const primeiroNome = (t?: string | null) =>
+  (t ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .split(/\s+/)[0];
+
+/**
+ * As fichas de um livro do clube: as escritas no app + as antigas de quem ainda não
+ * escreveu aqui (a ficha nova de alguém substitui a antiga com o mesmo nome).
+ * As antigas viram fichas com autor "antiga:<nome>".
+ */
+export function fichasComAntigas(
+  l: LivroDoClube,
+  reais: Ficha[],
+  membros: Membro[],
+): Ficha[] {
+  // nomes parecidos são a mesma pessoa ("wane" no app e "Wanessa" na revista)
+  const nomesComFicha = reais.flatMap((f) => {
+    const p = membros.find((m) => m.usuario_id === f.autor)?.pessoa;
+    return [primeiroNome(p?.nome), primeiroNome(p?.usuario)].filter((n) => n.length >= 3);
+  });
+  const mesmaPessoa = (nome: string) => {
+    const n = primeiroNome(nome);
+    return nomesComFicha.some(
+      (x) => x === n || (x.length >= 4 && n.startsWith(x)) || (n.length >= 4 && x.startsWith(n)),
+    );
+  };
+  const antigas = (l.fichas_antigas ?? [])
+    .filter((a) => a.pessoa && !mesmaPessoa(a.pessoa))
+    .map(
+      (a, i): Ficha => ({
+        id: `antiga-${l.id}-${i}`,
+        clube_livro_id: l.id,
+        autor: `antiga:${a.pessoa}`,
+        notas: a.notas ?? {},
+        nota: a.nota ?? null,
+        personagem: a.personagem ?? null,
+        citacao: a.citacao ?? null,
+        texto: a.resenha ?? null,
+        spoiler: false,
+        criado_em: a.lidoEm ?? l.encerrado_em ?? l.criado_em,
+      }),
+    );
+  return [...reais, ...antigas];
+}
+
+/** a pessoa de uma ficha: da conta, ou só o nome (fichas antigas) */
+export function pessoaDaFicha(
+  autor: string,
+  membros: Membro[],
+): PessoaResumo | null {
+  if (autor.startsWith("antiga:"))
+    return {
+      id: autor,
+      usuario: null,
+      nome: autor.slice(7),
+      foto: null,
+    } as PessoaResumo;
+  return membros.find((m) => m.usuario_id === autor)?.pessoa ?? null;
+}
 
 export const criterios = ["personagens", "plot", "escrita", "final"] as const;
 export type Criterio = (typeof criterios)[number];
@@ -107,8 +228,8 @@ function db() {
   return supabase;
 }
 
-const CAMPOS_LIVRO =
-  "id,clube_id,livro,estado,sugerido_por,motivo,rodada,prazo,iniciado_em,encerrado_em,criado_em,votos(usuario_id)";
+// "*": colunas novas (ex.: fichas_antigas) aparecem quando o banco for atualizado, sem quebrar antes
+const CAMPOS_LIVRO = "*,votos(usuario_id)";
 
 // ───────── clubes ─────────
 
@@ -262,6 +383,7 @@ export async function editarClube(
       | "limite_sugestoes"
       | "max_membros"
       | "tema"
+      | "escolha"
     >
   >,
 ) {
@@ -454,12 +576,15 @@ export async function progressoDe(livroId: string): Promise<Progresso[]> {
 export async function marcarProgresso(livroId: string, status: StatusLeitura) {
   const eu = meuId();
   if (!eu) return;
-  const { error } = await db()
-    .from("progresso_leitura")
-    .upsert(
-      { clube_livro_id: livroId, usuario_id: eu, status, atualizado_em: new Date().toISOString() },
-      { onConflict: "clube_livro_id,usuario_id" },
-    );
+  const { error } = await db().from("progresso_leitura").upsert(
+    {
+      clube_livro_id: livroId,
+      usuario_id: eu,
+      status,
+      atualizado_em: new Date().toISOString(),
+    },
+    { onConflict: "clube_livro_id,usuario_id" },
+  );
   if (error) throw error;
 }
 
@@ -595,17 +720,22 @@ export async function adicionarLidoAoClube(
   clubeId: string,
   livro: LivroDoClube["livro"],
   terminouEm: string,
+  extra: { iniciadoEm?: string; rodada?: number; fichasAntigas?: FichaAntiga[] } = {},
 ) {
   const eu = meuId();
   const { data, error } = await db()
     .from("clube_livros")
     .insert({
       clube_id: clubeId,
-      livro,
+      livro: { ...livro, historico: true },
       sugerido_por: eu,
       estado: "lido",
       motivo: null,
       encerrado_em: terminouEm,
+      ...(extra.iniciadoEm ? { iniciado_em: extra.iniciadoEm } : {}),
+      ...(extra.rodada ? { rodada: extra.rodada } : {}),
+      // só manda quando tem (bancos sem a coluna nova continuam importando o resto)
+      ...(extra.fichasAntigas?.length ? { fichas_antigas: extra.fichasAntigas } : {}),
     })
     .select("id")
     .single();
@@ -856,7 +986,14 @@ export async function anoDoClube(
     clube: c,
     membros,
     livros,
-    fichas,
+    // as fichas do app + as antigas (da revista) de quem ainda não escreveu aqui
+    fichas: livros.flatMap((l) =>
+      fichasComAntigas(
+        l,
+        fichas.filter((f) => f.clube_livro_id === l.id),
+        membros,
+      ),
+    ),
     encontros: encontros.filter((e) => doAno(e.quando)),
     foraDoClube,
   };

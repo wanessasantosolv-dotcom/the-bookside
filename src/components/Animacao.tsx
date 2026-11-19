@@ -160,9 +160,30 @@ export function Animacao({
   /** ocupa a tela toda, por cima de tudo (ex.: enquanto salva) */
   tela?: boolean;
 }) {
-  // carregando uma tela: só aparece se demorar mais de meio segundo (o espaço fica reservado)
+  // carregando uma tela: nada no primeiro meio segundo; depois, só uma linha discreta;
+  // a ilustração grande do design só aparece se a espera passar de 2,5 s
   const visivel = useDepoisDe(500, !tela);
-  if (!visivel) return <div aria-hidden className="min-h-[62dvh]" />;
+  const demorou = useDepoisDe(2500, !tela);
+  if (!visivel) return <div aria-hidden className="min-h-[40dvh]" />;
+  if (!demorou)
+    return (
+      <div
+        role="status"
+        aria-live="polite"
+        className="flex min-h-[40dvh] items-center justify-center gap-2.5 text-cinza"
+      >
+        <span aria-hidden className="flex gap-1">
+          {[0, 0.15, 0.3].map((d) => (
+            <i
+              key={d}
+              className="size-1.5 animate-pulse rounded-full bg-bordo/60"
+              style={{ animationDelay: `${d}s` }}
+            />
+          ))}
+        </span>
+        <span className="font-accent text-sm italic">{titulo}…</span>
+      </div>
+    );
   return (
     <div
       role="status"

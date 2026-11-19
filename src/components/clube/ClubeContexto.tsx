@@ -16,6 +16,7 @@ import { ErroOuFalta, Vazio } from "@/components/social/Estados";
 import {
   clube,
   membrosDe,
+  modoDe,
   sincronizarMinhaEstante,
   tirarMembro,
   type Clube,
@@ -109,7 +110,7 @@ function Menu({ c, papel }: { c: Clube; papel: Papel | null }) {
             convidar e membros
           </Link>
           <Link href={`/clubes/${c.id}/sugestoes`} className={item}>
-            sugestões e votação
+            {modoDe(c) === "votacao" ? "sugestões e votação" : "próximas leituras"}
           </Link>
           <Link href={`/clubes/${c.id}/retrospectiva`} className={item}>
             retrospectiva do ano ✦

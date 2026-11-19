@@ -20,8 +20,10 @@ import { useBuscaLivros, type LivroBusca } from "@/lib/catalogo";
 import {
   comecarLeitura,
   escolherLivroDaVez,
-  livrosDoClube,
   type LivroDoClube,
+  livrosDoClube,
+  modoDe,
+  vezDe,
 } from "@/lib/clubes";
 import { corDoLivro } from "@/lib/cores";
 import { nomeDe, useConsulta } from "@/lib/social";
@@ -89,9 +91,24 @@ function Escolher() {
 
   const livros = consulta.dados!;
   const atual = livros.find((l) => l.estado === "lendo");
+  const modo = modoDe(clube);
+  const votacao = modo === "votacao";
+  // a ordem das sugestões segue o jeito do clube escolher
+  const vez = modo === "rodizio" ? vezDe(livros, membros) : null;
   const sugestoes = livros
     .filter((l) => l.estado === "sugerido")
-    .sort((a, b) => b.votos.length - a.votos.length);
+    .sort((a, b) =>
+      votacao
+        ? b.votos.length - a.votos.length
+        : vez
+          ? Number(b.sugerido_por === vez.usuario_id) -
+              Number(a.sugerido_por === vez.usuario_id) ||
+            a.criado_em.localeCompare(b.criado_em)
+          : a.criado_em.localeCompare(b.criado_em),
+    );
+  // a sugestão "da vez" pelo jeito do clube: a 1ª da fila, a mais votada ou a de quem tem a vez
+  const daVez =
+    modo === "sorteio" || modo === "moderadora" ? undefined : sugestoes[0];
   const abaAtiva = aba ?? (sugestoes.length ? "sugestoes" : "busca");
   const pessoa = (id: string | null) =>
     id ? (membros.find((m) => m.usuario_id === id)?.pessoa ?? null) : null;
@@ -129,9 +146,10 @@ function Escolher() {
   }
 
   function sortear() {
-    // cada voto vale um bilhete a mais no sorteio
+    // com votação, cada voto vale um bilhete a mais no sorteio
     const bilhetes = sugestoes.flatMap(
-      (s) => Array(1 + s.votos.length).fill(s) as LivroDoClube[],
+      (s) =>
+        Array(1 + (votacao ? s.votos.length : 0)).fill(s) as LivroDoClube[],
     );
     const sorteada = bilhetes[Math.floor(Math.random() * bilhetes.length)];
     setEscolha({ tipo: "sugestao", l: sorteada });
@@ -196,6 +214,17 @@ function Escolher() {
         {abaAtiva === "sugestoes" ? (
           sugestoes.length ? (
             <div>
+              <p className="mb-2.5 rounded-md bg-rosa-fundo px-3 py-2 text-[13px] text-bordo">
+                {modo === "fila"
+                  ? "fila de sugestões: a próxima é a que foi sugerida há mais tempo."
+                  : modo === "votacao"
+                    ? "votação: a mais votada está em primeiro."
+                    : modo === "rodizio"
+                      ? `rodízio: é a vez de ${vez ? nomeDe(vez.pessoa) : "alguém"} escolher.`
+                      : modo === "sorteio"
+                        ? "sorteio: toque em sortear para o app escolher."
+                        : "quem modera escolhe: as sugestões são só ideias."}
+              </p>
               <ul className="space-y-2">
                 {sugestoes.map((s) => {
                   const on =
@@ -217,10 +246,13 @@ function Escolher() {
                             {s.livro.titulo}
                           </span>
                           <span className="block truncate text-xs text-cinza">
-                            {s.livro.autor} · {s.votos.length}{" "}
-                            {s.votos.length === 1 ? "voto" : "votos"} · sugestão{" "}
+                            {s.livro.autor}
+                            {votacao
+                              ? ` · ${s.votos.length} ${s.votos.length === 1 ? "voto" : "votos"}`
+                              : ""}
+                            {s.id === daVez?.id ? " · a da vez ✦" : ""}
                             {s.sugerido_por
-                              ? `de ${nomeDe(pessoa(s.sugerido_por))}`
+                              ? ` · sugerido por ${nomeDe(pessoa(s.sugerido_por))}`
                               : ""}
                           </span>
                         </span>
@@ -235,7 +267,8 @@ function Escolher() {
                 onClick={sortear}
                 className="mt-3 min-h-9 text-xs font-semibold text-bordo underline underline-offset-4"
               >
-                ✦ sortear entre as sugestões (cada voto conta)
+                ✦ sortear entre as sugestões
+                {votacao ? " (cada voto conta)" : ""}
               </button>
             </div>
           ) : (
