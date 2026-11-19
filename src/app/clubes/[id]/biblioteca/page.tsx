@@ -39,6 +39,7 @@ export default function BibliotecaPage() {
   const eu = useMeuId();
   const [filtro, setFiltro] = useState("todas");
   const [vis, setVis] = useState<Visualizacao>("prateleira");
+  const [editando, setEditando] = useState(false);
   const consulta = useConsulta(() => livrosDoClube(clube.id), [clube.id]);
   if (consulta.carregando && !consulta.dados)
     return (
@@ -121,16 +122,17 @@ export default function BibliotecaPage() {
       paginas: l.livro.paginas,
       href: `${base}/livro/${l.id}`,
       legenda: quemTrouxe(l, membros, eu),
-      acao: moderadora ? (
-        <button
-          type="button"
-          aria-label={`tirar ${l.livro.titulo} da estante`}
-          onClick={() => excluir(l)}
-          className="flex size-6 items-center justify-center rounded-full border border-creme bg-bordo text-xs leading-none text-creme shadow-[0_2px_6px_rgba(43,20,32,.35)]"
-        >
-          ×
-        </button>
-      ) : undefined,
+      acao:
+        moderadora && editando ? (
+          <button
+            type="button"
+            aria-label={`tirar ${l.livro.titulo} da estante`}
+            onClick={() => excluir(l)}
+            className="flex size-6 items-center justify-center rounded-full border border-creme bg-bordo text-xs leading-none text-creme shadow-[0_2px_6px_rgba(43,20,32,.35)]"
+          >
+            ×
+          </button>
+        ) : undefined,
     }));
 
   const acao =
@@ -155,6 +157,20 @@ export default function BibliotecaPage() {
           </p>
         </div>
         <span className="flex flex-wrap gap-2">
+          {moderadora ? (
+            <button
+              type="button"
+              onClick={() => setEditando((e) => !e)}
+              aria-pressed={editando}
+              className={
+                editando
+                  ? `${acao} border-bordo bg-bordo text-creme`
+                  : acao
+              }
+            >
+              {editando ? "concluir" : "editar estante"}
+            </button>
+          ) : null}
           {moderadora ? (
             <Link href={`${base}/adicionar-lido`} className={acao}>
               + livro já lido
