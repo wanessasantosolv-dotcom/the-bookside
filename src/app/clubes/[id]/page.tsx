@@ -25,7 +25,6 @@ import {
   virgula,
   organiza,
 } from "@/lib/clubes";
-import { estrelas } from "@/lib/estantes";
 import { nomeDe, useConsulta, useMeuId } from "@/lib/social";
 
 const secao =
@@ -97,233 +96,214 @@ export default function ClubeInicioPage() {
         .slice(0, 4);
 
   return (
-    <div className="space-y-8 px-6 pt-6 lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-12 xl:grid-cols-[minmax(0,1fr)_380px] lg:space-y-0 lg:px-0">
-      <div className="space-y-8">
-        {/* a retrospectiva e a revista do clube, à vista */}
-        <CartaoAnoDoClube clubeId={clube.id} />
-        <section>
-          <div className={secao}>
-            <h2 className={tituloSecao}>lendo agora</h2>
-            {lendo?.rodada ? (
-              <span className="text-[10px] font-semibold tracking-[.12em] text-rosa-antigo uppercase">
-                leitura nº {lendo.rodada}
-              </span>
-            ) : null}
-          </div>
-          {lendo ? (
+    <div className="space-y-7 px-6 pt-6 lg:mx-auto lg:max-w-[760px] lg:space-y-7 lg:px-0">
+      {/* a retrospectiva e a revista do clube, à vista */}
+      <CartaoAnoDoClube clubeId={clube.id} />
+
+      {/* ===== lendo agora + a turma, num card só ===== */}
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-bordo to-bordo-escuro px-5 py-5 text-creme lg:rounded-[4px] lg:px-7 lg:py-6">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-[10px] font-semibold tracking-[.16em] text-rosa-claro uppercase">
+            lendo agora{lendo?.rodada ? ` · nº ${lendo.rodada}` : ""}
+          </span>
+          {and ? (
+            <span className="flex-none rounded-pill bg-creme/15 px-2.5 py-1 text-[10px] font-semibold text-rosa-claro">
+              {and.faltam
+                ? `faltam ${and.faltam} ${and.faltam === 1 ? "dia" : "dias"}`
+                : "último dia!"}
+            </span>
+          ) : null}
+        </div>
+
+        {lendo ? (
+          <>
             <Link
               href={`/clubes/${clube.id}/leitura`}
               className="mt-4 flex gap-4"
             >
               <CapaAuto
                 livro={lendo.livro}
-                className="w-[92px] -rotate-1 [&>span:last-child]:text-xs"
+                className="w-[72px] -rotate-1 [&>span:last-child]:text-xs"
               />
               <span className="min-w-0 pt-1">
                 <span className="block font-display text-xl leading-tight font-semibold italic lg:font-revista lg:font-normal">
                   {lendo.livro.titulo}
                 </span>
-                <span className="mt-1.5 block text-[10px] font-semibold tracking-[.16em] text-cinza uppercase">
+                <span className="mt-1.5 block text-[10px] font-semibold tracking-[.16em] text-rosa-claro/80 uppercase">
                   {lendo.livro.autor}
                 </span>
                 {quemSugeriu ? (
-                  <span className="mt-2.5 block font-accent text-sm italic text-cinza">
+                  <span className="mt-2.5 block font-accent text-sm italic text-rosa-claro/90">
                     {quemSugeriu.id === eu
                       ? "sugestão sua"
                       : `escolha da ${nomeDe(quemSugeriu)}`}
                   </span>
                 ) : null}
-                {and ? (
-                  <span className="mt-2.5 inline-flex min-h-6 items-center rounded-pill bg-rosa-fundo px-2.5 text-[10px] font-semibold tracking-[.1em] text-bordo uppercase">
-                    {and.faltam
-                      ? `faltam ${and.faltam} ${and.faltam === 1 ? "dia" : "dias"}`
-                      : "último dia!"}
-                  </span>
-                ) : null}
               </span>
             </Link>
-          ) : null}
-          {lendo ? (
-            <Turma membros={membros} turma={consulta.dados!.turma} eu={eu} />
-          ) : (
-            <div className="mt-4 rounded-xl border border-dashed border-bege p-4 lg:rounded-[4px]">
-              <p className="font-display text-lg font-semibold italic text-bordo lg:font-revista lg:font-normal lg:text-tinta">
-                nenhuma leitura rolando
-              </p>
-              <p className="mt-1 text-[13px] text-cinza">
-                {sugestoes.length
-                  ? `${sugestoes.length} ${sugestoes.length === 1 ? "sugestão esperando" : "sugestões esperando"} ${modoDe(clube) === "votacao" ? "a votação" : "a vez"}.`
-                  : organiza(papel)
-                    ? "escolha qualquer livro para começar a primeira rodada."
-                    : "sugira um livro para começar a primeira rodada."}
-              </p>
-              <Link
-                href={`/clubes/${clube.id}/${organiza(papel) ? "escolher" : sugestoes.length ? "sugestoes" : "sugerir"}`}
-                className="mt-3 inline-flex min-h-11 items-center rounded-pill bg-bordo px-5 text-[13px] font-semibold text-creme"
-              >
-                {organiza(papel)
-                  ? "escolher o livro da vez"
-                  : sugestoes.length
-                    ? modoDe(clube) === "votacao"
-                      ? "ver e votar"
-                      : "ver a fila"
-                    : "sugerir um livro"}
-              </Link>
+            <div className="mt-4 border-t border-creme/15 pt-4">
+              <Turma
+                membros={membros}
+                turma={consulta.dados!.turma}
+                eu={eu}
+                escura
+              />
             </div>
-          )}
-        </section>
-
-        <SugerirRapido
-          clubeId={clube.id}
-          votacao={modoDe(clube) === "votacao"}
-          fila={sugestoes}
-          membros={membros}
-          eu={eu}
-        />
-
-        <section>
-          <div className={secao}>
-            <h2 className={tituloSecao}>o que a gente amou</h2>
-            {organiza(papel) ? (
-              <Link
-                href={`/clubes/${clube.id}/favoritos`}
-                className={linkSecao}
-              >
-                {escolhidos.length ? "trocar →" : "escolher →"}
-              </Link>
-            ) : (
-              <Link
-                href={`/clubes/${clube.id}/biblioteca`}
-                className={linkSecao}
-              >
-                ver a estante →
-              </Link>
-            )}
-          </div>
-          {amados.length ? (
-            <ul className="mt-4 grid grid-cols-4 gap-2.5 lg:max-w-[440px]">
-              {amados.map(({ l, m }) => (
-                <li key={l.id}>
-                  <Link href={`/clubes/${clube.id}/livro/${l.id}`}>
-                    <CapaAuto livro={l.livro} className="w-full" />
-                    <span className="mt-1.5 block text-center text-[10px] text-bordo">
-                      {m ? estrelas(Math.round(m * 2) / 2) : "♡"}
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="mt-3 font-accent text-sm italic text-cinza">
-              quando o clube terminar um livro e escrever as fichas, os
-              preferidos aparecem aqui.
+          </>
+        ) : (
+          <div className="mt-4 rounded-xl border border-dashed border-creme/30 p-4">
+            <p className="font-display text-lg font-semibold italic lg:font-revista lg:font-normal">
+              nenhuma leitura rolando
             </p>
-          )}
-        </section>
-        <section id="novidades" className="scroll-mt-24">
-          <div className={secao}>
-            <h2 className={tituloSecao}>o que está rolando</h2>
+            <p className="mt-1 text-[13px] text-rosa-claro/80">
+              {sugestoes.length
+                ? `${sugestoes.length} ${sugestoes.length === 1 ? "sugestão esperando" : "sugestões esperando"} ${modoDe(clube) === "votacao" ? "a votação" : "a vez"}.`
+                : organiza(papel)
+                  ? "escolha qualquer livro para começar a primeira rodada."
+                  : "sugira um livro para começar a primeira rodada."}
+            </p>
+            <Link
+              href={`/clubes/${clube.id}/${organiza(papel) ? "escolher" : sugestoes.length ? "sugestoes" : "sugerir"}`}
+              className="mt-3 inline-flex min-h-11 items-center rounded-pill bg-creme px-5 text-[13px] font-semibold text-bordo"
+            >
+              {organiza(papel)
+                ? "escolher o livro da vez"
+                : sugestoes.length
+                  ? modoDe(clube) === "votacao"
+                    ? "ver e votar"
+                    : "ver a fila"
+                  : "sugerir um livro"}
+            </Link>
           </div>
-          <div className="mt-4">
-            <FeedDoClube />
-          </div>
-        </section>
+        )}
       </div>
 
-      <div className="space-y-8">
-        <section>
-          <div className={secao}>
-            <h2 className={tituloSecao}>quem tá no clube</h2>
-            <span className="text-[10px] font-semibold tracking-[.12em] text-rosa-antigo uppercase">
-              {membros.length} {membros.length === 1 ? "pessoa" : "pessoas"}
-            </span>
-          </div>
-          <ul className="mt-4 flex flex-wrap gap-4">
-            {membros.map((m) => (
-              <li key={m.usuario_id}>
-                <Link
-                  href={
-                    m.pessoa.usuario
-                      ? `/clubes/${clube.id}/membro/${m.pessoa.usuario}`
-                      : "#"
-                  }
-                  className="flex w-14 flex-col items-center gap-1.5 text-center"
-                >
-                  <Avatar pessoa={m.pessoa} tamanho={48} />
-                  <span className="w-full truncate font-accent text-xs italic">
-                    {m.usuario_id === eu
-                      ? "você"
-                      : m.pessoa.nome || m.pessoa.usuario}
-                  </span>
-                </Link>
-              </li>
-            ))}
-            <li>
+      {/* ===== quem tá no clube — rolagem horizontal, bem mais em cima ===== */}
+      <section>
+        <div className={secao}>
+          <h2 className={tituloSecao}>quem tá no clube</h2>
+          <span className="text-[10px] font-semibold tracking-[.12em] text-rosa-antigo uppercase">
+            {membros.length} {membros.length === 1 ? "pessoa" : "pessoas"}
+          </span>
+        </div>
+        <ul className="mt-4 flex gap-4 overflow-x-auto pb-1">
+          {membros.map((m) => (
+            <li key={m.usuario_id} className="flex-none">
               <Link
-                href={`/clubes/${clube.id}/convidar`}
+                href={
+                  m.pessoa.usuario
+                    ? `/clubes/${clube.id}/membro/${m.pessoa.usuario}`
+                    : "#"
+                }
                 className="flex w-14 flex-col items-center gap-1.5 text-center"
               >
-                <span className="flex size-12 items-center justify-center rounded-full border border-dashed border-rosa-antigo text-xl text-rosa-antigo">
-                  +
-                </span>
-                <span className="font-accent text-xs italic text-cinza">
-                  convidar
+                <Avatar pessoa={m.pessoa} tamanho={48} />
+                <span className="w-full truncate font-accent text-xs italic">
+                  {m.usuario_id === eu
+                    ? "você"
+                    : m.pessoa.nome || m.pessoa.usuario}
                 </span>
               </Link>
             </li>
-          </ul>
-        </section>
-
-        <section>
-          <div className={secao}>
-            <h2 className={tituloSecao}>próximo encontro</h2>
-            <Link href={`/clubes/${clube.id}/agenda`} className={linkSecao}>
-              agenda →
-            </Link>
-          </div>
-          {proximo ? (
-            <p className="mt-3 text-sm">
-              <b className="font-display text-lg font-semibold italic text-bordo lg:font-revista lg:font-normal lg:text-tinta">
-                {proximo.titulo}
-              </b>
-              <span className="mt-1 block text-[13px] text-cinza">
-                {new Date(proximo.quando).toLocaleString("pt-BR", {
-                  weekday: "long",
-                  day: "numeric",
-                  month: "long",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-                {proximo.local ? ` · ${proximo.local}` : ""}
+          ))}
+          <li className="flex-none">
+            <Link
+              href={`/clubes/${clube.id}/convidar`}
+              className="flex w-14 flex-col items-center gap-1.5 text-center"
+            >
+              <span className="flex size-12 items-center justify-center rounded-full border border-dashed border-rosa-antigo text-xl text-rosa-antigo">
+                +
               </span>
-            </p>
-          ) : (
-            <p className="mt-3 font-accent text-sm italic text-cinza">
-              nada marcado ainda.
-            </p>
-          )}
-          {lendo && and ? (
-            <p className="mt-3 text-[13px] text-cinza">
-              a leitura de <i>{lendo.livro.titulo}</i> termina em{" "}
-              {and.fim.toLocaleDateString("pt-BR", {
-                day: "numeric",
-                month: "long",
-              })}
-              .
-            </p>
-          ) : null}
-        </section>
+              <span className="font-accent text-xs italic text-cinza">
+                convidar
+              </span>
+            </Link>
+          </li>
+        </ul>
+      </section>
 
-        {fichas.length ? (
-          <p className="text-[13px] text-cinza">
-            média geral do clube:{" "}
-            <b className="text-bordo">
-              {virgula(media(fichas.map((f) => f.nota)))}★
-            </b>{" "}
-            em {fichas.length} {fichas.length === 1 ? "ficha" : "fichas"}
-          </p>
-        ) : null}
+      {/* ===== próximo encontro + o que a gente amou, lado a lado ===== */}
+      <div className="grid grid-cols-2 gap-3">
+        <Link
+          href={`/clubes/${clube.id}/agenda`}
+          className="rounded-xl border border-linha bg-creme-quente p-3.5 hover:border-bordo lg:rounded-[4px] lg:border-fio lg:bg-transparent"
+        >
+          <span className="block text-[9.5px] font-semibold tracking-[.14em] text-bordo uppercase">
+            próximo encontro
+          </span>
+          {proximo ? (
+            <>
+              <span className="mt-1.5 block truncate font-display text-[15px] font-semibold italic lg:font-revista lg:font-normal">
+                {proximo.titulo}
+              </span>
+              <span className="mt-0.5 block text-[11px] text-cinza">
+                {new Date(proximo.quando).toLocaleDateString("pt-BR", {
+                  weekday: "short",
+                  day: "numeric",
+                  month: "short",
+                })}
+              </span>
+            </>
+          ) : (
+            <span className="mt-1.5 block font-accent text-[13px] italic text-cinza">
+              nada marcado →
+            </span>
+          )}
+        </Link>
+
+        <Link
+          href={
+            organiza(papel)
+              ? `/clubes/${clube.id}/favoritos`
+              : `/clubes/${clube.id}/biblioteca`
+          }
+          className="rounded-xl border border-linha bg-creme-quente p-3.5 hover:border-bordo lg:rounded-[4px] lg:border-fio lg:bg-transparent"
+        >
+          <span className="block text-[9.5px] font-semibold tracking-[.14em] text-bordo uppercase">
+            o que a gente amou
+          </span>
+          {amados.length ? (
+            <>
+              <span className="mt-1.5 flex -space-x-2">
+                {amados.slice(0, 3).map(({ l }) => (
+                  <CapaAuto
+                    key={l.id}
+                    livro={l.livro}
+                    className="w-7 rounded-[3px] ring-2 ring-creme-quente [&>span:last-child]:hidden"
+                  />
+                ))}
+              </span>
+              {fichas.length ? (
+                <span className="mt-1.5 block text-[11px] text-cinza">
+                  {virgula(media(fichas.map((f) => f.nota)))}★ em{" "}
+                  {fichas.length} {fichas.length === 1 ? "ficha" : "fichas"}
+                </span>
+              ) : null}
+            </>
+          ) : (
+            <span className="mt-1.5 block font-accent text-[13px] italic text-cinza">
+              ainda nada →
+            </span>
+          )}
+        </Link>
       </div>
+
+      <SugerirRapido
+        clubeId={clube.id}
+        votacao={modoDe(clube) === "votacao"}
+        fila={sugestoes}
+        membros={membros}
+        eu={eu}
+      />
+
+      <section id="novidades" className="scroll-mt-24">
+        <div className={secao}>
+          <h2 className={tituloSecao}>o que está rolando</h2>
+        </div>
+        <div className="mt-4">
+          <FeedDoClube />
+        </div>
+      </section>
     </div>
   );
 }
@@ -342,10 +322,12 @@ function Turma({
   membros,
   turma,
   eu,
+  escura = false,
 }: {
   membros: Membro[];
   turma: Map<string, AndamentoMembro>;
   eu: string | null;
+  escura?: boolean;
 }) {
   const ordem = { terminou: 0, lendo: 1, nao: 2 } as const;
   const lista = [...membros].sort(
@@ -358,8 +340,10 @@ function Turma({
     (m) => turma.get(m.usuario_id)?.estado === "terminou",
   ).length;
   return (
-    <div className="mt-5">
-      <p className="text-[11px] font-semibold tracking-[.12em] text-cinza uppercase">
+    <div>
+      <p
+        className={`text-[11px] font-semibold tracking-[.12em] uppercase ${escura ? "text-rosa-claro/80" : "text-cinza"}`}
+      >
         {terminaram === membros.length
           ? "todo mundo terminou ✦"
           : terminaram
@@ -374,31 +358,37 @@ function Turma({
               ? "ring-bordo"
               : a?.estado === "lendo"
                 ? "ring-rosa-antigo"
-                : "ring-bege opacity-60";
+                : escura
+                  ? "ring-creme/30"
+                  : "ring-bege opacity-60";
           return (
             <li
               key={m.usuario_id}
               className="flex w-[64px] flex-col items-center gap-1.5 text-center"
             >
               <span
-                className={`relative rounded-full ring-2 ring-offset-2 ring-offset-creme ${cor}`}
+                className={`relative rounded-full ring-2 ring-offset-2 ${escura ? "ring-offset-bordo-escuro" : "ring-offset-creme"} ${cor}`}
               >
                 <Avatar pessoa={m.pessoa} tamanho={44} />
                 {a?.estado === "terminou" ? (
                   <span
                     aria-hidden
-                    className="absolute -right-1 -bottom-1 flex size-5 items-center justify-center rounded-full border-2 border-creme bg-bordo text-[10px] font-bold text-creme"
+                    className={`absolute -right-1 -bottom-1 flex size-5 items-center justify-center rounded-full border-2 text-[10px] font-bold ${escura ? "border-bordo-escuro bg-creme text-bordo" : "border-creme bg-bordo text-creme"}`}
                   >
                     ✓
                   </span>
                 ) : null}
               </span>
-              <span className="w-full truncate font-accent text-xs italic">
+              <span
+                className={`w-full truncate font-accent text-xs italic ${escura ? "text-creme" : ""}`}
+              >
                 {m.usuario_id === eu
                   ? "você"
                   : m.pessoa.nome || m.pessoa.usuario}
               </span>
-              <span className="-mt-1 text-[10px] leading-tight text-cinza">
+              <span
+                className={`-mt-1 text-[10px] leading-tight ${escura ? "text-rosa-claro/70" : "text-cinza"}`}
+              >
                 {rotuloAndamento(a)}
               </span>
             </li>
