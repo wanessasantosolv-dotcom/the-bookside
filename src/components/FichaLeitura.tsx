@@ -67,7 +67,7 @@ export function FichaLeitura({
         <div className="min-w-0 flex-1">
           <p className={rotuloCampo}>sua nota</p>
           <EstrelasInput
-            valor={valores.nota || Math.round(final)}
+            valor={valores.nota || Math.round(final * 2) / 2}
             onMudar={(n) => mudar({ nota: n })}
             rotulo="sua nota"
           />

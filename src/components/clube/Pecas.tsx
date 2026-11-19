@@ -95,7 +95,11 @@ export const botaoPrincipal =
 export const botaoContorno =
   "flex min-h-[52px] items-center justify-center rounded-pill border border-bordo px-6 text-[15px] font-semibold text-bordo disabled:opacity-50";
 
-/** Seletor de 1 a 5 estrelas (com teclado: setas). */
+/**
+ * Seletor de 0,5 a 5 estrelas, com meia estrela: a metade esquerda de cada
+ * estrela vale meia, a direita vale inteira. Teclado: setas andam de meia em meia.
+ * Tocar de novo na nota escolhida apaga.
+ */
 export function EstrelasInput({
   valor,
   onMudar,
@@ -107,21 +111,63 @@ export function EstrelasInput({
   rotulo: string;
   pequeno?: boolean;
 }) {
+  const escolher = (n: number) => onMudar(valor === n ? 0 : n);
+  const tamanho = pequeno ? "size-8 text-base" : "size-10 text-2xl";
   return (
-    <div role="radiogroup" aria-label={rotulo} className="flex">
-      {[1, 2, 3, 4, 5].map((n) => (
-        <button
-          key={n}
-          type="button"
-          role="radio"
-          aria-checked={valor === n}
-          aria-label={`${n} ${n === 1 ? "estrela" : "estrelas"}`}
-          onClick={() => onMudar(valor === n ? 0 : n)}
-          className={`flex items-center justify-center ${pequeno ? "size-8 text-base" : "size-10 text-2xl"} ${n <= valor ? "text-bordo" : "text-bege"}`}
-        >
-          {n <= valor ? "★" : "☆"}
-        </button>
-      ))}
+    <div
+      role="radiogroup"
+      aria-label={rotulo}
+      className="flex"
+      onKeyDown={(e) => {
+        if (e.key === "ArrowRight" || e.key === "ArrowUp") {
+          e.preventDefault();
+          onMudar(Math.min(5, valor + 0.5));
+        } else if (e.key === "ArrowLeft" || e.key === "ArrowDown") {
+          e.preventDefault();
+          onMudar(Math.max(0, valor - 0.5));
+        }
+      }}
+    >
+      {[1, 2, 3, 4, 5].map((n) => {
+        const cheia = valor >= n;
+        const meia = !cheia && valor >= n - 0.5;
+        return (
+          <span
+            key={n}
+            className={`relative flex items-center justify-center ${tamanho}`}
+          >
+            {/* o desenho: estrela vazia com a parte cheia por cima */}
+            <span aria-hidden className="relative leading-none text-bege">
+              ☆
+              <span
+                className="absolute inset-0 overflow-hidden text-bordo"
+                style={{ width: cheia ? "100%" : meia ? "50%" : "0%" }}
+              >
+                ★
+              </span>
+            </span>
+            {/* as duas metades, cada uma um botão */}
+            <button
+              type="button"
+              role="radio"
+              aria-checked={valor === n - 0.5}
+              aria-label={`${String(n - 0.5).replace(".", ",")} ${n - 0.5 <= 1 ? "estrela" : "estrelas"}`}
+              tabIndex={valor === n - 0.5 || (n === 1 && !valor) ? 0 : -1}
+              onClick={() => escolher(n - 0.5)}
+              className="absolute inset-y-0 left-0 w-1/2"
+            />
+            <button
+              type="button"
+              role="radio"
+              aria-checked={valor === n}
+              aria-label={`${n} ${n === 1 ? "estrela" : "estrelas"}`}
+              tabIndex={valor === n ? 0 : -1}
+              onClick={() => escolher(n)}
+              className="absolute inset-y-0 right-0 w-1/2"
+            />
+          </span>
+        );
+      })}
     </div>
   );
 }
