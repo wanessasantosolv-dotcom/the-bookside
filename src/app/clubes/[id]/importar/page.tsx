@@ -16,6 +16,9 @@ import { Vazio } from "@/components/social/Estados";
 import { buscaDoApp, type LivroBusca } from "@/lib/catalogo";
 import {
   adicionarLidoAoClube,
+  completarLivroDoClube,
+  FaltaAtualizarBanco,
+  fichasDoClube,
   livrosDoClube,
   primeiroNome,
   salvarFicha,
@@ -32,7 +35,7 @@ import {
   type ItemImport,
 } from "@/lib/importar";
 import { usePerfil } from "@/lib/perfil-store";
-import { semPublicar } from "@/lib/social";
+import { meuId, semPublicar } from "@/lib/social";
 
 type Linha = {
   item: ItemImport;
@@ -42,6 +45,8 @@ type Linha = {
   dia: string;
   incluir: boolean;
   jaNoClube: boolean;
+  /** o livro que já está no clube (o importador completa as fichas dele) */
+  existente?: LivroDoClube;
   termo?: string;
   buscando?: boolean;
 };
@@ -104,7 +109,7 @@ export default function ImportarNoClubePage() {
           titulo="só quem modera importa livros no clube"
           acao={{
             href: `/clubes/${clube.id}/biblioteca`,
-            rotulo: "voltar à biblioteca",
+            rotulo: "voltar à estante",
           }}
         />
       </div>
@@ -117,24 +122,27 @@ export default function ImportarNoClubePage() {
       );
     setErro(null);
     setProgresso({ feito: 0, total: itens.length });
-    const doClube = new Set(
+    const doClube = new Map(
       (await livrosDoClube(clube.id).catch(() => [] as LivroDoClube[])).map(
-        (l) => normalizar(l.livro.titulo),
+        (l) => [normalizar(l.livro.titulo), l] as const,
       ),
     );
     const resultado: Linha[] = [];
     for (const [i, item] of itens.entries()) {
       const opcoes = await acharLivro(item).catch(() => [] as LivroBusca[]);
-      const jaNoClube =
-        doClube.has(normalizar(item.titulo)) ||
-        (!!opcoes[0] && doClube.has(normalizar(opcoes[0].titulo)));
+      const existente =
+        doClube.get(normalizar(item.titulo)) ??
+        (opcoes[0] ? doClube.get(normalizar(opcoes[0].titulo)) : undefined);
+      const jaNoClube = !!existente;
       resultado.push({
         item,
         opcoes,
         escolhido: opcoes.length ? 0 : -1,
         dia: item.lidoEm ?? diaLocal(),
-        incluir: !jaNoClube,
+        // já no clube: só entra de novo se o arquivo trouxer fichas para completar
+        incluir: !jaNoClube || !!item.fichas?.length || temFicha(item),
         jaNoClube,
+        existente,
       });
       setProgresso({ feito: i + 1, total: itens.length });
       await espera(300);
@@ -182,6 +190,8 @@ export default function ImportarNoClubePage() {
     const escolhidas = linhas.filter((l) => l.incluir);
     setSalvando({ feito: 0, total: escolhidas.length });
     let falhas = 0;
+    let faltaBanco = false;
+    const salvos = new Set<Linha>();
     for (const [k, l] of escolhidas.entries()) {
       const achado = l.escolhido >= 0 ? l.opcoes[l.escolhido] : undefined;
       const livro = {
@@ -212,15 +222,31 @@ export default function ImportarNoClubePage() {
           lidoEm: f.lidoEm ?? null,
         }));
       try {
-        const id = await adicionarLidoAoClube(clube.id, livro, terminouEm, {
-          iniciadoEm: l.item.iniciadoEm
-            ? dataDoDia(l.item.iniciadoEm)
-            : undefined,
-          rodada: l.item.rodada,
-          fichasAntigas: antigas,
-        });
+        const iniciadoEm = l.item.iniciadoEm
+          ? dataDoDia(l.item.iniciadoEm)
+          : undefined;
+        let id: string;
+        let jaTenhoFicha = false;
+        if (l.existente) {
+          // já estava no clube: completa as fichas, a rodada e as datas
+          id = l.existente.id;
+          await completarLivroDoClube(id, {
+            fichasAntigas: antigas,
+            rodada: l.existente.rodada ? undefined : l.item.rodada,
+            iniciadoEm: l.existente.iniciado_em ? undefined : iniciadoEm,
+          });
+          jaTenhoFicha = (await fichasDoClube([id]).catch(() => [])).some(
+            (f) => f.autor === meuId(),
+          );
+        } else
+          id = await adicionarLidoAoClube(clube.id, livro, terminouEm, {
+            iniciadoEm,
+            rodada: l.item.rodada,
+            fichasAntigas: antigas,
+          });
+        salvos.add(l);
         // a lista trouxe nota/ficha: vira a ficha de quem importou (sem avisar no feed)
-        if (temFicha(item))
+        if (temFicha(item) && !jaTenhoFicha)
           await salvarFicha(
             { id, clube_id: clube.id, livro } as LivroDoClube,
             {
@@ -258,16 +284,30 @@ export default function ImportarNoClubePage() {
               },
             ),
           );
-      } catch {
+      } catch (e) {
         falhas++;
+        if (e instanceof FaltaAtualizarBanco) faltaBanco = true;
       }
       setSalvando({ feito: k + 1, total: escolhidas.length });
     }
     setSalvando(null);
-    if (falhas === escolhidas.length && falhas)
-      return setErro(
-        "o banco não deixou salvar. rode de novo o arquivo supabase/social.sql no SQL Editor do Supabase e tente outra vez.",
+    if (falhas) {
+      // o que foi salvo sai da lista; o que falhou fica marcado para tentar de novo
+      setLinhas((ls) =>
+        ls
+          ? ls.map((x) =>
+              salvos.has(x) ? { ...x, incluir: false, jaNoClube: true } : x,
+            )
+          : ls,
       );
+      recarregar();
+      return setErro(
+        `${falhas} de ${escolhidas.length} ${escolhidas.length === 1 ? "livro não entrou" : "livros não entraram"}. ` +
+          (faltaBanco
+            ? "o banco do app precisa ser atualizado para guardar as fichas da revista: rode de novo o arquivo supabase/social.sql no SQL Editor do Supabase e toque em salvar outra vez (os que já entraram não se repetem)."
+            : "o banco não deixou salvar. rode de novo o arquivo supabase/social.sql no SQL Editor do Supabase e tente outra vez."),
+      );
+    }
     recarregar();
     router.push(`/clubes/${clube.id}/biblioteca`);
   }
@@ -293,7 +333,7 @@ export default function ImportarNoClubePage() {
   return (
     <div className="flex min-h-[70dvh] flex-col">
       <TopoForm
-        voltar={{ href: `/clubes/${clube.id}/biblioteca`, r: "biblioteca" }}
+        voltar={{ href: `/clubes/${clube.id}/biblioteca`, r: "estante" }}
         rotulo="histórico do clube"
         titulo="importar livros já lidos"
         frase="cole a lista do clube e o app acha cada livro ✦"
@@ -375,6 +415,9 @@ export default function ImportarNoClubePage() {
                           {l.jaNoClube ? (
                             <span className="ml-1 font-semibold text-bordo">
                               · já está no clube
+                              {l.item.fichas?.length || temFicha(l.item)
+                                ? " (vamos completar as fichas)"
+                                : ""}
                             </span>
                           ) : null}
                           {l.item.fichas?.length ? (

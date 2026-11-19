@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { CapaLivro } from "@/components/CapaLivro";
@@ -42,7 +43,7 @@ export default function AdicionarLidoPage() {
           texto="peça para a moderadora do clube incluir. você pode escrever a sua ficha nele depois."
           acao={{
             href: `/clubes/${clube.id}/biblioteca`,
-            rotulo: "voltar à biblioteca",
+            rotulo: "voltar à estante",
           }}
         />
       </div>
@@ -100,12 +101,26 @@ export default function AdicionarLidoPage() {
   return (
     <form onSubmit={salvar} className="flex min-h-[70dvh] flex-col">
       <TopoForm
-        voltar={{ href: `/clubes/${clube.id}/biblioteca`, r: "biblioteca" }}
+        voltar={{ href: `/clubes/${clube.id}/biblioteca`, r: "estante" }}
         rotulo="histórico do clube"
         titulo="um livro que já lemos"
-        frase="para a biblioteca contar toda a história do clube ✦"
+        frase="para a estante contar toda a história do clube ✦"
       />
       <div className="mt-6 space-y-6 px-6 lg:max-w-[640px] lg:px-0">
+        <Link
+          href={`/clubes/${clube.id}/importar`}
+          className="flex items-center justify-between gap-3 rounded-[12px] border border-dashed border-bege px-4 py-3 text-[13px] hover:border-bordo lg:rounded-[4px]"
+        >
+          <span>
+            <b className="font-semibold text-ameixa">tem uma lista?</b>{" "}
+            <span className="text-cinza">
+              importe vários livros (e as fichas) de uma vez.
+            </span>
+          </span>
+          <span className="flex-none text-xs font-semibold text-bordo">
+            importar →
+          </span>
+        </Link>
         <div>
           <p className={rotuloCampo}>o livro</p>
           {livro ? (

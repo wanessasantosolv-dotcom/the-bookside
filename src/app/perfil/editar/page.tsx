@@ -19,9 +19,9 @@ import {
 const LIMITE_FRASE = 120;
 const padroes: PadraoCapa[] = ["linhas", "bolinhas", "ondas", "estrelas"];
 const rotulo =
-  "mb-1.5 block text-[10px] leading-[14px] font-semibold tracking-[.12em] text-bordo uppercase";
+  "mb-1.5 block text-[11px] leading-[14px] font-semibold tracking-[.12em] text-bordo uppercase";
 const caixa =
-  "w-full rounded-sm border border-bege bg-creme-quente px-3 text-ameixa outline-none focus:border-bordo focus:ring-1 focus:ring-bordo";
+  "h-12 w-full rounded-[12px] border border-bege bg-creme-quente px-4 text-ameixa outline-none focus:border-bordo focus:ring-1 focus:ring-bordo lg:rounded-[4px]";
 
 type Rascunho = Pick<
   Perfil,
@@ -60,322 +60,421 @@ function Formulario({ inicial }: { inicial: Rascunho }) {
     mudar({ capa: padroes[(i + 1) % padroes.length], capaImagem: null });
   }
 
+  const meta = typeof r.meta === "number" ? r.meta : null;
+
   return (
     <TelaApp aba="perfil">
-      <header className="flex items-center justify-between px-6 pt-2">
-        <Voltar
-          padrao="/perfil"
-          rotulo="perfil"
-          className="-ml-2 flex min-h-11 items-center px-2 text-[13px] font-semibold text-bordo"
-        />
-        <h1 className="font-display text-lg font-semibold italic">
-          editar perfil
-        </h1>
-        <button
-          type="button"
-          onClick={salvar}
-          disabled={!valido}
-          className="-mr-2 min-h-11 px-2 text-[13px] font-semibold text-bordo disabled:opacity-40"
-        >
-          salvar
-        </button>
-      </header>
-
-      {/* capa */}
-      <div
-        className={`relative mt-1 h-[104px] bg-cover bg-center ${r.capaImagem ? "" : `pat-${r.capa}`}`}
-        style={
-          r.capaImagem
-            ? { backgroundImage: `url("${r.capaImagem}")` }
-            : undefined
-        }
-      >
-        <div
-          aria-hidden
-          className="absolute inset-0 bg-gradient-to-b from-transparent from-45% to-ameixa/45"
-        />
-        <div className="absolute right-4 bottom-3 flex gap-2">
-          <button
-            type="button"
-            onClick={trocarPadrao}
-            className="h-[30px] rounded-pill bg-creme/90 px-3 text-xs font-semibold text-bordo"
-          >
-            padrão: {r.capaImagem ? "foto" : r.capa}
-          </button>
-          {r.capaImagem ? (
-            <button
-              type="button"
-              onClick={() => setCapaParaAjustar(r.capaImagem)}
-              className="h-[30px] rounded-pill bg-creme/90 px-3 text-xs font-semibold text-bordo"
-            >
-              ajustar
-            </button>
-          ) : null}
-          <button
-            type="button"
-            onClick={() => capaRef.current?.click()}
-            className="h-[30px] rounded-pill bg-creme px-3 text-xs font-semibold text-bordo"
-          >
-            trocar capa
-          </button>
-        </div>
-        <input
-          ref={capaRef}
-          type="file"
-          accept="image/*"
-          hidden
-          onChange={async (e) => {
-            const f = e.target.files?.[0];
-            e.target.value = "";
-            if (f) setCapaParaAjustar(await reduzirImagem(f, 2000, 0.9));
-          }}
-        />
-      </div>
-      {capaParaAjustar ? (
-        <AjustarFoto
-          src={capaParaAjustar}
-          formato="capa"
-          onCancelar={() => setCapaParaAjustar(null)}
-          onPronto={(dataUrl) => {
-            mudar({ capaImagem: dataUrl });
-            setCapaParaAjustar(null);
-          }}
-        />
-      ) : null}
-
-      {/* foto */}
-      <div className="relative -mt-10 ml-6 size-[78px]">
-        <button
-          type="button"
-          onClick={() => fotoRef.current?.click()}
-          aria-label="trocar foto"
-          className="block size-full overflow-hidden rounded-full border-[3px] border-creme bg-linha"
-        >
-          {r.foto ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={r.foto}
-              alt=""
-              className="size-full object-cover object-[50%_30%]"
-            />
-          ) : (
-            <span className="font-display text-3xl font-semibold italic text-bordo">
-              +
-            </span>
-          )}
-        </button>
-        <span
-          aria-hidden
-          className="pointer-events-none absolute -right-0.5 -bottom-0.5 flex size-[26px] items-center justify-center rounded-full border-2 border-creme bg-bordo"
-        >
-          <svg
-            width="11"
-            height="11"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#F9F5EE"
-            strokeWidth="2.2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M12 20h9" />
-            <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
-          </svg>
-        </span>
-        <input
-          ref={fotoRef}
-          type="file"
-          accept="image/*"
-          hidden
-          onChange={async (e) => {
-            const f = e.target.files?.[0];
-            e.target.value = "";
-            if (f) setFotoParaAjustar(await reduzirImagem(f, 1600, 0.9));
-          }}
-        />
-        {r.foto ? (
-          <button
-            type="button"
-            onClick={() => setFotoParaAjustar(r.foto)}
-            className="absolute top-[34px] left-[92px] flex min-h-11 items-center text-xs font-semibold whitespace-nowrap text-bordo"
-          >
-            ajustar foto
-          </button>
-        ) : null}
-      </div>
-      {fotoParaAjustar ? (
-        <AjustarFoto
-          src={fotoParaAjustar}
-          onCancelar={() => setFotoParaAjustar(null)}
-          onPronto={(dataUrl) => {
-            mudar({ foto: dataUrl });
-            setFotoParaAjustar(null);
-          }}
-        />
-      ) : null}
-
-      <div className="flex-1 px-6 pt-3 pb-6">
-        <div className="flex gap-3">
-          <label className="block flex-[1.4]">
-            <span className={rotulo}>nome</span>
-            <input
-              value={r.nome}
-              onChange={(e) => mudar({ nome: e.target.value })}
-              className={`${caixa} h-[46px] font-display text-[21px] font-semibold italic`}
-            />
-          </label>
-          <label className="block flex-1">
-            <span className={rotulo}>usuário</span>
-            <span
-              className={`${caixa} flex h-[46px] items-center text-sm font-medium focus-within:border-bordo`}
-            >
-              <span className="text-bordo">@</span>
-              <input
-                value={r.usuario}
-                autoCapitalize="none"
-                onChange={(e) =>
-                  mudar({ usuario: sugerirUsuario(e.target.value) || "" })
-                }
-                className="w-full min-w-0 bg-transparent outline-none"
-              />
-            </span>
-          </label>
-        </div>
-
-        <label className="mt-5 block">
-          <span className={rotulo}>frase do perfil</span>
-          <textarea
-            value={r.frase}
-            maxLength={LIMITE_FRASE}
-            rows={2}
-            onChange={(e) => mudar({ frase: e.target.value })}
-            className={`${caixa} resize-none py-2.5 font-accent text-sm leading-[1.35] italic !text-bordo`}
+      <div className="mx-auto flex w-full max-w-[640px] flex-1 flex-col">
+        <header className="flex items-center justify-between px-6 pt-2 lg:px-0">
+          <Voltar
+            padrao="/perfil"
+            rotulo="perfil"
+            className="-ml-2 flex min-h-11 items-center px-2 text-[13px] font-semibold text-bordo"
           />
-          <span className="mt-1 block text-right text-[9px] font-semibold tracking-[.12em] text-cinza uppercase">
-            {r.frase.length} / {LIMITE_FRASE}
-          </span>
-        </label>
-
-        <fieldset className="mt-3">
-          <legend className={rotulo}>
-            meta de leitura · {new Date().getFullYear()}
-          </legend>
-          <div className="flex flex-wrap items-center gap-2">
-            {metas.map((m) => (
-              <label
-                key={String(m.valor)}
-                className={`inline-flex h-11 min-w-11 cursor-pointer items-center justify-center rounded-pill border px-3.5 text-sm font-medium has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-bordo ${
-                  r.meta === m.valor
-                    ? "border-bordo bg-bordo text-creme"
-                    : "border-bege bg-creme-quente"
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="meta"
-                  className="sr-only"
-                  checked={r.meta === m.valor}
-                  onChange={() => mudar({ meta: m.valor })}
-                />
-                {m.valor ?? "sem meta"}
-              </label>
-            ))}
-            <span className="ml-auto text-[9px] font-semibold tracking-[.12em] text-cinza uppercase">
-              {livrosLidos} lidos
-            </span>
-          </div>
-        </fieldset>
-
-        <fieldset className="mt-5">
-          <legend className={rotulo}>tema do perfil</legend>
-          <div className="-mx-6 flex gap-[9px] overflow-x-auto px-6 py-0.5 [scrollbar-width:none]">
-            {temas.map((t) => {
-              const on = r.tema === t.id;
-              return (
-                <label
-                  key={t.id}
-                  className={`relative h-[78px] w-[92px] flex-none cursor-pointer overflow-hidden rounded-[10px] has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-bordo ${
-                    on
-                      ? "border-2 border-bordo shadow-[0_6px_12px_-8px_rgba(107,13,36,.6)]"
-                      : "border-[1.5px] border-linha"
-                  }`}
-                  style={{ background: t.papel }}
-                >
-                  <input
-                    type="radio"
-                    name="tema"
-                    className="sr-only"
-                    checked={on}
-                    onChange={() => mudar({ tema: t.id })}
-                  />
-                  <div
-                    className="h-[26px]"
-                    style={{ background: t.destaque, opacity: 0.55 }}
-                  />
-                  <div
-                    className="absolute inset-x-2.5 top-[18px] bottom-0 rounded-t-[8px]"
-                    style={{ background: t.papel }}
-                  />
-                  <span
-                    className="absolute top-3.5 left-1/2 -ml-[9px] size-[18px] rounded-full border-2 border-creme-quente"
-                    style={{ background: t.destaque }}
-                  />
-                  <span
-                    className="absolute inset-x-1 top-[38px] text-center font-display text-[11px] leading-[1.15] font-semibold italic"
-                    style={{ color: t.texto }}
-                  >
-                    {t.nome}
-                  </span>
-                  {on ? (
-                    <span
-                      aria-hidden
-                      className="absolute top-[5px] right-[5px] size-4 rounded-full bg-bordo text-center text-[10px] leading-4 font-bold text-creme"
-                    >
-                      ✓
-                    </span>
-                  ) : null}
-                </label>
-              );
-            })}
-          </div>
-          <p className="mt-2 font-accent text-[13px] italic text-cinza">
-            o tema define a cor de destaque e o papel do seu perfil.
-          </p>
-        </fieldset>
-
-        <div className="mt-5 flex items-center justify-between border-y border-linha py-3">
-          <div>
-            <p className="text-[13px] font-semibold">favoritos</p>
-            <p className="mt-0.5 font-accent text-xs italic text-cinza">
-              até 4 capas em destaque
-            </p>
-          </div>
-          <Link
-            href="/perfil/favoritos"
-            className="flex min-h-11 items-center text-xs font-semibold text-bordo"
-          >
-            editar →
-          </Link>
-        </div>
-
-        <div className="mt-6 flex gap-2.5">
-          <Link
-            href="/perfil"
-            className="flex h-[52px] flex-1 items-center justify-center rounded-pill border border-bege text-sm font-semibold text-ameixa"
-          >
-            cancelar
-          </Link>
+          <h1 className="font-display text-lg font-semibold italic lg:font-revista lg:text-xl lg:font-normal">
+            editar perfil
+          </h1>
           <button
             type="button"
             onClick={salvar}
             disabled={!valido}
-            className="h-[52px] flex-1 rounded-pill bg-bordo text-sm font-semibold text-creme hover:bg-bordo-suave disabled:opacity-45"
+            className="-mr-2 min-h-11 px-2 text-[13px] font-semibold text-bordo disabled:opacity-40"
           >
-            salvar ♡
+            salvar
           </button>
+        </header>
+
+        {/* capa */}
+        <div
+          className={`relative mt-2 h-[120px] bg-cover bg-center sm:mx-6 sm:h-[150px] sm:rounded-[12px] sm:overflow-hidden lg:mx-0 lg:rounded-[4px] ${r.capaImagem ? "" : `pat-${r.capa}`}`}
+          style={
+            r.capaImagem
+              ? { backgroundImage: `url("${r.capaImagem}")` }
+              : undefined
+          }
+        >
+          <div
+            aria-hidden
+            className="absolute inset-0 bg-gradient-to-b from-transparent from-45% to-ameixa/45"
+          />
+          <div className="absolute right-3 bottom-3 flex flex-wrap justify-end gap-2">
+            {r.capaImagem ? (
+              <button
+                type="button"
+                onClick={() => setCapaParaAjustar(r.capaImagem)}
+                className={botaoCapa}
+              >
+                <Icone d={ICONES.ajustar} />
+                ajustar
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={trocarPadrao}
+                className={botaoCapa}
+                aria-label={`trocar o desenho da capa (agora: ${r.capa})`}
+              >
+                <Icone d={ICONES.padrao} />
+                outro desenho
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => capaRef.current?.click()}
+              className={`${botaoCapa} bg-creme`}
+            >
+              <Icone d={ICONES.foto} />
+              {r.capaImagem ? "trocar foto da capa" : "usar uma foto"}
+            </button>
+            {r.capaImagem ? (
+              <button
+                type="button"
+                onClick={() => mudar({ capaImagem: null })}
+                className={botaoCapa}
+                aria-label="tirar a foto da capa"
+              >
+                <Icone d={ICONES.lixo} />
+              </button>
+            ) : null}
+          </div>
+          <input
+            ref={capaRef}
+            type="file"
+            accept="image/*"
+            hidden
+            onChange={async (e) => {
+              const f = e.target.files?.[0];
+              e.target.value = "";
+              if (f) setCapaParaAjustar(await reduzirImagem(f, 2000, 0.9));
+            }}
+          />
+        </div>
+        {capaParaAjustar ? (
+          <AjustarFoto
+            src={capaParaAjustar}
+            formato="capa"
+            onCancelar={() => setCapaParaAjustar(null)}
+            onPronto={(dataUrl) => {
+              mudar({ capaImagem: dataUrl });
+              setCapaParaAjustar(null);
+            }}
+          />
+        ) : null}
+
+        {/* foto */}
+        <div className="-mt-10 flex items-end gap-3 px-6 sm:px-10 lg:px-4">
+          <div className="relative size-[84px] flex-none">
+            <button
+              type="button"
+              onClick={() => fotoRef.current?.click()}
+              aria-label="trocar foto"
+              className="flex size-full items-center justify-center overflow-hidden rounded-full border-[3px] border-creme bg-linha"
+            >
+              {r.foto ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={r.foto}
+                  alt=""
+                  className="size-full object-cover object-[50%_30%]"
+                />
+              ) : (
+                <Icone d={ICONES.foto} tamanho={24} />
+              )}
+            </button>
+            <span
+              aria-hidden
+              className="pointer-events-none absolute -right-0.5 -bottom-0.5 flex size-[26px] items-center justify-center rounded-full border-2 border-creme bg-bordo text-creme"
+            >
+              <Icone d={ICONES.lapis} tamanho={11} />
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-x-4 pb-1">
+            <button
+              type="button"
+              onClick={() => fotoRef.current?.click()}
+              className="flex min-h-11 items-center text-xs font-semibold text-bordo"
+            >
+              {r.foto ? "trocar foto" : "colocar foto"}
+            </button>
+            {r.foto ? (
+              <button
+                type="button"
+                onClick={() => setFotoParaAjustar(r.foto)}
+                className="flex min-h-11 items-center text-xs font-semibold text-bordo"
+              >
+                ajustar enquadramento
+              </button>
+            ) : null}
+          </div>
+          <input
+            ref={fotoRef}
+            type="file"
+            accept="image/*"
+            hidden
+            onChange={async (e) => {
+              const f = e.target.files?.[0];
+              e.target.value = "";
+              if (f) setFotoParaAjustar(await reduzirImagem(f, 1600, 0.9));
+            }}
+          />
+        </div>
+        {fotoParaAjustar ? (
+          <AjustarFoto
+            src={fotoParaAjustar}
+            onCancelar={() => setFotoParaAjustar(null)}
+            onPronto={(dataUrl) => {
+              mudar({ foto: dataUrl });
+              setFotoParaAjustar(null);
+            }}
+          />
+        ) : null}
+
+        <div className="flex-1 space-y-8 px-6 pt-6 pb-6 lg:px-0">
+          <section>
+            <TituloSecao icone={ICONES.pessoa} titulo="quem é você por aqui" />
+            <div className="grid gap-4 sm:grid-cols-[1.3fr_1fr]">
+              <label className="block min-w-0">
+                <span className={rotulo}>seu nome</span>
+                <input
+                  value={r.nome}
+                  onChange={(e) => mudar({ nome: e.target.value })}
+                  placeholder="como você quer ser chamada"
+                  className={`${caixa} font-display text-[21px] font-semibold italic`}
+                />
+              </label>
+              <label className="block min-w-0">
+                <span className={rotulo}>usuário</span>
+                <span
+                  className={`${caixa} flex items-center text-[15px] font-medium focus-within:border-bordo focus-within:ring-1 focus-within:ring-bordo`}
+                >
+                  <span className="text-bordo">@</span>
+                  <input
+                    value={r.usuario}
+                    autoCapitalize="none"
+                    onChange={(e) =>
+                      mudar({ usuario: sugerirUsuario(e.target.value) || "" })
+                    }
+                    className="w-full min-w-0 bg-transparent outline-none"
+                  />
+                </span>
+                <span className="mt-1.5 block font-accent text-xs italic text-cinza">
+                  é por ele que as amigas te encontram.
+                </span>
+              </label>
+            </div>
+
+            <label className="mt-4 block">
+              <span className={rotulo}>frase do perfil</span>
+              <textarea
+                value={r.frase}
+                maxLength={LIMITE_FRASE}
+                rows={2}
+                onChange={(e) => mudar({ frase: e.target.value })}
+                placeholder="uma frase que tem a sua cara de leitora"
+                className={`${caixa} !h-auto resize-none py-3 font-accent text-base leading-[1.35] italic !text-bordo`}
+              />
+              <span className="mt-1 flex justify-between gap-3 text-[11px] text-cinza">
+                <span className="font-accent italic">
+                  aparece logo abaixo do seu nome.
+                </span>
+                <span className="font-semibold tabular-nums">
+                  {r.frase.length}/{LIMITE_FRASE}
+                </span>
+              </span>
+            </label>
+          </section>
+
+          <fieldset>
+            <legend className="w-full">
+              <TituloSecao
+                icone={ICONES.alvo}
+                titulo={`meta de ${new Date().getFullYear()}`}
+              />
+            </legend>
+            <p className="-mt-1 mb-3 font-accent text-sm italic text-cinza">
+              quantos livros você quer ler este ano?
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {metas.map((m) => (
+                <label
+                  key={String(m.valor)}
+                  className={`inline-flex h-11 min-w-12 cursor-pointer items-center justify-center rounded-pill border px-4 text-sm font-semibold has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-bordo ${
+                    r.meta === m.valor
+                      ? "border-bordo bg-bordo text-creme"
+                      : "border-bege bg-creme-quente text-ameixa"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="meta"
+                    className="sr-only"
+                    checked={r.meta === m.valor}
+                    onChange={() => mudar({ meta: m.valor })}
+                  />
+                  {m.valor ?? "sem meta"}
+                </label>
+              ))}
+            </div>
+            <div className="mt-3 rounded-[12px] bg-creme-quente px-4 py-3 lg:rounded-[4px]">
+              <p className="text-[13px] text-ameixa">
+                {meta ? (
+                  <>
+                    <b className="text-bordo">{livrosLidos}</b> de {meta} lidos ·{" "}
+                    <span className="font-accent italic text-cinza">
+                      {metas.find((m) => m.valor === meta)?.legenda}
+                    </span>
+                  </>
+                ) : (
+                  <span className="font-accent italic text-cinza">
+                    sem números, só leitura · {livrosLidos} lidos até agora
+                  </span>
+                )}
+              </p>
+              {meta ? (
+                <span className="mt-2 block h-1.5 overflow-hidden rounded-full bg-bege/70">
+                  <span
+                    className="block h-full rounded-full bg-bordo"
+                    style={{
+                      width: `${Math.min(100, (livrosLidos / meta) * 100)}%`,
+                    }}
+                  />
+                </span>
+              ) : null}
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend className="w-full">
+              <TituloSecao icone={ICONES.paleta} titulo="cores do perfil" />
+            </legend>
+            <p className="-mt-1 mb-3 font-accent text-sm italic text-cinza">
+              o tema muda a cor de destaque e o papel do seu perfil.
+            </p>
+            <div className="grid grid-cols-2 gap-2.5 min-[420px]:grid-cols-4">
+              {temas.map((t) => {
+                const on = r.tema === t.id;
+                return (
+                  <label
+                    key={t.id}
+                    className={`relative h-[84px] cursor-pointer overflow-hidden rounded-[12px] has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-bordo lg:rounded-[6px] ${
+                      on
+                        ? "ring-2 ring-bordo ring-offset-2 ring-offset-creme"
+                        : "border border-linha"
+                    }`}
+                    style={{ background: t.papel }}
+                  >
+                    <input
+                      type="radio"
+                      name="tema"
+                      className="sr-only"
+                      checked={on}
+                      onChange={() => mudar({ tema: t.id })}
+                    />
+                    <div
+                      className="h-[26px]"
+                      style={{ background: t.destaque, opacity: 0.55 }}
+                    />
+                    <div
+                      className="absolute inset-x-2.5 top-[18px] bottom-0 rounded-t-[8px]"
+                      style={{ background: t.papel }}
+                    />
+                    <span
+                      className="absolute top-3.5 left-1/2 -ml-[9px] size-[18px] rounded-full border-2 border-creme-quente"
+                      style={{ background: t.destaque }}
+                    />
+                    <span
+                      className="absolute inset-x-1.5 top-[40px] text-center font-display text-[12px] leading-[1.15] font-semibold italic"
+                      style={{ color: t.texto }}
+                    >
+                      {t.nome}
+                    </span>
+                    {on ? (
+                      <span
+                        aria-hidden
+                        className="absolute top-[5px] right-[5px] flex size-[18px] items-center justify-center rounded-full bg-bordo text-creme"
+                      >
+                        <Icone d="M5 12.5l4.5 4.5L19 7.5" tamanho={10} grosso />
+                      </span>
+                    ) : null}
+                  </label>
+                );
+              })}
+            </div>
+          </fieldset>
+
+          <div className="flex flex-col-reverse gap-2.5 pt-2 sm:flex-row sm:justify-end">
+            <Link
+              href="/perfil"
+              className="flex h-12 items-center justify-center rounded-pill border border-bege px-8 text-sm font-semibold text-ameixa sm:min-w-[160px]"
+            >
+              cancelar
+            </Link>
+            <button
+              type="button"
+              onClick={salvar}
+              disabled={!valido}
+              className="h-12 rounded-pill bg-bordo px-8 text-sm font-semibold text-creme hover:bg-bordo-suave disabled:opacity-45 sm:min-w-[200px]"
+            >
+              salvar alterações
+            </button>
+          </div>
         </div>
       </div>
     </TelaApp>
+  );
+}
+
+const botaoCapa =
+  "inline-flex h-8 items-center gap-1.5 rounded-pill bg-creme/90 px-3 text-xs font-semibold text-bordo shadow-[0_2px_8px_rgba(43,20,32,.25)]";
+
+const ICONES = {
+  foto: "M4 8h3l2-3h6l2 3h3v11H4z M12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8z",
+  ajustar: "M4 7h10 M18 7h2 M4 17h2 M10 17h10 M16 5v4 M8 15v4",
+  padrao: "M4 4h16v16H4z M4 9c3 2 5-2 8 0s5-2 8 0 M4 15c3 2 5-2 8 0s5-2 8 0",
+  lixo: "M5 7h14 M10 7V5h4v2 M7 7l1 12h8l1-12",
+  lapis: "M12 20h9 M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z",
+  pessoa: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M4 20c1.5-4 4.5-6 8-6s6.5 2 8 6",
+  alvo: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M12 12h.01",
+  paleta:
+    "M12 3a9 9 0 0 0 0 18c1.5 0 2-1 2-2 0-1.5-1-2 0-3s3 0 4.5-1A5 5 0 0 0 21 11c0-4.5-4-8-9-8z M7.5 11h.01 M10 7h.01 M15 7.5h.01",
+};
+
+function Icone({
+  d,
+  tamanho = 14,
+  grosso,
+}: {
+  d: string;
+  tamanho?: number;
+  grosso?: boolean;
+}) {
+  return (
+    <svg
+      aria-hidden
+      width={tamanho}
+      height={tamanho}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={grosso ? 3 : 1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      {d.split(" M").map((p, i) => (
+        <path key={i} d={i ? `M${p}` : p} />
+      ))}
+    </svg>
+  );
+}
+
+function TituloSecao({ icone, titulo }: { icone: string; titulo: string }) {
+  return (
+    <h2 className="mb-3 flex items-center gap-2 border-b border-linha pb-2 font-display text-[19px] leading-none font-semibold italic text-bordo lg:font-revista lg:font-normal lg:text-tinta">
+      <span className="flex size-7 items-center justify-center rounded-full bg-rosa-fundo text-bordo">
+        <Icone d={icone} />
+      </span>
+      {titulo}
+    </h2>
   );
 }
 

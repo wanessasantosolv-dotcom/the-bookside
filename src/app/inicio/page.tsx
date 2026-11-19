@@ -15,6 +15,7 @@ import {
 import { Avatar, CartaoAtividade } from "@/components/social/Pessoas";
 import { lembrarLivros } from "@/lib/catalogo";
 import { citacaoDoDia } from "@/lib/citacoes";
+import { arquetipos } from "@/lib/teste";
 import { useIndicacoes } from "@/lib/indicacoes";
 import { corDoLivro } from "@/lib/cores";
 import { usePerfil, type LivroSalvo } from "@/lib/perfil-store";
@@ -143,24 +144,80 @@ function IndicacaoDoDia() {
   );
 }
 
-function BannerTeste() {
+/** O convite para o teste "que tipo de leitora você é?" (ou, depois de feito, o resultado). */
+function BannerTeste({ principal }: { principal?: string }) {
+  const arq = principal
+    ? arquetipos[principal as keyof typeof arquetipos]
+    : null;
+  if (arq)
+    return (
+      <Link
+        href="/teste/resultado"
+        className="flex items-center gap-3 rounded-xl border border-linha bg-creme-quente p-4 hover:border-bordo lg:rounded-[4px] lg:bg-transparent lg:hover:bg-[#F3ECDF]"
+      >
+        <span
+          aria-hidden
+          className="flex size-10 flex-none items-center justify-center rounded-full bg-rosa-fundo font-display text-lg text-bordo"
+        >
+          ✦
+        </span>
+        <span className="min-w-0">
+          <span className="block text-[10px] font-semibold tracking-[.16em] text-bordo uppercase">
+            seu bookside
+          </span>
+          <span className="mt-0.5 block truncate font-display text-[17px] font-semibold italic lg:font-revista lg:font-normal">
+            {arq.nome}
+          </span>
+          <span className="block text-xs text-cinza">
+            ver resultado ou refazer o teste →
+          </span>
+        </span>
+      </Link>
+    );
   return (
     <Link
       href="/teste"
-      className="block rounded-xl border border-dashed border-ouro bg-creme-quente p-4 lg:rounded-[4px] lg:bg-transparent lg:p-5"
+      className="group relative block overflow-hidden rounded-xl bg-ameixa p-5 text-creme lg:rounded-[4px] lg:p-7"
     >
-      <p className="text-[10px] font-semibold tracking-[.16em] text-bordo uppercase">
-        ✦ ainda não fez o teste?
-      </p>
-      <p className="mt-2 font-display text-[17px] leading-[1.2] font-semibold italic text-ameixa lg:font-revista lg:text-[19px] lg:font-normal">
-        descubra seu bookside
-      </p>
-      <p className="mt-1.5 font-accent text-sm italic text-cinza lg:font-texto lg:text-xs lg:not-italic">
-        15 perguntas, 8 arquétipos — e um universo literário só seu.
-      </p>
-      <p className="mt-2.5 text-[11px] font-bold tracking-[.1em] text-bordo uppercase">
-        fazer o teste →
-      </p>
+      {/* lombadas decorativas */}
+      <span
+        aria-hidden
+        className="absolute -right-3 bottom-0 flex items-end gap-1 opacity-90 transition-transform group-hover:-translate-y-1 sm:right-5"
+      >
+        {[
+          ["#B75A6B", 70, -6],
+          ["#A88B64", 92, 0],
+          ["#F2C9D2", 60, 0],
+          ["#6B7A5E", 84, 4],
+          ["#8E1D3D", 74, 0],
+        ].map(([cor, alto, giro], i) => (
+          <span
+            key={i}
+            className="block w-4 rounded-t-[3px] sm:w-5"
+            style={{
+              background: cor as string,
+              height: alto as number,
+              transform: `rotate(${giro}deg)`,
+              transformOrigin: "bottom",
+            }}
+          />
+        ))}
+      </span>
+      <span className="relative block max-w-[72%] sm:max-w-[60%]">
+        <span className="block text-[10px] font-semibold tracking-[.16em] text-rosa-claro uppercase">
+          ✦ teste · 3 minutinhos
+        </span>
+        <span className="mt-2 block font-display text-[24px] leading-[1.1] font-semibold italic lg:font-revista lg:text-[28px] lg:font-normal">
+          que tipo de leitora você é?
+        </span>
+        <span className="mt-2 block font-accent text-[15px] leading-snug italic text-creme/80 lg:font-texto lg:text-[13px] lg:not-italic">
+          15 perguntas para descobrir o seu bookside — e ganhar indicações com a
+          sua cara.
+        </span>
+        <span className="mt-4 inline-flex h-10 items-center rounded-pill bg-creme px-5 text-[13px] font-semibold text-bordo">
+          fazer o teste →
+        </span>
+      </span>
     </Link>
   );
 }
@@ -566,6 +623,12 @@ export default function InicioPage() {
               </figcaption>
             </figure>
 
+            {!bookside ? (
+              <div className="mx-6 mt-4 animate-subir lg:mx-0 lg:mt-0 lg:mb-7">
+                <BannerTeste />
+              </div>
+            ) : null}
+
             {lendo ? (
               <Link
                 href={`/livro/${lendo.id}/progresso`}
@@ -598,9 +661,9 @@ export default function InicioPage() {
               <IndicacaoDoDia />
             </div>
 
-            {!bookside ? (
+            {bookside ? (
               <div className="mx-6 mt-5 lg:hidden">
-                <BannerTeste />
+                <BannerTeste principal={bookside.principal} />
               </div>
             ) : null}
 
@@ -613,7 +676,7 @@ export default function InicioPage() {
           </div>
 
           <aside className="hidden space-y-5 lg:block">
-            {!bookside ? <BannerTeste /> : null}
+            {bookside ? <BannerTeste principal={bookside.principal} /> : null}
             <AmigasLendoWeb />
             <IndicacaoDoDia />
             <Link

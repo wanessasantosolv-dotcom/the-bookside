@@ -739,8 +739,101 @@ export async function adicionarLidoAoClube(
     })
     .select("id")
     .single();
-  if (error) throw error;
+  if (error) throw semColunaNova(error);
   return data.id as string;
+}
+
+export type AndamentoMembro = {
+  estado: "terminou" | "lendo" | "nao";
+  /** 0–100, quando a pessoa marcou a página */
+  pct?: number;
+};
+
+/**
+ * Como cada pessoa do clube está na leitura da vez: quem terminou (ficha ou
+ * marcou como lido na estante), quem está lendo (e em que página) e quem não começou.
+ */
+export async function andamentoDasMembros(
+  l: LivroDoClube,
+  membros: Membro[],
+  fichas: Ficha[],
+): Promise<Map<string, AndamentoMembro>> {
+  const res = new Map<string, AndamentoMembro>();
+  const { data } = membros.length
+    ? await db()
+        .from("perfis_publicos")
+        .select("id,livros:dados->livros")
+        .in(
+          "id",
+          membros.map((m) => m.usuario_id),
+        )
+    : { data: [] };
+  const chave = chaveLivro(l.livro.titulo);
+  for (const m of membros) {
+    if (fichas.some((f) => f.clube_livro_id === l.id && f.autor === m.usuario_id)) {
+      res.set(m.usuario_id, { estado: "terminou" });
+      continue;
+    }
+    const p = (data ?? []).find((x: { id: string }) => x.id === m.usuario_id) as
+      | {
+          livros?: {
+            id: string;
+            titulo?: string;
+            status?: string;
+            paginas?: number;
+            paginaAtual?: number;
+          }[];
+        }
+      | undefined;
+    const meu = (p?.livros ?? []).find(
+      (x) => x.id === l.livro.id || chaveLivro(x.titulo ?? "") === chave,
+    );
+    if (meu?.status === "lido") res.set(m.usuario_id, { estado: "terminou" });
+    else if (meu?.status === "lendo" || meu?.paginaAtual) {
+      const total = meu.paginas ?? l.livro.paginas;
+      res.set(m.usuario_id, {
+        estado: meu.paginaAtual ? "lendo" : "nao",
+        pct:
+          total && meu.paginaAtual
+            ? Math.min(100, Math.round((meu.paginaAtual / total) * 100))
+            : undefined,
+      });
+    } else res.set(m.usuario_id, { estado: "nao" });
+  }
+  return res;
+}
+
+/** o banco ainda não tem as colunas novas (falta rodar o social.sql de novo) */
+export class FaltaAtualizarBanco extends Error {}
+function semColunaNova(e: { code?: string; message?: string }) {
+  return e?.code === "PGRST204" ||
+    e?.code === "42703" ||
+    /fichas_antigas|escolha|schema cache/i.test(e?.message ?? "")
+    ? new FaltaAtualizarBanco(e.message)
+    : e;
+}
+
+/**
+ * Um livro que já estava no clube: o importador completa o que faltava
+ * (as fichas da revista, a rodada e as datas) em vez de pular.
+ */
+export async function completarLivroDoClube(
+  id: string,
+  dados: {
+    fichasAntigas?: FichaAntiga[];
+    rodada?: number;
+    iniciadoEm?: string;
+    encerradoEm?: string;
+  },
+) {
+  const mudar: Record<string, unknown> = {};
+  if (dados.fichasAntigas?.length) mudar.fichas_antigas = dados.fichasAntigas;
+  if (dados.rodada) mudar.rodada = dados.rodada;
+  if (dados.iniciadoEm) mudar.iniciado_em = dados.iniciadoEm;
+  if (dados.encerradoEm) mudar.encerrado_em = dados.encerradoEm;
+  if (!Object.keys(mudar).length) return;
+  const { error } = await db().from("clube_livros").update(mudar).eq("id", id);
+  if (error) throw semColunaNova(error);
 }
 
 const SINCRONIZADOS = "bookside-clube-na-estante";

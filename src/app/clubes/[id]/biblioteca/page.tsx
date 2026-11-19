@@ -27,13 +27,12 @@ import { useConsulta, useMeuId } from "@/lib/social";
 type Linha = {
   id: string;
   nome: string;
-  selo: string;
   livros: LivroDoClube[];
   link?: string;
   mais?: string;
 };
 
-/** A biblioteca do clube: o mesmo formato das estantes pessoais (prateleiras, leque, estante de pé). */
+/** A estante do clube: o mesmo formato das estantes pessoais (prateleiras, leque, estante de pé). */
 export default function BibliotecaPage() {
   const { clube, membros, papel } = useClube();
   const eu = useMeuId();
@@ -44,7 +43,7 @@ export default function BibliotecaPage() {
     return (
       <Animacao
         tipo="pilha"
-        titulo="abrindo a biblioteca"
+        titulo="abrindo a estante"
         sub="isso pode levar um instante"
       />
     );
@@ -58,7 +57,7 @@ export default function BibliotecaPage() {
   async function excluir(l: LivroDoClube) {
     if (
       !confirm(
-        `tirar "${l.livro.titulo}" da biblioteca do clube? isso apaga também as fichas desse livro.`,
+        `tirar "${l.livro.titulo}" da estante do clube? isso apaga também as fichas desse livro.`,
       )
     )
       return;
@@ -88,11 +87,6 @@ export default function BibliotecaPage() {
     {
       id: "lendo",
       nome: "lendo agora",
-      selo: and
-        ? and.faltam
-          ? `faltam ${and.faltam} dias`
-          : "último dia"
-        : "agora",
       livros: lendo,
       link: `${base}/leitura`,
       mais: moderadora ? `${base}/escolher` : undefined,
@@ -100,21 +94,22 @@ export default function BibliotecaPage() {
     {
       id: "lidos",
       nome: "lidos",
-      selo: `${desteAno} este ano`,
       livros: lidos,
       mais: moderadora ? `${base}/adicionar-lido` : undefined,
     },
     {
       id: "proximas",
       nome: votacao ? "sugestões" : "próximas leituras",
-      selo: votacao ? "votação aberta" : `${proximas.length} na fila`,
       livros: proximas,
       link: `${base}/sugestoes`,
       mais: `${base}/sugerir`,
     },
   ];
+  // em "todas", as prateleiras vazias somem (menos coisa na tela)
   const visiveis =
-    filtro === "todas" ? linhas : linhas.filter((l) => l.id === filtro);
+    filtro === "todas"
+      ? linhas.filter((l) => l.livros.length)
+      : linhas.filter((l) => l.id === filtro);
 
   const itens = (ls: LivroDoClube[]): ItemVitrine[] =>
     ls.map((l) => ({
@@ -128,7 +123,7 @@ export default function BibliotecaPage() {
       acao: moderadora ? (
         <button
           type="button"
-          aria-label={`tirar ${l.livro.titulo} da biblioteca`}
+          aria-label={`tirar ${l.livro.titulo} da estante`}
           onClick={() => excluir(l)}
           className="flex size-6 items-center justify-center rounded-full border border-creme bg-bordo text-xs leading-none text-creme shadow-[0_2px_6px_rgba(43,20,32,.35)]"
         >
@@ -142,30 +137,27 @@ export default function BibliotecaPage() {
 
   return (
     <div className="px-6 pt-5 pb-6 lg:px-0">
-      <CartaoAnoDoClube clubeId={clube.id} />
-
-      <div className="mt-6 flex flex-wrap items-end justify-between gap-3">
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h2 className="font-display text-[28px] leading-[1.1] font-semibold italic text-bordo lg:font-revista lg:text-[36px] lg:font-normal">
-            biblioteca do clube
+            estante do clube
           </h2>
           <p className="mt-1.5 text-[13px] text-cinza">
             {lidos.length} {lidos.length === 1 ? "livro lido" : "livros lidos"}
-            {paginas
-              ? ` · ${paginas.toLocaleString("pt-BR")} páginas`
-              : ""} · {livros.length} na biblioteca
+            {desteAno && desteAno !== lidos.length
+              ? ` (${desteAno} este ano)`
+              : ""}
+            {paginas ? ` · ${paginas.toLocaleString("pt-BR")} páginas` : ""}
+            {and && and.faltam
+              ? ` · a leitura atual termina em ${and.faltam} ${and.faltam === 1 ? "dia" : "dias"}`
+              : ""}
           </p>
         </div>
         <span className="flex flex-wrap gap-2">
           {moderadora ? (
-            <>
-              <Link href={`${base}/importar`} className={acao}>
-                importar lista
-              </Link>
-              <Link href={`${base}/adicionar-lido`} className={acao}>
-                + já lido
-              </Link>
-            </>
+            <Link href={`${base}/adicionar-lido`} className={acao}>
+              + livro já lido
+            </Link>
           ) : null}
           <Link
             href={`${base}/sugerir`}
@@ -178,14 +170,14 @@ export default function BibliotecaPage() {
 
       <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
         <nav
-          aria-label="filtrar a biblioteca"
+          aria-label="filtrar a estante"
           className="-mx-6 flex gap-[7px] overflow-x-auto px-6 [scrollbar-width:none] lg:mx-0 lg:px-0"
         >
           {[
-            { id: "todas", nome: `todas · ${livros.length}` },
+            { id: "todas", nome: "todas" },
             ...linhas.map((l) => ({
               id: l.id,
-              nome: `${l.nome} · ${l.livros.length}`,
+              nome: l.livros.length ? `${l.nome} · ${l.livros.length}` : l.nome,
             })),
           ].map((f) => (
             <button
@@ -213,7 +205,7 @@ export default function BibliotecaPage() {
       {!livros.length ? (
         <Vazio
           className="mt-6"
-          titulo="a biblioteca do clube está em branco"
+          titulo="a estante do clube está em branco"
           texto="sugira o primeiro livro, ou importe os livros que o clube já leu."
           acao={{ href: `${base}/sugerir`, rotulo: "sugerir um livro" }}
         />
@@ -224,29 +216,15 @@ export default function BibliotecaPage() {
           {visiveis.map((linha) => (
             <section key={linha.id} className="animate-subir">
               <div className="mb-3.5 flex items-baseline justify-between gap-3 border-b border-ameixa/70 pb-2">
-                <span className="flex items-center gap-2">
-                  <span
-                    className={`inline-flex h-[22px] items-center rounded-pill px-2.5 text-[9px] font-semibold tracking-[.1em] uppercase ${
-                      linha.id === "lendo"
-                        ? "bg-bordo text-creme"
-                        : "bg-bege/60 text-ameixa"
-                    }`}
-                  >
-                    {linha.selo}
-                  </span>
-                  <h3 className="font-display text-xl leading-none font-semibold italic text-bordo lg:font-revista lg:text-2xl lg:font-normal lg:text-ameixa">
-                    {linha.nome}
-                    <span className="ml-2 font-sans text-[11px] font-semibold text-cinza not-italic">
-                      · {linha.livros.length}
-                    </span>
-                  </h3>
-                </span>
+                <h3 className="font-display text-xl leading-none font-semibold italic text-bordo lg:font-revista lg:text-2xl lg:font-normal lg:text-ameixa">
+                  {linha.nome}
+                </h3>
                 {linha.link ? (
                   <Link
                     href={linha.link}
                     className="text-[10px] font-bold tracking-[.12em] text-bordo uppercase"
                   >
-                    abrir →
+                    {linha.id === "lendo" ? "ver a leitura →" : votacao ? "votar →" : "ver a fila →"}
                   </Link>
                 ) : null}
               </div>
@@ -288,6 +266,10 @@ export default function BibliotecaPage() {
           ))}
         </div>
       )}
+
+      <div className="mt-12">
+        <CartaoAnoDoClube clubeId={clube.id} />
+      </div>
 
       <p className="pt-8 text-center lg:hidden">
         <SeletorVisualizacao vis={vis} onChange={setVis} className="!text-sm" />

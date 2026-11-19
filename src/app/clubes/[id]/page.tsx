@@ -3,11 +3,18 @@
 import { CartaoAnoDoClube } from "@/components/clube/AnoDoClube";
 import { CapaAuto } from "@/components/CapaAuto";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { useClube } from "@/components/clube/ClubeContexto";
 import { Carregando, ErroOuFalta } from "@/components/social/Estados";
 import { Avatar } from "@/components/social/Pessoas";
 import {
   andamento,
+  andamentoDasMembros,
+  quemTrouxe,
+  type AndamentoMembro,
+  type LivroDoClube,
+  type Membro,
   encontrosDe,
   fichasComAntigas,
   fichasDoClube,
@@ -37,8 +44,14 @@ export default function ClubeInicioPage() {
     const fichas = await fichasDoClube(
       livros.filter((l) => l.estado !== "sugerido").map((l) => l.id),
     );
-    return { livros, encontros, fichas };
-  }, [clube.id]);
+    const daVez = livros.find((l) => l.estado === "lendo");
+    const turma = daVez
+      ? await andamentoDasMembros(daVez, membros, fichas).catch(
+          () => new Map<string, AndamentoMembro>(),
+        )
+      : new Map<string, AndamentoMembro>();
+    return { livros, encontros, fichas, turma };
+  }, [clube.id, membros.length]);
 
   if (consulta.carregando && !consulta.dados)
     return <Carregando texto="abrindo o clube…" linhas={2} />;
@@ -120,6 +133,9 @@ export default function ClubeInicioPage() {
                 ) : null}
               </span>
             </Link>
+          ) : null}
+          {lendo ? (
+            <Turma membros={membros} turma={consulta.dados!.turma} eu={eu} />
           ) : (
             <div className="mt-4 rounded-xl border border-dashed border-bege p-4 lg:rounded-[4px]">
               <p className="font-display text-lg font-semibold italic text-bordo lg:font-revista lg:font-normal lg:text-tinta">
@@ -148,11 +164,19 @@ export default function ClubeInicioPage() {
           )}
         </section>
 
+        <SugerirRapido
+          clubeId={clube.id}
+          votacao={modoDe(clube) === "votacao"}
+          fila={sugestoes}
+          membros={membros}
+          eu={eu}
+        />
+
         <section>
           <div className={secao}>
             <h2 className={tituloSecao}>o que a gente amou</h2>
             <Link href={`/clubes/${clube.id}/biblioteca`} className={linkSecao}>
-              ver todos →
+              ver a estante →
             </Link>
           </div>
           {amados.length ? (
@@ -272,5 +296,162 @@ export default function ClubeInicioPage() {
         ) : null}
       </div>
     </div>
+  );
+}
+
+const rotuloAndamento = (a?: AndamentoMembro) =>
+  !a || a.estado === "nao"
+    ? "ainda não começou"
+    : a.estado === "terminou"
+      ? "terminou ✓"
+      : a.pct !== undefined
+        ? `${a.pct}%`
+        : "lendo";
+
+/** As fotinhas de quem já terminou, de quem está lendo e de quem ainda não começou. */
+function Turma({
+  membros,
+  turma,
+  eu,
+}: {
+  membros: Membro[];
+  turma: Map<string, AndamentoMembro>;
+  eu: string | null;
+}) {
+  const ordem = { terminou: 0, lendo: 1, nao: 2 } as const;
+  const lista = [...membros].sort(
+    (a, b) =>
+      ordem[turma.get(a.usuario_id)?.estado ?? "nao"] -
+        ordem[turma.get(b.usuario_id)?.estado ?? "nao"] ||
+      (turma.get(b.usuario_id)?.pct ?? 0) - (turma.get(a.usuario_id)?.pct ?? 0),
+  );
+  const terminaram = lista.filter(
+    (m) => turma.get(m.usuario_id)?.estado === "terminou",
+  ).length;
+  return (
+    <div className="mt-5">
+      <p className="text-[11px] font-semibold tracking-[.12em] text-cinza uppercase">
+        {terminaram === membros.length
+          ? "todo mundo terminou ✦"
+          : terminaram
+            ? `${terminaram} de ${membros.length} já terminaram`
+            : "como está a turma"}
+      </p>
+      <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-3">
+        {lista.map((m) => {
+          const a = turma.get(m.usuario_id);
+          const cor =
+            a?.estado === "terminou"
+              ? "ring-bordo"
+              : a?.estado === "lendo"
+                ? "ring-rosa-antigo"
+                : "ring-bege opacity-60";
+          return (
+            <li
+              key={m.usuario_id}
+              className="flex w-[64px] flex-col items-center gap-1.5 text-center"
+            >
+              <span
+                className={`relative rounded-full ring-2 ring-offset-2 ring-offset-creme ${cor}`}
+              >
+                <Avatar pessoa={m.pessoa} tamanho={44} />
+                {a?.estado === "terminou" ? (
+                  <span
+                    aria-hidden
+                    className="absolute -right-1 -bottom-1 flex size-5 items-center justify-center rounded-full border-2 border-creme bg-bordo text-[10px] font-bold text-creme"
+                  >
+                    ✓
+                  </span>
+                ) : null}
+              </span>
+              <span className="w-full truncate font-accent text-xs italic">
+                {m.usuario_id === eu ? "você" : m.pessoa.nome || m.pessoa.usuario}
+              </span>
+              <span className="-mt-1 text-[10px] leading-tight text-cinza">
+                {rotuloAndamento(a)}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+/** Sugerir sem caçar botão: um campo direto no início do clube + a fila. */
+function SugerirRapido({
+  clubeId,
+  votacao,
+  fila,
+  membros,
+  eu,
+}: {
+  clubeId: string;
+  votacao: boolean;
+  fila: LivroDoClube[];
+  membros: Membro[];
+  eu: string | null;
+}) {
+  const router = useRouter();
+  const [termo, setTermo] = useState("");
+  const ir = () =>
+    router.push(
+      `/clubes/${clubeId}/sugerir${termo.trim() ? `?q=${encodeURIComponent(termo.trim())}` : ""}`,
+    );
+  return (
+    <section>
+      <div className={secao}>
+        <h2 className={tituloSecao}>
+          {votacao ? "sugestões" : "próximas leituras"}
+        </h2>
+        {fila.length ? (
+          <Link href={`/clubes/${clubeId}/sugestoes`} className={linkSecao}>
+            {votacao ? "votar →" : "ver a fila →"}
+          </Link>
+        ) : null}
+      </div>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          ir();
+        }}
+        className="mt-4 flex gap-2"
+      >
+        <label className="min-w-0 flex-1">
+          <span className="sr-only">que livro você quer sugerir?</span>
+          <input
+            type="search"
+            value={termo}
+            onChange={(e) => setTermo(e.target.value)}
+            placeholder="que livro você quer sugerir?"
+            className="h-12 w-full rounded-[12px] border border-bege bg-creme-quente px-4 text-[15px] outline-none focus:border-bordo focus:ring-1 focus:ring-bordo lg:rounded-[4px]"
+          />
+        </label>
+        <button
+          type="submit"
+          className="h-12 flex-none rounded-pill bg-bordo px-5 text-[13px] font-semibold text-creme hover:bg-bordo-suave"
+        >
+          sugerir
+        </button>
+      </form>
+      {fila.length ? (
+        <ul className="mt-4 flex gap-3 overflow-x-auto pb-1 [scrollbar-width:none]">
+          {fila.slice(0, 6).map((l) => (
+            <li key={l.id} className="w-[64px] flex-none">
+              <Link href={`/clubes/${clubeId}/livro/${l.id}`}>
+                <CapaAuto livro={l.livro} className="w-full [&>span:last-child]:text-[8px]" />
+                <span className="mt-1 block truncate text-[10px] text-cinza">
+                  {(quemTrouxe(l, membros, eu) ?? "").replace(/^sugerido por /, "")}
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-2 font-accent text-[13px] italic text-cinza">
+          ninguém sugeriu nada ainda. que tal começar?
+        </p>
+      )}
+    </section>
   );
 }

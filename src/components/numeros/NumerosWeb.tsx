@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { CapaLivro } from "@/components/CapaLivro";
+import { ExtremosDoAno } from "@/components/numeros/Extremos";
 import { corDoLivro } from "@/lib/cores";
 import {
   mediaTexto,
@@ -197,6 +198,8 @@ function ConteudoUnificado({
           </p>
         )}
       </section>
+
+      <ExtremosDoAno n={n} web />
 
       <section className="mb-14">
         <h2 className="mb-[18px] border-b border-ameixa pb-2 font-revista text-[22px] leading-none text-ameixa italic">

@@ -24,6 +24,19 @@ export function paginasDoLivro(l: LivroSalvo) {
   return l.paginas ?? sugestoesDeLivros.find((c) => c.id === l.id)?.paginas;
 }
 
+/** dias entre o começo e o fim da leitura (contando os dois), se as datas existem */
+export function diasDeLeitura(l: LivroSalvo): number | null {
+  if (!l.iniciadoEm || !l.lidoEm) return null;
+  const dia = (iso: string) => {
+    const [a, m, d] = iso.slice(0, 10).split("-").map(Number);
+    return Date.UTC(a, m - 1, d);
+  };
+  const dias = Math.round((dia(l.lidoEm) - dia(l.iniciadoEm)) / 864e5) + 1;
+  return dias >= 1 ? dias : null;
+}
+
+export const textoDias = (d: number) => (d === 1 ? "em 1 dia" : `em ${d} dias`);
+
 export type Numeros = ReturnType<typeof calcularNumeros>;
 
 /** Tudo o que as telas de números mostram, calculado a partir dos livros lidos no ano. */
@@ -91,6 +104,31 @@ export function calcularNumeros(
     .filter(paginasDoLivro)
     .sort((a, b) => (paginasDoLivro(b) ?? 0) - (paginasDoLivro(a) ?? 0))[0];
 
+  // os extremos do ano: notas e tempo de leitura (só quando a pessoa preencheu)
+  const comNota = lidos.filter((l) => l.nota);
+  const porNota = [...comNota].sort(
+    (a, b) =>
+      (b.nota ?? 0) - (a.nota ?? 0) ||
+      (b.lidoEm ?? "").localeCompare(a.lidoEm ?? ""),
+  );
+  const maisAmados = porNota.slice(0, 3);
+  const menosAmados =
+    porNota.length >= 2 && porNota.at(-1)!.nota! < porNota[0].nota!
+      ? [...porNota]
+          .reverse()
+          .filter((l) => l.nota! < porNota[0].nota!)
+          .slice(0, 3)
+      : [];
+  const comTempo = lidos
+    .map((l) => ({ l, dias: diasDeLeitura(l) }))
+    .filter((x): x is { l: LivroSalvo; dias: number } => x.dias !== null)
+    .sort((a, b) => a.dias - b.dias);
+  const maisRapido = comTempo[0] ?? null;
+  const maisDemorado =
+    comTempo.length >= 2 && comTempo.at(-1)!.dias > comTempo[0].dias
+      ? comTempo.at(-1)!
+      : null;
+
   // ritmo: quantos livros "deveriam" estar lidos até hoje para bater a meta
   const inicio = new Date(ano, 0, 1).getTime();
   const fracao =
@@ -124,6 +162,10 @@ export function calcularNumeros(
     autores,
     livroDoAno,
     maisLongo,
+    maisAmados,
+    menosAmados,
+    maisRapido,
+    maisDemorado,
     maisLongoPaginas: maisLongo ? paginasDoLivro(maisLongo) : undefined,
     meta,
     ritmo,

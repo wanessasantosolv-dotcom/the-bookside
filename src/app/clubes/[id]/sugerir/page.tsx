@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { CapaLivro } from "@/components/CapaLivro";
 import { CadastroManual } from "@/components/clube/CadastroManual";
 import { useClube } from "@/components/clube/ClubeContexto";
@@ -32,6 +32,11 @@ export default function SugerirPage() {
   const { clube } = useClube();
   const router = useRouter();
   const [termo, setTermo] = useState("");
+  // veio do campo do início do clube: já começa procurando
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get("q");
+    if (q) setTermo(q);
+  }, []);
   const [livro, setLivro] = useState<LivroBusca | null>(null);
   const [motivo, setMotivo] = useState("");
   const [clima, setClima] = useState<string[]>([]);

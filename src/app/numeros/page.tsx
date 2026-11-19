@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ExtremosDoAno } from "@/components/numeros/Extremos";
 import {
   bloco,
   NumerosShell,
@@ -170,6 +171,8 @@ export default function NumerosAnoPage() {
                   </p>
                 ) : null}
               </div>
+
+              <ExtremosDoAno n={n} />
 
               {wrappedLiberado() ? (
                 <Link
