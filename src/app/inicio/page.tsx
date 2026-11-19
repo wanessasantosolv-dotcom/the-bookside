@@ -6,6 +6,7 @@ import { useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { ConviteTeste } from "@/components/ConviteTeste";
 import { LendoAgora } from "@/components/feed/LendoAgora";
+import { ProntoPraVoce } from "@/components/feed/ProntoPraVoce";
 import { Publicar } from "@/components/feed/Publicar";
 import { CapaLivro } from "@/components/CapaLivro";
 import { useHidratado } from "@/components/PerfilHidratacao";
@@ -614,6 +615,11 @@ export default function InicioPage() {
                 </figcaption>
               </div>
             </figure>
+
+            {/* ===== pronto pra você: review do mês e retrospectiva, quando abrem ===== */}
+            <div className="mx-6 mt-4 empty:hidden lg:mx-0 lg:mt-5">
+              <ProntoPraVoce />
+            </div>
 
             {/* ===== você está lendo (celular e computador, card próprio) ===== */}
             <div className="mx-6 mt-4 lg:mx-0 lg:mt-5">
