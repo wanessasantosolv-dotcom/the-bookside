@@ -97,12 +97,18 @@ function Lista() {
       <li key={d.id}>
         <Link
           href={`/desafios/${d.id}`}
-          className="block rounded-xl border border-linha bg-creme-quente p-4 hover:border-bordo lg:rounded-[6px] lg:p-5"
+          className="relative block rounded-[2px] border border-dashed border-linha bg-creme-quente p-4 hover:border-bordo lg:rounded-[4px] lg:p-5"
         >
-          <div className="flex items-start gap-3">
+          <p className="font-maquina text-[9px] tracking-[.12em] text-rosa-antigo uppercase">
+            {modelo?.titulo ?? "desafio criado por você"}
+          </p>
+          <div className="mt-2 flex items-start gap-3">
             <span
-              className="flex size-11 flex-none items-center justify-center rounded-full text-xl"
-              style={{ background: `${modelo?.cor ?? "#6B0D24"}22` }}
+              className="flex size-11 flex-none items-center justify-center rounded-full border text-xl"
+              style={{
+                borderColor: modelo?.cor ?? "#6B0D24",
+                background: `${modelo?.cor ?? "#6B0D24"}14`,
+              }}
             >
               {modelo?.emoji ?? "✦"}
             </span>
@@ -119,9 +125,16 @@ function Lista() {
                   : " · encerrado"}
               </span>
             </span>
-            {meu?.concluido_em ? <span className="text-xl">🏆</span> : null}
+            {meu?.concluido_em ? (
+              <span
+                aria-hidden
+                className="font-maquina flex size-9 flex-none rotate-[8deg] items-center justify-center rounded-full border border-dashed border-ouro text-center text-[7px] leading-tight text-ouro"
+              >
+                feito
+              </span>
+            ) : null}
           </div>
-          <span className="mt-3 block h-2 overflow-hidden rounded-full bg-linha/70">
+          <span className="mt-3 block h-1.5 overflow-hidden rounded-full bg-linha/70">
             <span
               className="block h-full rounded-full bg-bordo transition-all"
               style={{ width: `${pct}%` }}
@@ -187,16 +200,25 @@ function Lista() {
             <li key={m.id}>
               <Link
                 href={`/desafios/novo?modelo=${m.id}`}
-                className="flex h-full flex-col rounded-xl p-4 text-creme transition-transform hover:-translate-y-0.5 lg:rounded-[6px] lg:p-5"
-                style={{
-                  background: `linear-gradient(150deg, ${m.cor}, ${m.cor}cc)`,
-                }}
+                className="flex h-full flex-col rounded-[2px] border border-dashed bg-creme-quente p-4 transition-transform hover:-translate-y-0.5 lg:rounded-[4px] lg:p-5"
+                style={{ borderColor: `${m.cor}66` }}
               >
-                <span className="text-2xl">{m.emoji}</span>
-                <span className="mt-2 block font-display text-[17px] leading-tight font-semibold italic lg:font-revista lg:text-xl lg:font-normal">
+                <span
+                  className="flex size-10 flex-none items-center justify-center rounded-full border text-lg"
+                  style={{ borderColor: m.cor, background: `${m.cor}14` }}
+                >
+                  {m.emoji}
+                </span>
+                <span
+                  className="font-maquina mt-3 block text-[9px] tracking-[.12em] uppercase"
+                  style={{ color: m.cor }}
+                >
+                  desafio
+                </span>
+                <span className="mt-1 block font-display text-[17px] leading-tight font-semibold italic text-ameixa lg:font-revista lg:text-xl lg:font-normal">
                   {m.titulo}
                 </span>
-                <span className="mt-1.5 block text-[12px] leading-snug opacity-85">
+                <span className="mt-1.5 block text-[12px] leading-snug text-cinza">
                   {m.descricao}
                 </span>
               </Link>
@@ -205,7 +227,7 @@ function Lista() {
           <li>
             <Link
               href="/desafios/novo"
-              className="flex h-full min-h-[140px] flex-col items-center justify-center rounded-xl border-[1.5px] border-dashed border-bordo/40 p-4 text-center text-bordo hover:border-bordo lg:rounded-[6px]"
+              className="flex h-full min-h-[140px] flex-col items-center justify-center rounded-[2px] border-[1.5px] border-dashed border-bordo/40 bg-creme-quente p-4 text-center text-bordo hover:border-bordo lg:rounded-[4px]"
             >
               <span className="text-2xl">＋</span>
               <span className="mt-1 font-display text-[17px] font-semibold italic lg:font-revista lg:font-normal">
