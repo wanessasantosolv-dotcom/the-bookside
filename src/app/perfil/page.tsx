@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import type { CSSProperties } from "react";
 import { CapaLivro } from "@/components/CapaLivro";
 import { AppShell } from "@/components/AppShell";
+import { AbasPerfil } from "@/components/perfil/AbasPerfil";
+import { VitrineFavoritos } from "@/components/VitrineFavoritos";
 import { PerfilWeb } from "@/components/perfil/PerfilWeb";
 import { MeusSeguidores } from "@/components/social/Pessoas";
 import { useHidratado } from "@/components/PerfilHidratacao";
@@ -144,6 +146,8 @@ export default function PerfilPage() {
             </button>
           </div>
 
+          <AbasPerfil ativa="geral" className="mx-4 mt-5" />
+
           {/* números */}
           <Link href="/numeros" aria-label="ver sua jornada" className="relative mt-5 flex border-y border-[var(--linha)]">
             {[
@@ -159,35 +163,19 @@ export default function PerfilPage() {
             ))}
           </Link>
 
-          {/* favoritos */}
-          <div className="mt-6 flex items-baseline justify-between">
-            <h2 className="font-display text-[22px] leading-[1.15] font-semibold italic text-[var(--acc)]">favoritos</h2>
-            <Link href="/perfil/favoritos" className="py-2 text-[10px] font-semibold tracking-[.12em] text-[var(--acc)] uppercase">
-              escolher →
-            </Link>
+          {/* favoritos: a vitrine, com destaque */}
+          <div className="mt-6">
+            <VitrineFavoritos
+              titulo="meus favoritos"
+              acao={{ href: "/perfil/favoritos", rotulo: "escolher →" }}
+              itens={favoritos.map((l) => ({
+                id: l.id,
+                titulo: l.titulo,
+                capa: l.capa,
+                href: `/livro/${l.id}`,
+              }))}
+            />
           </div>
-          <ul className="mt-2 grid grid-cols-4 gap-2">
-            {Array.from({ length: 4 }, (_, i) => {
-              const l = favoritos[i];
-              return (
-                <li key={l?.id ?? i}>
-                  {l ? (
-                    <Link href={`/livro/${l.id}`} className="block">
-                      <CapaLivro titulo={l.titulo} capa={l.capa} cor={corDoLivro(l.id)} className="w-full" />
-                    </Link>
-                  ) : (
-                    <Link
-                      href="/perfil/favoritos"
-                      aria-label="escolher favorito"
-                      className="flex aspect-[2/3] items-center justify-center rounded-[2px_5px_5px_2px] border border-dashed border-rosa-antigo text-xl text-rosa-antigo"
-                    >
-                      +
-                    </Link>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
 
           {/* estantes */}
           <div className="mt-6 flex items-baseline justify-between">

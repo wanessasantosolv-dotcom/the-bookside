@@ -1,6 +1,7 @@
 "use client";
 
 import { FeedDoClube } from "@/components/clube/FeedDoClube";
+import { VitrineFavoritos } from "@/components/VitrineFavoritos";
 import { CapaAuto } from "@/components/CapaAuto";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -227,56 +228,37 @@ export default function ClubeInicioPage() {
         />
       </div>
       <div className="lg:col-start-1 lg:row-start-2">
-        {/* ===== o que a gente amou: capas como os favoritos do perfil ===== */}
-        <section>
-          <div className={secao}>
-            <h2 className={tituloSecao}>o que a gente amou</h2>
-            <Link
-              href={
-                organiza(papel)
-                  ? `/clubes/${clube.id}/favoritos`
-                  : `/clubes/${clube.id}/biblioteca`
-              }
-              className={linkSecao}
-            >
-              {organiza(papel) ? "escolher →" : "ver a estante →"}
-            </Link>
-          </div>
-          {amados.length ? (
-            <ul className="mt-4 grid grid-cols-4 gap-3 sm:max-w-[440px] lg:gap-3">
-              {amados.slice(0, 4).map(({ l, m }) => (
-                <li key={l.id}>
-                  <Link
-                    href={`/clubes/${clube.id}/livro/${l.id}`}
-                    className="group block"
-                  >
-                    <CapaAuto
-                      livro={l.livro}
-                      className="w-full transition-transform group-hover:-translate-y-1 [&>span:last-child]:text-[10px]"
-                    />
-                    <span className="mt-1.5 block text-center text-[11px] text-bordo">
-                      {m ? estrelas(Math.round(m * 2) / 2) : "♡"}
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="mt-3 font-accent text-sm italic text-cinza">
-              quando o clube terminar um livro e escrever as fichas, os
-              preferidos aparecem aqui.
-            </p>
-          )}
-          {fichas.length ? (
-            <p className="mt-3 text-[12px] text-cinza">
-              média do clube:{" "}
-              <b className="text-bordo">
-                {virgula(media(fichas.map((f) => f.nota)))}★
-              </b>{" "}
-              em {fichas.length} {fichas.length === 1 ? "ficha" : "fichas"}
-            </p>
-          ) : null}
-        </section>
+        {/* ===== o que a gente amou: a vitrine do clube ===== */}
+        <VitrineFavoritos
+          compacta
+          titulo="o que a gente amou"
+          acao={
+            organiza(papel)
+              ? { href: `/clubes/${clube.id}/favoritos`, rotulo: "escolher →" }
+              : {
+                  href: `/clubes/${clube.id}/biblioteca`,
+                  rotulo: "ver a estante →",
+                }
+          }
+          vazio="quando o clube terminar um livro e escrever as fichas, os preferidos aparecem aqui."
+          vagas={Math.min(4, Math.max(amados.length, 1))}
+          itens={amados.slice(0, 4).map(({ l, m }) => ({
+            id: l.id,
+            titulo: l.livro.titulo,
+            capa: l.livro.capa,
+            href: `/clubes/${clube.id}/livro/${l.id}`,
+            legenda: m ? estrelas(Math.round(m * 2) / 2) : "♡",
+          }))}
+        />
+        {fichas.length ? (
+          <p className="mt-3 text-[12px] text-cinza">
+            média do clube:{" "}
+            <b className="text-bordo">
+              {virgula(media(fichas.map((f) => f.nota)))}★
+            </b>{" "}
+            em {fichas.length} {fichas.length === 1 ? "ficha" : "fichas"}
+          </p>
+        ) : null}
       </div>
       <div className="lg:col-start-1 lg:row-start-3">
         <section id="novidades" className="scroll-mt-24">
