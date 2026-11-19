@@ -2,7 +2,6 @@
 
 import { CapaAuto } from "@/components/CapaAuto";
 import Link from "next/link";
-import { useState } from "react";
 import { useClube } from "@/components/clube/ClubeContexto";
 import { Carregando, ErroOuFalta, Vazio } from "@/components/social/Estados";
 import { Avatar, CartaoAtividade } from "@/components/social/Pessoas";
@@ -33,7 +32,6 @@ type Item =
 /** O feed do clube (atividades, leituras e encontros) — mostrado no início do clube. */
 export function FeedDoClube() {
   const { clube, membros } = useClube();
-  const [filtro, setFiltro] = useState<"tudo" | "fichas" | "agenda">("tudo");
   const consulta = useConsulta(async () => {
     const [atividades, livros, encontros] = await Promise.all([
       atividadesDoClube(clube.id),
@@ -85,32 +83,11 @@ export function FeedDoClube() {
       detalhe: `${new Date(e.quando).toLocaleString("pt-BR", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })}${e.local ? ` · ${e.local}` : ""}`,
       href: `/clubes/${clube.id}/agenda`,
     })),
-  ]
-    .filter((i) =>
-      filtro === "fichas"
-        ? i.tipo === "atividade"
-        : filtro === "agenda"
-          ? i.tipo === "evento"
-          : true,
-    )
-    .sort((a, b) => b.quando.localeCompare(a.quando));
+  ].sort((a, b) => b.quando.localeCompare(a.quando));
 
   return (
     <div>
-      <div role="group" aria-label="filtrar" className="flex gap-1.5">
-        {(["tudo", "fichas", "agenda"] as const).map((f) => (
-          <button
-            key={f}
-            type="button"
-            aria-pressed={filtro === f}
-            onClick={() => setFiltro(f)}
-            className={`min-h-9 rounded-pill px-3.5 text-[11px] font-semibold ${filtro === f ? "bg-bordo text-creme" : "border border-bege text-ameixa"}`}
-          >
-            {f}
-          </button>
-        ))}
-      </div>
-      <div className="mt-4 space-y-3">
+      <div className="space-y-3">
         {itens.length ? (
           itens.map((i) =>
             i.tipo === "atividade" ? (
