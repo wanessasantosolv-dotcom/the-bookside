@@ -365,3 +365,11 @@ body {
   .celebra-cai, .celebra-estouro { display: none; }
   .celebra-cartao, .pulo-coracao { animation: none; }
 }
+
+/* o lugar aceso no passeio pelo app */
+@keyframes tour-pulso {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: .35; transform: scale(1.04); }
+}
+.tour-pulso { animation: tour-pulso 1.6s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .tour-pulso { animation: none; } }

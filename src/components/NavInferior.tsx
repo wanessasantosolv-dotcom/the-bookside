@@ -77,6 +77,7 @@ export function NavInferior({ ativa }: { ativa: Aba }) {
           <Link
             key={a.id}
             href={a.href}
+            data-tour={`aba-${a.id}`}
             aria-current={on ? "page" : undefined}
             className={`flex min-h-11 min-w-[52px] flex-col items-center justify-center gap-[5px] text-[10px] leading-none ${
               on ? "font-bold text-bordo" : "font-medium text-cinza"

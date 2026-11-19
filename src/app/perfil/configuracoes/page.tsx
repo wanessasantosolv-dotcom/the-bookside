@@ -253,6 +253,16 @@ export default function ConfiguracoesPage() {
               <div className="mt-3">
                 <InstalarApp />
               </div>
+              <button
+                type="button"
+                onClick={() => {
+                  atualizar({ tourVisto: false });
+                  router.push("/inicio");
+                }}
+                className="mt-4 min-h-9 text-[13px] font-semibold text-bordo underline underline-offset-4"
+              >
+                rever o passeio pelo app
+              </button>
             </section>
 
             {/* dados */}

@@ -62,7 +62,7 @@ function Topo({ nome }: { nome: string }) {
         aria-label="atalhos"
         className="-mr-2 flex flex-none items-center gap-0.5 lg:mr-0 lg:gap-1.5"
       >
-        <Link href="/buscar" aria-label="buscar livros" className={iconeLink}>
+        <Link href="/buscar" aria-label="buscar livros" data-tour="buscar" className={iconeLink}>
           <svg
             width="19"
             height="19"
@@ -78,7 +78,7 @@ function Topo({ nome }: { nome: string }) {
           </svg>
           <span className="hidden lg:inline">buscar livros</span>
         </Link>
-        <Link href="/pessoas" aria-label="encontrar pessoas" className={iconeLink}>
+        <Link href="/pessoas" aria-label="encontrar pessoas" data-tour="pessoas" className={iconeLink}>
           <svg
             width="20"
             height="20"
@@ -96,7 +96,7 @@ function Topo({ nome }: { nome: string }) {
           </svg>
           <span className="hidden lg:inline">encontrar pessoas</span>
         </Link>
-        <Link href="/novidades" aria-label="novidades" className={iconeLink}>
+        <Link href="/novidades" aria-label="novidades" data-tour="novidades" className={iconeLink}>
           <svg
             width="19"
             height="19"
@@ -617,7 +617,9 @@ export default function InicioPage() {
 
             {/* ===== você está lendo (celular e computador, card próprio) ===== */}
             <div className="mx-6 mt-4 lg:mx-0 lg:mt-5">
-              <LendoAgora />
+              <div data-tour="lendo">
+                <LendoAgora />
+              </div>
             </div>
 
             {/* ===== trilha "pra você" (celular e computador) ===== */}
@@ -634,7 +636,7 @@ export default function InicioPage() {
               feed
             </p>
             <ComConta>
-              <div className="mx-6 mb-5 lg:mx-0">
+              <div data-tour="publicar" className="mx-6 mb-5 lg:mx-0">
                 <Publicar onPublicado={() => setVersaoFeed((v) => v + 1)} />
               </div>
               <Feed key={versaoFeed} />

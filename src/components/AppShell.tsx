@@ -44,6 +44,7 @@ export function AppShell({
               <Link
                 key={a.id}
                 href={a.href}
+                data-tour={`aba-${a.id}`}
                 aria-current={on ? "page" : undefined}
                 className={`flex min-h-11 items-center gap-2.5 font-texto text-[13px] font-semibold ${on ? "text-vinho" : "text-grafite hover:text-tinta"}`}
               >
