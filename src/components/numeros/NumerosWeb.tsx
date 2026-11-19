@@ -415,23 +415,40 @@ export function GraficoMeses({ n, alto = 88 }: { n: Numeros; alto?: number }) {
     <figure>
       <div
         className="flex items-end gap-[5px]"
-        style={{ height: alto }}
+        style={{ height: alto + 16 }}
         role="img"
         aria-label={`livros por mês: ${n.porMes.map((m) => `${m.mes} ${m.livros}`).join(", ")}`}
       >
         {n.porMes.map((m) => (
-          <i
+          <span
             key={m.mes}
-            className="flex-1 rounded-t-[3px]"
-            style={{
-              height: m.livros ? Math.max(8, (m.livros / max) * alto) : 4,
-              background: !m.livros
-                ? "#E6D5CE"
-                : m === n.maisForte
-                  ? "#6B0D24"
-                  : "#B75A6B",
-            }}
-          />
+            className="flex h-full flex-1 flex-col items-center justify-end"
+          >
+            {/* a quantidade em cima da barra */}
+            <span
+              aria-hidden
+              className={`mb-1 text-[11px] leading-none font-semibold tabular-nums ${
+                m.livros
+                  ? m === n.maisForte
+                    ? "text-bordo"
+                    : "text-ameixa"
+                  : "text-transparent"
+              }`}
+            >
+              {m.livros || 0}
+            </span>
+            <i
+              className="block w-full rounded-t-[3px]"
+              style={{
+                height: m.livros ? Math.max(8, (m.livros / max) * alto) : 4,
+                background: !m.livros
+                  ? "#E6D5CE"
+                  : m === n.maisForte
+                    ? "#6B0D24"
+                    : "#B75A6B",
+              }}
+            />
+          </span>
         ))}
       </div>
       <div aria-hidden className="mt-2 flex gap-[5px]">
