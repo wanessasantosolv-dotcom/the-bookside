@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { AppShell } from "@/components/AppShell";
 import { ComConta, ErroOuFalta } from "@/components/social/Estados";
 import { Avatar } from "@/components/social/Pessoas";
@@ -22,6 +22,67 @@ import {
 } from "@/lib/desafios";
 import { usePerfil } from "@/lib/perfil-store";
 import { useConsulta, useMeuId } from "@/lib/social";
+
+/** Os ícones de cada modelo de desafio — traço fino, sem emoji, no estilo dos ícones do app. */
+const iconesModelo: Record<string, ReactNode> = {
+  maratona: (
+    <path d="M4 6c3-1.5 6-1.5 8 0v12c-2-1.5-5-1.5-8 0V6ZM20 6c-3-1.5-6-1.5-8 0v12c2-1.5 5-1.5 8 0V6Z" />
+  ),
+  "um-por-semana": (
+    <>
+      <rect x="4" y="5" width="16" height="15" rx="2" />
+      <path d="M8 3v4M16 3v4M4 10h16" />
+      <circle cx="15" cy="15" r="1.3" fill="currentColor" stroke="none" />
+    </>
+  ),
+  "zerar-pilha": (
+    <>
+      <rect x="4" y="15.3" width="16" height="3.4" rx="1" />
+      <rect x="5.4" y="10.8" width="13.2" height="3.4" rx="1" />
+      <rect x="4" y="6.3" width="16" height="3.4" rx="1" />
+    </>
+  ),
+  bingo: (
+    <>
+      <rect x="4" y="4" width="16" height="16" rx="2" />
+      <path d="M4 9.3h16M4 14.7h16M9.3 4v16M14.7 4v16" />
+    </>
+  ),
+  habito: (
+    <path d="M6.5 3h11M6.5 21h11M7 3c0 4.5 4 5.8 5 7 1-1.2 5-2.5 5-7M7 21c0-4.5 4-5.8 5-7 1 1.2 5 2.5 5 7" />
+  ),
+  "dez-horas": (
+    <>
+      <circle cx="12" cy="12" r="8" />
+      <path d="M12 8v4l3 2" />
+    </>
+  ),
+};
+
+function IconeModelo({ id, className }: { id?: string; className?: string }) {
+  if (!id || !iconesModelo[id]) {
+    return (
+      <span className={className} aria-hidden>
+        ✦
+      </span>
+    );
+  }
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      {iconesModelo[id]}
+    </svg>
+  );
+}
 
 /** Os desafios de leitura: os meus (com o progresso de todo mundo) e os modelos para começar. */
 function Lista() {
@@ -108,9 +169,10 @@ function Lista() {
               style={{
                 borderColor: modelo?.cor ?? "#6B0D24",
                 background: `${modelo?.cor ?? "#6B0D24"}14`,
+                color: modelo?.cor ?? "#6B0D24",
               }}
             >
-              {modelo?.emoji ?? "✦"}
+              <IconeModelo id={modelo?.id} />
             </span>
             <span className="min-w-0 flex-1">
               <span className="block font-display text-lg leading-tight font-semibold italic text-ameixa lg:font-revista lg:font-normal">
@@ -205,9 +267,9 @@ function Lista() {
               >
                 <span
                   className="flex size-10 flex-none items-center justify-center rounded-full border text-lg"
-                  style={{ borderColor: m.cor, background: `${m.cor}14` }}
+                  style={{ borderColor: m.cor, background: `${m.cor}14`, color: m.cor }}
                 >
-                  {m.emoji}
+                  <IconeModelo id={m.id} />
                 </span>
                 <span
                   className="font-maquina mt-3 block text-[9px] tracking-[.12em] uppercase"
