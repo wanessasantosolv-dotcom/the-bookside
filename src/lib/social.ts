@@ -511,9 +511,18 @@ export async function publicarAtividade(a: {
   nota?: number | null;
   texto?: string | null;
   clube_id?: string | null;
+  /** a pessoa mandou publicar (botão "publicar"): vale mesmo com o feed desligado */
+  explicito?: boolean;
 }) {
   const eu = meuId();
   if (!supabase || !eu) return null;
+  // configurações → privacidade: as leituras não vão sozinhas para o feed
+  if (
+    !a.explicito &&
+    !a.clube_id &&
+    usePerfil.getState().publicarNoFeed === false
+  )
+    return null;
   // capas enviadas pela pessoa (data URL) ficam só no perfil, não no feed
   const capa = a.livro.capa?.startsWith("data:") ? undefined : a.livro.capa;
   const { data, error } = await supabase

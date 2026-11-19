@@ -117,7 +117,7 @@ function Janela({
     setEnviando(true);
     setErro(null);
     try {
-      const r = await publicarAtividade({ tipo, livro, texto });
+      const r = await publicarAtividade({ tipo, livro, texto, explicito: true });
       if (r === null) throw new Error("sem conta");
       onPublicado();
     } catch (x) {
