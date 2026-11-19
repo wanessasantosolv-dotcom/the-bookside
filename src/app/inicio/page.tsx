@@ -626,58 +626,34 @@ export default function InicioPage() {
 
         <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start lg:gap-10">
           <div>
-            {/* ===== hoje (celular): citação + lendo num card só, e uma trilha pro resto ===== */}
-            <div className="lg:hidden">
-              <div className="relative mx-6 mt-3 animate-subir overflow-hidden rounded-xl bg-gradient-to-br from-bordo to-bordo-escuro px-[18px] py-4 text-creme">
-                <span
-                  aria-hidden
-                  className="pointer-events-none absolute -top-5 right-1 font-display text-[92px] leading-none text-rosa-claro/15 italic"
-                >
-                  “
-                </span>
-                <p className="flex items-center gap-1.5 text-[10px] font-semibold tracking-[.16em] text-rosa-claro uppercase">
-                  <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-ouro" />
-                  citação do dia
-                </p>
-                <blockquote className="relative mt-2.5 font-accent text-[21px] leading-[1.3] italic">
-                  “{citacao.texto}”
-                </blockquote>
-                <figcaption className="relative mt-2.5 flex items-center gap-1.5 text-[10px] font-semibold tracking-[.1em] text-rosa-claro">
-                  <span aria-hidden className="h-px w-3.5 bg-rosa-claro/50" />
-                  {citacao.livro} · {citacao.autor}
-                </figcaption>
-                <div className="relative mt-4 border-t border-creme/15 pt-4">
-                  <LendoAgora tema="escura" semCartao />
-                </div>
-              </div>
-
-              <div className="mt-3.5 flex gap-2.5 overflow-x-auto px-6 pb-1">
-                <IndicacaoDoDia compacto />
-                <BannerTeste compacto principal={bookside?.principal} />
+            {/* ===== hoje: citação + lendo num card só (celular e computador) ===== */}
+            <div className="relative mx-6 mt-3 animate-subir overflow-hidden rounded-xl bg-gradient-to-br from-bordo to-bordo-escuro px-[18px] py-4 text-creme lg:mx-0 lg:mt-0 lg:mb-7 lg:rounded-[4px] lg:px-8 lg:py-7">
+              <span
+                aria-hidden
+                className="pointer-events-none absolute -top-5 right-1 font-display text-[92px] leading-none text-rosa-claro/15 italic lg:-top-9 lg:text-[140px]"
+              >
+                “
+              </span>
+              <p className="flex items-center gap-1.5 text-[10px] font-semibold tracking-[.16em] text-rosa-claro uppercase">
+                <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-ouro" />
+                citação do dia
+              </p>
+              <blockquote className="relative mt-2.5 font-accent text-[21px] leading-[1.3] italic lg:font-revista lg:text-[28px]">
+                “{citacao.texto}”
+              </blockquote>
+              <figcaption className="relative mt-2.5 flex items-center gap-1.5 text-[10px] font-semibold tracking-[.1em] text-rosa-claro">
+                <span aria-hidden className="h-px w-3.5 bg-rosa-claro/50" />
+                {citacao.livro} · {citacao.autor}
+              </figcaption>
+              <div className="relative mt-4 border-t border-creme/15 pt-4 lg:mt-6 lg:pt-6">
+                <LendoAgora tema="escura" semCartao />
               </div>
             </div>
 
-            {/* ===== citação + lendo (computador) — mantém a identidade "jornal" já estabelecida ===== */}
-            <figure className="hidden rounded-[4px] bg-vinho px-7 py-6 text-creme lg:mb-7 lg:block">
-              <p className="text-[10px] font-semibold tracking-[.16em] text-rosa-claro uppercase">
-                citação do dia
-              </p>
-              <blockquote className="mt-2.5 font-revista text-[26px] leading-[1.3] italic">
-                “{citacao.texto}”
-              </blockquote>
-              <figcaption className="mt-2.5 text-[10px] font-semibold tracking-[.1em] text-rosa-claro">
-                {citacao.livro} · {citacao.autor}
-              </figcaption>
-            </figure>
-
-            {!bookside ? (
-              <div className="hidden lg:mb-7 lg:block">
-                <BannerTeste />
-              </div>
-            ) : null}
-
-            <div className="hidden lg:mb-7 lg:block">
-              <LendoAgora />
+            {/* ===== trilha "pra você" (só no celular — no computador isso mora na coluna lateral) ===== */}
+            <div className="mt-3.5 flex gap-2.5 overflow-x-auto px-6 pb-1 lg:hidden">
+              <IndicacaoDoDia compacto />
+              <BannerTeste compacto principal={bookside?.principal} />
             </div>
 
             <p className="mt-5 mb-3 px-6 text-[10px] font-semibold tracking-[.18em] text-bordo uppercase lg:hidden">
@@ -695,7 +671,7 @@ export default function InicioPage() {
           </div>
 
           <aside className="hidden space-y-5 lg:block">
-            {bookside ? <BannerTeste principal={bookside.principal} /> : null}
+            <BannerTeste principal={bookside?.principal} />
             <AmigasLendoWeb />
             <IndicacaoDoDia />
           </aside>
