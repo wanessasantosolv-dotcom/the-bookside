@@ -18,7 +18,7 @@ export const formatos: {
   },
   {
     id: "ebook",
-    nome: "kindle / e-book",
+    nome: "e-book",
     curto: "e-book",
     onde: "na tela",
     icone: "M7 2h10a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z M9 6h6 M9 9h6 M9 12h4 M11 18.5h2",

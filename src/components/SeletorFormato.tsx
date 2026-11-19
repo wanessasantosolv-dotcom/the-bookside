@@ -18,8 +18,8 @@ export function SeletorFormato({
       <legend className="text-[10px] font-semibold tracking-[.16em] text-bordo uppercase lg:text-grafite">
         como você lê esse livro?
       </legend>
-      <div className="mt-2 flex flex-wrap gap-2">
-        {formatos.map((f) => {
+      <div className="mt-2 flex overflow-hidden rounded-pill border-[1.5px] border-bordo">
+        {formatos.map((f, i) => {
           const on = valor === f.id;
           return (
             <button
@@ -27,28 +27,27 @@ export function SeletorFormato({
               type="button"
               aria-pressed={on}
               onClick={() => onChange(on ? undefined : f.id)}
-              className={`flex h-10 items-center gap-2 rounded-pill border px-4 text-[13px] font-semibold ${
-                on
-                  ? "border-bordo bg-bordo text-creme"
-                  : "border-bege bg-creme-quente text-ameixa hover:border-bordo"
-              }`}
+              className={`flex h-10 flex-1 items-center justify-center gap-1.5 text-[12px] font-semibold ${
+                i ? "border-l border-bordo/25" : ""
+              } ${on ? "bg-bordo text-creme" : "bg-transparent text-bordo"}`}
             >
               <svg
                 aria-hidden
-                width="16"
-                height="16"
+                width="14"
+                height="14"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="1.8"
                 strokeLinecap="round"
                 strokeLinejoin="round"
+                className="flex-none"
               >
                 {f.icone.split(" M").map((d, i) => (
                   <path key={i} d={i ? `M${d}` : d} />
                 ))}
               </svg>
-              {f.nome}
+              {f.curto}
             </button>
           );
         })}

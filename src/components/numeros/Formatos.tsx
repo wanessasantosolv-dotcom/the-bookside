@@ -20,7 +20,7 @@ export function FormatosDoAno({ n, web }: { n: Numeros; web?: boolean }) {
         <p
           className={`text-[13px] text-cinza italic ${web ? "font-revista" : "font-accent"}`}
         >
-          marque na página de cada livro se foi físico, kindle ou audiolivro — e
+          marque na página de cada livro se foi físico, e-book ou audiolivro — e
           descubra de que time você é ✦
         </p>
       </section>

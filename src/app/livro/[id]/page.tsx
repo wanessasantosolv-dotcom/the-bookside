@@ -259,33 +259,29 @@ export default function LivroPage() {
         <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-11 lg:px-14 lg:pt-10 lg:pb-16">
           <div>
             {/* status */}
-            <fieldset className="mt-5 flex gap-6 px-6 lg:mt-0 lg:px-0">
+            <fieldset className="mt-5 px-6 lg:mt-0 lg:px-0">
               <legend className="sr-only">status do livro</legend>
-              {acoes.map((a) => {
-                const on = status === a.status;
-                return (
-                  <button
-                    key={a.status}
-                    type="button"
-                    aria-pressed={on}
-                    onClick={() => marcar(a.status)}
-                    className={`flex flex-col items-center gap-1.5 ${on ? "font-semibold text-bordo" : "text-cinza"}`}
-                  >
-                    <span
-                      className={`flex h-[46px] w-[46px] items-center justify-center rounded-full border-[1.5px] ${
-                        on
-                          ? "border-bordo bg-bordo text-creme"
-                          : "border-linha text-bordo"
-                      }`}
+              <div className="flex overflow-hidden rounded-pill border-[1.5px] border-bordo">
+                {acoes.map((a, i) => {
+                  const on = status === a.status;
+                  return (
+                    <button
+                      key={a.status}
+                      type="button"
+                      aria-pressed={on}
+                      onClick={() => marcar(a.status)}
+                      className={`flex h-11 flex-1 items-center justify-center gap-1.5 text-[12.5px] font-semibold ${
+                        i ? "border-l border-bordo/25" : ""
+                      } ${on ? "bg-bordo text-creme" : "bg-transparent text-bordo"}`}
                     >
-                      {a.icone}
-                    </span>
-                    <span className="text-[10.5px] font-semibold tracking-[.02em]">
+                      <span className="flex h-[16px] w-[16px] flex-none items-center justify-center [&_svg]:h-full [&_svg]:w-full">
+                        {a.icone}
+                      </span>
                       {a.rotulo}
-                    </span>
-                  </button>
-                );
-              })}
+                    </button>
+                  );
+                })}
+              </div>
             </fieldset>
 
             {status ? (
