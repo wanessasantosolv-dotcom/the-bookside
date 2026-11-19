@@ -36,7 +36,12 @@ export async function GET(req: NextRequest) {
     url.searchParams.set("orderBy", "newest");
   url.searchParams.set("key", chave);
 
-  const r = await fetch(url, { next: { revalidate: 86400 } });
+  let r = await fetch(url, { next: { revalidate: 86400 } });
+  // o Google às vezes recusa por excesso de pedidos: tenta mais uma vez
+  if (r.status === 429 || r.status >= 500) {
+    await new Promise((ok) => setTimeout(ok, 700));
+    r = await fetch(url, { next: { revalidate: 86400 } });
+  }
   if (!r.ok)
     return NextResponse.json(
       { erro: `google ${r.status}` },

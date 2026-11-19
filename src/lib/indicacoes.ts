@@ -22,12 +22,102 @@ import { pareceIngles } from "@/lib/fontes";
 import { normalizar } from "@/lib/importar";
 import { usePerfil, type LivroSalvo } from "@/lib/perfil-store";
 import { supabase } from "@/lib/supabase";
+import { RESERVA } from "@/lib/reserva";
 import { arquetipos, type ArquetipoId } from "@/lib/teste";
 
 export type Indicacao = LivroBusca & { motivo: string };
 
 const SESSAO = "bookside-indicacoes-v2";
 const PASSADOS = "bookside-passados";
+/** todas as indicações que já vieram (para usar quando a busca falhar) */
+const POOL = "bookside-indicacoes-pool";
+/** capas/edições achadas para os livros da reserva */
+const RESERVA_ACHADOS = "bookside-reserva-achados";
+
+function lerJson<T>(chave: string, padrao: T): T {
+  try {
+    return (JSON.parse(localStorage.getItem(chave) ?? "null") as T) ?? padrao;
+  } catch {
+    return padrao;
+  }
+}
+function gravarJson(chave: string, valor: unknown) {
+  try {
+    localStorage.setItem(chave, JSON.stringify(valor));
+  } catch {
+    /* sem armazenamento */
+  }
+}
+
+function guardarNoPool(lista: Indicacao[]) {
+  const vistos = new Set<string>();
+  const junto = [...lista, ...lerJson<Indicacao[]>(POOL, [])].filter((x) => {
+    const k = chaveTitulo(x.titulo);
+    if (vistos.has(k)) return false;
+    vistos.add(k);
+    return true;
+  });
+  gravarJson(POOL, junto.slice(0, 250));
+}
+
+const slug = (t: string) =>
+  normalizar(t)
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+
+/** a reserva, com os gêneros da pessoa primeiro (e a edição achada, quando já achou) */
+function daReserva(generos: string[]): Indicacao[] {
+  const achados = lerJson<Record<string, Indicacao>>(RESERVA_ACHADOS, {});
+  const lista = montarReserva(generos, achados);
+  // a página do livro abre direto com esses dados
+  lembrarLivros(lista);
+  return lista;
+}
+function montarReserva(
+  generos: string[],
+  achados: Record<string, Indicacao>,
+): Indicacao[] {
+  const gs = generos.map((g) => g.toLowerCase());
+  const comGosto = (r: (typeof RESERVA)[number]) =>
+    r.generos.some((g) => gs.includes(g));
+  return [
+    ...sortear(RESERVA.filter(comGosto)),
+    ...sortear(RESERVA.filter((r) => !comGosto(r))),
+  ].map((r) => {
+    const g = r.generos.find((x) => gs.includes(x)) ?? r.generos[0];
+    const motivo = comGosto(r)
+      ? `do seu gosto · ${g}`
+      : `querido por muitos leitores · ${g}`;
+    const achado = achados[chaveTitulo(r.titulo)];
+    if (achado) return { ...achado, motivo };
+    const id = `reserva-${slug(r.titulo)}`;
+    return {
+      id,
+      titulo: r.titulo,
+      autor: r.autor,
+      cor: corDoLivro(id),
+      genero: g,
+      motivo,
+    };
+  });
+}
+
+/** acha a edição em português (capa, sinopse) de um livro da reserva; guarda para as próximas vezes */
+async function acharEdicao(l: Indicacao): Promise<Indicacao | null> {
+  const sobrenome = l.autor.split(" ").pop() ?? l.autor;
+  const achados = await livrosDoGoogle(
+    `intitle:"${l.titulo.split(":")[0]}" inauthor:"${sobrenome}"`,
+    "pt",
+  ).catch(() => [] as LivroBusca[]);
+  const x = achados.find((a) => a.capa);
+  if (!x) return null;
+  const pronto: Indicacao = { ...x, motivo: l.motivo };
+  const todos = lerJson<Record<string, Indicacao>>(RESERVA_ACHADOS, {});
+  todos[chaveTitulo(l.titulo)] = pronto;
+  gravarJson(RESERVA_ACHADOS, todos);
+  lembrarLivros([pronto]);
+  return pronto;
+}
 
 /** livros que a pessoa tocou em "passar": não voltam a aparecer (fica no perfil, vale em todo aparelho) */
 export function lembrarPassado(titulo: string) {
@@ -364,6 +454,7 @@ function obterIndicacoes(assinatura: string): Promise<Indicacao[]> {
       ? (arquetipos[e.bookside.principal as ArquetipoId] ?? null)
       : null,
   ).then((lista) => {
+    if (lista.length) guardarNoPool(lista);
     try {
       if (lista.length)
         localStorage.setItem(
@@ -409,12 +500,53 @@ export function useIndicacoes() {
   }, [assinatura]);
 
   const tenho = useMemo(() => naEstante(livros), [livros]);
-  const fora = passados();
+  const [trocas, setTrocas] = useState<Record<string, Indicacao>>({});
+  const final = useMemo(() => {
+    if (lista === null) return [];
+    const fora = passados();
+    const vistos = new Set<string>();
+    const serve = (l: Indicacao) => {
+      const k = chaveTitulo(l.titulo);
+      if (vistos.has(k) || tenho(l) || fora.has(k)) return false;
+      vistos.add(k);
+      return true;
+    };
+    const daVez = lista.filter(serve);
+    if (daVez.length >= 8) return daVez;
+    // a busca veio fraca (sem internet, limite do Google…): completa com o que
+    // já veio antes e com a reserva — o descobrir nunca fica vazio
+    const reserva = daReserva(generosQueLe(livros, gostos))
+      .map((r) => trocas[r.id] ?? r)
+      .filter(serve);
+    const antigas = sortear(lerJson<Indicacao[]>(POOL, [])).filter(serve);
+    return [...daVez, ...antigas.slice(0, 15), ...reserva].slice(0, 30);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lista, tenho, trocas, rodada]);
+
+  // os livros da reserva ganham capa e sinopse quando o catálogo responde
+  useEffect(() => {
+    const sem = final
+      .filter((l) => l.id.startsWith("reserva-") && !trocas[l.id])
+      .slice(0, 6);
+    if (!sem.length) return;
+    let vivo = true;
+    void Promise.all(
+      sem.map((l) => acharEdicao(l).then((x) => [l.id, x] as const)),
+    ).then((pares) => {
+      if (!vivo) return;
+      const novas = Object.fromEntries(
+        pares.filter((p): p is readonly [string, Indicacao] => !!p[1]),
+      );
+      if (Object.keys(novas).length) setTrocas((t) => ({ ...t, ...novas }));
+    });
+    return () => {
+      vivo = false;
+    };
+  }, [final, trocas]);
+
   return {
     carregando: lista === null,
-    lista: (lista ?? []).filter(
-      (l) => !tenho(l) && !fora.has(chaveTitulo(l.titulo)),
-    ),
+    lista: final,
     /** busca outra leva (a anterior acabou) */
     maisUmaRodada: () => {
       setLista(null);

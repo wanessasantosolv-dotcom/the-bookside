@@ -6,6 +6,7 @@ import { AppShell } from "@/components/AppShell";
 import { CapaLivro } from "@/components/CapaLivro";
 import { useHidratado } from "@/components/PerfilHidratacao";
 import { PerguntaTermino } from "@/components/PerguntaTermino";
+import { chaveTitulo } from "@/lib/catalogo";
 import {
   lembrarPassado,
   migrarPassados,
@@ -96,7 +97,14 @@ function UmaPorVez() {
         ),
       );
   }, [fila, indicacoes.carregando, indicacoes.lista]);
-  const livro = fila?.[indice];
+  // a versão mais nova do livro (a reserva ganha capa e sinopse depois que chega)
+  const naFila = fila?.[indice];
+  const livro =
+    naFila &&
+    (indicacoes.lista.find(
+      (l) => chaveTitulo(l.titulo) === chaveTitulo(naFila.titulo),
+    ) ??
+      naFila);
 
   function responder(status: StatusLivro | null, lidoEm?: string) {
     if (!livro) return;
