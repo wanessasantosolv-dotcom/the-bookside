@@ -85,6 +85,8 @@ export type Perfil = {
     salvoEm: string;
   } | null;
   onboardingConcluido: boolean;
+  /** já viu o passo a passo mostrando onde fica cada coisa no app */
+  tourVisto: boolean;
   /** última vez que abriu as novidades (para marcar o que é novo) */
   novidadesVistasEm: string | null;
   /** livros em que a pessoa tocou "passar" no descobrir (títulos normalizados): não voltam, em nenhum aparelho */
@@ -125,6 +127,7 @@ export const perfilInicial: Perfil = {
   estantesProprias: [],
   bookside: null,
   onboardingConcluido: false,
+  tourVisto: false,
   novidadesVistasEm: null,
   passados: [],
 };

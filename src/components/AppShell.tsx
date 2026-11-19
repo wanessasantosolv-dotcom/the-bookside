@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
 import { ExigeConta } from "@/components/ExigeConta";
 import { abas, NavInferior, type Aba } from "@/components/NavInferior";
+import { TourApp } from "@/components/TourApp";
 
 /**
  * Casca das telas principais do app.
@@ -30,6 +31,7 @@ export function AppShell({
       } ${className}`}
     >
       <ExigeConta />
+      <TourApp />
       <aside className="hidden lg:sticky lg:top-0 lg:block lg:h-dvh lg:w-[236px] lg:flex-none lg:border-r lg:border-fio lg:px-7 lg:py-8">
         <Link href="/inicio" aria-label="the bookside · início" className="mb-10 block">
           {/* eslint-disable-next-line @next/next/no-img-element */}
