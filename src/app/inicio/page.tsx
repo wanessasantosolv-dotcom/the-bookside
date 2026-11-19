@@ -156,6 +156,9 @@ function IndicacaoDoDia({ compacto = false }: { compacto?: boolean } = {}) {
         <span className="mt-2 block font-display text-[13px] leading-snug font-semibold italic [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2] overflow-hidden">
           {livro.titulo}
         </span>
+        <span className="mt-1 block truncate text-[10px] text-cinza">
+          {livro.motivo}
+        </span>
       </Link>
     );
   return (
@@ -650,8 +653,8 @@ export default function InicioPage() {
               </div>
             </div>
 
-            {/* ===== trilha "pra você" (só no celular — no computador isso mora na coluna lateral) ===== */}
-            <div className="mt-3.5 flex gap-2.5 overflow-x-auto px-6 pb-1 lg:hidden">
+            {/* ===== trilha "pra você" (celular e computador) ===== */}
+            <div className="mt-3.5 flex gap-2.5 overflow-x-auto px-6 pb-1 lg:mx-0 lg:mb-7 lg:px-0 lg:pb-0">
               <IndicacaoDoDia compacto />
               <BannerTeste compacto principal={bookside?.principal} />
             </div>
@@ -671,9 +674,7 @@ export default function InicioPage() {
           </div>
 
           <aside className="hidden space-y-5 lg:block">
-            <BannerTeste principal={bookside?.principal} />
             <AmigasLendoWeb />
-            <IndicacaoDoDia />
           </aside>
         </div>
       </div>
