@@ -47,7 +47,7 @@ alter table public.clubes add column if not exists codigo_expira_em timestamptz 
 create table if not exists public.membros (
   clube_id uuid not null references public.clubes (id) on delete cascade,
   usuario_id uuid not null references auth.users (id) on delete cascade,
-  papel text not null default 'membro' check (papel in ('moderadora', 'membro')),
+  papel text not null default 'membro' check (papel in ('moderadora', 'organizadora', 'membro')),
   entrou_em timestamptz not null default now(),
   primary key (clube_id, usuario_id)
 );
@@ -62,6 +62,37 @@ create or replace function public.e_moderadora(c uuid) returns boolean
   language sql stable security definer set search_path = public as $$
   select exists (select 1 from membros where clube_id = c and usuario_id = auth.uid() and papel = 'moderadora');
 $$;
+
+-- cargos: moderadora (cuida de tudo, inclusive dos cargos e do clube),
+-- organizadora (cuida da leitura, da agenda, dos convites e das membros) e membro
+alter table public.membros drop constraint if exists membros_papel_check;
+alter table public.membros add constraint membros_papel_check
+  check (papel in ('moderadora', 'organizadora', 'membro'));
+
+create or replace function public.e_organizadora(c uuid) returns boolean
+  language sql stable security definer set search_path = public as $$
+  select exists (select 1 from membros where clube_id = c and usuario_id = auth.uid() and papel in ('moderadora', 'organizadora'));
+$$;
+
+create or replace function public.papel_de(c uuid, u uuid) returns text
+  language sql stable security definer set search_path = public as $$
+  select papel from membros where clube_id = c and usuario_id = u;
+$$;
+
+-- só a moderadora troca cargos; o clube nunca fica sem moderadora
+create or replace function public.mudar_papel(p_clube uuid, p_usuario uuid, p_papel text) returns void
+  language plpgsql security definer set search_path = public as $$
+begin
+  if not e_moderadora(p_clube) then raise exception 'só a moderadora muda os cargos'; end if;
+  if p_papel not in ('moderadora', 'organizadora', 'membro') then raise exception 'cargo inválido'; end if;
+  if p_papel <> 'moderadora'
+     and (select papel from membros where clube_id = p_clube and usuario_id = p_usuario) = 'moderadora'
+     and (select count(*) from membros where clube_id = p_clube and papel = 'moderadora') <= 1 then
+    raise exception 'o clube precisa de pelo menos uma moderadora';
+  end if;
+  update membros set papel = p_papel where clube_id = p_clube and usuario_id = p_usuario;
+end $$;
+grant execute on function public.mudar_papel(uuid, uuid, text) to authenticated;
 
 -- código de convite: 6 caracteres sem os que confundem (0/O, 1/I)
 create or replace function public.gerar_codigo() returns text
@@ -98,7 +129,7 @@ create or replace function public.novo_codigo(p_clube uuid) returns text
   language plpgsql security definer set search_path = public as $$
 declare cod text;
 begin
-  if not e_moderadora(p_clube) then raise exception 'só quem modera gera convite'; end if;
+  if not e_organizadora(p_clube) then raise exception 'só quem organiza gera convite'; end if;
   cod := gerar_codigo();
   update clubes set codigo = cod, codigo_expira_em = now() + interval '7 days' where id = p_clube;
   return cod;
@@ -140,7 +171,12 @@ drop policy if exists "membros veem os membros" on public.membros;
 create policy "membros veem os membros" on public.membros for select to authenticated using (public.e_membro(clube_id));
 drop policy if exists "sair do clube" on public.membros;
 create policy "sair do clube" on public.membros for delete to authenticated
-  using (usuario_id = auth.uid() or public.e_moderadora(clube_id));
+  using (
+    usuario_id = auth.uid()
+    or public.e_moderadora(clube_id)
+    -- organizadora tira membros, mas não quem modera ou organiza
+    or (public.e_organizadora(clube_id) and papel = 'membro')
+  );
 
 -- livros do clube: sugestões, leitura da vez e lidos
 create table if not exists public.clube_livros (
@@ -176,17 +212,17 @@ create policy "membros veem os livros" on public.clube_livros for select to auth
 drop policy if exists "membros sugerem" on public.clube_livros;
 create policy "membros sugerem" on public.clube_livros for insert to authenticated
   with check (
-    (public.e_moderadora(clube_id) or public.pode_sugerir(clube_id))
+    (public.e_organizadora(clube_id) or public.pode_sugerir(clube_id))
     and sugerido_por = auth.uid()
     -- sugestão (qualquer membro) ou um livro que o clube já leu (só quem modera, para o histórico)
-    and (estado = 'sugerido' or (estado = 'lido' and public.e_moderadora(clube_id)))
+    and (estado = 'sugerido' or (estado = 'lido' and public.e_organizadora(clube_id)))
   );
 drop policy if exists "moderadora organiza a leitura" on public.clube_livros;
 create policy "moderadora organiza a leitura" on public.clube_livros for update to authenticated
-  using (public.e_moderadora(clube_id)) with check (public.e_moderadora(clube_id));
+  using (public.e_organizadora(clube_id)) with check (public.e_organizadora(clube_id));
 drop policy if exists "apagar sugestão" on public.clube_livros;
 create policy "apagar sugestão" on public.clube_livros for delete to authenticated
-  using (public.e_moderadora(clube_id) or (sugerido_por = auth.uid() and estado = 'sugerido'));
+  using (public.e_organizadora(clube_id) or (sugerido_por = auth.uid() and estado = 'sugerido'));
 
 create table if not exists public.votos (
   clube_livro_id uuid not null references public.clube_livros (id) on delete cascade,
@@ -248,7 +284,7 @@ create policy "membros marcam encontros" on public.encontros for insert to authe
   with check (public.e_membro(clube_id) and criado_por = auth.uid());
 drop policy if exists "desmarcar encontro" on public.encontros;
 create policy "desmarcar encontro" on public.encontros for delete to authenticated
-  using (criado_por = auth.uid() or public.e_moderadora(clube_id));
+  using (criado_por = auth.uid() or public.e_organizadora(clube_id));
 
 alter table public.clubes add column if not exists capa text;
 alter table public.fichas add column if not exists spoiler boolean not null default false;
@@ -419,3 +455,15 @@ create policy "atualizar o próprio progresso" on public.progresso_leitura for u
 -- onde cada um está na leitura em andamento (página ou capítulo)
 alter table public.progresso_leitura add column if not exists unidade text check (unidade in ('pagina', 'capitulo'));
 alter table public.progresso_leitura add column if not exists numero int check (numero >= 0);
+
+
+-- "o que a gente amou": os favoritos do clube (ids de clube_livros, em ordem).
+-- vazio = o app mostra sozinho os de nota mais alta
+alter table public.clubes add column if not exists favoritos jsonb not null default '[]';
+create or replace function public.definir_favoritos_do_clube(p_clube uuid, p_ids jsonb) returns void
+  language plpgsql security definer set search_path = public as $$
+begin
+  if not e_organizadora(p_clube) then raise exception 'só quem organiza escolhe os favoritos'; end if;
+  update clubes set favoritos = coalesce(p_ids, '[]'::jsonb) where id = p_clube;
+end $$;
+grant execute on function public.definir_favoritos_do_clube(uuid, jsonb) to authenticated;

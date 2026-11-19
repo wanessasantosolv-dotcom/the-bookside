@@ -23,6 +23,7 @@ import {
   primeiroNome,
   salvarFicha,
   type LivroDoClube,
+  organiza,
 } from "@/lib/clubes";
 import { notasCompletas } from "@/lib/estantes";
 import { corDoLivro } from "@/lib/cores";
@@ -102,7 +103,7 @@ export default function ImportarNoClubePage() {
   const [erro, setErro] = useState<string | null>(null);
   const arquivo = useRef<HTMLInputElement>(null);
 
-  if (papel !== "moderadora")
+  if (!organiza(papel))
     return (
       <div className="px-6 pt-6 lg:px-0">
         <Vazio

@@ -21,6 +21,7 @@ import {
   modoDe,
   quemTrouxe,
   type LivroDoClube,
+  organiza,
 } from "@/lib/clubes";
 import { useConsulta, useMeuId } from "@/lib/social";
 
@@ -50,7 +51,7 @@ export default function BibliotecaPage() {
   if (consulta.erro)
     return <ErroOuFalta erro={consulta.erro} onTentar={consulta.recarregar} />;
   const livros = consulta.dados!;
-  const moderadora = papel === "moderadora";
+  const moderadora = organiza(papel);
   const base = `/clubes/${clube.id}`;
   const votacao = modoDe(clube) === "votacao";
 
@@ -224,7 +225,11 @@ export default function BibliotecaPage() {
                     href={linha.link}
                     className="text-[10px] font-bold tracking-[.12em] text-bordo uppercase"
                   >
-                    {linha.id === "lendo" ? "ver a leitura →" : votacao ? "votar →" : "ver a fila →"}
+                    {linha.id === "lendo"
+                      ? "ver a leitura →"
+                      : votacao
+                        ? "votar →"
+                        : "ver a fila →"}
                   </Link>
                 ) : null}
               </div>

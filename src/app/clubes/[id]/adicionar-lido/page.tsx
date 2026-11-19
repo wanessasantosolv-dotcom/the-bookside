@@ -15,7 +15,7 @@ import {
 } from "@/components/clube/Pecas";
 import { Vazio } from "@/components/social/Estados";
 import { useBuscaLivros, type LivroBusca } from "@/lib/catalogo";
-import { adicionarLidoAoClube } from "@/lib/clubes";
+import { adicionarLidoAoClube, organiza } from "@/lib/clubes";
 import { corDoLivro } from "@/lib/cores";
 import { dataDoDia, diaLocal } from "@/lib/datas";
 import { usePerfil } from "@/lib/perfil-store";
@@ -35,7 +35,7 @@ export default function AdicionarLidoPage() {
   const [erro, setErro] = useState<string | null>(null);
   const busca = useBuscaLivros(termo);
 
-  if (papel !== "moderadora")
+  if (!organiza(papel))
     return (
       <div className="px-6 pt-6 lg:px-0">
         <Vazio

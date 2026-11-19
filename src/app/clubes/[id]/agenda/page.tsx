@@ -5,7 +5,13 @@ import { useState, type FormEvent } from "react";
 import { useClube } from "@/components/clube/ClubeContexto";
 import { botaoPrincipal, campo, rotuloCampo } from "@/components/clube/Pecas";
 import { Carregando, ErroOuFalta } from "@/components/social/Estados";
-import { desmarcarEncontro, encontrosDe, livrosDoClube, marcarEncontro } from "@/lib/clubes";
+import {
+  desmarcarEncontro,
+  encontrosDe,
+  livrosDoClube,
+  marcarEncontro,
+  organiza,
+} from "@/lib/clubes";
 import { nomeDe, useConsulta, useMeuId } from "@/lib/social";
 
 type Evento = {
@@ -34,7 +40,11 @@ function NovoEncontro({ aoMarcar }: { aoMarcar: () => void }) {
     setOcupado(true);
     setErro(null);
     try {
-      await marcarEncontro(clube.id, { titulo, quando: new Date(quando).toISOString(), local });
+      await marcarEncontro(clube.id, {
+        titulo,
+        quando: new Date(quando).toISOString(),
+        local,
+      });
       setAberto(false);
       setQuando("");
       setLocal("");
@@ -63,7 +73,13 @@ function NovoEncontro({ aoMarcar }: { aoMarcar: () => void }) {
     >
       <label className="block">
         <span className={rotuloCampo}>o que é</span>
-        <input value={titulo} onChange={(e) => setTitulo(e.target.value)} maxLength={80} required className={campo} />
+        <input
+          value={titulo}
+          onChange={(e) => setTitulo(e.target.value)}
+          maxLength={80}
+          required
+          className={campo}
+        />
       </label>
       <label className="block">
         <span className={rotuloCampo}>quando</span>
@@ -111,14 +127,20 @@ export default function AgendaPage() {
   const eu = useMeuId();
   const [aba, setAba] = useState<"proximos" | "passados">("proximos");
   const consulta = useConsulta(async () => {
-    const [encontros, livros] = await Promise.all([encontrosDe(clube.id), livrosDoClube(clube.id)]);
+    const [encontros, livros] = await Promise.all([
+      encontrosDe(clube.id),
+      livrosDoClube(clube.id),
+    ]);
     return { encontros, livros };
   }, [clube.id]);
 
-  if (consulta.carregando && !consulta.dados) return <Carregando texto="abrindo a agenda…" linhas={2} />;
-  if (consulta.erro) return <ErroOuFalta erro={consulta.erro} onTentar={consulta.recarregar} />;
+  if (consulta.carregando && !consulta.dados)
+    return <Carregando texto="abrindo a agenda…" linhas={2} />;
+  if (consulta.erro)
+    return <ErroOuFalta erro={consulta.erro} onTentar={consulta.recarregar} />;
   const { encontros, livros } = consulta.dados!;
-  const pessoa = (id?: string | null) => (id ? (membros.find((m) => m.usuario_id === id)?.pessoa ?? null) : null);
+  const pessoa = (id?: string | null) =>
+    id ? (membros.find((m) => m.usuario_id === id)?.pessoa ?? null) : null;
 
   const eventos: Evento[] = [
     ...encontros.map((e) => ({
@@ -138,7 +160,10 @@ export default function AgendaPage() {
         rotulo: "começa",
         titulo: l.livro.titulo,
         detalhe: `${l.livro.autor}${l.rodada ? ` · rodada ${l.rodada}` : ""}`,
-        href: l.estado === "lendo" ? `/clubes/${clube.id}/leitura` : `/clubes/${clube.id}/livro/${l.id}`,
+        href:
+          l.estado === "lendo"
+            ? `/clubes/${clube.id}/leitura`
+            : `/clubes/${clube.id}/livro/${l.id}`,
       })),
     ...livros
       .filter((l) => l.prazo)
@@ -154,10 +179,14 @@ export default function AgendaPage() {
   const agora = Date.now();
   const lista = eventos
     .filter((e) =>
-      aba === "proximos" ? e.quando.getTime() >= agora - 864e5 / 2 : e.quando.getTime() < agora - 864e5 / 2,
+      aba === "proximos"
+        ? e.quando.getTime() >= agora - 864e5 / 2
+        : e.quando.getTime() < agora - 864e5 / 2,
     )
     .sort((a, b) =>
-      aba === "proximos" ? a.quando.getTime() - b.quando.getTime() : b.quando.getTime() - a.quando.getTime(),
+      aba === "proximos"
+        ? a.quando.getTime() - b.quando.getTime()
+        : b.quando.getTime() - a.quando.getTime(),
     );
 
   return (
@@ -190,13 +219,17 @@ export default function AgendaPage() {
             <>
               <span className="w-12 flex-none text-center">
                 <span className="block text-[10px] font-semibold tracking-[.12em] text-cinza uppercase">
-                  {e.quando.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "")}
+                  {e.quando
+                    .toLocaleDateString("pt-BR", { month: "short" })
+                    .replace(".", "")}
                 </span>
                 <span className="block font-display text-[28px] leading-none font-semibold text-bordo">
                   {e.quando.getDate()}
                 </span>
                 <span className="block text-[10px] text-cinza">
-                  {e.quando.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "")}
+                  {e.quando
+                    .toLocaleDateString("pt-BR", { weekday: "short" })
+                    .replace(".", "")}
                 </span>
               </span>
               <span className="min-w-0 flex-1 border-l border-linha pl-4">
@@ -206,12 +239,19 @@ export default function AgendaPage() {
                 <span className="mt-0.5 block font-display text-lg leading-tight font-semibold italic lg:font-revista lg:font-normal">
                   {e.titulo}
                 </span>
-                {e.detalhe ? <span className="mt-0.5 block text-xs text-cinza">{e.detalhe}</span> : null}
+                {e.detalhe ? (
+                  <span className="mt-0.5 block text-xs text-cinza">
+                    {e.detalhe}
+                  </span>
+                ) : null}
               </span>
             </>
           );
           return (
-            <li key={e.id} className="flex items-start gap-2 border-b border-linha py-4 lg:border-fio">
+            <li
+              key={e.id}
+              className="flex items-start gap-2 border-b border-linha py-4 lg:border-fio"
+            >
               {e.href ? (
                 <Link href={e.href} className="flex flex-1 gap-3">
                   {conteudo}
@@ -219,7 +259,7 @@ export default function AgendaPage() {
               ) : (
                 <span className="flex flex-1 gap-3">{conteudo}</span>
               )}
-              {e.encontroId && (e.criado_por === eu || papel === "moderadora") ? (
+              {e.encontroId && (e.criado_por === eu || organiza(papel)) ? (
                 <button
                   type="button"
                   onClick={async () => {
@@ -238,7 +278,9 @@ export default function AgendaPage() {
       </ol>
       {!lista.length ? (
         <p className="py-8 text-center font-accent text-sm italic text-cinza">
-          {aba === "proximos" ? "nada marcado por enquanto ✦" : "nada no passado ainda."}
+          {aba === "proximos"
+            ? "nada marcado por enquanto ✦"
+            : "nada no passado ainda."}
         </p>
       ) : null}
     </div>

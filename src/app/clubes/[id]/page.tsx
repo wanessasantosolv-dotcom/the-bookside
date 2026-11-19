@@ -1,6 +1,7 @@
 "use client";
 
 import { CartaoAnoDoClube } from "@/components/clube/AnoDoClube";
+import { FeedDoClube } from "@/components/clube/FeedDoClube";
 import { CapaAuto } from "@/components/CapaAuto";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -22,6 +23,7 @@ import {
   media,
   modoDe,
   virgula,
+  organiza,
 } from "@/lib/clubes";
 import { estrelas } from "@/lib/estantes";
 import { nomeDe, useConsulta, useMeuId } from "@/lib/social";
@@ -75,17 +77,24 @@ export default function ClubeInicioPage() {
   const proximo = encontros.find(
     (e) => new Date(e.quando).getTime() > Date.now(),
   );
-  const amados = livros
+  // "o que a gente amou": os escolhidos (se houver) ou os de nota mais alta
+  const comNota = livros
     .filter((l) => l.estado === "lido")
     .map((l) => ({
       l,
       m: media(
         fichas.filter((f) => f.clube_livro_id === l.id).map((f) => f.nota),
       ),
-    }))
-    .filter((x) => x.m !== null)
-    .sort((a, b) => b.m! - a.m!)
-    .slice(0, 4);
+    }));
+  const escolhidos = (clube.favoritos ?? [])
+    .map((id) => comNota.find((x) => x.l.id === id))
+    .filter((x): x is (typeof comNota)[number] => !!x);
+  const amados = escolhidos.length
+    ? escolhidos
+    : comNota
+        .filter((x) => x.m !== null)
+        .sort((a, b) => b.m! - a.m!)
+        .slice(0, 4);
 
   return (
     <div className="space-y-8 px-6 pt-6 lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-12 xl:grid-cols-[minmax(0,1fr)_380px] lg:space-y-0 lg:px-0">
@@ -144,15 +153,15 @@ export default function ClubeInicioPage() {
               <p className="mt-1 text-[13px] text-cinza">
                 {sugestoes.length
                   ? `${sugestoes.length} ${sugestoes.length === 1 ? "sugestão esperando" : "sugestões esperando"} ${modoDe(clube) === "votacao" ? "a votação" : "a vez"}.`
-                  : papel === "moderadora"
+                  : organiza(papel)
                     ? "escolha qualquer livro para começar a primeira rodada."
                     : "sugira um livro para começar a primeira rodada."}
               </p>
               <Link
-                href={`/clubes/${clube.id}/${papel === "moderadora" ? "escolher" : sugestoes.length ? "sugestoes" : "sugerir"}`}
+                href={`/clubes/${clube.id}/${organiza(papel) ? "escolher" : sugestoes.length ? "sugestoes" : "sugerir"}`}
                 className="mt-3 inline-flex min-h-11 items-center rounded-pill bg-bordo px-5 text-[13px] font-semibold text-creme"
               >
-                {papel === "moderadora"
+                {organiza(papel)
                   ? "escolher o livro da vez"
                   : sugestoes.length
                     ? modoDe(clube) === "votacao"
@@ -175,9 +184,21 @@ export default function ClubeInicioPage() {
         <section>
           <div className={secao}>
             <h2 className={tituloSecao}>o que a gente amou</h2>
-            <Link href={`/clubes/${clube.id}/biblioteca`} className={linkSecao}>
-              ver a estante →
-            </Link>
+            {organiza(papel) ? (
+              <Link
+                href={`/clubes/${clube.id}/favoritos`}
+                className={linkSecao}
+              >
+                {escolhidos.length ? "trocar →" : "escolher →"}
+              </Link>
+            ) : (
+              <Link
+                href={`/clubes/${clube.id}/biblioteca`}
+                className={linkSecao}
+              >
+                ver a estante →
+              </Link>
+            )}
           </div>
           {amados.length ? (
             <ul className="mt-4 grid grid-cols-4 gap-2.5 lg:max-w-[440px]">
@@ -186,7 +207,7 @@ export default function ClubeInicioPage() {
                   <Link href={`/clubes/${clube.id}/livro/${l.id}`}>
                     <CapaAuto livro={l.livro} className="w-full" />
                     <span className="mt-1.5 block text-center text-[10px] text-bordo">
-                      {estrelas(Math.round(m! * 2) / 2)}
+                      {m ? estrelas(Math.round(m * 2) / 2) : "♡"}
                     </span>
                   </Link>
                 </li>
@@ -198,6 +219,14 @@ export default function ClubeInicioPage() {
               preferidos aparecem aqui.
             </p>
           )}
+        </section>
+        <section id="novidades" className="scroll-mt-24">
+          <div className={secao}>
+            <h2 className={tituloSecao}>o que está rolando</h2>
+          </div>
+          <div className="mt-4">
+            <FeedDoClube />
+          </div>
         </section>
       </div>
 
@@ -365,7 +394,9 @@ function Turma({
                 ) : null}
               </span>
               <span className="w-full truncate font-accent text-xs italic">
-                {m.usuario_id === eu ? "você" : m.pessoa.nome || m.pessoa.usuario}
+                {m.usuario_id === eu
+                  ? "você"
+                  : m.pessoa.nome || m.pessoa.usuario}
               </span>
               <span className="-mt-1 text-[10px] leading-tight text-cinza">
                 {rotuloAndamento(a)}
@@ -439,9 +470,15 @@ function SugerirRapido({
           {fila.slice(0, 6).map((l) => (
             <li key={l.id} className="w-[64px] flex-none">
               <Link href={`/clubes/${clubeId}/livro/${l.id}`}>
-                <CapaAuto livro={l.livro} className="w-full [&>span:last-child]:text-[8px]" />
+                <CapaAuto
+                  livro={l.livro}
+                  className="w-full [&>span:last-child]:text-[8px]"
+                />
                 <span className="mt-1 block truncate text-[10px] text-cinza">
-                  {(quemTrouxe(l, membros, eu) ?? "").replace(/^sugerido por /, "")}
+                  {(quemTrouxe(l, membros, eu) ?? "").replace(
+                    /^sugerido por /,
+                    "",
+                  )}
                 </span>
               </Link>
             </li>

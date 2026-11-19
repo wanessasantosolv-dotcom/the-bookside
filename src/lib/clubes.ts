@@ -26,6 +26,8 @@ export type Clube = {
   criado_em: string;
   /** sugestões por pessoa por mês (null = sem limite) */
   limite_sugestoes: number | null;
+  /** "o que a gente amou" escolhido à mão (ids dos livros do clube); vazio = automático */
+  favoritos?: string[] | null;
   /** máximo de pessoas no clube (null = sem limite) */
   max_membros: number | null;
   /** o código de convite vale até aqui */
@@ -75,7 +77,37 @@ export function vezDe(livros: LivroDoClube[], membros: Membro[]): Membro | null 
   const i = ultima ? membros.findIndex((m) => m.usuario_id === ultima.sugerido_por) : -1;
   return membros[(i + 1) % membros.length];
 }
-export type Papel = "moderadora" | "membro";
+export type Papel = "moderadora" | "organizadora" | "membro";
+
+/** os cargos do clube e o que cada um pode */
+export const cargos: { id: Papel; nome: string; descricao: string }[] = [
+  { id: "moderadora", nome: "moderadora", descricao: "cuida de tudo: informações do clube, cargos, leituras e membros" },
+  { id: "organizadora", nome: "organizadora", descricao: "escolhe e encerra leituras, marca encontros, convida e tira membros" },
+  { id: "membro", nome: "membro", descricao: "lê, sugere, vota e escreve fichas" },
+];
+
+/** pode cuidar da leitura, da agenda, dos convites e das membros */
+export const organiza = (p: Papel | null | undefined) =>
+  p === "moderadora" || p === "organizadora";
+
+/** escolhe os favoritos do clube ("o que a gente amou"); [] volta ao automático */
+export async function definirFavoritosDoClube(clubeId: string, ids: string[]) {
+  const { error } = await db().rpc("definir_favoritos_do_clube", {
+    p_clube: clubeId,
+    p_ids: ids,
+  });
+  if (error) throw error;
+}
+
+/** muda o cargo de alguém (só quem modera; o clube nunca fica sem moderadora) */
+export async function mudarPapel(clubeId: string, usuarioId: string, papel: Papel) {
+  const { error } = await db().rpc("mudar_papel", {
+    p_clube: clubeId,
+    p_usuario: usuarioId,
+    p_papel: papel,
+  });
+  if (error) throw error;
+}
 export type Membro = {
   usuario_id: string;
   papel: Papel;

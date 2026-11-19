@@ -4,9 +4,23 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { useClube } from "@/components/clube/ClubeContexto";
-import { botaoContorno, botaoPrincipal, Rodape, TopoForm } from "@/components/clube/Pecas";
+import {
+  botaoContorno,
+  botaoPrincipal,
+  Rodape,
+  TopoForm,
+} from "@/components/clube/Pecas";
 import { Avatar } from "@/components/social/Pessoas";
-import { conviteVencido, linkDeConvite, novoCodigo, tirarMembro } from "@/lib/clubes";
+import {
+  conviteVencido,
+  linkDeConvite,
+  novoCodigo,
+  tirarMembro,
+  organiza,
+  cargos,
+  mudarPapel,
+  type Papel,
+} from "@/lib/clubes";
 import { nomeDe, useMeuId } from "@/lib/social";
 
 function Convite() {
@@ -17,7 +31,9 @@ function Convite() {
   const [copiado, setCopiado] = useState<"link" | "codigo" | null>(null);
   const [gerando, setGerando] = useState(false);
   const vencido = conviteVencido(clube);
-  const vagas = clube.max_membros ? Math.max(0, clube.max_membros - membros.length) : null;
+  const vagas = clube.max_membros
+    ? Math.max(0, clube.max_membros - membros.length)
+    : null;
 
   async function gerar() {
     setGerando(true);
@@ -43,10 +59,29 @@ function Convite() {
   async function enviar() {
     const texto = `vem pro clube ${clube.nome} no the bookside! o código é ${clube.codigo}`;
     try {
-      if (navigator.share) await navigator.share({ title: clube.nome, text: texto, url: link });
+      if (navigator.share)
+        await navigator.share({ title: clube.nome, text: texto, url: link });
       else await copiar(`${texto}\n${link}`, "link");
     } catch {
       /* a pessoa cancelou */
+    }
+  }
+
+  const [erroCargo, setErroCargo] = useState<string | null>(null);
+  async function trocarCargo(id: string, nome: string, novo: Papel) {
+    setErroCargo(null);
+    try {
+      await mudarPapel(clube.id, id, novo);
+      recarregar();
+    } catch (x) {
+      const e = x as { message?: string; code?: string };
+      setErroCargo(
+        /moderadora/.test(e?.message ?? "")
+          ? "o clube precisa de pelo menos uma moderadora. passe o cargo para outra pessoa antes."
+          : e?.code === "PGRST202"
+            ? "o banco do app precisa ser atualizado: rode de novo o arquivo supabase/social.sql no SQL Editor do Supabase."
+            : `não deu para mudar o cargo de ${nome} agora.`,
+      );
     }
   }
 
@@ -56,7 +91,8 @@ function Convite() {
     recarregar();
   }
 
-  const botao = "flex min-h-11 flex-1 items-center justify-center rounded-pill text-[13px] font-semibold";
+  const botao =
+    "flex min-h-11 flex-1 items-center justify-center rounded-pill text-[13px] font-semibold";
 
   return (
     <div className="flex min-h-[70dvh] flex-col">
@@ -64,23 +100,39 @@ function Convite() {
         voltar={{ href: `/clubes/${clube.id}`, r: clube.nome }}
         rotulo="convidar"
         titulo={novo ? "clube criado! ✦" : "chama mais gente"}
-        frase={novo ? "agora chama as amigas: mande o link ou o código." : "quem entra pelo link já cai no clube ✦"}
+        frase={
+          novo
+            ? "agora chama as amigas: mande o link ou o código."
+            : "quem entra pelo link já cai no clube ✦"
+        }
       />
       <div className="mt-6 space-y-6 px-6 lg:max-w-[640px] lg:px-0">
         <div className="rounded-xl border border-linha bg-creme-quente p-4 lg:rounded-[4px] lg:border-fio lg:bg-transparent lg:p-5">
-          <p className="text-[10px] font-semibold tracking-[.16em] text-cinza uppercase">link de convite</p>
+          <p className="text-[10px] font-semibold tracking-[.16em] text-cinza uppercase">
+            link de convite
+          </p>
           <p className="mt-2 rounded-md border border-linha bg-creme px-3 py-3 font-accent text-sm break-all italic text-cinza">
             {link || "…"}
           </p>
           <div className="mt-3 flex gap-2.5">
-            <button type="button" onClick={() => copiar(link, "link")} className={`${botao} bg-bordo text-creme`}>
+            <button
+              type="button"
+              onClick={() => copiar(link, "link")}
+              className={`${botao} bg-bordo text-creme`}
+            >
               {copiado === "link" ? "copiado ✓" : "copiar link"}
             </button>
-            <button type="button" onClick={enviar} className={`${botao} border border-bordo text-bordo`}>
+            <button
+              type="button"
+              onClick={enviar}
+              className={`${botao} border border-bordo text-bordo`}
+            >
               enviar
             </button>
           </div>
-          <p className="mt-4 text-[10px] font-semibold tracking-[.16em] text-cinza uppercase">ou o código</p>
+          <p className="mt-4 text-[10px] font-semibold tracking-[.16em] text-cinza uppercase">
+            ou o código
+          </p>
           <button
             type="button"
             onClick={() => copiar(clube.codigo, "codigo")}
@@ -97,37 +149,58 @@ function Convite() {
             ))}
           </button>
           <p className="mt-2 font-accent text-xs italic text-cinza">
-            {copiado === "codigo" ? "código copiado ✓" : "toque no código para copiar."}
+            {copiado === "codigo"
+              ? "código copiado ✓"
+              : "toque no código para copiar."}
           </p>
-          <p className={`mt-3 text-xs ${vencido ? "font-semibold text-bordo" : "text-cinza"}`}>
+          <p
+            className={`mt-3 text-xs ${vencido ? "font-semibold text-bordo" : "text-cinza"}`}
+          >
             {vencido
               ? "esse convite venceu e não funciona mais."
               : clube.codigo_expira_em
                 ? `vale até ${new Date(clube.codigo_expira_em).toLocaleDateString("pt-BR", { day: "numeric", month: "long" })}`
                 : "vale sem prazo"}
-            {vagas !== null ? ` · ${vagas === 0 ? "sem vagas" : `${vagas} ${vagas === 1 ? "vaga" : "vagas"}`}` : ""}
+            {vagas !== null
+              ? ` · ${vagas === 0 ? "sem vagas" : `${vagas} ${vagas === 1 ? "vaga" : "vagas"}`}`
+              : ""}
           </p>
-          {papel === "moderadora" ? (
+          {organiza(papel) ? (
             <button
               type="button"
               onClick={gerar}
               disabled={gerando}
               className="mt-2 min-h-9 text-xs font-semibold text-bordo underline underline-offset-4 disabled:opacity-50"
             >
-              {gerando ? "gerando…" : vencido ? "gerar um convite novo" : "gerar outro código (o atual para de valer)"}
+              {gerando
+                ? "gerando…"
+                : vencido
+                  ? "gerar um convite novo"
+                  : "gerar outro código (o atual para de valer)"}
             </button>
           ) : vencido ? (
-            <p className="mt-1 text-xs text-cinza">peça para quem modera gerar um convite novo.</p>
+            <p className="mt-1 text-xs text-cinza">
+              peça para quem modera gerar um convite novo.
+            </p>
           ) : null}
         </div>
 
         <section>
-          <p className="text-[10px] font-semibold tracking-[.16em] text-bordo uppercase">membros · {membros.length}</p>
+          <p className="text-[10px] font-semibold tracking-[.16em] text-bordo uppercase">
+            membros · {membros.length}
+          </p>
           <ul className="mt-2">
             {membros.map((m) => (
-              <li key={m.usuario_id} className="flex items-center gap-3 border-t border-linha py-3 lg:border-fio">
+              <li
+                key={m.usuario_id}
+                className="flex items-center gap-3 border-t border-linha py-3 lg:border-fio"
+              >
                 <Link
-                  href={m.pessoa.usuario ? `/clubes/${clube.id}/membro/${m.pessoa.usuario}` : "#"}
+                  href={
+                    m.pessoa.usuario
+                      ? `/clubes/${clube.id}/membro/${m.pessoa.usuario}`
+                      : "#"
+                  }
                   className="flex min-w-0 flex-1 items-center gap-3"
                 >
                   <Avatar pessoa={m.pessoa} tamanho={38} />
@@ -136,16 +209,43 @@ function Convite() {
                       {m.usuario_id === eu ? "você" : nomeDe(m.pessoa)}
                     </span>
                     {m.pessoa.usuario ? (
-                      <span className="block truncate text-xs text-cinza">@{m.pessoa.usuario}</span>
+                      <span className="block truncate text-xs text-cinza">
+                        @{m.pessoa.usuario}
+                      </span>
                     ) : null}
                   </span>
                 </Link>
-                <span
-                  className={`text-[10px] font-semibold tracking-[.12em] uppercase ${m.papel === "moderadora" ? "text-bordo" : "text-cinza"}`}
-                >
-                  {m.usuario_id === clube.criado_por ? "dona" : m.papel}
-                </span>
-                {papel === "moderadora" && m.usuario_id !== eu ? (
+                {papel === "moderadora" ? (
+                  <label className="flex-none">
+                    <span className="sr-only">cargo de {nomeDe(m.pessoa)}</span>
+                    <select
+                      value={m.papel}
+                      onChange={(e) =>
+                        trocarCargo(
+                          m.usuario_id,
+                          nomeDe(m.pessoa),
+                          e.target.value as Papel,
+                        )
+                      }
+                      className="h-9 rounded-pill border border-bege bg-creme-quente px-3 text-xs font-semibold text-ameixa outline-none focus:border-bordo"
+                    >
+                      {cargos.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.nome}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ) : (
+                  <span
+                    className={`text-[10px] font-semibold tracking-[.12em] uppercase ${m.papel === "membro" ? "text-cinza" : "text-bordo"}`}
+                  >
+                    {m.papel}
+                  </span>
+                )}
+                {m.usuario_id !== eu &&
+                (papel === "moderadora" ||
+                  (papel === "organizadora" && m.papel === "membro")) ? (
                   <button
                     type="button"
                     onClick={() => tirar(m.usuario_id, nomeDe(m.pessoa))}
@@ -157,12 +257,38 @@ function Convite() {
               </li>
             ))}
           </ul>
+          <details className="mt-4 rounded-[12px] border border-linha p-4 text-[13px] lg:rounded-[4px]">
+            <summary className="cursor-pointer font-semibold text-bordo">
+              o que cada cargo pode fazer?
+            </summary>
+            <ul className="mt-3 space-y-2">
+              {cargos.map((c) => (
+                <li key={c.id}>
+                  <b className="font-semibold text-ameixa">{c.nome}</b>
+                  <span className="text-cinza"> — {c.descricao}</span>
+                </li>
+              ))}
+            </ul>
+            {papel === "moderadora" ? (
+              <p className="mt-3 font-accent text-sm italic text-cinza">
+                para mudar o cargo de alguém, escolha na lista acima.
+              </p>
+            ) : null}
+          </details>
+          {erroCargo ? (
+            <p role="alert" className="mt-3 text-[13px] text-bordo">
+              {erroCargo}
+            </p>
+          ) : null}
         </section>
       </div>
       <Rodape>
-        {novo && papel === "moderadora" ? (
+        {novo && organiza(papel) ? (
           <>
-            <Link href={`/clubes/${clube.id}/escolher`} className={`${botaoPrincipal} lg:max-w-[360px]`}>
+            <Link
+              href={`/clubes/${clube.id}/escolher`}
+              className={`${botaoPrincipal} lg:max-w-[360px]`}
+            >
               escolher o primeiro livro →
             </Link>
             <Link href={`/clubes/${clube.id}`} className={botaoContorno}>
@@ -170,7 +296,10 @@ function Convite() {
             </Link>
           </>
         ) : (
-          <Link href="/clubes/entrar" className={`${botaoContorno} flex-1 lg:max-w-[640px]`}>
+          <Link
+            href="/clubes/entrar"
+            className={`${botaoContorno} flex-1 lg:max-w-[640px]`}
+          >
             entrar com um convite
           </Link>
         )}

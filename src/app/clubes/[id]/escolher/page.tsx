@@ -24,6 +24,7 @@ import {
   livrosDoClube,
   modoDe,
   vezDe,
+  organiza,
 } from "@/lib/clubes";
 import { corDoLivro } from "@/lib/cores";
 import { nomeDe, useConsulta } from "@/lib/social";
@@ -65,7 +66,7 @@ function Escolher() {
     if (duracao) setPrazo(diasDepois(v, duracao));
   }
 
-  if (papel !== "moderadora")
+  if (!organiza(papel))
     return (
       <div className="px-6 pt-6 lg:px-0">
         <Vazio

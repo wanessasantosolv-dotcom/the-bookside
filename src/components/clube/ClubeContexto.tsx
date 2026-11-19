@@ -46,7 +46,6 @@ const largura = "lg:w-full lg:px-12 xl:px-16";
 
 const abas = [
   { id: "", r: "início" },
-  { id: "feed", r: "feed" },
   { id: "biblioteca", r: "estante" },
   { id: "leitura", r: "leitura" },
   { id: "agenda", r: "agenda" },

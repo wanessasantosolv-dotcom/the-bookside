@@ -18,6 +18,7 @@ import {
   modosDeEscolha,
   vezDe,
   votar,
+  organiza,
 } from "@/lib/clubes";
 import { nomeDe, useConsulta, useMeuId } from "@/lib/social";
 
@@ -164,7 +165,7 @@ export default function SugestoesPage() {
                         </button>
                       </div>
                     ) : null}
-                    {papel === "moderadora" || l.sugerido_por === eu ? (
+                    {organiza(papel) || l.sugerido_por === eu ? (
                       <button
                         type="button"
                         onClick={() => tirar(l)}
