@@ -151,7 +151,7 @@ function Busca() {
                 onClick={() => adicionar(l)}
                 className={`flex h-11 flex-none items-center rounded-pill border px-3 text-[11px] font-semibold whitespace-nowrap ${
                   ok
-                    ? "border-linha bg-[#F1E4DC] text-cinza"
+                    ? "border-linha bg-linha/70 text-cinza"
                     : "border-bordo text-bordo hover:bg-rosa-fundo"
                 }`}
               >

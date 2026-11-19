@@ -17,6 +17,8 @@ export default function ConfiguracoesPage() {
   const erroNuvem = useNuvem((s) => s.erro);
   const quantos = usePerfil((s) => s.livros.length);
   const esvaziarEstante = usePerfil((s) => s.esvaziarEstante);
+  const aparencia = usePerfil((s) => s.aparencia ?? "claro");
+  const atualizar = usePerfil((s) => s.atualizar);
 
   async function esvaziar() {
     if (!quantos) return;
@@ -70,6 +72,39 @@ export default function ConfiguracoesPage() {
             </dd>
           </div>
         </dl>
+        <fieldset className="mt-6">
+          <legend className="text-sm font-semibold">aparência</legend>
+          <p className="mt-0.5 text-[13px] text-cinza">
+            o app claro, escuro ou igual ao seu celular/computador.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {(
+              [
+                ["claro", "☀ claro"],
+                ["escuro", "☾ escuro"],
+                ["sistema", "automático"],
+              ] as const
+            ).map(([id, r]) => (
+              <label
+                key={id}
+                className={`flex h-10 cursor-pointer items-center rounded-pill border px-4 text-[13px] font-semibold has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-bordo ${
+                  aparencia === id
+                    ? "border-bordo bg-bordo text-creme"
+                    : "border-bege bg-creme-quente text-ameixa"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="aparencia"
+                  className="sr-only"
+                  checked={aparencia === id}
+                  onChange={() => atualizar({ aparencia: id })}
+                />
+                {r}
+              </label>
+            ))}
+          </div>
+        </fieldset>
         <div className="mt-6">
           <InstalarApp />
         </div>

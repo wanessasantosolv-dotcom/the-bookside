@@ -80,7 +80,7 @@ export function NumerosShell({
         </div>
         <nav
           aria-label="seções da jornada"
-          className="mx-6 mt-5 flex gap-1 rounded-pill bg-[#F1E4DC] p-1"
+          className="mx-6 mt-5 flex gap-1 rounded-pill bg-linha/70 p-1"
         >
           {abas
             .filter((a) => a.id !== "retro" || wrappedLiberado())

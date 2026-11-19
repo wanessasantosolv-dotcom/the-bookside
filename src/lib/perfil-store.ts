@@ -89,6 +89,8 @@ export type Perfil = {
   tourVisto: boolean;
   /** última vez que abriu as novidades (para marcar o que é novo) */
   novidadesVistasEm: string | null;
+  /** aparência do app: claro, escuro ou igual ao celular/computador */
+  aparencia: "claro" | "escuro" | "sistema";
   /** livros em que a pessoa tocou "passar" no descobrir (títulos normalizados): não voltam, em nenhum aparelho */
   passados: string[];
 };
@@ -130,6 +132,7 @@ export const perfilInicial: Perfil = {
   tourVisto: false,
   novidadesVistasEm: null,
   passados: [],
+  aparencia: "claro",
 };
 
 export const usePerfil = create<Perfil & Acoes>()(

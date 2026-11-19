@@ -162,7 +162,7 @@ function IndicacaoDoDia({ compacto = false }: { compacto?: boolean } = {}) {
   return (
     <Link
       href="/descobrir"
-      className="flex items-center gap-4 rounded-xl border border-linha bg-creme-quente p-4 hover:border-bordo lg:rounded-[4px] lg:border-fio lg:bg-transparent lg:p-5 lg:hover:bg-[#F3ECDF]"
+      className="flex items-center gap-4 rounded-xl border border-linha bg-creme-quente p-4 hover:border-bordo lg:rounded-[4px] lg:border-fio lg:bg-transparent lg:p-5 lg:hover:bg-papel"
     >
       <CapaLivro
         titulo={livro.titulo}
@@ -206,7 +206,7 @@ function BannerTeste({
         className={
           compacto
             ? "flex w-[172px] flex-none flex-col rounded-[14px] border border-linha bg-creme-quente p-3"
-            : "flex items-center gap-3 rounded-xl border border-linha bg-creme-quente p-4 hover:border-bordo lg:rounded-[4px] lg:bg-transparent lg:hover:bg-[#F3ECDF]"
+            : "flex items-center gap-3 rounded-xl border border-linha bg-creme-quente p-4 hover:border-bordo lg:rounded-[4px] lg:bg-transparent lg:hover:bg-papel"
         }
       >
         <span
@@ -382,7 +382,7 @@ function Destaques({
     .sort((x, y) => y.d.getTime() - x.d.getTime())[0];
 
   const cartao =
-    "flex w-[220px] flex-none items-center gap-3.5 rounded-xl border border-linha bg-creme-quente p-3.5 hover:border-bordo lg:w-auto lg:rounded-[4px] lg:border-fio lg:bg-transparent lg:p-4 lg:hover:bg-[#F3ECDF]";
+    "flex w-[220px] flex-none items-center gap-3.5 rounded-xl border border-linha bg-creme-quente p-3.5 hover:border-bordo lg:w-auto lg:rounded-[4px] lg:border-fio lg:bg-transparent lg:p-4 lg:hover:bg-papel";
   const rotulo =
     "block text-[10px] font-semibold tracking-[.16em] text-bordo uppercase";
 
@@ -593,7 +593,7 @@ export default function InicioPage() {
         <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start lg:gap-10">
           <div>
             {/* ===== citação do dia (celular e computador) ===== */}
-            <figure className="relative mx-6 mt-3 flex animate-subir items-center gap-3 overflow-hidden rounded-xl bg-gradient-to-br from-bordo to-bordo-escuro px-4 py-3 text-creme lg:mx-0 lg:mt-0 lg:rounded-[4px] lg:px-6 lg:py-4">
+            <figure className="inverso relative mx-6 mt-3 flex animate-subir items-center gap-3 overflow-hidden rounded-xl bg-gradient-to-br from-bordo to-bordo-escuro px-4 py-3 text-creme lg:mx-0 lg:mt-0 lg:rounded-[4px] lg:px-6 lg:py-4">
               <span
                 aria-hidden
                 className="font-display text-[26px] leading-none text-rosa-claro/40 italic lg:text-[32px]"

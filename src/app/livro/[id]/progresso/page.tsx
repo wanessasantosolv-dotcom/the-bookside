@@ -103,7 +103,7 @@ function Progresso({ livro }: { livro: LivroSalvo }) {
             </div>
           </div>
           <div
-            className="mt-5 h-2.5 overflow-hidden rounded-full bg-[#F1E4DC]"
+            className="mt-5 h-2.5 overflow-hidden rounded-full bg-linha/70"
             role="progressbar"
             aria-valuemin={0}
             aria-valuemax={100}

@@ -34,12 +34,12 @@ function Desenho({ tipo, frase }: { tipo: TipoAnimacao; frase?: string }) {
       return (
         <div className="relative h-[172px] w-[250px] [perspective:1000px]">
           <div className="absolute inset-x-0 bottom-0 h-[162px] rounded-[5px] bg-[linear-gradient(145deg,#8E1D3D,#6B0D24_45%,#4B0D1B)] shadow-[0_14px_22px_-10px_rgba(43,20,32,.55)]" />
-          <div className="absolute top-[9px] right-[11px] bottom-[11px] left-[11px] rounded-[2px] bg-[#FFFCF6] shadow-[inset_0_0_0_1px_#E6D5CE]" />
+          <div className="absolute top-[9px] right-[11px] bottom-[11px] left-[11px] rounded-[2px] bg-creme-quente shadow-[inset_0_0_0_1px_#E6D5CE]" />
           <div className="absolute top-[9px] bottom-[11px] left-1/2 w-px bg-linha" />
           {[0, 0.7, 1.4].map((d) => (
             <div
               key={d}
-              className="ld-pagina absolute top-[9px] left-1/2 h-[calc(100%-20px)] w-[calc(50%-11px)] rounded-r-[3px] border-l border-linha bg-[#FFFCF6] shadow-[-2px_0_6px_-3px_rgba(43,20,32,.3)]"
+              className="ld-pagina absolute top-[9px] left-1/2 h-[calc(100%-20px)] w-[calc(50%-11px)] rounded-r-[3px] border-l border-linha bg-creme-quente shadow-[-2px_0_6px_-3px_rgba(43,20,32,.3)]"
               style={atraso(d)}
             />
           ))}
@@ -72,7 +72,7 @@ function Desenho({ tipo, frase }: { tipo: TipoAnimacao; frase?: string }) {
           {["100%", "80%", "92%", "60%", "85%", "42%"].map((w, i) => (
             <div
               key={i}
-              className={`h-2 rounded-full bg-[#F0E6DC] ${i === 4 ? "mt-6" : "mt-3.5"}`}
+              className={`h-2 rounded-full bg-linha/70 ${i === 4 ? "mt-6" : "mt-3.5"}`}
               style={{ width: w }}
             />
           ))}
@@ -94,14 +94,14 @@ function Desenho({ tipo, frase }: { tipo: TipoAnimacao; frase?: string }) {
               (w, i) => (
                 <div
                   key={i}
-                  className="mx-6 mb-[15px] h-[7px] rounded-full bg-[#F0E6DC]"
+                  className="mx-6 mb-[15px] h-[7px] rounded-full bg-linha/70"
                   style={w === "auto" ? undefined : { width: w }}
                 />
               ),
             )}
             <span className="ld-fita absolute -top-2 right-[30px] h-[156px] w-7 bg-[linear-gradient(#8E1D3D,#6B0D24)] shadow-[0_3px_6px_-2px_rgba(43,20,32,.4)]" />
           </div>
-          <div className="mt-[26px] h-[7px] w-[210px] overflow-hidden rounded-full bg-[#F0E6DC]">
+          <div className="mt-[26px] h-[7px] w-[210px] overflow-hidden rounded-full bg-linha/70">
             <i className="ld-trilha block h-full rounded-full bg-[linear-gradient(90deg,#6B0D24,#B75A6B)]" />
           </div>
         </div>

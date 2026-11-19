@@ -51,7 +51,7 @@ export function PerguntaTermino({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-ameixa/40 sm:items-center"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-[#2b1420]/40 sm:items-center"
       onClick={(e) => e.target === e.currentTarget && onCancelar()}
     >
       <div

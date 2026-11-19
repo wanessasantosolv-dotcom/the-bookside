@@ -53,7 +53,7 @@ function Aviso() {
   return (
     <div
       role="status"
-      className="mx-6 mt-3 flex items-center gap-3 rounded-md bg-ameixa px-4 py-3 text-[13px] text-creme lg:mx-14 lg:mt-6"
+      className="inverso mx-6 mt-3 flex items-center gap-3 rounded-md bg-ameixa px-4 py-3 text-[13px] text-creme lg:mx-14 lg:mt-6"
     >
       <span className="min-w-0 flex-1">
         <i className="font-accent">{titulo}</i> saiu da sua estante.

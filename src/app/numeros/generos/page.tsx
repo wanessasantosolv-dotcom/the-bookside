@@ -30,7 +30,7 @@ export default function NumerosGenerosPage() {
                       {g.qtd} {g.qtd === 1 ? "livro" : "livros"}
                     </b>
                   </div>
-                  <div className="mt-[7px] h-[9px] overflow-hidden rounded-full bg-[#F0E6DC]">
+                  <div className="mt-[7px] h-[9px] overflow-hidden rounded-full bg-linha/70">
                     <i className="block h-full rounded-full" style={{ width: `${(g.qtd / n.generos[0].qtd) * 100}%`, background: cores[i % cores.length] }} />
                   </div>
                 </div>
@@ -42,7 +42,7 @@ export default function NumerosGenerosPage() {
               <ol>
                 {n.autores.map((a, i) => (
                   <li key={a.nome} className="flex items-center gap-[13px] border-t border-linha py-[11px] first:border-t-0">
-                    <span className="flex size-[26px] flex-none items-center justify-center rounded-full bg-[#F1E4DC] text-xs font-bold text-bordo">{i + 1}</span>
+                    <span className="flex size-[26px] flex-none items-center justify-center rounded-full bg-linha/70 text-xs font-bold text-bordo">{i + 1}</span>
                     <span>
                       <b className="font-display text-base leading-[1.2] font-semibold italic">{a.nome}</b>
                       <small className="mt-[3px] block text-xs text-cinza">

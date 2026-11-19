@@ -98,15 +98,15 @@ function PerfilDela({ usuario }: { usuario: string }) {
   const emComum = lidos.filter((l) => meusLivros.has(l.id)).length;
 
   const estilo = {
-    "--papel": escuro ? tema.papel : "#F9F5EE",
-    "--tinta": escuro ? "#F5EFE6" : "#2B1420",
-    "--acc": escuro
+    "--papel": escuro ? tema.papel : "var(--color-creme)",
+    "--tinta": escuro ? "#F5EFE6" : "var(--color-ameixa)",
+    "--acc-base": escuro
       ? tema.texto
       : tema.id === "biblioteca-classica"
         ? "#6B0D24"
         : tema.texto,
-    "--suave": escuro ? "#CFC3B8" : "#7A6A6E",
-    "--linha": escuro ? "rgba(245,239,230,.18)" : "#E6D5CE",
+    "--suave": escuro ? "#CFC3B8" : "var(--color-cinza)",
+    "--linha": escuro ? "rgba(245,239,230,.18)" : "var(--color-linha)",
   } as CSSProperties;
 
   const seguidores = (
@@ -125,7 +125,7 @@ function PerfilDela({ usuario }: { usuario: string }) {
   );
 
   return (
-    <div style={estilo}>
+    <div style={estilo} className="acc-tema">
       <PerfilWeb
         perfil={p}
         tema={tema}

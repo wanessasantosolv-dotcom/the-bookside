@@ -230,7 +230,7 @@ function Cabecalho({
                     backgroundImage: `linear-gradient(rgba(43,20,32,.02),rgba(43,20,32,.14)), url("${c.capa}")`,
                   }
                 : tema
-                  ? { background: "escuro" in tema ? "#3A343B" : tema.fundo }
+                  ? { background: tema.fundo }
                   : undefined
             }
           />

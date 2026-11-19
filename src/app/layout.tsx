@@ -1,3 +1,5 @@
+import { Aparencia } from "@/components/Aparencia";
+import { scriptAparencia } from "@/lib/aparencia";
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { AvisoOffline } from "@/components/AvisoOffline";
@@ -137,10 +139,16 @@ export default function RootLayout({
   return (
     <html
       lang="pt-BR"
+      suppressHydrationWarning
       className={`${playfair.variable} ${dmSerif.variable} ${inter.variable} ${specialElite.variable} ${fraunces.variable} ${manrope.variable} ${spaceMono.variable}`}
     >
+      <head>
+        {/* aplica o modo escuro antes de pintar a página */}
+        <script dangerouslySetInnerHTML={{ __html: scriptAparencia }} />
+      </head>
       <body>
         <PerfilHidratacao />
+        <Aparencia />
         <AvisoOffline />
         <RastroNavegacao />
         {children}

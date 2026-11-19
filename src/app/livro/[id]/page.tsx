@@ -159,7 +159,7 @@ export default function LivroPage() {
   return (
     <AppShell aba="estantes">
       <div className="flex flex-1 flex-col lg:bg-jornal">
-        <header className="flex items-center justify-between px-6 pt-2 lg:bg-[#F3ECDF] lg:px-14 lg:pt-6">
+        <header className="flex items-center justify-between px-6 pt-2 lg:bg-papel lg:px-14 lg:pt-6">
           {/* volta para a tela de onde a pessoa veio; aberto direto pelo link, vai para a estante */}
           <Voltar
             padrao={voltar.href}
@@ -169,7 +169,7 @@ export default function LivroPage() {
         </header>
 
         {/* topo: capa + dados */}
-        <div className="flex animate-subir gap-[18px] px-6 pt-2 lg:gap-11 lg:border-b lg:border-fio lg:bg-[#F3ECDF] lg:px-14 lg:pt-4 lg:pb-12">
+        <div className="flex animate-subir gap-[18px] px-6 pt-2 lg:gap-11 lg:border-b lg:border-fio lg:bg-papel lg:px-14 lg:pt-4 lg:pb-12">
           <div className="flex flex-none flex-col items-center">
             <CapaLivro
               key={livro.capa}
@@ -207,7 +207,7 @@ export default function LivroPage() {
                 .join(" · ")}
             </p>
             {livro.genero ? (
-              <span className="mt-2.5 inline-block rounded-pill bg-[#F1E4DC] px-2 py-1 text-[9px] font-semibold text-bordo lg:hidden">
+              <span className="mt-2.5 inline-block rounded-pill bg-linha/70 px-2 py-1 text-[9px] font-semibold text-bordo lg:hidden">
                 {livro.genero}
               </span>
             ) : null}
@@ -298,7 +298,7 @@ export default function LivroPage() {
                     {progresso !== null ? `${progresso}%` : "atualizar →"}
                   </span>
                 </div>
-                <div className="mt-2.5 h-2 overflow-hidden rounded-full bg-[#F1E4DC]">
+                <div className="mt-2.5 h-2 overflow-hidden rounded-full bg-linha/70">
                   <i
                     className="block h-full rounded-full bg-bordo"
                     style={{ width: `${progresso ?? 0}%` }}

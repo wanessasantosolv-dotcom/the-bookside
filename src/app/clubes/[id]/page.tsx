@@ -94,7 +94,7 @@ export default function ClubeInicioPage() {
   return (
     <div className="space-y-7 px-6 pt-6 lg:mx-auto lg:max-w-[760px] lg:space-y-7 lg:px-0">
       {/* ===== lendo agora + a turma, num card só ===== */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-bordo to-bordo-escuro px-5 py-5 text-creme lg:rounded-[4px] lg:px-7 lg:py-6">
+      <div className="inverso relative overflow-hidden rounded-xl bg-gradient-to-br from-bordo to-bordo-escuro px-5 py-5 text-creme lg:rounded-[4px] lg:px-7 lg:py-6">
         <div className="flex items-center justify-between gap-3">
           <span className="text-[10px] font-semibold tracking-[.16em] text-rosa-claro uppercase">
             lendo agora{lendo?.rodada ? ` · nº ${lendo.rodada}` : ""}

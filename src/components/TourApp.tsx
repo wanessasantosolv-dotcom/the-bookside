@@ -40,7 +40,7 @@ export function TourApp() {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-ameixa/55 backdrop-blur-[2px] lg:items-center lg:justify-center">
+    <div className="fixed inset-0 z-50 flex flex-col bg-[#2b1420]/55 backdrop-blur-[2px] lg:items-center lg:justify-center">
       <button
         type="button"
         onClick={encerrar}

@@ -88,7 +88,7 @@ export default function ProntoPage() {
             data-aberto={aberto}
             className="livro3d relative mt-8 h-[318px] w-[212px]"
           >
-            <div className="absolute inset-0 z-[1] flex flex-col items-center justify-center rounded-[4px_10px_10px_4px] bg-[#FFFCF6] px-6 text-center shadow-[inset_0_0_0_1px_#E6D5CE,inset_-8px_0_10px_-8px_rgba(43,20,32,.25)]">
+            <div className="absolute inset-0 z-[1] flex flex-col items-center justify-center rounded-[4px_10px_10px_4px] bg-creme-quente px-6 text-center shadow-[inset_0_0_0_1px_#E6D5CE,inset_-8px_0_10px_-8px_rgba(43,20,32,.25)]">
               <span className="revela font-accent text-[26px] leading-none italic text-ouro [transition-delay:1.5s]">
                 ✦
               </span>

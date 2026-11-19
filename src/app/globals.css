@@ -60,6 +60,71 @@ html {
   --altura-menu: 0px;
 }
 
+/*
+ * Modo escuro do app (configurações → aparência). Troca os tokens de cor;
+ * os temas do perfil e do clube continuam valendo por cima (só a cor de destaque).
+ */
+html[data-modo="escuro"] {
+  color-scheme: dark;
+  --color-creme: #1a1416;
+  --color-creme-quente: #241c1f;
+  --color-papel: #2a2124;
+  --color-jornal: #1a1416;
+  --color-mesa: #120e0f;
+  --color-ameixa: #f3e9e6;
+  --color-tinta: #f3e9e6;
+  --color-tinta-suave: #e3d6d2;
+  --color-cinza: #b5a6a9;
+  --color-grafite: #b5a6a9;
+  --color-linha: #3a2f32;
+  --color-fio: #3a2f32;
+  --color-bege: #554549;
+  --color-bordo: #d97a90;
+  --color-bordo-escuro: #e898aa;
+  --color-bordo-suave: #e08aa0;
+  --color-vinho: #d97a90;
+  --color-rosa-antigo: #c9798a;
+  --color-rosa-claro: #7a3a49;
+  --color-rosa-fundo: #3a2028;
+  --color-oliva: #9cb08b;
+  --color-ouro: #d7b57c;
+}
+
+/* no modo escuro, os blocos "de destaque" (vinho/ameixa com texto claro) continuam como no claro */
+html[data-modo="escuro"] .inverso {
+  --color-bordo: #6b0d24;
+  --color-bordo-escuro: #4b0d1b;
+  --color-bordo-suave: #8e1d3d;
+  --color-vinho: #692536;
+  --color-ameixa: #2b1420;
+  --color-creme: #f9f5ee;
+  --color-creme-quente: #fff8f3;
+  --color-rosa-claro: #e8b4bf;
+  --color-rosa-antigo: #b75a6b;
+  --color-rosa-fundo: #f6e3e7;
+}
+/* a cor de destaque do tema do perfil; no modo escuro, mais clara para ler sobre o fundo escuro */
+.acc-tema { --acc: var(--acc-base); }
+html[data-modo="escuro"] .acc-tema { --acc: color-mix(in srgb, var(--acc-base) 45%, #f3e9e6); }
+.acc-web-tema { --acc-web: var(--acc-web-base); }
+html[data-modo="escuro"] .acc-web-tema { --acc-web: color-mix(in srgb, var(--acc-web-base) 45%, #f3e9e6); }
+
+.jornada-tema {
+  --acc: var(--acc-base);
+  --acc-fundo: color-mix(in srgb, var(--acc) 6%, transparent);
+  --acc-claro: color-mix(in srgb, var(--acc) 18%, transparent);
+}
+html[data-modo="escuro"] .jornada-tema { --acc: color-mix(in srgb, var(--acc-base) 45%, #f3e9e6); }
+
+/* o logo bordô fica creme no modo escuro */
+html[data-modo="escuro"] img[src$="logo-bordo.png"] { filter: brightness(0) invert(93%) sepia(14%); }
+
+/* os desenhos das capas, com fundo escuro */
+html[data-modo="escuro"] .pat-linhas { background: repeating-linear-gradient(90deg, #5a2a36 0 2px, transparent 2px 12px), #241c1f; }
+html[data-modo="escuro"] .pat-bolinhas { background: radial-gradient(circle, #8a4a5a 1.6px, transparent 2px) 0 0 / 12px 12px, #241c1f; }
+html[data-modo="escuro"] .pat-ondas { background: repeating-radial-gradient(circle at 50% 135%, #4a3f42 0 2px, transparent 2px 11px), #241c1f; }
+html[data-modo="escuro"] .pat-estrelas { background: radial-gradient(circle, #c9798a 1px, transparent 1.6px) 0 0 / 22px 22px, #2a1d22; }
+
 a,
 button,
 label,

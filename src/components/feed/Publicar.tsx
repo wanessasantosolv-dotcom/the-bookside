@@ -17,7 +17,7 @@ export function Publicar({ onPublicado }: { onPublicado: () => void }) {
       <button
         type="button"
         onClick={() => setAberto(true)}
-        className="flex w-full items-center gap-3 rounded-xl border border-linha bg-creme-quente px-4 py-3 text-left hover:border-bordo lg:rounded-[4px] lg:border-fio lg:bg-transparent lg:hover:bg-[#F3ECDF]"
+        className="flex w-full items-center gap-3 rounded-xl border border-linha bg-creme-quente px-4 py-3 text-left hover:border-bordo lg:rounded-[4px] lg:border-fio lg:bg-transparent lg:hover:bg-papel"
       >
         <span
           aria-hidden
@@ -139,7 +139,7 @@ function Janela({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-ameixa/40 sm:items-center"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-[#2b1420]/40 sm:items-center"
       onClick={(e) => e.target === e.currentTarget && onFechar()}
     >
       <div

@@ -47,7 +47,7 @@ function Cartao({
             c.capa
               ? { backgroundImage: `url("${c.capa}")` }
               : tema
-                ? { background: "escuro" in tema ? "#3A343B" : tema.fundo }
+                ? { background: tema.fundo }
                 : undefined
           }
         >

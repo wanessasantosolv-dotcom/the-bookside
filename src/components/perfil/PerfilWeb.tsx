@@ -103,7 +103,11 @@ export function PerfilWeb({
   const outra = !!acoes;
   const [copiado, setCopiado] = useState(false);
   const base = tema.id === "biblioteca-classica" ? "#692536" : tema.destaque;
-  const acc = tema.id === "noite-de-tinta" ? "#692536" : base;
+  // temas escuros: o destaque é claro, então escurece um pouco para ler sobre o papel claro da web
+  const acc =
+    "escuro" in tema
+      ? `color-mix(in srgb, ${tema.destaque} 60%, #2B1420)`
+      : base;
 
   async function compartilhar() {
     const url = `${window.location.origin}/perfil`;
@@ -125,8 +129,8 @@ export function PerfilWeb({
 
   return (
     <div
-      className="hidden min-h-dvh bg-jornal font-texto text-tinta lg:block"
-      style={{ ["--acc-web" as string]: acc }}
+      className="acc-web-tema hidden min-h-dvh bg-jornal font-texto text-tinta lg:block"
+      style={{ ["--acc-web-base" as string]: acc }}
     >
       {/* topo */}
       <div

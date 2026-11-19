@@ -177,7 +177,7 @@ export default function NumerosAnoPage() {
               {wrappedLiberado() ? (
                 <Link
                   href="/numeros/retrospectiva"
-                  className="mt-auto flex h-[50px] items-center justify-between rounded-md bg-ameixa px-[18px] text-sm font-semibold text-creme hover:bg-bordo-escuro"
+                  className="inverso mt-auto flex h-[50px] items-center justify-between rounded-md bg-ameixa px-[18px] text-sm font-semibold text-creme hover:bg-bordo-escuro"
                 >
                   <span>ver sua retrospectiva de {n.ano}</span>
                   <span aria-hidden>→</span>

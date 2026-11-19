@@ -7,7 +7,7 @@ export function ConviteTeste() {
   return (
     <Link
       href="/teste"
-      className="group relative block overflow-hidden rounded-xl bg-ameixa p-5 text-creme lg:rounded-[4px] lg:p-7"
+      className="inverso group relative block overflow-hidden rounded-xl bg-ameixa p-5 text-creme lg:rounded-[4px] lg:p-7"
     >
       {/* lombadas decorativas */}
       <span

@@ -232,7 +232,7 @@ export default function EstanteAbertaPage() {
                               {l.autor}
                             </span>
                             {genero ? (
-                              <span className="mt-[7px] inline-block rounded-pill bg-[#F1E4DC] px-2 py-1 text-[9px] font-semibold text-bordo">
+                              <span className="mt-[7px] inline-block rounded-pill bg-linha/70 px-2 py-1 text-[9px] font-semibold text-bordo">
                                 {genero}
                               </span>
                             ) : null}

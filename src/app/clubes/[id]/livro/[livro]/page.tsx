@@ -118,7 +118,7 @@ function CartaoFicha({
         className="absolute top-[46px] -right-[9px] size-[18px] rounded-full bg-mesa"
       />
 
-      <div className="relative flex items-center justify-between gap-3 bg-gradient-to-br from-bordo to-bordo-escuro px-4 pt-3 pb-3">
+      <div className="inverso relative flex items-center justify-between gap-3 bg-gradient-to-br from-bordo to-bordo-escuro px-4 pt-3 pb-3">
         <span className="font-maquina absolute top-1.5 left-4 text-[8px] tracking-[.06em] text-creme/55">
           ficha nº {f.id.slice(0, 4)}
         </span>

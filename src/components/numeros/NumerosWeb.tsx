@@ -47,7 +47,7 @@ export function NumerosWeb({
 
   return (
     <div
-      className="hidden min-h-dvh bg-creme font-sans text-ameixa lg:block"
+      className="jornada-tema hidden min-h-dvh bg-creme font-sans text-ameixa lg:block"
       style={coresDaJornada(temaId)}
     >
       <Cabecalho eyebrow={eyebrow} h1={h1} frase={frase} />
@@ -233,7 +233,7 @@ function ConteudoUnificado({
                 <span className="w-[150px] flex-none truncate text-xs font-semibold">
                   {g.nome}
                 </span>
-                <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-[#F0E6DC]">
+                <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-linha/70">
                   <i
                     className="block h-full rounded-full"
                     style={{
@@ -295,7 +295,7 @@ function ConteudoUnificado({
       {wrappedLiberado() ? (
         <Link
           href="/numeros/retrospectiva"
-          className="flex h-[58px] items-center justify-between rounded-md bg-ameixa px-7 text-sm font-semibold text-creme hover:bg-bordo-escuro"
+          className="inverso flex h-[58px] items-center justify-between rounded-md bg-ameixa px-7 text-sm font-semibold text-creme hover:bg-bordo-escuro"
         >
           <span>gerar o wrapped de {n.ano} ✦</span>
           <span aria-hidden>→</span>
@@ -586,10 +586,11 @@ function Cabecalho({
 /** as cores dos cartões vêm do tema do perfil */
 function coresDaJornada(id: string): CSSProperties {
   const t = temas.find((x) => x.id === id) ?? temas[0];
-  const acc = "escuro" in t && t.escuro ? "#8A6A43" : t.destaque;
+  const acc =
+    "escuro" in t
+      ? `color-mix(in srgb, ${t.destaque} 60%, #2B1420)`
+      : t.destaque;
   return {
-    ["--acc" as string]: acc,
-    ["--acc-fundo" as string]: `${acc}0F`,
-    ["--acc-claro" as string]: `${acc}2E`,
+    ["--acc-base" as string]: acc,
   };
 }

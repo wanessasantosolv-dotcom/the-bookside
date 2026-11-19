@@ -7,8 +7,16 @@ export const temas = [
   { id: "jardim-de-livros", fundo: "#D7DCC1", nome: "jardim de livros", papel: "#E8E7DC", destaque: "#79806B", texto: "#5E6553" },
   { id: "noite-de-tinta", fundo: "#29252A", nome: "noite de tinta", papel: "#29252A", destaque: "#A88B64", texto: "#F5EFE6", escuro: true },
   { id: "orelha-rosa", fundo: "#F9D9E2", nome: "orelha rosa", papel: "#F9D9E2", destaque: "#C0506F", texto: "#9E3A57" },
-  { id: "capa-kraft", fundo: "#D9C3A0", nome: "capa kraft", papel: "#D9C3A0", destaque: "#692536", texto: "#692536" },
+  { id: "capa-kraft", fundo: "#D9C3A0", nome: "capa kraft", papel: "#D9C3A0", destaque: "#8A5A2B", texto: "#6E4520" },
   { id: "poesia-de-bolso", fundo: "#CFDDEB", nome: "poesia de bolso", papel: "#CFDDEB", destaque: "#2B4C7E", texto: "#2B4C7E" },
+  { id: "terracota", fundo: "#F1D2C1", nome: "terracota", papel: "#F7E6DC", destaque: "#B4532A", texto: "#8E3E1E" },
+  { id: "mar-aberto", fundo: "#CDE6E3", nome: "mar aberto", papel: "#E3F1EF", destaque: "#1F6E6A", texto: "#17524F" },
+  { id: "mostarda", fundo: "#F2E1A8", nome: "mostarda", papel: "#F8EFCF", destaque: "#A77B0E", texto: "#6E5106" },
+  { id: "lavanda", fundo: "#E3DAF0", nome: "lavanda", papel: "#EEE8F6", destaque: "#6E52A3", texto: "#563F85" },
+  { id: "veludo-vinho", fundo: "#2A1219", nome: "veludo vinho", papel: "#2A1219", destaque: "#D9748A", texto: "#F7E4E8", escuro: true },
+  { id: "biblioteca-a-noite", fundo: "#121A2B", nome: "biblioteca à noite", papel: "#121A2B", destaque: "#C9A46A", texto: "#EDE6D6", escuro: true },
+  { id: "floresta-escura", fundo: "#14211B", nome: "floresta escura", papel: "#14211B", destaque: "#8FB89A", texto: "#E6EFE8", escuro: true },
+  { id: "preto-e-branco", fundo: "#111111", nome: "preto e branco", papel: "#111111", destaque: "#F5EFE6", texto: "#F5EFE6", escuro: true },
 ] as const;
 
 export type Tema = (typeof temas)[number];
