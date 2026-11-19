@@ -200,6 +200,22 @@ export default function CalendarioPage() {
                         </span>
                       ) : null}
                     </Link>
+                  ) : lendo.length === 1 ? (
+                    <Link
+                      href={`/livro/${lendo[0].id}`}
+                      title={`lendo ${lendo[0].titulo}`}
+                      className="absolute inset-0"
+                    >
+                      <CapaLivro
+                        titulo={lendo[0].titulo}
+                        capa={lendo[0].capa}
+                        cor={corDoLivro(lendo[0].id)}
+                        className="h-full w-full !rounded-none !shadow-none [&>span:last-child]:text-[7px]"
+                      />
+                      <span className="absolute right-0.5 bottom-0.5 flex size-4 items-center justify-center rounded-full border border-creme/80 bg-tinta/40 text-[9px] text-creme sm:size-5 sm:text-[10px]">
+                        📖
+                      </span>
+                    </Link>
                   ) : lendo.length ? (
                     <div className="absolute inset-x-1 bottom-1 flex justify-center -space-x-2.5">
                       {lendo.slice(0, 2).map((l, i) => (
@@ -222,7 +238,7 @@ export default function CalendarioPage() {
                   ) : null}
                   <span
                     className={`absolute top-0.5 left-1 text-[10px] font-semibold sm:top-1 sm:left-1.5 sm:text-xs ${
-                      principal
+                      principal || lendo.length === 1
                         ? "rounded bg-creme/85 px-1 text-bordo"
                         : ehHoje(d)
                           ? "text-bordo"
