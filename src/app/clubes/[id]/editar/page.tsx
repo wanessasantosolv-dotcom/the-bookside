@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import { CampoFoto } from "@/components/clube/CampoFoto";
 import { CampoCapa } from "@/components/clube/CampoCapa";
 import { useClube } from "@/components/clube/ClubeContexto";
 import {
@@ -28,6 +29,7 @@ export default function EditarClubePage() {
   const [nome, setNome] = useState(clube.nome);
   const [descricao, setDescricao] = useState(clube.descricao ?? "");
   const [capa, setCapa] = useState<string | null>(clube.capa);
+  const [foto, setFoto] = useState<string | null>(clube.foto ?? null);
   const [tema, setTema] = useState<string>(clube.tema ?? temas[0].id);
   const [limite, setLimite] = useState<string>(
     clube.limite_sugestoes ? String(clube.limite_sugestoes) : "",
@@ -64,6 +66,7 @@ export default function EditarClubePage() {
         max_membros: maximo ? Math.max(Number(maximo), membros.length) : null,
         // só manda quando muda (clubes sem a coluna nova continuam salvando o resto)
         ...(escolha !== modoDe(clube) ? { escolha } : {}),
+        ...(foto !== (clube.foto ?? null) ? { foto } : {}),
       });
       recarregar();
       router.push(`/clubes/${clube.id}`);
@@ -125,6 +128,7 @@ export default function EditarClubePage() {
             className={`${campo} resize-none font-accent italic`}
           />
         </label>
+        <CampoFoto valor={foto} onMudar={setFoto} />
         <CampoCapa valor={capa} onMudar={setCapa} />
         <fieldset>
           <legend className={rotuloCampo}>tema do clube</legend>

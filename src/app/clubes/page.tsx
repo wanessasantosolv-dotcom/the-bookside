@@ -62,6 +62,14 @@ function Cartao({
           </span>
         </div>
         <div className="flex gap-4 px-4 pt-3 pb-4 lg:px-5">
+          {c.foto ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={c.foto}
+              alt=""
+              className="-mt-10 size-16 flex-none rounded-full border-[3px] border-creme-quente object-cover shadow-[0_6px_14px_-8px_rgba(43,20,32,.5)]"
+            />
+          ) : null}
           <div className="min-w-0 flex-1">
             <h2 className="font-display text-[24px] leading-[1.1] font-semibold italic text-bordo lg:font-revista lg:text-[26px] lg:font-normal">
               {c.nome}

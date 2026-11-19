@@ -22,6 +22,8 @@ export type Clube = {
   descricao: string | null;
   codigo: string;
   capa: string | null;
+  /** a foto redonda do clube */
+  foto?: string | null;
   criado_por: string;
   criado_em: string;
   /** sugestões por pessoa por mês (null = sem limite) */
@@ -412,6 +414,7 @@ export async function editarClube(
       | "nome"
       | "descricao"
       | "capa"
+      | "foto"
       | "limite_sugestoes"
       | "max_membros"
       | "tema"

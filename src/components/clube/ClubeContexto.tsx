@@ -249,6 +249,15 @@ function Cabecalho({
           className={`relative bg-creme px-6 pt-5 text-center lg:bg-jornal lg:text-left ${largura}`}
         >
           <div className="lg:flex lg:items-end lg:gap-5">
+            {c.foto ? (
+              // a foto do clube, subindo sobre a capa
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={c.foto}
+                alt=""
+                className="mx-auto -mt-14 mb-2 block size-24 rounded-full border-4 border-creme object-cover shadow-[0_10px_20px_-10px_rgba(43,20,32,.5)] lg:mx-0 lg:-mt-16 lg:mb-0 lg:size-28 lg:border-jornal"
+              />
+            ) : null}
             <div className="min-w-0 flex-1">
               {rodada ? (
                 <p className="text-[10px] font-semibold tracking-[.16em] text-cinza uppercase">

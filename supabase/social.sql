@@ -635,3 +635,6 @@ begin
   return v;
 end $$;
 grant execute on function public.entrar_no_desafio(text) to authenticated;
+
+-- foto (avatar) do clube, além da capa
+alter table public.clubes add column if not exists foto text;
