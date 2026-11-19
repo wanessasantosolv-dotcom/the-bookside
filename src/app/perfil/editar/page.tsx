@@ -38,6 +38,8 @@ type Rascunho = Pick<
 function Formulario({ inicial }: { inicial: Rascunho }) {
   const router = useRouter();
   const atualizar = usePerfil((s) => s.atualizar);
+  const atualizarJa = atualizar;
+  const temaNoApp = usePerfil((s) => s.temaNoApp ?? false);
   const livrosLidos = usePerfil(
     (s) => s.livros.filter((l) => l.status === "lido").length,
   );
@@ -441,6 +443,20 @@ function Formulario({ inicial }: { inicial: Rascunho }) {
                 );
               })}
             </div>
+            <label className="mt-4 flex cursor-pointer items-center gap-3 text-[13px]">
+              <input
+                type="checkbox"
+                checked={temaNoApp}
+                onChange={(e) => atualizarJa({ temaNoApp: e.target.checked })}
+                className="size-5 flex-none accent-bordo"
+              />
+              <span>
+                <b className="font-semibold">usar esse tema no app todo</b>{" "}
+                <span className="text-cinza">
+                  — as cores valem em todas as telas, não só no perfil.
+                </span>
+              </span>
+            </label>
           </fieldset>
 
           <div className="flex flex-col-reverse gap-2.5 pt-2 sm:flex-row sm:justify-end">

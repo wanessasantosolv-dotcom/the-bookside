@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { InstalarApp } from "@/components/InstalarApp";
 import { Botao } from "@/components/ui/Botao";
+import { temas } from "@/lib/dados";
 import { usePerfil } from "@/lib/perfil-store";
 import { sairDaConta, useNuvem } from "@/lib/nuvem";
 import { apagarMinhasAtividades } from "@/lib/social";
@@ -19,6 +20,9 @@ export default function ConfiguracoesPage() {
   const esvaziarEstante = usePerfil((s) => s.esvaziarEstante);
   const aparencia = usePerfil((s) => s.aparencia ?? "claro");
   const atualizar = usePerfil((s) => s.atualizar);
+  const temaNoApp = usePerfil((s) => s.temaNoApp ?? false);
+  const temaAtual =
+    temas.find((t) => t.id === usePerfil.getState().tema) ?? temas[0];
 
   async function esvaziar() {
     if (!quantos) return;
@@ -104,6 +108,24 @@ export default function ConfiguracoesPage() {
               </label>
             ))}
           </div>
+          <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-[12px] border border-linha bg-creme-quente p-3.5 lg:rounded-[4px]">
+            <input
+              type="checkbox"
+              checked={temaNoApp}
+              onChange={(e) => atualizar({ temaNoApp: e.target.checked })}
+              className="mt-0.5 size-5 flex-none accent-bordo"
+            />
+            <span>
+              <span className="block text-sm font-semibold">
+                usar o tema do perfil no app todo
+              </span>
+              <span className="mt-0.5 block text-[13px] text-cinza">
+                as cores de “{temaAtual.nome}” nos botões, títulos e menus de
+                todas as telas.{" "}
+                {"escuro" in temaAtual ? "como é um tema escuro, o app todo escurece." : ""}
+              </span>
+            </span>
+          </label>
         </fieldset>
         <div className="mt-6">
           <InstalarApp />

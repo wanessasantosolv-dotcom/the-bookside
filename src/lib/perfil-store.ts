@@ -94,6 +94,8 @@ export type Perfil = {
   novidadesVistasEm: string | null;
   /** aparência do app: claro, escuro ou igual ao celular/computador */
   aparencia: "claro" | "escuro" | "sistema";
+  /** as cores do tema do perfil valem para o app inteiro */
+  temaNoApp: boolean;
   /** livros em que a pessoa tocou "passar" no descobrir (títulos normalizados): não voltam, em nenhum aparelho */
   passados: string[];
 };
@@ -136,6 +138,7 @@ export const perfilInicial: Perfil = {
   novidadesVistasEm: null,
   passados: [],
   aparencia: "claro",
+  temaNoApp: false,
 };
 
 export const usePerfil = create<Perfil & Acoes>()(
