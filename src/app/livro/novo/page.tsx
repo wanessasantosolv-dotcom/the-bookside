@@ -3,6 +3,7 @@
 import { diaLocal } from "@/lib/datas";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState, type FormEvent } from "react";
+import { SeletorFormato } from "@/components/SeletorFormato";
 import { TelaApp } from "@/components/AppShell";
 import {
   CamposDoLivro,
@@ -19,7 +20,11 @@ import {
   TopoForm,
 } from "@/components/clube/Pecas";
 import { normalizar } from "@/lib/importar";
-import { usePerfil, type StatusLivro } from "@/lib/perfil-store";
+import {
+  usePerfil,
+  type StatusLivro,
+  type FormatoLivro,
+} from "@/lib/perfil-store";
 
 const hoje = () => diaLocal();
 
@@ -35,6 +40,7 @@ function Cadastro() {
   const [status, setStatus] = useState<StatusLivro>("quero");
   const [lidoEm, setLidoEm] = useState(hoje());
   const [nota, setNota] = useState(0);
+  const [formato, setFormato] = useState<FormatoLivro | undefined>();
   const [erro, setErro] = useState<string | null>(null);
   const voltar = params.get("volta") || "/buscar";
 
@@ -62,6 +68,7 @@ function Cadastro() {
       },
       {
         status,
+        formato,
         paginas: l.paginas,
         sinopse: l.sinopse,
         capaEscolhida: l.capa ? true : undefined,
@@ -116,6 +123,10 @@ function Cadastro() {
             ))}
           </div>
         </fieldset>
+
+        {status !== "quero" ? (
+          <SeletorFormato valor={formato} onChange={setFormato} />
+        ) : null}
 
         {status === "lido" ? (
           <div className="grid grid-cols-2 gap-3">

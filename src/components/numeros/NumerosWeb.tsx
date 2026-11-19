@@ -6,6 +6,7 @@ import { CapaLivro } from "@/components/CapaLivro";
 import { temas } from "@/lib/dados";
 import { usePerfil } from "@/lib/perfil-store";
 import { ExtremosDoAno } from "@/components/numeros/Extremos";
+import { FormatosDoAno } from "@/components/numeros/Formatos";
 import { corDoLivro } from "@/lib/cores";
 import {
   mediaTexto,
@@ -221,6 +222,8 @@ function ConteudoUnificado({
         )}
       </section>
       <ExtremosDoAno n={n} web />
+
+      <FormatosDoAno n={n} web />
       <section className="mb-14">
         <h2 className="mb-[18px] border-b border-ameixa pb-2 font-revista text-[22px] leading-none text-ameixa italic">
           gêneros

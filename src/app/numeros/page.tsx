@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ExtremosDoAno } from "@/components/numeros/Extremos";
+import { FormatosDoAno } from "@/components/numeros/Formatos";
 import {
   bloco,
   NumerosShell,
@@ -173,6 +174,7 @@ export default function NumerosAnoPage() {
               </div>
 
               <ExtremosDoAno n={n} />
+              <FormatosDoAno n={n} />
 
               {wrappedLiberado() ? (
                 <Link

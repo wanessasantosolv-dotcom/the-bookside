@@ -2,6 +2,7 @@
 
 import { Voltar } from "@/components/Voltar";
 import Link from "next/link";
+import { SeletorFormato } from "@/components/SeletorFormato";
 import { notFound, useParams, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { AppShell } from "@/components/AppShell";
@@ -286,6 +287,14 @@ export default function LivroPage() {
                 );
               })}
             </fieldset>
+
+            {status ? (
+              <SeletorFormato
+                valor={livro.formato}
+                onChange={(formato) => editarLivro(base, { formato })}
+                className="mx-6 mt-5 lg:mx-0"
+              />
+            ) : null}
 
             {status === "lendo" ? (
               <Link

@@ -1,4 +1,5 @@
 import { sugestoesDeLivros } from "@/lib/dados";
+import { formatos } from "@/lib/formatos";
 import type { LivroSalvo } from "@/lib/perfil-store";
 
 const MESES = [
@@ -129,6 +130,19 @@ export function calcularNumeros(
       ? comTempo.at(-1)!
       : null;
 
+  // como a pessoa leu: papel, tela ou ouvidos
+  const porFormato = formatos.map((f) => {
+    const ls = lidos.filter((l) => l.formato === f.id);
+    const ns = ls.map((l) => l.nota).filter((x): x is number => !!x);
+    return {
+      ...f,
+      qtd: ls.length,
+      paginas: ls.reduce((t, l) => t + (paginasDoLivro(l) ?? 0), 0),
+      media: ns.length ? ns.reduce((t, x) => t + x, 0) / ns.length : null,
+    };
+  });
+  const semFormato = lidos.filter((l) => !l.formato).length;
+
   // ritmo: quantos livros "deveriam" estar lidos até hoje para bater a meta
   const inicio = new Date(ano, 0, 1).getTime();
   const fracao =
@@ -163,6 +177,8 @@ export function calcularNumeros(
     livroDoAno,
     maisLongo,
     maisAmados,
+    porFormato,
+    semFormato,
     menosAmados,
     maisRapido,
     maisDemorado,

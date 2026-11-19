@@ -13,6 +13,7 @@ export type PadraoCapa = "linhas" | "bolinhas" | "ondas" | "estrelas";
 export type EscolhaEstante = "lendo" | "quero" | "vazia";
 
 export type StatusLivro = "lendo" | "quero" | "lido";
+export type FormatoLivro = "fisico" | "ebook" | "audio";
 export type NotasDetalhe = {
   personagens: number;
   plot: number;
@@ -27,6 +28,8 @@ export type LivroSalvo = {
   /** sinopse (escrita pela IA ou pela pessoa, nos livros cadastrados à mão) */
   sinopse?: string;
   status?: StatusLivro;
+  /** como a pessoa leu: livro físico, e-book (Kindle etc.) ou audiolivro */
+  formato?: FormatoLivro;
   /** URL da capa (Open Library) */
   capa?: string;
   /** a pessoa escolheu ou enviou esta capa: o app não troca sozinho */
