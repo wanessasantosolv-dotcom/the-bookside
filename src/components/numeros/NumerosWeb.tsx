@@ -238,6 +238,20 @@ function ConteudoUnificado({
         <span className="text-sm font-semibold text-bordo">ver →</span>
       </Link>
 
+      <Link
+        href="/desafios"
+        className="inverso mb-8 flex items-center gap-5 rounded-[4px] bg-gradient-to-br from-[#2B4C7E] to-[#2b1420] px-7 py-5 text-creme"
+      >
+        <span className="text-3xl">🏆</span>
+        <span className="min-w-0 flex-1">
+          <span className="block font-revista text-2xl italic">desafios de leitura</span>
+          <span className="block text-[13px] text-rosa-claro">
+            maratonas, bingo, zerar a pilha — sozinha, com amigos ou com o clube
+          </span>
+        </span>
+        <span className="text-sm font-semibold">ver →</span>
+      </Link>
+
       <MesEmRevista web />
 
       <ExtremosDoAno n={n} web />

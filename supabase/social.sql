@@ -557,3 +557,81 @@ begin
 end $$;
 revoke all on function public.email_para_entrar(text, text) from public;
 grant execute on function public.email_para_entrar(text, text) to anon, authenticated;
+
+-- ───────── desafios de leitura (sozinha, com amigos ou com um clube) ─────────
+create table if not exists public.desafios (
+  id uuid primary key default gen_random_uuid(),
+  titulo text not null check (char_length(titulo) between 1 and 80),
+  tipo text not null check (tipo in ('livros', 'paginas', 'minutos', 'pilha', 'bingo', 'dias')),
+  meta int not null check (meta between 1 and 100000),
+  inicio date not null,
+  fim date not null,
+  modelo text,
+  config jsonb not null default '{}',
+  codigo text unique,
+  clube_id uuid references public.clubes (id) on delete cascade,
+  criado_por uuid not null references auth.users (id) on delete cascade default auth.uid(),
+  criado_em timestamptz not null default now(),
+  check (fim >= inicio)
+);
+create table if not exists public.desafio_participantes (
+  desafio_id uuid not null references public.desafios (id) on delete cascade,
+  usuario_id uuid not null references auth.users (id) on delete cascade default auth.uid(),
+  progresso int not null default 0,
+  detalhe jsonb not null default '{}',
+  concluido_em timestamptz,
+  entrou_em timestamptz not null default now(),
+  atualizado_em timestamptz not null default now(),
+  primary key (desafio_id, usuario_id)
+);
+
+create or replace function public.participa_do_desafio(d uuid) returns boolean
+  language sql stable security definer set search_path = public as $$
+  select exists (select 1 from desafio_participantes where desafio_id = d and usuario_id = auth.uid());
+$$;
+
+alter table public.desafios enable row level security;
+drop policy if exists "ver desafios" on public.desafios;
+create policy "ver desafios" on public.desafios for select to authenticated
+  using (criado_por = auth.uid() or public.participa_do_desafio(id)
+         or (clube_id is not null and public.e_membro(clube_id)));
+drop policy if exists "criar desafio" on public.desafios;
+create policy "criar desafio" on public.desafios for insert to authenticated
+  with check (criado_por = auth.uid() and (clube_id is null or public.e_membro(clube_id)));
+drop policy if exists "editar desafio" on public.desafios;
+create policy "editar desafio" on public.desafios for update to authenticated
+  using (criado_por = auth.uid()) with check (criado_por = auth.uid());
+drop policy if exists "apagar desafio" on public.desafios;
+create policy "apagar desafio" on public.desafios for delete to authenticated
+  using (criado_por = auth.uid());
+
+alter table public.desafio_participantes enable row level security;
+drop policy if exists "ver participantes" on public.desafio_participantes;
+create policy "ver participantes" on public.desafio_participantes for select to authenticated
+  using (public.participa_do_desafio(desafio_id)
+         or exists (select 1 from desafios d where d.id = desafio_id and
+                    (d.criado_por = auth.uid() or (d.clube_id is not null and public.e_membro(d.clube_id)))));
+drop policy if exists "entrar no desafio" on public.desafio_participantes;
+create policy "entrar no desafio" on public.desafio_participantes for insert to authenticated
+  with check (usuario_id = auth.uid() and exists (
+    select 1 from desafios d where d.id = desafio_id and
+      (d.criado_por = auth.uid() or (d.clube_id is not null and public.e_membro(d.clube_id)))));
+drop policy if exists "meu progresso" on public.desafio_participantes;
+create policy "meu progresso" on public.desafio_participantes for update to authenticated
+  using (usuario_id = auth.uid()) with check (usuario_id = auth.uid());
+drop policy if exists "sair do desafio" on public.desafio_participantes;
+create policy "sair do desafio" on public.desafio_participantes for delete to authenticated
+  using (usuario_id = auth.uid());
+
+-- entrar com o código de convite (amigos de fora do clube)
+create or replace function public.entrar_no_desafio(p_codigo text) returns uuid
+  language plpgsql security definer set search_path = public as $$
+declare v uuid;
+begin
+  select id into v from desafios where codigo = upper(btrim(p_codigo)) and fim >= current_date;
+  if v is null then return null; end if;
+  insert into desafio_participantes (desafio_id, usuario_id) values (v, auth.uid())
+    on conflict do nothing;
+  return v;
+end $$;
+grant execute on function public.entrar_no_desafio(text) to authenticated;

@@ -176,6 +176,20 @@ export default function NumerosAnoPage() {
               </div>
 
               <MesEmRevista />
+              <Link
+                href="/desafios"
+                className="inverso mb-4 flex items-center gap-4 rounded-xl bg-gradient-to-br from-[#2B4C7E] to-[#2b1420] p-5 text-creme"
+              >
+                <span className="text-3xl">🏆</span>
+                <span className="min-w-0 flex-1">
+                  <span className="block font-display text-[20px] font-semibold italic">
+                    desafios de leitura
+                  </span>
+                  <span className="block text-[13px] text-rosa-claro">
+                    sozinha, com amigos ou com o clube →
+                  </span>
+                </span>
+              </Link>
               <ExtremosDoAno n={n} />
               <FormatosDoAno n={n} />
               <MesAMes n={n} />
