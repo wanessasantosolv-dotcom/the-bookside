@@ -194,19 +194,28 @@ function BannerDesafios() {
   return (
     <Link
       href="/desafios"
-      className="flex w-[172px] flex-none flex-col rounded-[14px] border border-linha bg-creme-quente p-3 hover:border-bordo"
+      className="relative block -rotate-1 rounded-[2px] border border-linha bg-creme-quente px-5 py-5 pr-16 shadow-[0_14px_26px_-18px_rgba(43,20,32,.3)] hover:border-bordo lg:rounded-[4px]"
     >
       <span
         aria-hidden
-        className="mb-1.5 flex size-6 items-center justify-center rounded-full bg-rosa-fundo text-xs"
-      >
-        🏆
-      </span>
-      <span className="block text-[9.5px] font-semibold tracking-[.16em] text-bordo uppercase">
+        className="absolute -top-2.5 left-1/2 h-5 w-16 -translate-x-1/2 -rotate-2 bg-[rgba(232,180,191,.88)] bg-[repeating-linear-gradient(45deg,rgba(255,255,255,.35)_0_5px,transparent_5px_11px)] shadow-[0_2px_4px_rgba(43,20,32,.15)]"
+      />
+      <p className="font-maquina text-[9.5px] tracking-[.12em] text-rosa-antigo uppercase">
+        no mural esse mês
+      </p>
+      <h3 className="mt-1.5 font-revista text-[19px] text-bordo italic">
         desafios de leitura
-      </span>
-      <span className="mt-0.5 block text-[13px] leading-snug font-semibold italic">
-        sozinha, com amigas ou com o clube
+      </h3>
+      <p className="mt-2 max-w-[220px] text-[11.5px] leading-snug text-cinza">
+        sozinha, com amigas ou com o clube — escolha o seu e comece hoje.
+      </p>
+      <span
+        aria-hidden
+        className="font-maquina absolute right-4 bottom-4 flex size-10 rotate-[8deg] items-center justify-center rounded-full border border-dashed border-ouro text-center text-[8px] leading-tight text-ouro"
+      >
+        ver
+        <br />
+        mais
       </span>
     </Link>
   );
@@ -652,11 +661,15 @@ export default function InicioPage() {
             </div>
 
             {/* ===== trilha "pra você" (celular e computador) ===== */}
-            <div className="mt-3.5 flex gap-2.5 overflow-x-auto px-6 pb-1 lg:mx-0 lg:mb-7 lg:px-0 lg:pb-0">
+            <div className="mt-3.5 flex gap-2.5 overflow-x-auto px-6 pb-1 lg:mx-0 lg:px-0 lg:pb-0">
               <IndicacaoDoDia compacto />
-              <BannerDesafios />
               {/* depois de feito, o resultado fica no perfil (não no feed) */}
               {!bookside ? <BannerTeste compacto /> : null}
+            </div>
+
+            {/* ===== desafios de leitura: banner de largura cheia (só celular; no computador mora na lateral) ===== */}
+            <div className="mx-6 mt-3.5 lg:hidden">
+              <BannerDesafios />
             </div>
 
             <p className="mt-5 mb-3 px-6 text-[10px] font-semibold tracking-[.18em] text-bordo uppercase lg:hidden">
@@ -674,6 +687,7 @@ export default function InicioPage() {
           </div>
 
           <aside className="hidden space-y-5 lg:block">
+            <BannerDesafios />
             <AmigasLendoWeb />
           </aside>
         </div>
