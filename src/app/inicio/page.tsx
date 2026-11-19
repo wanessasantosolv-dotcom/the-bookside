@@ -333,14 +333,13 @@ function CartaoGrupo({
   );
 }
 
-/** Destaques do topo do feed: lembrança, meta do ano e amigas lendo o mesmo livro. */
+/** Destaques do topo do feed: lembrança e amigas lendo o mesmo livro. */
 function Destaques({
   mesmos,
 }: {
   mesmos: { pessoa: PessoaResumo; livro: LivroSalvo }[];
 }) {
   const livros = usePerfil((s) => s.livros);
-  const meta = usePerfil((s) => s.meta);
   const agora = new Date();
   const ano = agora.getFullYear();
 
@@ -355,12 +354,6 @@ function Destaques({
     })
     .sort((x, y) => y.d.getTime() - x.d.getTime())[0];
 
-  const lidosNoAno = livros.filter(
-    (l) =>
-      l.status === "lido" &&
-      l.lidoEm &&
-      new Date(l.lidoEm).getFullYear() === ano,
-  ).length;
   const cartao =
     "flex items-center gap-3.5 rounded-xl border border-linha bg-creme-quente p-3.5 hover:border-bordo lg:rounded-[4px] lg:border-fio lg:bg-transparent lg:p-4 lg:hover:bg-[#F3ECDF]";
   const rotulo =
@@ -391,28 +384,6 @@ function Destaques({
                 {"★".repeat(Math.round(lembranca.l.nota))}
               </span>
             ) : null}
-          </span>
-        </span>
-      </Link>,
-    );
-  }
-  if (meta) {
-    const pct = Math.min(100, Math.round((lidosNoAno / meta) * 100));
-    const falta = Math.max(0, meta - lidosNoAno);
-    itens.push(
-      <Link key="meta" href="/numeros" className={cartao}>
-        <span className="min-w-0 flex-1">
-          <span className={rotulo}>meta de {ano}</span>
-          <span className="mt-0.5 block text-[13px]">
-            {falta
-              ? `${lidosNoAno} de ${meta} livros · faltam ${falta}`
-              : `você bateu a meta: ${lidosNoAno} livros ✦`}
-          </span>
-          <span className="mt-1.5 block h-1.5 rounded-full bg-rosa-fundo">
-            <i
-              className="block h-full rounded-full bg-bordo"
-              style={{ width: `${pct}%` }}
-            />
           </span>
         </span>
       </Link>,
