@@ -28,6 +28,40 @@ function dadosDoStore(): Partial<Perfil> {
 }
 
 let carregado = false;
+/** o app está aplicando o perfil que veio da nuvem (não é mudança da pessoa) */
+let aplicandoNuvem = false;
+
+/**
+ * Mudanças feitas aqui que ainda não chegaram à nuvem (ex.: trocou a capa e
+ * fechou o app antes de salvar). Assim, ao abrir de novo, a versão antiga da
+ * nuvem não passa por cima do que a pessoa acabou de escolher.
+ */
+const PENDENTE = "bookside-perfil-pendente";
+function marcarPendente(usuarioId: string | null) {
+  try {
+    localStorage.setItem(
+      PENDENTE,
+      JSON.stringify({ usuario: usuarioId, em: new Date().toISOString() }),
+    );
+  } catch {
+    /* sem armazenamento: segue sem a proteção */
+  }
+}
+function pendente(): { usuario: string | null; em: string } | null {
+  try {
+    return JSON.parse(localStorage.getItem(PENDENTE) ?? "null");
+  } catch {
+    return null;
+  }
+}
+function limparPendente(desde: string) {
+  try {
+    // só limpa se nada mudou enquanto salvava
+    if (pendente()?.em === desde) localStorage.removeItem(PENDENTE);
+  } catch {
+    /* nada */
+  }
+}
 
 /** O perfil da nuvem já foi carregado (antes disso, mudanças no store não são da pessoa). */
 export function nuvemPronta() {
@@ -38,6 +72,7 @@ export function nuvemPronta() {
 export async function salvarPerfil(id: string) {
   if (!supabase) return;
   useNuvem.setState({ estado: "salvando" });
+  const marcado = pendente()?.em;
   const s = usePerfil.getState();
   const { error } = await supabase.from("perfis").upsert({
     id,
@@ -52,7 +87,10 @@ export async function salvarPerfil(id: string) {
         ? "esse @usuário já está em uso. troque em editar perfil."
         : "não conseguimos salvar na nuvem agora.";
     useNuvem.setState({ estado: "erro", erro: msg });
-  } else useNuvem.setState({ estado: "salvo", erro: null });
+  } else {
+    if (marcado) limparPendente(marcado);
+    useNuvem.setState({ estado: "salvo", erro: null });
+  }
 }
 
 /**
@@ -62,11 +100,27 @@ export async function salvarPerfil(id: string) {
 export async function carregarPerfil(user: User): Promise<Perfil> {
   if (!supabase) return usePerfil.getState();
   useNuvem.setState({ estado: "carregando", usuario: user });
-  const { data, error } = await supabase.from("perfis").select("dados").eq("id", user.id).maybeSingle();
+  const { data, error } = await supabase
+    .from("perfis")
+    .select("dados,atualizado_em")
+    .eq("id", user.id)
+    .maybeSingle();
+  const local = pendente();
+  const localMaisNovo =
+    !!local &&
+    (local.usuario === user.id || local.usuario === null) &&
+    (!data?.atualizado_em || local.em > data.atualizado_em);
   if (error) {
     useNuvem.setState({ estado: "erro", erro: "não conseguimos abrir seu perfil na nuvem." });
+  } else if (data?.dados && Object.keys(data.dados).length && localMaisNovo) {
+    // o que está aqui é mais novo que a nuvem (não tinha dado tempo de salvar): sobe
+    usePerfil.setState({ email: user.email ?? null });
+    carregado = true;
+    await salvarPerfil(user.id);
   } else if (data?.dados && Object.keys(data.dados).length) {
+    aplicandoNuvem = true;
     usePerfil.setState({ ...perfilInicial, ...(data.dados as Partial<Perfil>), email: user.email ?? null });
+    aplicandoNuvem = false;
     useNuvem.setState({ estado: "salvo" });
   } else {
     // conta nova (por e-mail, Google ou Apple): aproveita o nome que veio do login
@@ -81,6 +135,11 @@ export async function carregarPerfil(user: User): Promise<Perfil> {
 
 export async function sairDaConta() {
   carregado = false;
+  try {
+    localStorage.removeItem(PENDENTE);
+  } catch {
+    /* nada */
+  }
   if (supabase) await supabase.auth.signOut();
   usePerfil.getState().sair();
   useNuvem.setState({ estado: supabase ? "sem-conta" : "desligada", usuario: null, erro: null });
@@ -105,9 +164,13 @@ export function iniciarNuvem() {
     }
   });
 
-  const pararStore = usePerfil.subscribe(() => {
+  const pararStore = usePerfil.subscribe((novo, antigo) => {
+    if (aplicandoNuvem) return;
+    // só o que a nuvem guarda conta como mudança (ex.: não o e-mail)
+    if (CAMPOS.every((k) => novo[k] === antigo[k])) return;
     const usuario = useNuvem.getState().usuario;
     if (!carregado || !usuario) return;
+    marcarPendente(usuario.id);
     clearTimeout(espera);
     espera = setTimeout(() => void salvarPerfil(usuario.id), 1200);
   });

@@ -33,7 +33,9 @@ export type TipoAtividade =
   /** um trecho que ficou: texto = a citação */
   | "trecho"
   /** movimento de um clube: texto = o que aconteceu */
-  | "clube";
+  | "clube"
+  /** um comentário publicado pela pessoa sobre um livro */
+  | "post";
 export type Atividade = {
   id: string;
   autor: string;
@@ -65,6 +67,7 @@ export const verbo: Record<TipoAtividade, string> = {
   progresso: "está lendo",
   trecho: "guardou um trecho de",
   clube: "",
+  post: "escreveu sobre",
 };
 
 function db() {
@@ -543,6 +546,7 @@ const prioridade: Record<TipoAtividade, number> = {
   progresso: 0,
   trecho: 0,
   clube: 0,
+  post: 0,
 };
 
 /**

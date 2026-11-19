@@ -804,7 +804,7 @@ async function sugestoesPorGosto(
       ? escolhidos
       : ["fiction", "romance", "thrillers", "fantasy"]
   ).slice(0, 3);
-  const tenho = new Set(jaTenho.map(chaveTitulo));
+  const tenho = new Set(jaTenho.flatMap(formasDoTitulo));
   const listas = await Promise.all(
     assuntos.map((a) =>
       volumesDoGoogle(`subject:"${a}"`, 20, undefined, {
@@ -816,7 +816,11 @@ async function sugestoesPorGosto(
             .map(doGoogle)
             .filter(
               (l): l is LivroBusca =>
-                !!l && !!l.capa && !tenho.has(chaveTitulo(l.titulo)),
+                !!l &&
+                !!l.capa &&
+                // só edições em português
+                (!l.idioma || l.idioma === "pt") &&
+                !formasDoTitulo(l.titulo).some((f) => tenho.has(f)),
             ),
         )
         .catch(() => [] as LivroBusca[]),
@@ -856,6 +860,30 @@ export const chaveTitulo = (t: string) =>
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
 
+/** as formas de um título: inteiro, cada parte ("Anxious People | Gente ansiosa") e sem subtítulo */
+export function formasDoTitulo(t: string): string[] {
+  const partes = t.split(/\s*[|/]\s*|\s+[-–—]\s+/);
+  const formas = new Set<string>([chaveTitulo(t)]);
+  for (const p of partes) {
+    formas.add(chaveTitulo(p));
+    formas.add(chaveTitulo(p.split(/[:(]/)[0]));
+  }
+  formas.delete("");
+  return [...formas];
+}
+
+/**
+ * "Esse livro já está na estante?" — por id ou por qualquer forma do título,
+ * em qualquer status (lendo, lido, quero ler). Usado para não indicar repetido.
+ */
+export function naEstante(livros: { id: string; titulo: string }[]) {
+  const ids = new Set(livros.map((l) => l.id));
+  const titulos = new Set(livros.flatMap((l) => formasDoTitulo(l.titulo)));
+  return (l: { id?: string; titulo: string }) =>
+    (!!l.id && ids.has(l.id)) ||
+    formasDoTitulo(l.titulo).some((f) => f.length > 2 && titulos.has(f));
+}
+
 /**
  * Sugestões que mudam: começam com a lista local (sem os livros que a pessoa
  * já tem) e trocam pelas sugestões dos gostos dela assim que chegam.
@@ -876,11 +904,9 @@ export function useSugestoesVivas(tirarOsQueTenho = true): LivroBusca[] {
       vivo = false;
     };
   }, [gostos, chaveTitulos]);
-  const tenho = new Set(titulos.map(chaveTitulo));
+  const tenho = naEstante(livros);
   const lista = vivas ?? locais;
-  return tirarOsQueTenho
-    ? lista.filter((l) => !tenho.has(chaveTitulo(l.titulo)))
-    : lista;
+  return tirarOsQueTenho ? lista.filter((l) => !tenho(l)) : lista;
 }
 
 /** Sugestões locais com as capas já encontradas. */

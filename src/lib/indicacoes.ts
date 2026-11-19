@@ -10,6 +10,7 @@
  */
 import { useEffect, useMemo, useState } from "react";
 import {
+  naEstante,
   assuntoDoGosto,
   chaveTitulo,
   lembrarLivros,
@@ -47,6 +48,12 @@ function passados(): Set<string> {
   } catch {
     return new Set();
   }
+}
+
+/** "Anxious People | Gente ansiosa" → "Gente ansiosa" */
+function parteEmPortugues(t: string) {
+  const partes = t.split(/\s*[|/]\s*/).filter(Boolean);
+  return partes.length > 1 ? (partes.find((p) => !pareceIngles(p)) ?? t) : t;
 }
 
 /** é edição em português? (o Google diz o idioma; a sinopse confirma) */
@@ -99,21 +106,27 @@ async function emAltaNoApp(): Promise<Indicacao[]> {
   const { data, error } = await supabase.rpc("livros_em_alta", { p_dias: 60 });
   if (error || !data) return [];
   return (
-    data as {
-      id: string;
-      titulo: string;
-      autor: string;
-      capa: string | null;
-      pessoas: number;
-    }[]
-  ).map((x) => ({
-    id: x.id,
-    titulo: x.titulo,
-    autor: x.autor || "autoria desconhecida",
-    capa: x.capa ?? undefined,
-    cor: corDoLivro(x.id),
-    motivo: `em alta no the bookside · ${x.pessoas} ${x.pessoas === 1 ? "leitora" : "leitoras"}`,
-  }));
+    (
+      data as {
+        id: string;
+        titulo: string;
+        autor: string;
+        capa: string | null;
+        pessoas: number;
+      }[]
+    )
+      // só os que estão em português (ou a parte em português do título)
+      .map((x) => ({ ...x, titulo: parteEmPortugues(x.titulo) }))
+      .filter((x) => !pareceIngles(x.titulo))
+      .map((x) => ({
+        id: x.id,
+        titulo: x.titulo,
+        autor: x.autor || "autoria desconhecida",
+        capa: x.capa ?? undefined,
+        cor: corDoLivro(x.id),
+        motivo: `em alta no the bookside · ${x.pessoas} ${x.pessoas === 1 ? "leitora" : "leitoras"}`,
+      }))
+  );
 }
 
 async function montar(
@@ -228,16 +241,12 @@ export function useIndicacoes() {
     // só refaz quando a assinatura muda
   }, [assinatura]);
 
-  const tenho = useMemo(
-    () => new Set(livros.map((l) => chaveTitulo(l.titulo))),
-    [livros],
-  );
+  const tenho = useMemo(() => naEstante(livros), [livros]);
   const fora = passados();
   return {
     carregando: lista === null,
     lista: (lista ?? []).filter(
-      (l) =>
-        !tenho.has(chaveTitulo(l.titulo)) && !fora.has(chaveTitulo(l.titulo)),
+      (l) => !tenho(l) && !fora.has(chaveTitulo(l.titulo)),
     ),
   };
 }

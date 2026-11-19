@@ -266,9 +266,9 @@ export function PerfilWeb({
               </Link>
             </div>
             {favoritos.length ? (
-              <ul className="flex gap-2.5">
-                {favoritos.slice(0, 3).map((l) => (
-                  <li key={l.id} className="w-[84px]">
+              <ul className="grid grid-cols-4 gap-2">
+                {favoritos.slice(0, 4).map((l) => (
+                  <li key={l.id}>
                     <Link href={`/livro/${l.id}`} className="block">
                       <CapaLivro
                         titulo={l.titulo}
@@ -311,28 +311,57 @@ export function PerfilWeb({
             lendo agora
           </h2>
           {lendo.length ? (
-            <ul className="grid grid-cols-2 gap-6">
-              {lendo.map((l) => (
-                <li
-                  key={l.id}
-                  className="flex items-center gap-3 rounded-[4px] border border-fio p-4"
-                >
-                  <CapaLivro
-                    titulo={l.titulo}
-                    capa={l.capa}
-                    cor={corDoLivro(l.id)}
-                    className="w-11 [&>span:last-child]:hidden"
-                  />
-                  <div>
-                    <h3 className="font-revista text-[15px] leading-[1.2] italic">
-                      {l.titulo}
-                    </h3>
-                    <p className="mt-1 text-[11px] text-grafite">
-                      {l.autor} · lendo
-                    </p>
-                  </div>
-                </li>
-              ))}
+            <ul className="grid grid-cols-2 gap-x-8 gap-y-6 xl:grid-cols-3">
+              {lendo.map((l) => {
+                const total = l.paginas;
+                const pct =
+                  total && l.paginaAtual
+                    ? Math.min(100, Math.round((l.paginaAtual / total) * 100))
+                    : null;
+                return (
+                  <li key={l.id}>
+                    <Link
+                      href={outra ? `/livro/${l.id}` : `/livro/${l.id}/progresso`}
+                      className="group flex gap-4"
+                    >
+                      <CapaLivro
+                        titulo={l.titulo}
+                        capa={l.capa}
+                        cor={corDoLivro(l.id)}
+                        className="w-[72px] flex-none transition-transform group-hover:-translate-y-1 [&>span:last-child]:text-[9px]"
+                      />
+                      <div className="min-w-0 flex-1 pt-1">
+                        <h3 className="line-clamp-2 font-revista text-[17px] leading-[1.15] italic">
+                          {l.titulo}
+                        </h3>
+                        <p className="mt-1 truncate text-[11px] text-grafite">
+                          {l.autor}
+                        </p>
+                        {pct !== null ? (
+                          <>
+                            <span className="mt-3 block h-1 overflow-hidden rounded-full bg-fio">
+                              <span
+                                className="block h-full rounded-full bg-[var(--acc-web)]"
+                                style={{ width: `${pct}%` }}
+                              />
+                            </span>
+                            <p className="mt-1.5 text-[10px] font-semibold tracking-[.08em] text-grafite uppercase">
+                              pág. {l.paginaAtual} de {total} · {pct}%
+                            </p>
+                          </>
+                        ) : (
+                          <p className="mt-3 text-[10px] font-semibold tracking-[.08em] text-grafite uppercase">
+                            {l.iniciadoEm
+                              ? `desde ${new Date(l.iniciadoEm).toLocaleDateString("pt-BR", { day: "numeric", month: "short" })}`
+                              : "começou a ler"}
+                            {outra ? "" : " · marcar página →"}
+                          </p>
+                        )}
+                      </div>
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           ) : (
             <p className="font-revista text-[13px] italic text-grafite">

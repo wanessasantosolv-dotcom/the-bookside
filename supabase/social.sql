@@ -270,7 +270,7 @@ create index if not exists atividades_clube on public.atividades (clube_id, cria
 -- tipos de atualização: os de sempre + progresso de leitura, trecho guardado e movimento dos clubes
 alter table public.atividades drop constraint if exists atividades_tipo_check;
 alter table public.atividades add constraint atividades_tipo_check
-  check (tipo in ('comecou', 'terminou', 'avaliou', 'quer', 'ficha', 'progresso', 'trecho', 'clube'));
+  check (tipo in ('comecou', 'terminou', 'avaliou', 'quer', 'ficha', 'progresso', 'trecho', 'clube', 'post'));
 alter table public.atividades enable row level security;
 drop policy if exists "ler atividades" on public.atividades;
 create policy "ler atividades" on public.atividades for select to authenticated

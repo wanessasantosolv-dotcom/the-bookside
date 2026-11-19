@@ -4,6 +4,8 @@ import { CapaAuto } from "@/components/CapaAuto";
 import Link from "next/link";
 import { useState } from "react";
 import { AppShell } from "@/components/AppShell";
+import { LendoAgora } from "@/components/feed/LendoAgora";
+import { Publicar } from "@/components/feed/Publicar";
 import { CapaLivro } from "@/components/CapaLivro";
 import { useHidratado } from "@/components/PerfilHidratacao";
 import {
@@ -76,6 +78,24 @@ function Topo({ nome }: { nome: string }) {
             <path d="m20 20-3.5-3.5" />
           </svg>
           <span className="hidden lg:inline">buscar livros</span>
+        </Link>
+        <Link href="/pessoas" aria-label="adicionar amigas" className={iconeLink}>
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden
+          >
+            <circle cx="9" cy="8" r="4" />
+            <path d="M2 21c1-4 3.8-6 7-6s6 2 7 6" />
+            <path d="M19 8v6M16 11h6" />
+          </svg>
+          <span className="hidden lg:inline">amigas</span>
         </Link>
         <Link href="/novidades" aria-label="novidades" className={iconeLink}>
           <svg
@@ -597,11 +617,10 @@ export default function InicioPage() {
   const hidratado = useHidratado();
   const nome = usePerfil((s) => s.nome);
   const bookside = usePerfil((s) => s.bookside);
-  const livros = usePerfil((s) => s.livros);
+  const [versaoFeed, setVersaoFeed] = useState(0);
 
   if (!hidratado) return <AppShell aba="inicio">{null}</AppShell>;
   const citacao = citacaoDoDia();
-  const lendo = livros.find((l) => !l.status || l.status === "lendo");
 
   return (
     <AppShell aba="inicio">
@@ -629,33 +648,9 @@ export default function InicioPage() {
               </div>
             ) : null}
 
-            {lendo ? (
-              <Link
-                href={`/livro/${lendo.id}/progresso`}
-                className="mb-7 hidden items-center gap-4 rounded-[4px] border border-fio p-5 hover:bg-[#F3ECDF] lg:flex"
-              >
-                <CapaLivro
-                  titulo={lendo.titulo}
-                  capa={lendo.capa}
-                  cor={corDoLivro(lendo.id)}
-                  className="w-11 [&>span:last-child]:hidden"
-                />
-                <span>
-                  <span className="block text-[10px] font-semibold tracking-[.18em] text-grafite uppercase">
-                    você está lendo
-                  </span>
-                  <span className="mt-1 block font-revista text-xl italic">
-                    {lendo.titulo}
-                  </span>
-                  <span className="mt-0.5 block text-xs text-grafite">
-                    {lendo.autor}
-                    {lendo.paginas && lendo.paginaAtual
-                      ? ` · página ${lendo.paginaAtual} de ${lendo.paginas}`
-                      : " · quantas páginas já foram? atualizar →"}
-                  </span>
-                </span>
-              </Link>
-            ) : null}
+            <div className="mx-6 mt-4 lg:mx-0 lg:mt-0 lg:mb-7">
+              <LendoAgora />
+            </div>
 
             <div className="mx-6 mt-4 lg:hidden">
               <IndicacaoDoDia />
@@ -671,7 +666,10 @@ export default function InicioPage() {
               feed
             </p>
             <ComConta>
-              <Feed />
+              <div className="mx-6 mb-5 lg:mx-0">
+                <Publicar onPublicado={() => setVersaoFeed((v) => v + 1)} />
+              </div>
+              <Feed key={versaoFeed} />
             </ComConta>
           </div>
 
@@ -679,17 +677,6 @@ export default function InicioPage() {
             {bookside ? <BannerTeste principal={bookside.principal} /> : null}
             <AmigasLendoWeb />
             <IndicacaoDoDia />
-            <Link
-              href="/pessoas"
-              className="block rounded-[4px] border border-fio p-5 hover:bg-[#F3ECDF]"
-            >
-              <p className="font-revista text-[17px] italic">
-                encontrar amigas
-              </p>
-              <p className="mt-1 text-xs text-grafite">
-                busque pelo nome ou pelo @usuário →
-              </p>
-            </Link>
           </aside>
         </div>
       </div>
