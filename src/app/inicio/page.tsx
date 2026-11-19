@@ -618,7 +618,8 @@ export default function InicioPage() {
             {/* ===== trilha "pra você" (celular e computador) ===== */}
             <div className="mt-3.5 flex gap-2.5 overflow-x-auto px-6 pb-1 lg:mx-0 lg:mb-7 lg:px-0 lg:pb-0">
               <IndicacaoDoDia compacto />
-              <BannerTeste compacto principal={bookside?.principal} />
+              {/* depois de feito, o resultado fica no perfil (não no feed) */}
+              {!bookside ? <BannerTeste compacto /> : null}
             </div>
 
             <p className="mt-5 mb-3 px-6 text-[10px] font-semibold tracking-[.18em] text-bordo uppercase lg:hidden">

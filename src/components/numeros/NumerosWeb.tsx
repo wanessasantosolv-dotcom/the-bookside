@@ -7,6 +7,7 @@ import { temas } from "@/lib/dados";
 import { usePerfil } from "@/lib/perfil-store";
 import { ExtremosDoAno } from "@/components/numeros/Extremos";
 import { FormatosDoAno } from "@/components/numeros/Formatos";
+import { MesAMes } from "@/components/numeros/MesAMes";
 import { corDoLivro } from "@/lib/cores";
 import {
   mediaTexto,
@@ -224,6 +225,8 @@ function ConteudoUnificado({
       <ExtremosDoAno n={n} web />
 
       <FormatosDoAno n={n} web />
+
+      <MesAMes n={n} web />
       <section className="mb-14">
         <h2 className="mb-[18px] border-b border-ameixa pb-2 font-revista text-[22px] leading-none text-ameixa italic">
           gêneros

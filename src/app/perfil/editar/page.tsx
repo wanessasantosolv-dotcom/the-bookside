@@ -61,6 +61,12 @@ function Formulario({ inicial }: { inicial: Rascunho }) {
   }
 
   const meta = typeof r.meta === "number" ? r.meta : null;
+  const [textoMeta, setTextoMeta] = useState(() =>
+    meta !== null && !metas.some((m) => m.valor === meta) ? String(meta) : "",
+  );
+  // a meta escrita à mão (fica marcada enquanto for a escolhida)
+  const metaPersonalizada =
+    textoMeta !== "" && meta !== null && meta === Number(textoMeta);
 
   return (
     <TelaApp aba="perfil">
@@ -309,11 +315,43 @@ function Formulario({ inicial }: { inicial: Rascunho }) {
                     name="meta"
                     className="sr-only"
                     checked={r.meta === m.valor}
-                    onChange={() => mudar({ meta: m.valor })}
+                    onChange={() => {
+                      setTextoMeta("");
+                      mudar({ meta: m.valor });
+                    }}
                   />
                   {m.valor ?? "sem meta"}
                 </label>
               ))}
+              {/* outra quantidade, do jeito da pessoa */}
+              <label
+                className={`inline-flex h-11 items-center gap-2 rounded-pill border pr-2 pl-4 text-sm font-semibold focus-within:border-bordo ${
+                  metaPersonalizada
+                    ? "border-bordo bg-bordo text-creme"
+                    : "border-bege bg-creme-quente text-ameixa"
+                }`}
+              >
+                outra
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  max={999}
+                  placeholder="nº"
+                  value={textoMeta}
+                  onChange={(e) => {
+                    const v = Math.min(999, Math.round(Number(e.target.value)));
+                    setTextoMeta(e.target.value === "" ? "" : String(v));
+                    if (v > 0) mudar({ meta: v });
+                  }}
+                  aria-label="meta personalizada: quantos livros"
+                  className={`h-8 w-16 rounded-pill px-2 text-center text-sm outline-none ${
+                    metaPersonalizada
+                      ? "bg-creme text-bordo"
+                      : "bg-creme text-ameixa"
+                  }`}
+                />
+              </label>
             </div>
             <div className="mt-3 rounded-[12px] bg-creme-quente px-4 py-3 lg:rounded-[4px]">
               <p className="text-[13px] text-ameixa">
@@ -321,7 +359,10 @@ function Formulario({ inicial }: { inicial: Rascunho }) {
                   <>
                     <b className="text-bordo">{livrosLidos}</b> de {meta} lidos ·{" "}
                     <span className="font-accent italic text-cinza">
-                      {metas.find((m) => m.valor === meta)?.legenda}
+                      {metas.find((m) => m.valor === meta)?.legenda ??
+                        (meta >= 52
+                          ? `mais de um livro por semana — que fôlego!`
+                          : `cerca de ${Math.max(1, Math.round((365 / meta) * 10) / 10).toLocaleString("pt-BR")} dias por livro`)}
                     </span>
                   </>
                 ) : (

@@ -41,8 +41,8 @@ export function useClube() {
   return c;
 }
 
-/** largura do clube no computador: ocupa a tela toda, com capa, título e conteúdo alinhados */
-const largura = "lg:w-full lg:px-12 xl:px-16";
+/** largura do clube no computador: centralizada como o perfil (a capa continua de ponta a ponta) */
+const largura = "lg:mx-auto lg:w-full lg:max-w-[1196px] lg:px-12";
 
 const abas = [
   { id: "", r: "início" },

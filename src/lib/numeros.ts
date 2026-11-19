@@ -130,6 +130,24 @@ export function calcularNumeros(
       ? comTempo.at(-1)!
       : null;
 
+  // mês a mês: o melhor e o pior livro (pela nota), dos meses que tiveram livros com nota
+  const mesAMes = MESES.slice(0, ultimoMes + 1)
+    .map((mes, m) => {
+      const doMes = lidos
+        .filter((l) => l.nota && new Date(l.lidoEm!).getMonth() === m)
+        .sort((a, b) => (b.nota ?? 0) - (a.nota ?? 0));
+      return {
+        mes,
+        total: lidos.filter((l) => new Date(l.lidoEm!).getMonth() === m).length,
+        melhor: doMes[0] ?? null,
+        pior:
+          doMes.length > 1 && doMes.at(-1)!.nota! < doMes[0].nota!
+            ? doMes.at(-1)!
+            : null,
+      };
+    })
+    .filter((x) => x.melhor);
+
   // como a pessoa leu: papel, tela ou ouvidos
   const porFormato = formatos.map((f) => {
     const ls = lidos.filter((l) => l.formato === f.id);
@@ -178,6 +196,7 @@ export function calcularNumeros(
     maisLongo,
     maisAmados,
     porFormato,
+    mesAMes,
     semFormato,
     menosAmados,
     maisRapido,

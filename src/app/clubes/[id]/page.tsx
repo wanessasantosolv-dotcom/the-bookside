@@ -93,7 +93,7 @@ export default function ClubeInicioPage() {
         .slice(0, 4);
 
   return (
-    <div className="space-y-8 px-6 pt-6 lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:grid-rows-[auto_auto_1fr] lg:items-start lg:gap-x-12 lg:gap-y-8 lg:space-y-0 lg:px-0 xl:grid-cols-[minmax(0,1fr)_360px]">
+    <div className="space-y-8 px-6 pt-6 lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:grid-rows-[auto_auto_1fr] lg:items-start lg:gap-x-12 lg:gap-y-8 lg:space-y-0 lg:px-0 xl:grid-cols-[minmax(0,1fr)_340px]">
       <div className="lg:col-start-1 lg:row-start-1">
         {/* ===== lendo agora + a turma, num card só ===== */}
         <div className="relative overflow-hidden rounded-xl border border-rosa-claro/70 bg-rosa-fundo px-5 py-5 lg:rounded-[6px] lg:px-7 lg:py-6">
@@ -243,7 +243,7 @@ export default function ClubeInicioPage() {
             </Link>
           </div>
           {amados.length ? (
-            <ul className="mt-4 grid grid-cols-4 gap-3 lg:gap-4">
+            <ul className="mt-4 grid grid-cols-4 gap-3 sm:max-w-[440px] lg:gap-3">
               {amados.slice(0, 4).map(({ l, m }) => (
                 <li key={l.id}>
                   <Link
@@ -344,7 +344,7 @@ function Turma({
                 ? "ring-rosa-antigo"
                 : escura
                   ? "ring-creme/30"
-                  : "ring-bege opacity-60";
+                  : "ring-bege";
           return (
             <li
               key={m.usuario_id}

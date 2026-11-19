@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ExtremosDoAno } from "@/components/numeros/Extremos";
 import { FormatosDoAno } from "@/components/numeros/Formatos";
+import { MesAMes } from "@/components/numeros/MesAMes";
 import {
   bloco,
   NumerosShell,
@@ -175,6 +176,7 @@ export default function NumerosAnoPage() {
 
               <ExtremosDoAno n={n} />
               <FormatosDoAno n={n} />
+              <MesAMes n={n} />
 
               {wrappedLiberado() ? (
                 <Link
