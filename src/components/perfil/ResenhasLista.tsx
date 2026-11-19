@@ -112,9 +112,17 @@ export function ResenhasLista() {
                       ? ` · ${new Date(l.lidoEm).toLocaleDateString("pt-BR", { day: "numeric", month: "short", year: "numeric" })}`
                       : ""}
                   </p>
-                  {l.nota || l.amei ? (
-                    <p className="mt-1.5 text-sm text-bordo">
+                  {l.nota || l.amei || l.reacao ? (
+                    <p className="mt-1.5 flex flex-wrap items-center gap-x-2 text-sm text-bordo">
                       {l.nota ? estrelas(l.nota) : null}
+                      {reacaoDe(l.reacao) ? (
+                        <span
+                          className="rounded-pill px-2 py-0.5 text-[11px] font-semibold text-creme"
+                          style={{ background: reacaoDe(l.reacao)!.cor }}
+                        >
+                          {reacaoDe(l.reacao)!.emoji} {reacaoDe(l.reacao)!.nome}
+                        </span>
+                      ) : null}
                       {l.amei ? (
                         <span className="ml-2" title="amei">
                           ♥
