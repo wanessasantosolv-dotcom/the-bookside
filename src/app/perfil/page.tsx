@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type { CSSProperties } from "react";
 import { CapaLivro } from "@/components/CapaLivro";
 import { AppShell } from "@/components/AppShell";
+import { ConviteTeste } from "@/components/ConviteTeste";
 import { PerfilWeb } from "@/components/perfil/PerfilWeb";
 import { MeusSeguidores } from "@/components/social/Pessoas";
 import { useHidratado } from "@/components/PerfilHidratacao";
@@ -132,7 +133,12 @@ export default function PerfilPage() {
             </p>
           ) : null}
 
-          <div className="mt-4 flex justify-center">
+          {!arquetipo ? (
+            <div className="mx-4 mt-5">
+              <ConviteTeste />
+            </div>
+          ) : null}
+          <div className={`mt-4 justify-center ${arquetipo ? "flex" : "hidden"}`}>
             <button
               type="button"
               onClick={abrirResultado}

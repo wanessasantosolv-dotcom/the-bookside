@@ -4,6 +4,7 @@ import { Voltar } from "@/components/Voltar";
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import { CapaLivro } from "@/components/CapaLivro";
+import { ConviteTeste } from "@/components/ConviteTeste";
 import { corDoLivro } from "@/lib/cores";
 import type { Tema } from "@/lib/dados";
 import type { LivroSalvo, Perfil } from "@/lib/perfil-store";
@@ -218,7 +219,14 @@ export function PerfilWeb({
             “{p.frase}”
           </p>
         ) : null}
-        <div className="mb-7 flex justify-center">
+        {!arquetipo && !outra ? (
+          <div className="mx-auto mb-8 max-w-[760px]">
+            <ConviteTeste />
+          </div>
+        ) : null}
+        <div
+          className={`mb-7 justify-center ${!arquetipo && !outra ? "hidden" : "flex"}`}
+        >
           <button
             type="button"
             onClick={abrirResultado}
