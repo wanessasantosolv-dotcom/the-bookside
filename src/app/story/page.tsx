@@ -84,11 +84,14 @@ function Conteudo() {
     .filter((l) => l.lidoEm!.startsWith(mesSel))
     .sort((a, b) => a.lidoEm!.localeCompare(b.lidoEm!));
 
-  // estilos: os temas do app (o mesmo do editar perfil), começando pelo seu
+  // poucos estilos: o seu tema + três fixos (claro, vinho e preto)
   const estilos = useMemo(() => {
-    const todos = temas.map(estiloDoTema);
-    const meu = todos.find((x) => x.id === temaId);
-    return meu ? [meu, ...todos.filter((x) => x.id !== temaId)] : todos;
+    const fixos = ["biblioteca-classica", "veludo-vinho", "preto-e-branco"];
+    const ids = fixos.includes(temaId) || !temaId ? fixos : [temaId, ...fixos];
+    return ids
+      .map((id) => temas.find((t) => t.id === id))
+      .filter((t): t is (typeof temas)[number] => !!t)
+      .map(estiloDoTema);
   }, [temaId]);
   const [estiloId, setEstiloId] = useState(temaId || "biblioteca-classica");
   const e = estilos.find((x) => x.id === estiloId) ?? estilos[0];
@@ -227,7 +230,7 @@ function Conteudo() {
             <span className="mb-1.5 block text-[11px] font-semibold tracking-[.12em] text-bordo uppercase">
               estilo
             </span>
-            <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6">
+            <div className="grid max-w-[520px] grid-cols-4 gap-2.5">
               {estilos.map((x) => {
                 const on = estiloId === x.id;
                 return (
@@ -236,7 +239,7 @@ function Conteudo() {
                     type="button"
                     aria-pressed={on}
                     onClick={() => setEstiloId(x.id)}
-                    className={`relative h-[70px] overflow-hidden rounded-[10px] text-left ${
+                    className={`relative h-[84px] overflow-hidden rounded-[10px] text-left ${
                       on ? "ring-2 ring-bordo ring-offset-2 ring-offset-creme" : "border border-linha"
                     }`}
                     style={{ background: x.fundo }}
@@ -244,8 +247,7 @@ function Conteudo() {
                     <span className="absolute inset-x-0 top-0 h-5" style={{ background: x.destaque, opacity: 0.55 }} />
                     <span className="absolute top-3 left-1/2 -ml-2 size-4 rounded-full border-2" style={{ background: x.destaque, borderColor: x.fundo }} />
                     <span className="absolute inset-x-1 bottom-1.5 text-center font-display text-[10px] leading-[1.1] font-semibold italic" style={{ color: x.texto }}>
-                      {x.nome}
-                      {x.id === temaId ? " · seu" : ""}
+                      {x.id === temaId ? "seu tema" : x.nome}
                     </span>
                   </button>
                 );
