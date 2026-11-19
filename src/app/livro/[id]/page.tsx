@@ -189,7 +189,7 @@ export default function LivroPage() {
               </button>
             ) : null}
           </div>
-          <div className="min-w-0 flex-1 lg:max-w-[560px] lg:pt-2">
+          <div className="min-w-0 flex-1 lg:max-w-[920px] lg:pt-2">
             {livro.genero ? (
               <p className="hidden text-[10px] font-semibold tracking-[.18em] text-grafite uppercase lg:mb-2.5 lg:block">
                 {livro.genero}
@@ -223,7 +223,7 @@ export default function LivroPage() {
               </>
             ) : null}
             {livro.sinopse ? (
-              <p className="mt-[18px] hidden max-w-[520px] text-sm leading-[1.6] text-tinta-suave lg:block">
+              <p className="mt-[18px] hidden max-w-[880px] text-[15px] leading-[1.65] text-tinta-suave lg:block">
                 {livro.sinopse}
               </p>
             ) : null}
