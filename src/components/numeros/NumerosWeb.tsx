@@ -553,7 +553,6 @@ function Cabecalho({
   frase: string;
 }) {
   const p = usePerfil();
-  const tema = temas.find((t) => t.id === p.tema) ?? temas[0];
   return (
     <div>
       {/* só a imagem na capa; o texto fica embaixo, sempre legível */}
@@ -565,25 +564,8 @@ function Cabecalho({
             : undefined
         }
       />
-      <div className="flex items-end gap-6 px-14">
-        <span className="-mt-12 block size-[104px] flex-none overflow-hidden rounded-full border-4 border-creme bg-linha shadow-[0_10px_24px_-10px_rgba(43,20,32,.45)]">
-          {p.foto ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={p.foto}
-              alt=""
-              className="size-full object-cover object-[50%_30%]"
-            />
-          ) : (
-            <span
-              className="flex size-full items-center justify-center font-revista text-4xl text-creme italic"
-              style={{ background: tema.destaque }}
-            >
-              {(p.nome || "?").slice(0, 1)}
-            </span>
-          )}
-        </span>
-        <div className="min-w-0 pt-4">
+      <div className="px-14">
+        <div className="min-w-0 pt-6">
           <p className="text-[10px] font-semibold tracking-[.2em] text-[var(--acc)] uppercase">
             {eyebrow}
           </p>
