@@ -107,7 +107,7 @@ export default function RetrospectivaDoClube() {
         ) : (
           <div className="mt-7 grid gap-3.5 lg:grid-cols-2">
             <div className={`${cartao} lg:col-span-2`}>
-              <p className={etiqueta}>juntas, vocês leram</p>
+              <p className={etiqueta}>juntos, vocês leram</p>
               <p className="mt-2.5 font-display text-[70px] leading-[.95] font-bold italic">
                 {w.lidos}
               </p>
@@ -207,7 +207,7 @@ export default function RetrospectivaDoClube() {
             ) : null}
 
             <div className={`${cartao} lg:col-span-2`}>
-              <p className={etiqueta}>as leitoras</p>
+              <p className={etiqueta}>quem leu</p>
               <ul className="mt-3 space-y-2.5">
                 {w.dedicada ? (
                   <li className="flex items-center gap-3 text-sm">

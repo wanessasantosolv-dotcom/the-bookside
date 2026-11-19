@@ -96,7 +96,7 @@ export default function EntrarPage() {
 
   return (
     <div className="lg:flex lg:min-h-dvh lg:bg-jornal">
-      <PainelLateral eyebrow="bem-vinda de volta" frase="a estante ao lado da cama" />
+      <PainelLateral eyebrow="que bom te ver de novo" frase="a estante ao lado da cama" />
       <main className="relative mx-auto flex min-h-dvh w-full max-w-[430px] flex-col overflow-hidden bg-bordo-escuro lg:max-w-none lg:flex-1 lg:items-center lg:justify-center lg:bg-jornal">
         <section className="flex flex-1 flex-col items-center justify-center pt-10 pb-8 lg:hidden">
           <LogoAnimada />

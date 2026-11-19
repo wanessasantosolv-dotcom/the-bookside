@@ -27,7 +27,7 @@ export default function NomePage() {
           se chama?
         </>
       }
-      descricao="é assim que suas amigas vão te reconhecer nas fichas e no clube."
+      descricao="é assim que seus amigos vão te reconhecer nas fichas e no clube."
       rodape={
         <BotaoLink
           href="/criar-perfil/foto"

@@ -124,7 +124,7 @@ async function emAltaNoApp(): Promise<Indicacao[]> {
         autor: x.autor || "autoria desconhecida",
         capa: x.capa ?? undefined,
         cor: corDoLivro(x.id),
-        motivo: `em alta no the bookside · ${x.pessoas} ${x.pessoas === 1 ? "leitora" : "leitoras"}`,
+        motivo: `em alta no the bookside · ${x.pessoas} ${x.pessoas === 1 ? "leitor" : "leitores"}`,
       }))
   );
 }

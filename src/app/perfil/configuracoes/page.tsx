@@ -66,7 +66,7 @@ export default function ConfiguracoesPage() {
           <div className="flex items-center justify-between border-b border-linha py-3.5">
             <dt className="text-sm font-semibold">conta</dt>
             <dd className="text-[13px] text-cinza">
-              {email ?? "não conectada"}
+              {email ?? "sem conta conectada"}
             </dd>
           </div>
         </dl>

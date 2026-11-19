@@ -102,7 +102,7 @@ function Convite() {
         titulo={novo ? "clube criado! ✦" : "chama mais gente"}
         frase={
           novo
-            ? "agora chama as amigas: mande o link ou o código."
+            ? "agora chame os amigos: mande o link ou o código."
             : "quem entra pelo link já cai no clube ✦"
         }
       />

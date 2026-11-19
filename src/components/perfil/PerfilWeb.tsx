@@ -229,7 +229,7 @@ export function PerfilWeb({
               ? `♡ ${arquetipo.nome.replace(/^a /, "")} · ${tema.nome}`
               : outra
                 ? `✧ ${tema.nome}`
-                : "✧ descubra que tipo de leitora você é · fazer o teste →"}
+                : "✧ descubra seu tipo de leitora →"}
           </button>
         </div>
 

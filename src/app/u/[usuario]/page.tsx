@@ -113,7 +113,7 @@ function PerfilDela({ usuario }: { usuario: string }) {
     <span className="flex gap-3">
       <Link href={`${base}/seguidores`} className="hover:underline">
         <b className="font-semibold">{numeros.seguidores}</b>{" "}
-        {numeros.seguidores === 1 ? "seguidora" : "seguidores"}
+        {numeros.seguidores === 1 ? "seguidor" : "seguidores"}
       </Link>
       <Link
         href={`${base}/seguidores?aba=seguindo`}

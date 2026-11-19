@@ -268,7 +268,7 @@ export default function ImportarPage() {
             <h1 className={`mt-4 ${titulo}`}>confira antes de salvar</h1>
             <p className="mt-1.5 font-accent text-sm italic text-cinza">
               {linhas.filter((l) => l.incluir).length} de {linhas.length} livros
-              vão para os lidos. nada disso aparece no feed das amigas.
+              vão para os lidos. nada disso aparece no feed dos amigos.
             </p>
             <ul className="mt-5">
               {linhas.map((l, i) => {

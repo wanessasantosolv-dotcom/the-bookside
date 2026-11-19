@@ -507,7 +507,7 @@ function Feed() {
       {amigasLendo ? (
         <section className="mt-6 px-6 lg:hidden">
           <p className="eyebrow !text-[10px] text-bordo">
-            lendo agora entre amigas
+            lendo agora entre amigos
           </p>
           <div className="mt-3">{amigasLendo}</div>
         </section>
@@ -540,7 +540,7 @@ function Feed() {
       <div className="mt-4 space-y-3 px-6 lg:px-0">
         {!atividades.length ? (
           <Vazio
-            titulo="suas leituras e as das amigas aparecem aqui"
+            titulo="suas leituras e as dos amigos aparecem aqui"
             texto="marque o que está lendo ou avalie um livro, e siga quem você conhece para ver o que estão lendo."
             acao={{ href: "/pessoas", rotulo: "buscar pessoas" }}
           />
@@ -582,7 +582,7 @@ function AmigasLendoWeb() {
   return (
     <div className="rounded-[4px] border border-fio p-5">
       <p className="mb-3 text-[10px] font-semibold tracking-[.18em] text-grafite uppercase">
-        lendo agora entre amigas
+        lendo agora entre amigos
       </p>
       <ul className="flex flex-wrap gap-3.5">
         {lendo.dados.map(({ pessoa, livro }) => (

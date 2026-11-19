@@ -414,7 +414,7 @@ export default function LivroPage() {
 
           <aside className="mt-6 px-6 pb-8 lg:mt-0 lg:px-0 lg:pb-0">
             <div className="rounded-md border border-linha p-4 lg:rounded-[4px] lg:border-fio lg:p-5">
-              <p className={secao}>entre suas amigas</p>
+              <p className={secao}>entre seus amigos</p>
               <AmigasComLivro livroId={livro.id} />
             </div>
             <div className="mt-4">

@@ -75,7 +75,7 @@ export default function EstanteAbertaPage() {
         : estante.status === "lendo"
           ? "leituras em andamento"
           : estante.propria?.publica
-            ? "amigas também veem"
+            ? "amigos também veem"
             : "só você vê";
   const pill = (on: boolean) =>
     `flex h-11 items-center rounded-pill border px-3 text-[11px] font-semibold whitespace-nowrap lg:h-9 ${on ? "border-bordo bg-bordo text-creme" : "border-bege bg-creme-quente text-ameixa"}`;

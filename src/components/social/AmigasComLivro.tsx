@@ -9,7 +9,7 @@ import { amigasComLivro, nomeDe, useMeuId, type PessoaResumo } from "@/lib/socia
 
 const rotulo: Record<string, string> = { lido: "leu", lendo: "está lendo", quero: "quer ler" };
 
-/** "entre suas amigas" na página do livro: quem você segue e tem este livro. */
+/** "entre seus amigos" na página do livro: quem você segue e tem este livro. */
 export function AmigasComLivro({ livroId }: { livroId: string }) {
   const eu = useMeuId();
   const [lista, setLista] = useState<{ pessoa: PessoaResumo; livro: LivroSalvo }[] | null>(null);
@@ -21,7 +21,7 @@ export function AmigasComLivro({ livroId }: { livroId: string }) {
   }, [eu, livroId]);
 
   if (!lista?.length)
-    return <p className="mt-2 font-accent text-sm italic text-cinza">quando suas amigas lerem este livro, elas aparecem aqui.</p>;
+    return <p className="mt-2 font-accent text-sm italic text-cinza">quando seus amigos lerem este livro, eles aparecem aqui.</p>;
   return (
     <ul className="mt-3 space-y-3">
       {lista.map(({ pessoa, livro }) => (

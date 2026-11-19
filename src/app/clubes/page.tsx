@@ -137,7 +137,7 @@ function Lista() {
         ) : (
           <Vazio
             titulo="você ainda não está em nenhum clube"
-            texto="crie um clube e chame as amigas, ou entre com o código de convite que alguém te mandou."
+            texto="crie um clube e chame os amigos, ou entre com o código de convite que alguém te mandou."
             acao={{ href: "/clubes/novo", rotulo: "criar um clube" }}
           />
         )}

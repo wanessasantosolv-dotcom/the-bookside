@@ -522,8 +522,8 @@ export default function ImportarNoClubePage() {
                 <span className="min-w-0 flex-1">
                   qual dessas pessoas é você?
                   <span className="block text-xs text-cinza">
-                    a sua ficha entra como ficha de verdade; as das outras ficam
-                    como “fichas da revista” até elas escreverem a delas no app.
+                    a sua ficha entra como ficha de verdade; as das outras pessoas ficam
+                    como “fichas da revista” até cada pessoa escrever a sua no app.
                   </span>
                 </span>
                 <select

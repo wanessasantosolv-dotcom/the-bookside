@@ -258,7 +258,7 @@ function Formulario({ inicial }: { inicial: Rascunho }) {
                   />
                 </span>
                 <span className="mt-1.5 block font-accent text-xs italic text-cinza">
-                  é por ele que as amigas te encontram.
+                  é por ele que os amigos te encontram.
                 </span>
               </label>
             </div>

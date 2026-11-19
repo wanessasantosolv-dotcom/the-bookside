@@ -140,7 +140,7 @@ export default function PerfilPage() {
             >
               {arquetipo
                 ? `♡ ${arquetipo.nome.replace(/^a /, "")} · ${tema.nome}`
-                : "✧ descubra que tipo de leitora você é · fazer o teste →"}
+                : "✧ descubra seu tipo de leitora →"}
             </button>
           </div>
 

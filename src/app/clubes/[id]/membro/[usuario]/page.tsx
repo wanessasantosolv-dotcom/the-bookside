@@ -121,7 +121,7 @@ export default function MembroPage() {
             @{pessoa.usuario}
           </Link>{" "}
           · {numeros.seguidores}{" "}
-          {numeros.seguidores === 1 ? "seguidora" : "seguidores"} ·{" "}
+          {numeros.seguidores === 1 ? "seguidor" : "seguidores"} ·{" "}
           {numeros.seguindo} seguindo
         </p>
         {p.frase ? (

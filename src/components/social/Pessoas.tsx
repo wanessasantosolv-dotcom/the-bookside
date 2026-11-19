@@ -347,7 +347,7 @@ export function MeusSeguidores({
     <span className={`flex justify-center gap-3 ${className}`}>
       <Link href={`/u/${usuario}/seguidores`} className="hover:underline">
         <b className="font-semibold">{n.seguidores}</b>{" "}
-        {n.seguidores === 1 ? "seguidora" : "seguidores"}
+        {n.seguidores === 1 ? "seguidor" : "seguidores"}
       </Link>
       <Link
         href={`/u/${usuario}/seguidores?aba=seguindo`}

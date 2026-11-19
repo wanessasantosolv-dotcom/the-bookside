@@ -36,7 +36,7 @@ function Lista() {
       <div className="px-6 pt-4 lg:px-0">
         <Vazio
           titulo="nada de novo por aqui ainda"
-          texto="quando suas amigas curtirem, comentarem, seguirem você ou seu clube agendar algo, aparece aqui."
+          texto="quando seus amigos curtirem, comentarem, seguirem você ou seu clube agendar algo, aparece aqui."
           acao={{ href: "/clubes", rotulo: "ver os clubes ♡" }}
         />
       </div>

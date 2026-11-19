@@ -205,7 +205,7 @@ export function ComConta({
       <div className="px-6 pt-4 lg:px-0">
         <Vazio
           titulo="isso precisa de uma conta"
-          texto="amigas, clubes e comentários ficam na nuvem. o app está no modo local, só neste navegador."
+          texto="amigos, clubes e comentários ficam na nuvem. o app está no modo local, só neste navegador."
           acao={{ href: "/perfil/configuracoes", rotulo: "ver configurações" }}
         />
       </div>
@@ -236,7 +236,7 @@ export function ErroOuFalta({
       <div className="px-6 pt-4 lg:px-0">
         <Vazio
           titulo="falta um passo no banco"
-          texto="as tabelas de amigas e clubes ainda não foram criadas no Supabase. rode o arquivo supabase/social.sql no SQL Editor."
+          texto="as tabelas de amigos e clubes ainda não foram criadas no Supabase. rode o arquivo supabase/social.sql no SQL Editor."
         />
       </div>
     );

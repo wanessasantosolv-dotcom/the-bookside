@@ -47,7 +47,7 @@ function Resultados({ termo }: { termo: string }) {
         <p className="py-8 text-center font-accent text-sm italic text-cinza">ninguém com esse nome ou @usuário ainda.</p>
       ) : (
         <div className="mt-3">
-          <Vazio titulo="ainda não tem ninguém por aqui" texto="chame suas amigas para o the bookside e procure pelo @usuário delas." />
+          <Vazio titulo="ainda não tem ninguém por aqui" texto="chame seus amigos para o the bookside e procure pelo @usuário deles." />
         </div>
       )}
       <p className="py-8 text-center font-accent text-[13px] italic text-cinza">procure pelo @usuário pra achar direto ✦</p>
