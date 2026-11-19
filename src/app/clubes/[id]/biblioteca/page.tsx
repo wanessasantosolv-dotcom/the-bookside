@@ -122,6 +122,7 @@ export default function BibliotecaPage() {
       paginas: l.livro.paginas,
       href: `${base}/livro/${l.id}`,
       legenda: quemTrouxe(l, membros, eu),
+      segurar: moderadora ? () => excluir(l) : undefined,
       acao:
         moderadora && editando ? (
           <button

@@ -5,7 +5,7 @@
  * clube: prateleiras, leque de capas e estante de pé (lombadas).
  */
 import Link from "next/link";
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { CapaAuto } from "@/components/CapaAuto";
 import { corDoLivro } from "@/lib/cores";
 
@@ -30,6 +30,8 @@ export type ItemVitrine = {
   legenda?: ReactNode;
   /** botãozinho no canto da capa (ex.: tirar do clube) */
   acao?: ReactNode;
+  /** atalho: segurar a capa por um instante (ex.: remover sem precisar abrir o modo de editar) */
+  segurar?: () => void;
 };
 
 /** mostra as 3 opções de visualização de uma vez, com a ativa destacada em bordô. */
@@ -77,6 +79,24 @@ export function PrateleiraCapas({
   maisHref?: string;
   maisRotulo?: string;
 }) {
+  // atalho de segurar a capa: um temporizador por livro, cancelado se soltar/arrastar antes da hora
+  const temporizadores = useRef<Record<string, ReturnType<typeof setTimeout>>>(
+    {},
+  );
+  const segurou = useRef<Record<string, boolean>>({});
+
+  function iniciarToque(item: ItemVitrine) {
+    if (!item.segurar) return;
+    segurou.current[item.id] = false;
+    temporizadores.current[item.id] = setTimeout(() => {
+      segurou.current[item.id] = true;
+      item.segurar?.();
+    }, 480);
+  }
+  function cancelarToque(id: string) {
+    clearTimeout(temporizadores.current[id]);
+  }
+
   return (
     <div className="relative">
       <ul className="flex items-end gap-3 overflow-x-auto px-0.5 pb-[3px] [scrollbar-width:none] lg:gap-4">
@@ -84,8 +104,21 @@ export function PrateleiraCapas({
           <li key={l.id} className="relative w-[74px] flex-none lg:w-[104px]">
             <Link
               href={l.href ?? `/livro/${l.id}`}
-              className="block"
+              className={`block select-none ${l.segurar ? "transition-transform active:scale-[.94]" : ""}`}
               title={l.titulo}
+              onPointerDown={() => iniciarToque(l)}
+              onPointerUp={() => cancelarToque(l.id)}
+              onPointerLeave={() => cancelarToque(l.id)}
+              onPointerCancel={() => cancelarToque(l.id)}
+              onContextMenu={(e) => {
+                if (l.segurar) e.preventDefault();
+              }}
+              onClick={(e) => {
+                if (segurou.current[l.id]) {
+                  e.preventDefault();
+                  segurou.current[l.id] = false;
+                }
+              }}
             >
               <CapaAuto livro={l} className="w-full" />
             </Link>
