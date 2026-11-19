@@ -37,7 +37,7 @@ export function NumerosShell({
   const frase = usePerfil((s) => s.frase);
   const capa = usePerfil((s) => s.capa);
   const capaImagem = usePerfil((s) => s.capaImagem);
-  if (!hidratado) return <AppShell aba="numeros">{null}</AppShell>;
+  if (!hidratado) return <AppShell aba="perfil">{null}</AppShell>;
   const n = calcularNumeros(livros, meta);
   const totalVidaToda = livros.filter((l) => l.status === "lido").length;
   const anoInicio = livros.reduce<number | null>((min, l) => {
@@ -47,7 +47,7 @@ export function NumerosShell({
   }, null);
 
   return (
-    <AppShell aba="numeros">
+    <AppShell aba="perfil">
       <NumerosWeb
         n={n}
         nome={nome}

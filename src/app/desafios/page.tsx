@@ -262,7 +262,7 @@ function Lista() {
 
 export default function DesafiosPage() {
   return (
-    <AppShell aba="numeros">
+    <AppShell aba="perfil">
       <div className="flex flex-1 flex-col px-6 pt-2 pb-10 lg:bg-jornal lg:px-12 lg:pt-8">
         <div className="mx-auto w-full max-w-[1000px]">
           <Voltar

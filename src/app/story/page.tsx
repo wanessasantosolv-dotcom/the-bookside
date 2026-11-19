@@ -356,7 +356,7 @@ function BotaoCompartilhar({
 export default function StoryPage() {
   const hidratado = useHidratado();
   return (
-    <AppShell aba="numeros">
+    <AppShell aba="perfil">
       {hidratado ? (
         <Suspense fallback={null}>
           <Conteudo />

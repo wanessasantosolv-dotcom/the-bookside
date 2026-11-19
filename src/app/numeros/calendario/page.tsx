@@ -60,7 +60,7 @@ export default function CalendarioPage() {
     [livros],
   );
 
-  if (!hidratado) return <AppShell aba="numeros">{null}</AppShell>;
+  if (!hidratado) return <AppShell aba="perfil">{null}</AppShell>;
 
   const ano = ref.getFullYear();
   const mes = ref.getMonth();
@@ -104,7 +104,7 @@ export default function CalendarioPage() {
     setRef((r) => new Date(r.getFullYear(), r.getMonth() + delta, 1));
 
   return (
-    <AppShell aba="numeros">
+    <AppShell aba="perfil">
       <div className="flex flex-1 flex-col px-4 pt-2 pb-10 sm:px-6 lg:bg-jornal lg:px-12 lg:pt-8">
         <div className="mx-auto w-full max-w-[760px]">
           <Voltar

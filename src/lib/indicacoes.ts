@@ -210,6 +210,72 @@ function intercalar(fontes: Indicacao[][], max = 40) {
   return lista;
 }
 
+/**
+ * Indicações da IA (Gemini, pela rota do app): ela escolhe títulos pelo gosto da
+ * pessoa; o app acha cada um no catálogo (capa, edição em português).
+ */
+async function sugestoesDaIA(
+  livros: LivroSalvo[],
+  gostos: string[],
+  tipo: { id: string; nome: string } | null,
+): Promise<Indicacao[]> {
+  if (!supabase) return [];
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  if (!token) return [];
+  const amados = livros
+    .filter(
+      (l) =>
+        (l.nota ?? 0) >= 4 ||
+        l.amei ||
+        l.reacao === "favoritado" ||
+        l.reacao === "adorei",
+    )
+    .slice(0, 15)
+    .map((l) => `${l.titulo} (${l.autor})`);
+  const naoCurtiu = livros
+    .filter(
+      (l) =>
+        (l.nota && l.nota <= 2) ||
+        l.reacao === "nao" ||
+        l.status === "abandonado",
+    )
+    .slice(0, 8)
+    .map((l) => `${l.titulo} (${l.autor})`);
+  const r = await fetch("/api/ia/sugestoes", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      amados,
+      naoCurtiu,
+      tenho: livros.slice(0, 60).map((l) => l.titulo),
+      generos: generosQueLe(livros, gostos).slice(0, 6),
+      tipo: tipo?.nome,
+    }),
+  });
+  if (!r.ok) return [];
+  const { livros: sugeridos = [] } = (await r.json()) as {
+    livros?: { titulo: string; autor: string; motivo: string }[];
+  };
+  const achados = await Promise.all(
+    sugeridos.slice(0, 10).map((s) =>
+      livrosDoGoogle(
+        `intitle:"${s.titulo}" inauthor:"${s.autor.split(" ").pop()}"`,
+        "pt",
+      )
+        .then((ls) => ls.find((x) => x.capa))
+        .then((x): Indicacao | null =>
+          x ? { ...x, motivo: `✦ ia · ${s.motivo || "pelo seu gosto"}` } : null,
+        )
+        .catch(() => null),
+    ),
+  );
+  return achados.filter((x): x is Indicacao => !!x);
+}
+
 async function montar(
   livros: LivroSalvo[],
   favoritos: string[],
@@ -223,6 +289,7 @@ async function montar(
     : ["romance", "suspense"];
 
   const fontes = await Promise.all([
+    sugestoesDaIA(livros, gostos, tipo).catch(() => [] as Indicacao[]),
     ...autoras.map((a) =>
       buscarPt(`inauthor:"${a}"`, `porque você gosta de ${a}`),
     ),

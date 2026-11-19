@@ -13,9 +13,7 @@ const descricoes: Record<Aba, string> = {
     "descobrir: recomendações pensadas pra você e os lançamentos do momento.",
   clubes:
     "clubes: leia acompanhada, vote no próximo livro e troque fichas com a turma.",
-  numeros:
-    "jornada: acompanhe quantos livros você já leu e seus números ao longo do ano.",
-  perfil: "perfil: sua estante em destaque, favoritos e configurações da conta.",
+  perfil: "perfil: seus favoritos, a sua jornada de leitura e as resenhas — tudo em abas.",
 };
 
 /**

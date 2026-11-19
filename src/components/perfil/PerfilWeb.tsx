@@ -244,7 +244,12 @@ export function PerfilWeb({
         ) : (
           <>
             <Link
-              href={href.numeros}
+              href={outra ? href.numeros : "/perfil?aba=jornada"}
+              onClick={(e) => {
+                if (outra || !onAba) return;
+                e.preventDefault();
+                onAba("jornada");
+              }}
               aria-label={outra ? "ver os lidos" : "ver sua jornada"}
               className="mb-10 grid grid-cols-4 border-y border-fio"
             >

@@ -253,7 +253,11 @@ export default function PerfilPage() {
             <>
               {/* números */}
               <Link
-                href="/numeros"
+                href="/perfil?aba=jornada"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setAba("jornada");
+                }}
                 aria-label="ver sua jornada"
                 className="relative mt-5 flex border-y border-[var(--linha)]"
               >

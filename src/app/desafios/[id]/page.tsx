@@ -314,7 +314,7 @@ function Detalhe() {
 
 export default function DesafioPage() {
   return (
-    <AppShell aba="numeros">
+    <AppShell aba="perfil">
       <div className="flex flex-1 flex-col px-6 pt-2 pb-10 lg:bg-jornal lg:px-12 lg:pt-8">
         <div className="w-full max-w-[760px]">
           <Voltar
