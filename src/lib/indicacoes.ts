@@ -143,53 +143,62 @@ async function emAltaNoApp(): Promise<Indicacao[]> {
   );
 }
 
-async function montar(
-  livros: LivroSalvo[],
-  favoritos: string[],
-  gostos: string[],
-): Promise<Indicacao[]> {
-  const autoras = autorasQueAma(livros, favoritos).slice(0, 3);
-  const generos = generosQueLe(livros, gostos)
-    .map((g) => ({ g, assunto: assuntoDe(g) }))
-    .filter((x): x is { g: string; assunto: string } => !!x.assunto)
-    .slice(0, 4);
-  const assuntos = generos.length
-    ? sortear(generos).slice(0, 2)
-    : [
-        { g: "romance", assunto: "romance" },
-        { g: "suspense", assunto: "thrillers" },
-      ];
-  const google = (q: string, motivo: string, novos = false) =>
-    livrosDoGoogle(q, "pt", undefined, {
-      novos,
-      inicio: novos ? 0 : Math.floor(Math.random() * 3) * 10,
-    })
-      .then((l) =>
-        l
-          .filter((x) => x.capa && emPortugues(x))
-          .map((x) => ({ ...x, motivo })),
-      )
-      .catch(() => [] as Indicacao[]);
+/** termos em português para cada gênero: trazem bem mais edições brasileiras que o "subject" do Google */
+const TERMO_PT: Record<string, string> = {
+  romance: "romance contemporâneo",
+  suspense: "suspense psicológico",
+  "ficção científica": "ficção científica",
+  "não ficção": "não ficção",
+  poesia: "poesia",
+  fantasia: "fantasia",
+  drama: "drama",
+  clássicos: "clássicos da literatura",
+  humor: "comédia romântica",
+  "histórias de família": "saga familiar",
+  biografia: "biografia",
+  terror: "terror",
+  thrillers: "thriller",
+  mystery: "romance policial",
+  fiction: "romance",
+};
+const termoPt = (g: string) => TERMO_PT[g.toLowerCase()] ?? g.toLowerCase();
 
-  const fontes = await Promise.all([
-    ...autoras.map((a) =>
-      google(`inauthor:"${a}"`, `porque você gosta de ${a}`),
-    ),
-    emAltaNoApp().catch(() => [] as Indicacao[]),
-    ...assuntos.map((x) =>
-      google(`subject:"${x.assunto}"`, `do seu gosto · ${x.g}`),
-    ),
-    ...assuntos
-      .slice(0, 1)
-      .map((x) =>
-        google(`subject:"${x.assunto}"`, `lançamento · ${x.g}`, true),
-      ),
-  ]);
+const buscarPt = (q: string, motivo: string, novos = false) =>
+  livrosDoGoogle(q, "pt", undefined, {
+    novos,
+    inicio: novos ? 0 : Math.floor(Math.random() * 3) * 10,
+  })
+    .then((l) =>
+      l.filter((x) => x.capa && emPortugues(x)).map((x) => ({ ...x, motivo })),
+    )
+    .catch(() => [] as Indicacao[]);
 
-  // intercala as fontes, sem repetidos
+/** um gênero: pelo assunto do Google e pelo termo em português, juntos */
+const porGenero = (g: string, motivo: string, novos = false) =>
+  Promise.all([
+    assuntoDe(g) ? buscarPt(`subject:"${assuntoDe(g)}"`, motivo, novos) : [],
+    buscarPt(termoPt(g), motivo, novos),
+  ]).then(([a, b]) => intercalar([b, a]));
+
+/** os mais lidos/em alta no mundo (Open Library), na edição em português */
+async function tendencias(periodo: "ano" | "mes", motivo: string) {
+  try {
+    const r = await fetch(`/api/tendencias?periodo=${periodo}`);
+    if (!r.ok) return [] as Indicacao[];
+    const { livros = [] } = (await r.json()) as { livros?: LivroBusca[] };
+    return livros.map(
+      (l): Indicacao => ({ ...l, cor: corDoLivro(l.id), motivo }),
+    );
+  } catch {
+    return [] as Indicacao[];
+  }
+}
+
+/** junta listas alternando entre elas, sem títulos repetidos */
+function intercalar(fontes: Indicacao[][], max = 40) {
   const vistos = new Set<string>();
   const lista: Indicacao[] = [];
-  for (let i = 0; lista.length < 24 && fontes.some((f) => f[i]); i++)
+  for (let i = 0; lista.length < max && fontes.some((f) => f[i]); i++)
     for (const f of fontes) {
       const x = f[i];
       if (x && !vistos.has(chaveTitulo(x.titulo))) {
@@ -197,6 +206,36 @@ async function montar(
         lista.push(x);
       }
     }
+  return lista;
+}
+
+async function montar(
+  livros: LivroSalvo[],
+  favoritos: string[],
+  gostos: string[],
+): Promise<Indicacao[]> {
+  const autoras = autorasQueAma(livros, favoritos).slice(0, 3);
+  const generos = generosQueLe(livros, gostos).slice(0, 4);
+  const assuntos = generos.length
+    ? sortear(generos).slice(0, 2)
+    : ["romance", "suspense"];
+
+  const fontes = await Promise.all([
+    ...autoras.map((a) =>
+      buscarPt(`inauthor:"${a}"`, `porque você gosta de ${a}`),
+    ),
+    emAltaNoApp().catch(() => [] as Indicacao[]),
+    tendencias("mes", "em alta no mundo").then(sortear),
+    ...assuntos.map((g) => porGenero(g, `do seu gosto · ${g}`)),
+    ...assuntos.slice(0, 1).map((g) => porGenero(g, `lançamento · ${g}`, true)),
+    tendencias(
+      "ano",
+      `entre os mais lidos de ${new Date().getFullYear()}`,
+    ).then(sortear),
+  ]);
+
+  // intercala as fontes, sem repetidos
+  const lista = intercalar(fontes, 30);
   lembrarLivros(lista);
   return lista;
 }
@@ -283,25 +322,15 @@ export type Secao = {
 
 /** o tipo de leitora (teste) → os assuntos para procurar */
 const ASSUNTOS_DO_TIPO: Record<string, string[]> = {
-  coruja: ["thrillers", "adventure"],
-  detetive: ["mystery", "thrillers"],
+  coruja: ["thriller", "aventura"],
+  detetive: ["romance policial", "mistério"],
   coracao: ["romance", "drama"],
-  viajante: ["fantasy", "science fiction"],
-  guardia: ["classics", "historical fiction"],
-  curiosa: ["literary fiction", "biography"],
-  aconchego: ["romance", "humor"],
-  entrelinhas: ["poetry", "literary fiction"],
+  viajante: ["fantasia", "ficção científica"],
+  guardia: ["clássicos da literatura", "romance histórico"],
+  curiosa: ["literatura contemporânea", "biografia"],
+  aconchego: ["comédia romântica", "romance"],
+  entrelinhas: ["poesia", "literatura brasileira"],
 };
-
-const google = (q: string, motivo: string, novos = false) =>
-  livrosDoGoogle(q, "pt", undefined, {
-    novos,
-    inicio: novos ? 0 : Math.floor(Math.random() * 3) * 10,
-  })
-    .then((l) =>
-      l.filter((x) => x.capa && emPortugues(x)).map((x) => ({ ...x, motivo })),
-    )
-    .catch(() => [] as Indicacao[]);
 
 /** livros mais lidos no the bookside neste ano (marcados como lidos em {ano}) */
 async function maisLidosDoAno(ano: number): Promise<Indicacao[]> {
@@ -378,32 +407,37 @@ export async function secoesDoDescobrir(estado: {
 }): Promise<Secao[]> {
   const ano = new Date().getFullYear();
   const autoras = autorasQueAma(estado.livros, estado.favoritos).slice(0, 2);
-  const generos = generosQueLe(estado.livros, estado.gostos)
-    .map((g) => ({ g, assunto: assuntoDe(g) }))
-    .filter((x): x is { g: string; assunto: string } => !!x.assunto)
-    .slice(0, 2);
+  const generos = generosQueLe(estado.livros, estado.gostos).slice(0, 2);
   const assuntosDoTipo = estado.tipo
     ? (ASSUNTOS_DO_TIPO[estado.tipo.id] ?? [])
     : [];
+  const motivoTipo = estado.tipo
+    ? `pra ${estado.tipo.nome.replace(/^a /, "")}`
+    : "";
 
-  const [doTipo, ...resto] = await Promise.all([
+  const [
+    doTipo,
+    maisLidosApp,
+    maisLidosMundo,
+    emAltaApp,
+    emAltaMundo,
+    ...outros
+  ] = await Promise.all([
     estado.tipo
       ? Promise.all([
           livrosDoTipo(estado.tipo.livros),
-          ...assuntosDoTipo.map((a) =>
-            google(
-              `subject:"${a}"`,
-              `pra ${estado.tipo!.nome.replace(/^a /, "")}`,
-            ),
-          ),
-        ]).then((ls) => ls.flat())
+          ...assuntosDoTipo.map((a) => porGenero(a, motivoTipo)),
+        ]).then((ls) => [...ls[0], ...intercalar(ls.slice(1))])
       : Promise.resolve([] as Indicacao[]),
     maisLidosDoAno(ano).catch(() => [] as Indicacao[]),
+    tendencias("ano", `entre os mais lidos de ${ano}`),
     emAltaNoApp().catch(() => [] as Indicacao[]),
-    ...autoras.map((a) => google(`inauthor:"${a}"`, `de ${a}`)),
-    ...generos.map((x) => google(`subject:"${x.assunto}"`, x.g, true)),
+    tendencias("mes", "em alta no mundo"),
+    ...autoras.map((a) => buscarPt(`inauthor:"${a}"`, `de ${a}`)),
+    ...generos.map((g) => porGenero(g, g, true)),
   ]);
-  const [maisLidos, emAlta, ...outros] = resto;
+  const maisLidos = intercalar([maisLidosApp, maisLidosMundo]);
+  const emAlta = intercalar([emAltaApp, emAltaMundo]);
   const daAutora = outros.slice(0, autoras.length);
   const lancamentos = outros.slice(autoras.length);
 
@@ -418,13 +452,13 @@ export async function secoesDoDescobrir(estado: {
   secoes.push({
     id: "ano",
     titulo: `os mais lidos de ${ano}`,
-    sub: "o que mais gente terminou este ano no the bookside",
+    sub: "os mais lidos do ano no mundo e no the bookside, em edição brasileira",
     livros: maisLidos,
   });
   secoes.push({
     id: "alta",
     titulo: "em alta agora",
-    sub: "o que está entrando nas estantes nos últimos 60 dias",
+    sub: "o que está sendo mais lido este mês",
     livros: emAlta,
   });
   autoras.forEach((a, i) =>
@@ -434,10 +468,10 @@ export async function secoesDoDescobrir(estado: {
       livros: daAutora[i] ?? [],
     }),
   );
-  generos.forEach((x, i) =>
+  generos.forEach((x: string, i) =>
     secoes.push({
       id: `lancamentos-${i}`,
-      titulo: `lançamentos em ${x.g}`,
+      titulo: `lançamentos em ${x}`,
       livros: lancamentos[i] ?? [],
     }),
   );

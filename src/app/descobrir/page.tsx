@@ -235,10 +235,14 @@ function UmaPorVez() {
       ) : (
         <div className="py-6 text-center sm:text-left">
           <p className="font-display text-[22px] leading-tight font-semibold italic text-bordo lg:font-revista lg:font-normal">
-            você viu todas desta leva ✦
+            {fila.length
+              ? "você viu todas desta leva ✦"
+              : "não achei indicações novas agora"}
           </p>
           <p className="mt-1.5 font-accent text-sm italic text-cinza">
-            os que você passou não voltam. quer mais?
+            {fila.length
+              ? "os que você passou não voltam. quer mais?"
+              : "pode ser a internet ou o limite de buscas do dia. tente outra leva — ou veja as prateleiras aqui embaixo."}
           </p>
           <button
             type="button"
@@ -347,9 +351,7 @@ function Prateleira({
         <h2 className="font-display text-[22px] leading-tight font-semibold italic text-bordo lg:font-revista lg:text-[24px] lg:font-normal lg:text-tinta">
           {s.titulo}
         </h2>
-        {s.sub ? (
-          <p className="mt-0.5 text-xs text-cinza">{s.sub}</p>
-        ) : null}
+        {s.sub ? <p className="mt-0.5 text-xs text-cinza">{s.sub}</p> : null}
       </div>
       <ul className="mt-4 flex gap-4 overflow-x-auto px-6 pb-2 [scrollbar-width:thin] lg:px-0">
         {lista.map((l) => {
