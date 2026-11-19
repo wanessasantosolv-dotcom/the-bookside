@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import type { CSSProperties } from "react";
 import { CapaLivro } from "@/components/CapaLivro";
 import { AppShell } from "@/components/AppShell";
-import { ConviteTeste } from "@/components/ConviteTeste";
 import { PerfilWeb } from "@/components/perfil/PerfilWeb";
 import { MeusSeguidores } from "@/components/social/Pessoas";
 import { useHidratado } from "@/components/PerfilHidratacao";
@@ -133,18 +132,15 @@ export default function PerfilPage() {
             </p>
           ) : null}
 
-          {!arquetipo ? (
-            <div className="mx-4 mt-5">
-              <ConviteTeste />
-            </div>
-          ) : null}
-          <div className={`mt-4 justify-center ${arquetipo ? "flex" : "hidden"}`}>
+          <div className="mt-4 flex justify-center">
             <button
               type="button"
               onClick={abrirResultado}
               className="flex min-h-7 items-center rounded-pill border border-[var(--acc)] px-4 py-1 text-[10px] font-semibold tracking-[.1em] text-[var(--acc)] uppercase"
             >
-              {arquetipo ? `♡ ${arquetipo.nome.replace(/^a /, "")} · ${tema.nome}` : "✧ descobrir meu bookside"}
+              {arquetipo
+                ? `♡ ${arquetipo.nome.replace(/^a /, "")} · ${tema.nome}`
+                : "✧ descubra que tipo de leitora você é · fazer o teste →"}
             </button>
           </div>
 
