@@ -11,6 +11,7 @@ import { usePerfil } from "@/lib/perfil-store";
 const abas = [
   { id: "ano", href: "/numeros", rotulo: "o ano" },
   { id: "generos", href: "/numeros/generos", rotulo: "gêneros" },
+  { id: "calendario", href: "/numeros/calendario", rotulo: "calendário" },
   { id: "retro", href: "/numeros/retrospectiva", rotulo: "retrospectiva" },
 ] as const;
 
@@ -51,7 +52,7 @@ export function NumerosShell({
         n={n}
         nome={nome}
         frase={frase}
-        aba={aba}
+        aba={aba === "calendario" ? "ano" : aba}
         totalVidaToda={totalVidaToda}
         anoInicio={anoInicio}
       />

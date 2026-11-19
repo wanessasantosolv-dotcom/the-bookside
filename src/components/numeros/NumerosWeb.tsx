@@ -223,6 +223,21 @@ function ConteudoUnificado({
           </p>
         )}
       </section>
+      <Link
+        href="/numeros/calendario"
+        className="mb-8 flex items-center justify-between rounded-[4px] border border-linha px-6 py-4 hover:border-bordo"
+      >
+        <span>
+          <span className="block font-revista text-xl text-ameixa italic">
+            calendário de leitura
+          </span>
+          <span className="block text-xs text-cinza">
+            as capas dos livros em cada dia do mês
+          </span>
+        </span>
+        <span className="text-sm font-semibold text-bordo">ver →</span>
+      </Link>
+
       <MesEmRevista web />
 
       <ExtremosDoAno n={n} web />
