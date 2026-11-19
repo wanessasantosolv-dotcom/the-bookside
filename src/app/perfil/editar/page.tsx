@@ -6,11 +6,12 @@ import { TelaApp } from "@/components/AppShell";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { AjustarFoto } from "@/components/AjustarFoto";
+import { CampoUsuario } from "@/components/CampoUsuario";
+import type { SituacaoUsuario } from "@/lib/usuario";
 import { useHidratado } from "@/components/PerfilHidratacao";
 import { metas, temas } from "@/lib/dados";
 import { reduzirImagem } from "@/lib/imagem";
 import {
-  sugerirUsuario,
   usePerfil,
   type PadraoCapa,
   type Perfil,
@@ -49,7 +50,15 @@ function Formulario({ inicial }: { inicial: Rascunho }) {
   const [capaParaAjustar, setCapaParaAjustar] = useState<string | null>(null);
   const capaRef = useRef<HTMLInputElement>(null);
   const mudar = (d: Partial<Rascunho>) => setR((x) => ({ ...x, ...d }));
-  const valido = r.nome.trim() && r.usuario.trim();
+  const [situacaoUsuario, setSituacaoUsuario] =
+    useState<SituacaoUsuario>("verificando");
+  const usuarioAntigo = inicial.usuario;
+  // o @ só bloqueia se for inválido ou de outra pessoa
+  const usuarioOk =
+    r.usuario === usuarioAntigo ||
+    situacaoUsuario === "ok" ||
+    situacaoUsuario === "sem_internet";
+  const valido = r.nome.trim() && r.usuario.trim() && usuarioOk;
 
   function salvar() {
     if (!valido) return;
@@ -250,25 +259,26 @@ function Formulario({ inicial }: { inicial: Rascunho }) {
                   className={`${caixa} font-display text-[21px] font-semibold italic`}
                 />
               </label>
-              <label className="block min-w-0">
+              <div className="min-w-0">
                 <span className={rotulo}>usuário</span>
-                <span
-                  className={`${caixa} flex items-center text-[15px] font-medium focus-within:border-bordo focus-within:ring-1 focus-within:ring-bordo`}
-                >
-                  <span className="text-bordo">@</span>
-                  <input
-                    value={r.usuario}
-                    autoCapitalize="none"
-                    onChange={(e) =>
-                      mudar({ usuario: sugerirUsuario(e.target.value) || "" })
-                    }
-                    className="w-full min-w-0 bg-transparent outline-none"
-                  />
-                </span>
-                <span className="mt-1.5 block font-accent text-xs italic text-cinza">
-                  é por ele que os amigos te encontram.
-                </span>
-              </label>
+                <CampoUsuario
+                  valor={r.usuario}
+                  nome={r.nome}
+                  onChange={(u) => mudar({ usuario: u })}
+                  onSituacao={setSituacaoUsuario}
+                />
+                {r.usuario !== usuarioAntigo ? (
+                  <span className="mt-1 block text-[11px] text-cinza">
+                    seu link vai mudar para{" "}
+                    <b className="text-ameixa">/u/{r.usuario || "…"}</b> — e
+                    você passa a entrar com o @ novo.
+                  </span>
+                ) : (
+                  <span className="mt-1 block text-[11px] text-cinza">
+                    seu perfil: <b className="text-ameixa">/u/{r.usuario}</b>
+                  </span>
+                )}
+              </div>
             </div>
 
             <label className="mt-4 block">

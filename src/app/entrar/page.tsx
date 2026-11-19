@@ -9,6 +9,7 @@ import { Botao } from "@/components/ui/Botao";
 import { usePerfil } from "@/lib/perfil-store";
 import { mensagemDeErro, supabase } from "@/lib/supabase";
 import { carregarPerfil } from "@/lib/nuvem";
+import { usuarioValido } from "@/lib/usuario";
 
 const estrelas = [
   { src: "/brand/logo-estrela-1.png", origem: "10.07% 14.07%", atraso: "0s" },
@@ -75,12 +76,35 @@ export default function EntrarPage() {
 
   async function entrar(e: FormEvent) {
     e.preventDefault();
-    if (!/^\S+@\S+\.\S+$/.test(email)) return setErro("confira o e-mail.");
+    const texto = email.trim();
+    const ehEmail = /^\S+@\S+\.\S+$/.test(texto);
+    const usuario = texto.replace(/^@/, "").toLowerCase();
+    if (!ehEmail && !usuarioValido(usuario))
+      return setErro("confira o e-mail ou o @usuário.");
     if (senha.length < 6) return setErro("a senha tem pelo menos 6 caracteres.");
     setErro(null);
     setEnviando(true);
     if (supabase) {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password: senha });
+      // com o @: o banco confere a senha e devolve o e-mail da conta
+      let emailDaConta = texto;
+      if (!ehEmail) {
+        const r = await supabase.rpc("email_para_entrar", {
+          p_usuario: usuario,
+          p_senha: senha,
+        });
+        if (r.error || !r.data) {
+          setEnviando(false);
+          return setErro(
+            /muitas tentativas/.test(r.error?.message ?? "")
+              ? "muitas tentativas seguidas. espere uns minutos e tente de novo."
+              : r.error?.code === "PGRST202"
+                ? "entrar com o @ ainda não está ligado. use o e-mail por enquanto."
+                : "@usuário ou senha incorretos.",
+          );
+        }
+        emailDaConta = r.data as string;
+      }
+      const { data, error } = await supabase.auth.signInWithPassword({ email: emailDaConta, password: senha });
       if (error || !data.user) {
         setEnviando(false);
         return setErro(mensagemDeErro(error));
@@ -89,7 +113,7 @@ export default function EntrarPage() {
       return router.push(perfil.onboardingConcluido ? "/inicio" : "/criar-perfil/nome");
     }
     // modo local (sem Supabase configurado)
-    atualizar({ email });
+    atualizar({ email: texto });
     const concluido = usePerfil.getState().onboardingConcluido;
     router.push(concluido ? "/inicio" : "/criar-perfil/nome");
   }
@@ -116,12 +140,16 @@ export default function EntrarPage() {
 
           <form onSubmit={entrar} noValidate className="login-campos">
             <label className="mt-[18px] block">
-              <span className="eyebrow mb-1.5 block text-bordo">e-mail</span>
+              <span className="eyebrow mb-1.5 block text-bordo">
+                e-mail ou @usuário
+              </span>
               <input
-                type="email"
-                autoComplete="email"
-                inputMode="email"
-                placeholder="seu@email.com"
+                type="text"
+                autoComplete="username"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                placeholder="seu@email.com ou @seu.nome"
                 className={campo}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}

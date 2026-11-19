@@ -1,5 +1,7 @@
 "use client";
 
+import { usePerfil } from "@/lib/perfil-store";
+
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
@@ -73,6 +75,7 @@ export default function PessoasPage() {
               pessoas
             </span>
           </nav>
+          <MeuArroba />
           <div className="mt-4 px-6 lg:px-0">
             <label className="flex h-[52px] items-center gap-3 rounded-pill border border-linha bg-creme-quente px-5 focus-within:border-bordo">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7A6A6E" strokeWidth="1.9" strokeLinecap="round" aria-hidden>
@@ -97,5 +100,37 @@ export default function PessoasPage() {
         </div>
       </div>
     </AppShell>
+  );
+}
+
+/** "seu @ é @wane": para mandar aos amigos (copia o link do perfil) */
+function MeuArroba() {
+  const usuario = usePerfil((s) => s.usuario);
+  const [copiado, setCopiado] = useState(false);
+  if (!usuario) return null;
+  async function copiar() {
+    const link = `${window.location.origin}/u/${usuario}`;
+    try {
+      if (navigator.share) await navigator.share({ title: "the bookside", url: link });
+      else {
+        await navigator.clipboard.writeText(link);
+        setCopiado(true);
+        setTimeout(() => setCopiado(false), 2000);
+      }
+    } catch {
+      /* a pessoa cancelou */
+    }
+  }
+  return (
+    <p className="mt-3 flex flex-wrap items-center gap-x-2 px-6 text-[13px] text-cinza lg:px-0">
+      seu @ é <b className="font-semibold text-ameixa">@{usuario}</b>
+      <button
+        type="button"
+        onClick={copiar}
+        className="min-h-9 font-semibold text-bordo underline underline-offset-4"
+      >
+        {copiado ? "link copiado ✓" : "mandar para os amigos"}
+      </button>
+    </p>
   );
 }

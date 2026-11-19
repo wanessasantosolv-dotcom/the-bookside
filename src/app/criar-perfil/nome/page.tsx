@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { Passo } from "@/components/onboarding/Passo";
 import { BotaoLink } from "@/components/ui/Botao";
+import { CampoUsuario } from "@/components/CampoUsuario";
 import { sugerirUsuario, usePerfil } from "@/lib/perfil-store";
+import type { SituacaoUsuario } from "@/lib/usuario";
 
 export default function NomePage() {
   const nome = usePerfil((s) => s.nome);
@@ -12,7 +14,11 @@ export default function NomePage() {
   const [usuarioEditado, setUsuarioEditado] = useState(false);
 
   const usuarioMostrado = usuario || sugerirUsuario(nome);
-  const podeContinuar = nome.trim().length > 0 && usuarioMostrado.length > 0;
+  const [situacao, setSituacao] = useState<SituacaoUsuario>("verificando");
+  const podeContinuar =
+    nome.trim().length > 0 &&
+    usuarioMostrado.length > 0 &&
+    (situacao === "ok" || situacao === "sem_internet");
 
   return (
     <Passo
@@ -59,23 +65,20 @@ export default function NomePage() {
           />
         </label>
 
-        <label className="mt-5 block">
+        <div className="mt-5">
           <span className="eyebrow !text-[10px] text-cinza">usuário</span>
-          <span className="mt-2 flex items-center border-b border-linha focus-within:border-bordo">
-            <span className="text-base font-medium text-bordo">@</span>
-            <input
-              autoComplete="username"
-              autoCapitalize="none"
-              placeholder="seu.nome"
-              value={usuario}
-              onChange={(e) => {
-                setUsuarioEditado(true);
-                atualizar({ usuario: sugerirUsuario(e.target.value.replace(/^@/, "")) || e.target.value.toLowerCase() });
-              }}
-              className="h-10 w-full bg-transparent text-base font-medium text-ameixa outline-none placeholder:text-cinza"
-            />
-          </span>
-        </label>
+          <CampoUsuario
+            valor={usuarioMostrado}
+            nome={nome}
+            onChange={(u) => {
+              setUsuarioEditado(true);
+              atualizar({ usuario: u });
+            }}
+            onSituacao={setSituacao}
+            className="mt-2"
+            classeCaixa="flex h-10 items-center border-b border-linha text-base font-medium focus-within:border-bordo"
+          />
+        </div>
       </div>
     </Passo>
   );

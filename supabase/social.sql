@@ -493,3 +493,67 @@ language sql stable security invoker set search_path = public as $$
 $$;
 revoke all on function public.mais_lidos_do_ano(int) from anon, public;
 grant execute on function public.mais_lidos_do_ano(int) to authenticated;
+
+-- ───────── usuário (@) ─────────
+-- regras: 3 a 24 caracteres, letras minúsculas, números, ponto e sublinhado;
+-- começa e termina com letra ou número; sem ".." ; alguns nomes reservados.
+create or replace function public.usuario_valido(u text) returns boolean
+  language sql immutable as $$
+  select coalesce(u ~ '^[a-z0-9][a-z0-9._]{1,22}[a-z0-9]$' and u !~ '\.\.', false);
+$$;
+
+-- "ok" | "invalido" | "reservado" | "em_uso" (quem chama pode ser você mesma: o seu atual vale)
+create or replace function public.usuario_disponivel(p_usuario text) returns text
+  language plpgsql stable security definer set search_path = public as $$
+declare u text := lower(btrim(replace(coalesce(p_usuario, ''), '@', '')));
+begin
+  if not usuario_valido(u) then return 'invalido'; end if;
+  if u = any (array['admin', 'administrador', 'bookside', 'thebookside', 'the.bookside', 'suporte',
+                    'ajuda', 'entrar', 'perfil', 'clubes', 'clube', 'oficial', 'api', 'moderacao']) then
+    return 'reservado';
+  end if;
+  if exists (select 1 from perfis where lower(usuario) = u and id is distinct from auth.uid()) then
+    return 'em_uso';
+  end if;
+  return 'ok';
+end $$;
+grant execute on function public.usuario_disponivel(text) to anon, authenticated;
+
+-- o mesmo @ não pode existir com letras maiúsculas/minúsculas diferentes
+do $$ begin
+  create unique index if not exists perfis_usuario_minusculo on public.perfis (lower(usuario));
+exception when others then
+  raise notice 'há @ repetidos com maiúsculas diferentes; o índice fica para depois';
+end $$;
+
+-- entrar com o @: devolve o e-mail da conta só se a senha estiver certa
+-- (assim ninguém descobre o e-mail de outra pessoa pelo @). Limite de 8 tentativas por @ a cada 15 min.
+create table if not exists public.tentativas_login (
+  usuario text not null,
+  em timestamptz not null default now()
+);
+alter table public.tentativas_login enable row level security;
+revoke all on public.tentativas_login from anon, authenticated;
+
+create or replace function public.email_para_entrar(p_usuario text, p_senha text) returns text
+  language plpgsql volatile security definer set search_path = public, extensions, auth as $$
+declare
+  u text := lower(btrim(replace(coalesce(p_usuario, ''), '@', '')));
+  v_email text;
+  v_hash text;
+begin
+  delete from tentativas_login where em < now() - interval '1 day';
+  if (select count(*) from tentativas_login where usuario = u and em > now() - interval '15 minutes') >= 8 then
+    raise exception 'muitas tentativas, espere alguns minutos';
+  end if;
+  insert into tentativas_login (usuario) values (u);
+  select au.email, au.encrypted_password into v_email, v_hash
+    from auth.users au join public.perfis p on p.id = au.id
+   where lower(p.usuario) = u;
+  if v_email is null or v_hash is null or crypt(coalesce(p_senha, ''), v_hash) <> v_hash then
+    return null;
+  end if;
+  return v_email;
+end $$;
+revoke all on function public.email_para_entrar(text, text) from public;
+grant execute on function public.email_para_entrar(text, text) to anon, authenticated;
