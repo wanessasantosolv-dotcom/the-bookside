@@ -202,18 +202,19 @@ export default function CalendarioPage() {
                     </Link>
                   ) : lendo.length ? (
                     <div className="absolute inset-x-1 bottom-1 flex justify-center -space-x-2.5">
-                      {lendo.slice(0, 2).map((l) => (
+                      {lendo.slice(0, 2).map((l, i) => (
                         <Link
                           key={l.id}
                           href={`/livro/${l.id}`}
                           title={`lendo ${l.titulo}`}
                           className="w-[46%] max-w-[38px]"
+                          style={{ zIndex: lendo.length - i }}
                         >
                           <CapaLivro
                             titulo={l.titulo}
                             capa={l.capa}
                             cor={corDoLivro(l.id)}
-                            className="w-full opacity-80 [&>span:last-child]:hidden"
+                            className="w-full !shadow-[1px_0_0_rgba(249,245,238,.9),2px_4px_8px_-3px_rgba(43,20,32,.4)] [&>span:last-child]:hidden"
                           />
                         </Link>
                       ))}

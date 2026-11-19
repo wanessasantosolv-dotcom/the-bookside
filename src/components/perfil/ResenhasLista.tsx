@@ -90,7 +90,7 @@ export function ResenhasLista() {
               key={l.id}
               className="rounded-xl border border-linha bg-creme-quente p-4 lg:rounded-[6px] lg:p-5"
             >
-              <div className="flex gap-4">
+              <div className="flex items-start gap-4">
                 <Link href={`/livro/${l.id}`} className="flex-none">
                   <CapaLivro
                     titulo={l.titulo}

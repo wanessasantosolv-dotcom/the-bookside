@@ -113,7 +113,7 @@ function Linha({
   }
 
   return (
-    <li className="flex gap-3.5 py-3 first:pt-1 last:pb-0">
+    <li className="flex items-start gap-3.5 py-3 first:pt-1 last:pb-0">
       <Link
         href={`/livro/${l.id}`}
         className={`flex-none shadow-md shadow-ameixa/20 lg:rotate-0 lg:shadow-none ${indice % 2 === 0 ? "rotate-[-3deg]" : "rotate-[3deg]"}`}
