@@ -35,8 +35,6 @@ import {
   type PessoaResumo,
 } from "@/lib/social";
 
-type Filtro = "tudo" | "resenhas" | "listas" | "clubes";
-
 const iconeLink =
   "flex min-h-11 items-center gap-2 rounded-pill px-3 text-[13px] font-semibold text-bordo hover:bg-rosa-fundo";
 
@@ -444,7 +442,6 @@ function Destaques({
 }
 
 function Feed() {
-  const [filtro, setFiltro] = useState<Filtro>("tudo");
   const eu = useMeuId();
   const feed = useConsulta(async () => {
     const meusLendo = usePerfil
@@ -468,15 +465,7 @@ function Feed() {
   if (feed.erro)
     return <ErroOuFalta erro={feed.erro} onTentar={feed.recarregar} />;
   const { atividades, lendo, pessoas, mesmos } = feed.dados!;
-  const visiveis = atividades.filter((a) =>
-    filtro === "resenhas"
-      ? !!a.texto && a.tipo !== "progresso" && a.tipo !== "clube"
-      : filtro === "listas"
-        ? a.tipo === "quer"
-        : filtro === "clubes"
-          ? !!a.clube_id
-          : true,
-  );
+  const visiveis = atividades;
 
   const amigasLendo = lendo.length ? (
     <ul className="flex gap-4 overflow-x-auto pb-1">
@@ -518,39 +507,13 @@ function Feed() {
 
       <Destaques mesmos={mesmos} />
 
-      <div
-        className="mt-6 flex gap-1.5 px-6 lg:mt-0 lg:px-0"
-        role="group"
-        aria-label="filtrar o feed"
-      >
-        {(["tudo", "resenhas", "listas", "clubes"] as Filtro[]).map((f) => (
-          <button
-            key={f}
-            type="button"
-            aria-pressed={filtro === f}
-            onClick={() => setFiltro(f)}
-            className={`min-h-9 rounded-pill border px-3.5 text-[11px] font-semibold ${
-              filtro === f
-                ? "border-bordo bg-bordo text-creme"
-                : "border-bege bg-creme-quente text-ameixa lg:bg-transparent"
-            }`}
-          >
-            {f}
-          </button>
-        ))}
-      </div>
-
-      <div className="mt-4 space-y-3 px-6 lg:px-0">
+      <div className="mt-6 space-y-3 px-6 lg:mt-5 lg:px-0">
         {!atividades.length ? (
           <Vazio
             titulo="suas leituras e as dos amigos aparecem aqui"
             texto="marque o que está lendo ou avalie um livro, e siga quem você conhece para ver o que estão lendo."
             acao={{ href: "/pessoas", rotulo: "buscar pessoas" }}
           />
-        ) : !visiveis.length ? (
-          <p className="py-6 text-center font-accent text-sm italic text-cinza">
-            nada por aqui com esse filtro.
-          </p>
         ) : (
           agrupar(visiveis).map((item) =>
             item.tipo === "grupo" ? (
@@ -629,8 +592,8 @@ export default function InicioPage() {
 
         <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start lg:gap-10">
           <div>
-            {/* ===== hoje: citação + lendo num card só (celular e computador) ===== */}
-            <div className="relative mx-6 mt-3 animate-subir overflow-hidden rounded-xl bg-gradient-to-br from-bordo to-bordo-escuro px-[18px] py-4 text-creme lg:mx-0 lg:mt-0 lg:mb-7 lg:rounded-[4px] lg:px-8 lg:py-7">
+            {/* ===== citação do dia (celular e computador) ===== */}
+            <figure className="relative mx-6 mt-3 animate-subir overflow-hidden rounded-xl bg-gradient-to-br from-bordo to-bordo-escuro px-[18px] py-4 text-creme lg:mx-0 lg:mt-0 lg:rounded-[4px] lg:px-8 lg:py-7">
               <span
                 aria-hidden
                 className="pointer-events-none absolute -top-5 right-1 font-display text-[92px] leading-none text-rosa-claro/15 italic lg:-top-9 lg:text-[140px]"
@@ -648,9 +611,11 @@ export default function InicioPage() {
                 <span aria-hidden className="h-px w-3.5 bg-rosa-claro/50" />
                 {citacao.livro} · {citacao.autor}
               </figcaption>
-              <div className="relative mt-4 border-t border-creme/15 pt-4 lg:mt-6 lg:pt-6">
-                <LendoAgora tema="escura" semCartao />
-              </div>
+            </figure>
+
+            {/* ===== você está lendo (celular e computador, card próprio) ===== */}
+            <div className="mx-6 mt-4 lg:mx-0 lg:mt-5">
+              <LendoAgora />
             </div>
 
             {/* ===== trilha "pra você" (celular e computador) ===== */}
