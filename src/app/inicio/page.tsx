@@ -79,7 +79,7 @@ function Topo({ nome }: { nome: string }) {
           </svg>
           <span className="hidden lg:inline">buscar livros</span>
         </Link>
-        <Link href="/pessoas" aria-label="adicionar amigas" className={iconeLink}>
+        <Link href="/pessoas" aria-label="encontrar pessoas" className={iconeLink}>
           <svg
             width="20"
             height="20"
@@ -95,7 +95,7 @@ function Topo({ nome }: { nome: string }) {
             <path d="M2 21c1-4 3.8-6 7-6s6 2 7 6" />
             <path d="M19 8v6M16 11h6" />
           </svg>
-          <span className="hidden lg:inline">amigas</span>
+          <span className="hidden lg:inline">encontrar pessoas</span>
         </Link>
         <Link href="/novidades" aria-label="novidades" className={iconeLink}>
           <svg
@@ -183,13 +183,13 @@ function BannerTeste({ principal }: { principal?: string }) {
         </span>
         <span className="min-w-0">
           <span className="block text-[10px] font-semibold tracking-[.16em] text-bordo uppercase">
-            seu bookside
+            seu tipo de leitora
           </span>
           <span className="mt-0.5 block truncate font-display text-[17px] font-semibold italic lg:font-revista lg:font-normal">
             {arq.nome}
           </span>
           <span className="block text-xs text-cinza">
-            ver resultado ou refazer o teste →
+            resultado do teste · ver ou refazer →
           </span>
         </span>
       </Link>
