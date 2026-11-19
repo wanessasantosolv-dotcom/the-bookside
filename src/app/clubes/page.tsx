@@ -6,7 +6,9 @@ import Link from "next/link";
 import { AppShell } from "@/components/AppShell";
 import { Avatares } from "@/components/clube/Pecas";
 import { ComConta, ErroOuFalta, Vazio } from "@/components/social/Estados";
-import { andamento, meusClubes, type ResumoClube } from "@/lib/clubes";
+import { andamento, meusClubes, modoDe, type ResumoClube } from "@/lib/clubes";
+import { temas } from "@/lib/dados";
+import { coresDoTema } from "@/lib/tema";
 import { pessoasPorId, useConsulta, useMeuId } from "@/lib/social";
 
 function Cartao({
@@ -26,47 +28,80 @@ function Cartao({
       ? `lendo agora · dia ${and.dia} de ${and.total}`
       : "lendo agora"
     : c.sugestoes
-      ? "votação aberta"
-      : "sem livro";
+      ? modoDe(c) === "votacao"
+        ? "votação aberta"
+        : "escolhendo o próximo"
+      : "entre leituras";
 
+  const tema = temas.find((t) => t.id === c.tema);
   return (
-    <li>
+    <li style={coresDoTema(c.tema)}>
       <Link
         href={`/clubes/${c.id}`}
-        className={`flex gap-4 rounded-xl border p-4 transition-colors hover:border-bordo lg:rounded-[4px] lg:p-5 ${
-          c.lendo ? "border-linha bg-creme-quente lg:border-fio lg:bg-transparent" : "border-dashed border-bege"
-        }`}
+        className="group block overflow-hidden rounded-xl border border-linha bg-creme-quente transition-colors hover:border-bordo lg:rounded-[6px] lg:border-fio"
       >
-        <div className="min-w-0 flex-1">
+        {/* a capa do clube (ou as cores do tema), como na página do clube */}
+        <div
+          className={`relative h-[92px] bg-cover bg-center lg:h-[110px] ${c.capa || tema ? "" : "pat-estrelas"}`}
+          style={
+            c.capa
+              ? { backgroundImage: `url("${c.capa}")` }
+              : tema
+                ? { background: "escuro" in tema ? "#3A343B" : tema.fundo }
+                : undefined
+          }
+        >
           <span
-            className={`inline-flex min-h-6 items-center rounded-pill px-2.5 text-[9px] font-semibold tracking-[.12em] uppercase ${
-              c.lendo ? "bg-bordo text-creme" : c.sugestoes ? "bg-ouro/25 text-ameixa" : "bg-linha text-cinza"
+            className={`absolute top-3 left-4 inline-flex min-h-6 items-center rounded-pill px-2.5 text-[9px] font-semibold tracking-[.12em] uppercase shadow-sm ${
+              c.lendo
+                ? "bg-bordo text-creme"
+                : "bg-creme/95 text-ameixa"
             }`}
           >
             {selo}
           </span>
-          <h2 className="mt-2.5 font-display text-[26px] leading-[1.1] font-semibold italic text-bordo lg:font-revista lg:font-normal lg:text-tinta">
-            {c.nome}
-          </h2>
-          <p className="mt-1 text-[13px] text-cinza">
-            {c.lendo
-              ? `${c.lendo.livro.titulo} · ${c.lendo.livro.autor}`
-              : c.sugestoes
-                ? `${c.votaram} de ${c.membros.length} já votaram ✦`
-                : c.membros.length > 1
-                  ? "ninguém sugeriu um livro ainda"
-                  : "só você por enquanto · convide alguém"}
-          </p>
-          <div className="mt-3 flex items-center gap-2.5">
-            <Avatares pessoas={lista} />
-            <span className="truncate text-xs text-cinza">{nomes}</span>
-          </div>
         </div>
-        {c.lendo ? (
-          <CapaAuto livro={c.lendo.livro}
-            className="w-[64px] self-start [&>span:last-child]:hidden"
-          />
-        ) : null}
+        <div className="flex gap-4 px-4 pt-3 pb-4 lg:px-5">
+          <div className="min-w-0 flex-1">
+            <h2 className="font-display text-[24px] leading-[1.1] font-semibold italic text-bordo lg:font-revista lg:text-[26px] lg:font-normal">
+              {c.nome}
+            </h2>
+            {c.descricao ? (
+              <p className="mt-0.5 truncate font-accent text-[13px] italic text-cinza">
+                {c.descricao}
+              </p>
+            ) : null}
+            <p className="mt-2 text-[13px] text-ameixa">
+              {c.lendo
+                ? `${c.lendo.livro.titulo} · ${c.lendo.livro.autor}`
+                : c.sugestoes
+                  ? `${c.sugestoes} ${c.sugestoes === 1 ? "sugestão" : "sugestões"} na fila`
+                  : c.membros.length > 1
+                    ? "nenhuma leitura agora · sugira um livro"
+                    : "só você por enquanto · convide alguém"}
+            </p>
+            {and ? (
+              <span className="mt-2 block h-1 max-w-[220px] overflow-hidden rounded-full bg-rosa-fundo">
+                <span
+                  className="block h-full rounded-full bg-bordo"
+                  style={{
+                    width: `${Math.min(100, (and.dia / and.total) * 100)}%`,
+                  }}
+                />
+              </span>
+            ) : null}
+            <div className="mt-3 flex items-center gap-2.5">
+              <Avatares pessoas={lista} />
+              <span className="truncate text-xs text-cinza">{nomes}</span>
+            </div>
+          </div>
+          {c.lendo ? (
+            <CapaAuto
+              livro={c.lendo.livro}
+              className="-mt-12 w-[68px] flex-none self-start shadow-[0_10px_20px_-10px_rgba(43,20,32,.6)] transition-transform group-hover:-translate-y-1 [&>span:last-child]:hidden"
+            />
+          ) : null}
+        </div>
       </Link>
     </li>
   );
