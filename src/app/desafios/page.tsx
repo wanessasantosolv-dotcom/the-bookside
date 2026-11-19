@@ -158,44 +158,65 @@ function Lista() {
       <li key={d.id}>
         <Link
           href={`/desafios/${d.id}`}
-          className="relative block rounded-[2px] border border-dashed border-linha bg-creme-quente p-4 hover:border-bordo lg:rounded-[4px] lg:p-5"
+          className="relative block rounded-[2px] border border-linha bg-creme-quente p-4 pr-20 hover:border-bordo lg:rounded-[4px] lg:p-5 lg:pr-24"
         >
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-[5px] rounded-[1px] border border-dashed border-linha/50"
+          />
+          <span
+            aria-hidden
+            className="absolute top-3 right-3 flex size-11 rotate-3 items-center justify-center rounded-[1px] border border-dashed bg-creme text-lg shadow-[0_3px_6px_rgba(43,20,32,.12)] lg:top-4 lg:right-4"
+            style={{
+              borderColor: modelo?.cor ?? "#C9A46A",
+              color: modelo?.cor ?? "#6B0D24",
+            }}
+          >
+            <IconeModelo id={modelo?.id} />
+          </span>
+          <span
+            aria-hidden
+            className="font-maquina absolute top-9 right-6 flex size-11 -rotate-[12deg] items-center justify-center rounded-full border border-bordo/45 text-center text-[6.5px] leading-tight text-bordo/55 lg:top-11 lg:right-7"
+          >
+            {meu?.concluido_em
+              ? "feito"
+              : resta >= 0
+                ? resta === 0
+                  ? (
+                    <>
+                      último
+                      <br />
+                      dia
+                    </>
+                  )
+                  : (
+                    <>
+                      {resta}
+                      <br />
+                      dias
+                    </>
+                  )
+                : (
+                  <>
+                    encer
+                    <br />
+                    rado
+                  </>
+                )}
+          </span>
           <p className="font-maquina text-[9px] tracking-[.12em] text-rosa-antigo uppercase">
             {modelo?.titulo ?? "desafio criado por você"}
           </p>
-          <div className="mt-2 flex items-start gap-3">
-            <span
-              className="flex size-11 flex-none items-center justify-center rounded-full border text-xl"
-              style={{
-                borderColor: modelo?.cor ?? "#6B0D24",
-                background: `${modelo?.cor ?? "#6B0D24"}14`,
-                color: modelo?.cor ?? "#6B0D24",
-              }}
-            >
-              <IconeModelo id={modelo?.id} />
+          <span className="mt-2 block">
+            <span className="block font-display text-lg leading-tight font-semibold italic text-ameixa lg:font-revista lg:font-normal">
+              {d.titulo}
             </span>
-            <span className="min-w-0 flex-1">
-              <span className="block font-display text-lg leading-tight font-semibold italic text-ameixa lg:font-revista lg:font-normal">
-                {d.titulo}
-              </span>
-              <span className="mt-0.5 block text-xs text-cinza">
-                {meu
-                  ? `${(meu.progresso ?? 0).toLocaleString("pt-BR")} de ${d.meta.toLocaleString("pt-BR")} ${unidade[d.tipo][1]}`
-                  : "você ainda não entrou"}
-                {resta >= 0
-                  ? ` · ${resta === 0 ? "último dia" : `faltam ${resta} ${resta === 1 ? "dia" : "dias"}`}`
-                  : " · encerrado"}
-              </span>
+            <span className="mt-0.5 block text-xs text-cinza">
+              {meu
+                ? `${(meu.progresso ?? 0).toLocaleString("pt-BR")} de ${d.meta.toLocaleString("pt-BR")} ${unidade[d.tipo][1]}`
+                : "você ainda não entrou"}
             </span>
-            {meu?.concluido_em ? (
-              <span
-                aria-hidden
-                className="font-maquina flex size-9 flex-none rotate-[8deg] items-center justify-center rounded-full border border-dashed border-ouro text-center text-[7px] leading-tight text-ouro"
-              >
-                feito
-              </span>
-            ) : null}
-          </div>
+          </span>
           <span className="mt-3 block h-1.5 overflow-hidden rounded-full bg-linha/70">
             <span
               className="block h-full rounded-full bg-bordo transition-all"
@@ -257,31 +278,26 @@ function Lista() {
         <h2 className="border-b border-linha pb-2 font-display text-[22px] leading-none font-semibold italic text-bordo lg:font-revista lg:font-normal lg:text-tinta">
           começar um desafio
         </h2>
-        <ul className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-3">
+        <ul className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
           {modelos.map((m) => (
             <li key={m.id}>
               <Link
                 href={`/desafios/novo?modelo=${m.id}`}
-                className="flex h-full flex-col rounded-[2px] border border-dashed bg-creme-quente p-4 transition-transform hover:-translate-y-0.5 lg:rounded-[4px] lg:p-5"
-                style={{ borderColor: `${m.cor}66` }}
+                className="flex h-full items-center gap-3.5 rounded-[2px] border border-linha bg-creme-quente p-4 transition-transform hover:-translate-y-0.5 hover:border-bordo lg:rounded-[4px] lg:p-5"
               >
                 <span
-                  className="flex size-10 flex-none items-center justify-center rounded-full border text-lg"
-                  style={{ borderColor: m.cor, background: `${m.cor}14`, color: m.cor }}
+                  className="flex size-11 flex-none rotate-2 items-center justify-center rounded-[1px] border border-dashed bg-creme text-lg shadow-[0_3px_6px_rgba(43,20,32,.12)]"
+                  style={{ borderColor: m.cor, color: m.cor }}
                 >
                   <IconeModelo id={m.id} />
                 </span>
-                <span
-                  className="font-maquina mt-3 block text-[9px] tracking-[.12em] uppercase"
-                  style={{ color: m.cor }}
-                >
-                  desafio
-                </span>
-                <span className="mt-1 block font-display text-[17px] leading-tight font-semibold italic text-ameixa lg:font-revista lg:text-xl lg:font-normal">
-                  {m.titulo}
-                </span>
-                <span className="mt-1.5 block text-[12px] leading-snug text-cinza">
-                  {m.descricao}
+                <span className="min-w-0">
+                  <span className="block font-display text-[16px] leading-tight font-semibold italic text-ameixa lg:font-revista lg:text-[17px] lg:font-normal">
+                    {m.titulo}
+                  </span>
+                  <span className="mt-1 block text-[12px] leading-snug text-cinza">
+                    {m.descricao}
+                  </span>
                 </span>
               </Link>
             </li>
@@ -289,14 +305,18 @@ function Lista() {
           <li>
             <Link
               href="/desafios/novo"
-              className="flex h-full min-h-[140px] flex-col items-center justify-center rounded-[2px] border-[1.5px] border-dashed border-bordo/40 bg-creme-quente p-4 text-center text-bordo hover:border-bordo lg:rounded-[4px]"
+              className="flex h-full items-center gap-3.5 rounded-[2px] border-[1.5px] border-dashed border-bordo/40 bg-creme-quente p-4 text-bordo hover:border-bordo lg:rounded-[4px] lg:p-5"
             >
-              <span className="text-2xl">＋</span>
-              <span className="mt-1 font-display text-[17px] font-semibold italic lg:font-revista lg:font-normal">
-                criar o meu
+              <span className="flex size-11 flex-none rotate-2 items-center justify-center rounded-[1px] border border-dashed border-bordo/50 bg-creme text-xl">
+                ＋
               </span>
-              <span className="mt-1 text-[12px] text-cinza">
-                você escolhe a meta e o prazo
+              <span>
+                <span className="block font-display text-[16px] font-semibold italic lg:font-revista lg:text-[17px] lg:font-normal">
+                  criar o meu
+                </span>
+                <span className="mt-1 block text-[12px] text-cinza">
+                  você escolhe a meta e o prazo
+                </span>
               </span>
             </Link>
           </li>
