@@ -6,11 +6,10 @@ import { Suspense, useMemo, useRef, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { useHidratado } from "@/components/PerfilHidratacao";
 import {
-  estilosBase,
+  estiloDoTema,
   StoryLendo,
   StoryMes,
   StoryTerminei,
-  type EstiloStory,
 } from "@/components/story/Stories";
 import { Voltar } from "@/components/Voltar";
 import { temas } from "@/lib/dados";
@@ -85,30 +84,13 @@ function Conteudo() {
     .filter((l) => l.lidoEm!.startsWith(mesSel))
     .sort((a, b) => a.lidoEm!.localeCompare(b.lidoEm!));
 
-  // estilos: os três de sempre + as cores do tema do perfil
-  const tema = temas.find((t) => t.id === temaId);
-  const estilos: EstiloStory[] = useMemo(
-    () =>
-      tema && tema.id !== "biblioteca-classica"
-        ? [
-            ...estilosBase,
-            {
-              id: "tema",
-              nome: tema.nome,
-              fundo: tema.papel,
-              texto: "escuro" in tema ? "#F5EFE6" : "#2B1420",
-              suave: "escuro" in tema ? "#CFC3B8" : "#6E6264",
-              destaque: tema.destaque,
-              fio:
-                "escuro" in tema
-                  ? "rgba(245,239,230,.2)"
-                  : "rgba(43,20,32,.16)",
-            },
-          ]
-        : estilosBase,
-    [tema],
-  );
-  const [estiloId, setEstiloId] = useState("creme");
+  // estilos: os temas do app (o mesmo do editar perfil), começando pelo seu
+  const estilos = useMemo(() => {
+    const todos = temas.map(estiloDoTema);
+    const meu = todos.find((x) => x.id === temaId);
+    return meu ? [meu, ...todos.filter((x) => x.id !== temaId)] : todos;
+  }, [temaId]);
+  const [estiloId, setEstiloId] = useState(temaId || "biblioteca-classica");
   const e = estilos.find((x) => x.id === estiloId) ?? estilos[0];
 
   const quadro = useRef<HTMLDivElement>(null);
@@ -123,6 +105,8 @@ function Conteudo() {
       const png = await toPng(quadro.current, {
         pixelRatio: 3,
         cacheBust: true,
+        // cada capa tem o seu endereço (sem isto, todas viravam a primeira)
+        includeQueryParams: true,
       });
       const blob = await (await fetch(png)).blob();
       const nome = `the-bookside-${tipo}.png`;
@@ -243,26 +227,29 @@ function Conteudo() {
             <span className="mb-1.5 block text-[11px] font-semibold tracking-[.12em] text-bordo uppercase">
               estilo
             </span>
-            <div className="flex flex-wrap gap-2.5">
-              {estilos.map((x) => (
-                <button
-                  key={x.id}
-                  type="button"
-                  aria-pressed={estiloId === x.id}
-                  onClick={() => setEstiloId(x.id)}
-                  className={`flex items-center gap-2 rounded-pill border py-1 pr-3.5 pl-1 text-xs font-semibold ${
-                    estiloId === x.id ? "border-bordo" : "border-bege"
-                  }`}
-                >
-                  <span
-                    className="flex size-7 items-center justify-center rounded-full border border-black/10 font-revista text-sm italic"
-                    style={{ background: x.fundo, color: x.destaque }}
+            <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6">
+              {estilos.map((x) => {
+                const on = estiloId === x.id;
+                return (
+                  <button
+                    key={x.id}
+                    type="button"
+                    aria-pressed={on}
+                    onClick={() => setEstiloId(x.id)}
+                    className={`relative h-[70px] overflow-hidden rounded-[10px] text-left ${
+                      on ? "ring-2 ring-bordo ring-offset-2 ring-offset-creme" : "border border-linha"
+                    }`}
+                    style={{ background: x.fundo }}
                   >
-                    a
-                  </span>
-                  {x.nome}
-                </button>
-              ))}
+                    <span className="absolute inset-x-0 top-0 h-5" style={{ background: x.destaque, opacity: 0.55 }} />
+                    <span className="absolute top-3 left-1/2 -ml-2 size-4 rounded-full border-2" style={{ background: x.destaque, borderColor: x.fundo }} />
+                    <span className="absolute inset-x-1 bottom-1.5 text-center font-display text-[10px] leading-[1.1] font-semibold italic" style={{ color: x.texto }}>
+                      {x.nome}
+                      {x.id === temaId ? " · seu" : ""}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 

@@ -47,6 +47,44 @@ export const estilosBase: EstiloStory[] = [
   },
 ];
 
+/** um tema do app vira um estilo de story */
+export function estiloDoTema(t: {
+  id: string;
+  nome: string;
+  papel: string;
+  destaque: string;
+  texto: string;
+}): EstiloStory {
+  const escuro = "escuro" in t;
+  return {
+    id: t.id,
+    nome: t.nome,
+    fundo: t.papel,
+    texto: escuro ? "#F5EFE6" : "#2B1420",
+    suave: escuro ? "#CFC3B8" : "#6E6264",
+    destaque: escuro ? t.destaque : t.texto,
+    fio: escuro ? "rgba(245,239,230,.2)" : "rgba(43,20,32,.16)",
+  };
+}
+
+/** título que cabe: quanto mais longo, menor a letra (e no máximo N linhas) */
+export const tituloQueCabe = (
+  texto: string,
+  base: number,
+  linhas = 2,
+): React.CSSProperties => {
+  const n = texto.length;
+  const tam = n > 60 ? base * 0.62 : n > 40 ? base * 0.72 : n > 24 ? base * 0.85 : base;
+  return {
+    fontSize: Math.round(tam),
+    display: "-webkit-box",
+    WebkitLineClamp: linhas,
+    WebkitBoxOrient: "vertical",
+    overflow: "hidden",
+    overflowWrap: "anywhere",
+  };
+};
+
 /** capas de fora passam pelo app para poderem virar imagem */
 export const capaSegura = (url?: string) =>
   !url
@@ -180,6 +218,7 @@ const Moldura = forwardRef<
           display: "flex",
           flexDirection: "column",
           minHeight: 0,
+          overflow: "hidden",
         }}
       >
         {children}
@@ -262,7 +301,14 @@ export const StoryTerminei = forwardRef<
       <div style={{ display: "flex", justifyContent: "center", marginTop: 22 }}>
         <Capa l={livro} largura={170} girar={-2} />
       </div>
-      <p style={{ ...tituloStyle(30), textAlign: "center", marginTop: 26 }}>
+      <p
+        style={{
+          ...tituloStyle(30),
+          ...tituloQueCabe(livro.titulo, 30, 3),
+          textAlign: "center",
+          marginTop: 22,
+        }}
+      >
         {livro.titulo}
       </p>
       <p
@@ -274,6 +320,9 @@ export const StoryTerminei = forwardRef<
           color: e.suave,
           marginTop: 8,
           fontWeight: 600,
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
         }}
       >
         {livro.autor}
@@ -365,7 +414,12 @@ export const StoryLendo = forwardRef<
                 girar={i % 2 ? 1.5 : -1.5}
               />
               <div style={{ minWidth: 0, flex: 1, paddingTop: 4 }}>
-                <p style={{ ...tituloStyle(lista.length === 1 ? 26 : 19) }}>
+                <p
+                  style={{
+                    ...tituloStyle(lista.length === 1 ? 26 : 19),
+                    ...tituloQueCabe(l.titulo, lista.length === 1 ? 26 : 19, 2),
+                  }}
+                >
                   {l.titulo}
                 </p>
                 <p
@@ -376,6 +430,9 @@ export const StoryLendo = forwardRef<
                     color: e.suave,
                     marginTop: 6,
                     fontWeight: 600,
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
                   }}
                 >
                   {l.autor}
@@ -478,8 +535,9 @@ export const StoryMes = forwardRef<
         audio: "time fone de ouvido",
       }[formatoTop[0]]
     : null;
-  const capas = livros.slice(0, livros.length > 6 ? 9 : 6);
-  const largura = capas.length > 6 ? 80 : capas.length > 3 ? 88 : 96;
+  // cabe sempre: até 3 capas grandes numa fileira; mais que isso, até 8 em duas fileiras
+  const capas = livros.slice(0, 8);
+  const largura = capas.length > 3 ? 60 : 92;
 
   return (
     <Moldura ref={ref} e={e} usuario={usuario}>
@@ -599,7 +657,16 @@ export const StoryMes = forwardRef<
             >
               o favorito do mês
             </span>
-            {melhor.titulo}{" "}
+            <span
+              style={{
+                display: "-webkit-box",
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: "vertical",
+                overflow: "hidden",
+              }}
+            >
+              {melhor.titulo}
+            </span>
             <span style={{ color: e.destaque, fontStyle: "normal" }}>
               {estrelasTexto(melhor.nota)}
             </span>
