@@ -140,21 +140,21 @@ function IndicacaoDoDia({ compacto = false }: { compacto?: boolean } = {}) {
     return (
       <Link
         href="/descobrir"
-        className="flex w-[168px] flex-none items-center gap-2.5 rounded-[14px] border border-linha bg-creme-quente p-3"
+        className="flex w-[172px] flex-none flex-col rounded-[14px] border border-linha bg-creme-quente p-3"
       >
-        <CapaLivro
-          titulo={livro.titulo}
-          capa={livro.capa}
-          cor={livro.cor}
-          className="w-9 flex-none [&>span:last-child]:hidden"
-        />
-        <span className="min-w-0">
+        <div className="flex items-center gap-2.5">
+          <CapaLivro
+            titulo={livro.titulo}
+            capa={livro.capa}
+            cor={livro.cor}
+            className="w-9 flex-none [&>span:last-child]:hidden"
+          />
           <span className="block text-[9.5px] font-semibold tracking-[.16em] text-bordo uppercase">
-            pra você ✦
+            recomendação ✦
           </span>
-          <span className="mt-0.5 block truncate font-display text-[13px] font-semibold italic">
-            {livro.titulo}
-          </span>
+        </div>
+        <span className="mt-2 block font-display text-[13px] leading-snug font-semibold italic [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2] overflow-hidden">
+          {livro.titulo}
         </span>
       </Link>
     );
@@ -204,7 +204,7 @@ function BannerTeste({
         href="/teste/resultado"
         className={
           compacto
-            ? "flex w-[168px] flex-none flex-col rounded-[14px] border border-linha bg-creme-quente p-3"
+            ? "flex w-[172px] flex-none flex-col rounded-[14px] border border-linha bg-creme-quente p-3"
             : "flex items-center gap-3 rounded-xl border border-linha bg-creme-quente p-4 hover:border-bordo lg:rounded-[4px] lg:bg-transparent lg:hover:bg-[#F3ECDF]"
         }
       >
@@ -249,7 +249,7 @@ function BannerTeste({
     return (
       <Link
         href="/teste"
-        className="flex w-[168px] flex-none flex-col rounded-[14px] border border-linha bg-creme-quente p-3"
+        className="flex w-[172px] flex-none flex-col rounded-[14px] border border-linha bg-creme-quente p-3"
       >
         <span
           aria-hidden
