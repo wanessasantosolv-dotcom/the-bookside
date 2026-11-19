@@ -23,8 +23,41 @@ export type NotaMedia = {
   total: number;
 };
 
-/** A nota média com mais avaliações em cada fonte, para este livro. */
+/**
+ * A nota média com mais avaliações em cada fonte, para este livro.
+ * Edições brasileiras quase nunca têm nota: aí procura também pelo título
+ * original (Wikidata), que costuma ter bem mais avaliações.
+ */
 export async function notasDosLeitores(
+  titulo: string,
+  autor: string,
+): Promise<NotaMedia[]> {
+  const daqui = await notasPorTitulo(titulo, autor);
+  const poucas = (f: NotaMedia["fonte"]) =>
+    (daqui.find((n) => n.fonte === f)?.total ?? 0) < 20;
+  if (!poucas("Google Books") && !poucas("Open Library")) return daqui;
+  let original: { titulo: string; autor?: string } | undefined;
+  try {
+    original = (await traducoesDoTitulo(titulo, comTempo())).find(
+      (t) => normalizar(t.titulo) !== normalizar(titulo),
+    );
+  } catch {
+    /* sem tradução: fica o que achou */
+  }
+  if (!original) return daqui;
+  const deLa = await notasPorTitulo(original.titulo, original.autor ?? autor);
+  // de cada fonte, a que tem mais avaliações
+  return (["Google Books", "Open Library"] as const)
+    .map((f) =>
+      [daqui, deLa]
+        .map((l) => l.find((n) => n.fonte === f))
+        .filter((n): n is NotaMedia => !!n)
+        .sort((a, b) => b.total - a.total)[0],
+    )
+    .filter((n): n is NotaMedia => !!n);
+}
+
+async function notasPorTitulo(
   titulo: string,
   autor: string,
 ): Promise<NotaMedia[]> {
@@ -37,7 +70,7 @@ export async function notasDosLeitores(
   if (autoria) ol.set("author", autoria);
   const [google, doOL] = await Promise.all([
     livrosDoGoogle(
-      `intitle:${titulo}${autoria ? ` inauthor:${autoria}` : ""}`,
+      `intitle:"${titulo}"${autoria ? ` inauthor:"${autoria}"` : ""}`,
       undefined,
       comTempo(),
     ).catch(() => [] as LivroBusca[]),
