@@ -8,7 +8,12 @@ import { AppShell } from "@/components/AppShell";
 import { useHidratado } from "@/components/PerfilHidratacao";
 import { NumerosWeb } from "@/components/numeros/NumerosWeb";
 import { Botao } from "@/components/ui/Botao";
-import { calcularNumeros, numero, wrappedLiberado } from "@/lib/numeros";
+import {
+  anoDaRetrospectiva,
+  calcularNumeros,
+  numero,
+  wrappedLiberado,
+} from "@/lib/numeros";
 import { usePerfil } from "@/lib/perfil-store";
 
 const cartao = "rounded-[14px] border border-rosa-claro/30 bg-creme/5 p-[18px]";
@@ -18,7 +23,7 @@ const etiqueta =
 export default function RetrospectivaPage() {
   const hidratado = useHidratado();
   const router = useRouter();
-  // o wrapped pessoal só abre em dezembro
+  // a retrospectiva abre na penúltima semana do ano (e fica até o fim de janeiro)
   useEffect(() => {
     if (!wrappedLiberado()) router.replace("/numeros");
   }, [router]);
@@ -28,7 +33,7 @@ export default function RetrospectivaPage() {
   const frase = usePerfil((s) => s.frase);
   const [aviso, setAviso] = useState<string | null>(null);
   if (!hidratado) return <AppShell aba="perfil">{null}</AppShell>;
-  const n = calcularNumeros(livros, meta);
+  const n = calcularNumeros(livros, meta, anoDaRetrospectiva() ?? undefined);
   const genero = n.generos[0];
 
   async function compartilhar() {

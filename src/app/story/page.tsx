@@ -14,6 +14,7 @@ import {
 } from "@/components/story/Stories";
 import { Voltar } from "@/components/Voltar";
 import { temas } from "@/lib/dados";
+import { mesDoReview } from "@/lib/numeros";
 import { usePerfil } from "@/lib/perfil-store";
 
 const MESES = [
@@ -53,16 +54,28 @@ function Conteudo() {
     params.get("livro") ?? lidos[0]?.id ?? "",
   );
   const hoje = new Date();
-  const [mesSel, setMesSel] = useState(
-    params.get("mes") ??
-      `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}`,
-  );
+  // o mês em andamento só entra quando o review dele abre (penúltimo dia do mês)
+  const review = mesDoReview(hoje);
+  const chaveMes = (a: number, m: number) => `${a}-${String(m + 1).padStart(2, "0")}`;
+  const mesAtual = chaveMes(hoje.getFullYear(), hoje.getMonth());
+  const mesReview = review ? chaveMes(review.ano, review.mes) : null;
+  const liberado = (m: string) => m < mesAtual || m === mesReview;
+  const [mesSel, setMesSel] = useState(() => {
+    const pedido = params.get("mes");
+    if (pedido && liberado(pedido)) return pedido;
+    if (mesReview) return mesReview;
+    const anterior = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1);
+    return chaveMes(anterior.getFullYear(), anterior.getMonth());
+  });
 
   // os meses que tiveram leituras (para escolher)
   const meses = useMemo(
     () =>
-      [...new Set(lidos.map((l) => l.lidoEm!.slice(0, 7)))].sort().reverse(),
-    [lidos],
+      [...new Set(lidos.map((l) => l.lidoEm!.slice(0, 7)))]
+        .filter((m) => m < mesAtual || m === mesReview)
+        .sort()
+        .reverse(),
+    [lidos, mesAtual, mesReview],
   );
   const [anoMes, mesNum] = [
     Number(mesSel.slice(0, 4)),

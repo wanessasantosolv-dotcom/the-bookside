@@ -42,7 +42,41 @@ export type Numeros = ReturnType<typeof calcularNumeros>;
 
 /** Tudo o que as telas de números mostram, calculado a partir dos livros lidos no ano. */
 /** O wrapped pessoal (retrospectiva do ano) só aparece em dezembro. */
-export const wrappedLiberado = (hoje = new Date()) => hoje.getMonth() === 11;
+/**
+ * A retrospectiva do ano abre sozinha no primeiro dia (segunda-feira) da
+ * penúltima semana do ano e fica até o fim de janeiro do ano seguinte.
+ * (a última semana é a que tem o dia 31 de dezembro)
+ */
+export function inicioDaRetrospectiva(ano: number) {
+  const d31 = new Date(ano, 11, 31);
+  const segundaDaUltima = new Date(ano, 11, 31 - ((d31.getDay() + 6) % 7));
+  return new Date(ano, 11, segundaDaUltima.getDate() - 7);
+}
+/** o ano da retrospectiva aberta agora (ou null se ainda não é época) */
+export function anoDaRetrospectiva(hoje = new Date()): number | null {
+  const ano = hoje.getFullYear();
+  if (hoje >= inicioDaRetrospectiva(ano)) return ano;
+  if (hoje.getMonth() === 0) return ano - 1;
+  return null;
+}
+export const wrappedLiberado = (hoje = new Date()) => anoDaRetrospectiva(hoje) !== null;
+
+/**
+ * O review do mês abre sozinho no penúltimo dia do mês e fica uma semana
+ * (até o dia 5 do mês seguinte). Devolve o mês do review aberto agora, ou null.
+ */
+export function mesDoReview(hoje = new Date()): { ano: number; mes: number } | null {
+  const dia = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  for (const delta of [0, -1]) {
+    const ref = new Date(hoje.getFullYear(), hoje.getMonth() + delta, 1);
+    const ultimo = new Date(ref.getFullYear(), ref.getMonth() + 1, 0).getDate();
+    const inicio = new Date(ref.getFullYear(), ref.getMonth(), ultimo - 1);
+    const fim = new Date(inicio.getFullYear(), inicio.getMonth(), inicio.getDate() + 6);
+    if (dia(hoje) >= dia(inicio) && dia(hoje) <= dia(fim))
+      return { ano: ref.getFullYear(), mes: ref.getMonth() };
+  }
+  return null;
+}
 
 export function calcularNumeros(
   livros: LivroSalvo[],

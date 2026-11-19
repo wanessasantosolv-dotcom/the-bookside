@@ -8,7 +8,12 @@ import { MesAMes } from "@/components/numeros/MesAMes";
 import { MesEmRevista } from "@/components/numeros/MesEmRevista";
 import { Nacionalidades } from "@/components/numeros/Nacionalidades";
 import { GraficoMeses } from "@/components/numeros/NumerosWeb";
-import { calcularNumeros, mediaTexto, numero } from "@/lib/numeros";
+import {
+  anoDaRetrospectiva,
+  calcularNumeros,
+  mediaTexto,
+  numero,
+} from "@/lib/numeros";
 import { usePerfil } from "@/lib/perfil-store";
 
 type Parte = "ano" | "destaques" | "jeito";
@@ -27,6 +32,7 @@ export function JornadaNoPerfil() {
   const livros = usePerfil((s) => s.livros);
   const meta = usePerfil((s) => s.meta);
   const [parte, setParte] = useState<Parte>("ano");
+  const anoRetro = anoDaRetrospectiva();
   const n = calcularNumeros(livros, meta);
   const pct = n.meta ? Math.min(100, (n.total / n.meta) * 100) : 0;
 
@@ -72,6 +78,26 @@ export function JornadaNoPerfil() {
           </>
         ) : null}
       </div>
+
+      {/* a retrospectiva do ano: aparece sozinha na penúltima semana do ano */}
+      {anoRetro ? (
+        <Link
+          href="/numeros/retrospectiva"
+          className="inverso block rounded-xl bg-gradient-to-br from-ameixa to-bordo p-6 text-creme lg:rounded-[6px]"
+        >
+          <span className="block text-[10px] font-semibold tracking-[.2em] text-rosa-claro uppercase">
+            chegou ✦ retrospectiva
+          </span>
+          <span className="mt-1.5 block font-display text-[30px] leading-tight font-semibold italic lg:font-revista lg:font-normal">
+            seu {anoRetro} em livros
+          </span>
+          <span className="mt-4 inline-flex h-10 items-center rounded-pill bg-creme px-5 text-[13px] font-semibold text-bordo">
+            abrir a retrospectiva →
+          </span>
+        </Link>
+      ) : null}
+
+      <MesEmRevista />
 
       {/* atalhos */}
       <div className="flex gap-3">
@@ -120,7 +146,6 @@ export function JornadaNoPerfil() {
               </p>
             ) : null}
           </section>
-          <MesEmRevista />
         </div>
       ) : parte === "destaques" ? (
         <div className="space-y-2">
