@@ -3,6 +3,7 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { iniciarCapas } from "@/lib/catalogo";
 import { iniciarSincronizacaoClubes } from "@/lib/clubes";
+import { preaquecerIndicacoes } from "@/lib/indicacoes";
 import { iniciarNuvem } from "@/lib/nuvem";
 import { iniciarAtividades } from "@/lib/social";
 import { usePerfil } from "@/lib/perfil-store";
@@ -24,7 +25,10 @@ export function PerfilHidratacao() {
       const pararCapas = iniciarCapas();
       const pararAtividades = iniciarAtividades();
       const pararClubes = iniciarSincronizacaoClubes();
+      // as indicações do "descobrir" ficam prontas antes da pessoa abrir a aba
+      const aquecer = setTimeout(preaquecerIndicacoes, 4000);
       parar = () => {
+        clearTimeout(aquecer);
         pararClubes();
         pararNuvem();
         pararCapas();

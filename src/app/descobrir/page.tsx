@@ -1,30 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { CapaLivro } from "@/components/CapaLivro";
 import { useHidratado } from "@/components/PerfilHidratacao";
 import { PerguntaTermino } from "@/components/PerguntaTermino";
-import { naEstante } from "@/lib/catalogo";
 import {
   lembrarPassado,
-  limparSecao,
   migrarPassados,
-  secoesDoDescobrir,
   useIndicacoes,
   type Indicacao,
-  type Secao,
 } from "@/lib/indicacoes";
 import { nuvemPronta } from "@/lib/nuvem";
 import { usePerfil, type StatusLivro } from "@/lib/perfil-store";
-import { useConsulta } from "@/lib/social";
-import { arquetipos, type ArquetipoId } from "@/lib/teste";
 
 /**
- * Descobrir livros: um lugar fixo no menu.
- * - "uma por vez": passar, quero ler ou já li (o que passou não volta, em nenhum aparelho);
- * - prateleiras: pelo tipo de leitora, mais lidos do ano, em alta, autoras e lançamentos.
+ * Descobrir livros: um lugar fixo no menu, com uma indicação por vez —
+ * passar, quero ler ou já li. O que passou não volta, em nenhum aparelho.
  */
 export default function DescobrirPage() {
   const hidratado = useHidratado();
@@ -48,8 +41,7 @@ export default function DescobrirPage() {
               descobrir livros
             </h1>
             <p className="mt-1.5 font-accent text-sm italic text-cinza">
-              indicações pelo que você lê, pelo seu tipo de leitora e pelo que
-              está em alta ✦
+              uma indicação por vez: passe, guarde ou marque como lido ✦
             </p>
           </div>
           <Link
@@ -77,7 +69,6 @@ export default function DescobrirPage() {
         {hidratado ? (
           <>
             <UmaPorVez />
-            <Prateleiras />
           </>
         ) : null}
       </div>
@@ -166,9 +157,15 @@ function UmaPorVez() {
       </div>
 
       {fila === null ? (
-        <p className="py-10 text-center font-accent text-[15px] italic text-cinza">
-          escolhendo livros pra você…
-        </p>
+        <div className="mt-4 flex animate-pulse flex-col items-center gap-5 sm:flex-row sm:items-start lg:gap-10">
+          <span className="block aspect-[2/3] w-[160px] rounded-[4px] bg-linha lg:w-[260px]" />
+          <span className="w-full flex-1 space-y-3 pt-2">
+            <span className="block h-3 w-40 rounded bg-linha" />
+            <span className="block h-7 w-64 rounded bg-linha" />
+            <span className="block h-3 w-48 rounded bg-linha" />
+            <span className="block h-16 w-full rounded bg-linha/70" />
+          </span>
+        </div>
       ) : livro ? (
         <div
           key={livro.id}
@@ -179,7 +176,7 @@ function UmaPorVez() {
               titulo={livro.titulo}
               capa={livro.capa}
               cor={livro.cor}
-              className="w-[130px] rotate-[1.5deg] shadow-[0_16px_28px_-12px_rgba(43,20,32,.5)] lg:w-[190px] [&>span:last-child]:text-sm"
+              className="w-[160px] rotate-[1.5deg] shadow-[0_16px_28px_-12px_rgba(43,20,32,.5)] lg:w-[260px] [&>span:last-child]:text-sm"
             />
           </Link>
           <div className="flex min-w-0 flex-1 flex-col text-center sm:text-left">
@@ -195,7 +192,7 @@ function UmaPorVez() {
               {livro.paginas ? ` · ${livro.paginas} páginas` : ""}
             </p>
             {livro.sinopse ? (
-              <p className="mt-3 line-clamp-4 text-[13px] leading-normal text-cinza lg:line-clamp-5 lg:text-[14px] lg:leading-[1.6]">
+              <p className="mt-3 line-clamp-6 text-[13px] leading-normal text-cinza lg:line-clamp-[9] lg:text-[15px] lg:leading-[1.6]">
                 {livro.sinopse}
               </p>
             ) : null}
@@ -264,139 +261,6 @@ function UmaPorVez() {
           }}
         />
       ) : null}
-    </section>
-  );
-}
-
-/* ───────── prateleiras ───────── */
-
-function Prateleiras() {
-  const livros = usePerfil((s) => s.livros);
-  const favoritos = usePerfil((s) => s.favoritos);
-  const gostos = usePerfil((s) => s.gostos);
-  const bookside = usePerfil((s) => s.bookside);
-  const tipo = bookside
-    ? (arquetipos[bookside.principal as ArquetipoId] ?? null)
-    : null;
-  // só refaz quando a pessoa avalia/adiciona livros ou muda o tipo
-  const assinatura =
-    livros.map((l) => `${l.id}:${l.nota ?? ""}`).join("|") +
-    favoritos.join(",") +
-    gostos.join(",") +
-    (tipo?.id ?? "");
-  const consulta = useConsulta(
-    () =>
-      secoesDoDescobrir({
-        livros: usePerfil.getState().livros,
-        favoritos: usePerfil.getState().favoritos,
-        gostos: usePerfil.getState().gostos,
-        tipo,
-      }),
-    [assinatura],
-  );
-  const tenho = useMemo(() => naEstante(livros), [livros]);
-
-  return (
-    <div className="mt-10 space-y-10">
-      {!tipo ? (
-        <Link
-          href="/teste"
-          className="mx-6 flex items-center justify-between gap-4 rounded-xl border border-dashed border-bordo/40 px-5 py-4 hover:border-bordo lg:mx-0 lg:rounded-[6px]"
-        >
-          <span>
-            <span className="block text-[11px] font-semibold tracking-[.14em] text-bordo uppercase">
-              indicações pelo seu tipo de leitora
-            </span>
-            <span className="mt-1 block font-accent text-[15px] italic text-cinza">
-              faça o teste (3 minutinhos) e ganhe uma prateleira só sua.
-            </span>
-          </span>
-          <span className="flex-none text-xs font-semibold text-bordo">
-            fazer o teste →
-          </span>
-        </Link>
-      ) : null}
-
-      {consulta.carregando && !consulta.dados ? (
-        <p className="px-6 font-accent text-[15px] italic text-cinza lg:px-0">
-          arrumando as prateleiras…
-        </p>
-      ) : (
-        (consulta.dados ?? []).map((s) => (
-          <Prateleira key={s.id} s={s} tenho={tenho} />
-        ))
-      )}
-    </div>
-  );
-}
-
-function Prateleira({
-  s,
-  tenho,
-}: {
-  s: Secao;
-  tenho: (l: { id?: string; titulo: string }) => boolean;
-}) {
-  const guardarLivro = usePerfil((st) => st.guardarLivro);
-  // os que a pessoa guardou nesta visita continuam na prateleira, marcados
-  const [guardados, setGuardados] = useState<string[]>([]);
-  const lista = limparSecao(s.livros, (l) =>
-    guardados.includes(l.id ?? "") ? false : tenho(l),
-  ).slice(0, 14);
-  if (!lista.length) return null;
-
-  return (
-    <section>
-      <div className="mx-6 border-b border-linha pb-2 lg:mx-0 lg:border-tinta">
-        <h2 className="font-display text-[22px] leading-tight font-semibold italic text-bordo lg:font-revista lg:text-[24px] lg:font-normal lg:text-tinta">
-          {s.titulo}
-        </h2>
-        {s.sub ? <p className="mt-0.5 text-xs text-cinza">{s.sub}</p> : null}
-      </div>
-      <ul className="mt-4 flex gap-4 overflow-x-auto px-6 pb-2 [scrollbar-width:thin] lg:px-0">
-        {lista.map((l) => {
-          const naLista = guardados.includes(l.id);
-          return (
-            <li key={l.id} className="w-[112px] flex-none lg:w-[128px]">
-              <Link href={`/livro/${l.id}`} className="group block">
-                <CapaLivro
-                  titulo={l.titulo}
-                  capa={l.capa}
-                  cor={l.cor}
-                  className="w-full transition-transform group-hover:-translate-y-1 [&>span:last-child]:text-[10px]"
-                />
-                <span className="mt-2 line-clamp-2 text-[13px] leading-tight font-semibold">
-                  {l.titulo}
-                </span>
-                <span className="mt-0.5 block truncate text-[11px] text-cinza">
-                  {l.autor}
-                </span>
-              </Link>
-              <button
-                type="button"
-                disabled={naLista}
-                onClick={() => {
-                  guardarLivro({
-                    id: l.id,
-                    titulo: l.titulo,
-                    autor: l.autor,
-                    capa: l.capa,
-                    status: "quero",
-                  });
-                  setGuardados((g) => [...g, l.id]);
-                }}
-                className={`mt-2 h-8 w-full rounded-pill text-[11px] font-semibold ${
-                  naLista
-                    ? "bg-rosa-fundo text-bordo"
-                    : "border border-bordo text-bordo hover:bg-bordo/5"
-                }`}
-              >
-                {naLista ? "na lista ✓" : "+ quero ler"}
-              </button>
-            </li>
-          );
-        })}
-      </ul>
     </section>
   );
 }
