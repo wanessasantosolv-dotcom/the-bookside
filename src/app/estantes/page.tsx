@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { LendoJunto } from "@/components/social/LendoJunto";
 import { useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { AvisoRemovido } from "@/components/AvisoRemovido";
@@ -240,6 +241,9 @@ function EstantesWeb({
           </span>
         </div>
       </div>
+      <div className="px-14">
+        <LendoJunto />
+      </div>
       <div className="px-14 pt-10 pb-16">
         {visiveis.map((linha) => {
           const covers = linha.livros.slice(
@@ -391,6 +395,8 @@ export default function EstantesPage() {
             {comLivros.length} estantes ✦
           </p>
         </div>
+
+        <LendoJunto />
 
         {livros.length === 0 ? (
           <div className="mx-6 mt-8 rounded-md border border-linha bg-creme-quente px-6 py-8 text-center">

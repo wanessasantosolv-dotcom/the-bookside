@@ -360,6 +360,42 @@ export async function atividade(id: string): Promise<Atividade | null> {
 
 /** Amigas lendo agora: o livro "lendo" mais recente de cada pessoa que você segue. */
 /** Quem eu sigo e está lendo um dos livros que eu estou lendo agora (mesmo id ou mesmo título). */
+/** "lendo junto": para cada livro que estou lendo, quem que eu sigo também está lendo */
+export async function lendoJunto(
+  meus: { id: string; titulo: string }[],
+): Promise<Map<string, PessoaResumo[]>> {
+  const mapa = new Map<string, PessoaResumo[]>();
+  if (!meus.length) return mapa;
+  const sigo = [...(await idsQueSigo())];
+  if (!sigo.length) return mapa;
+  const { data, error } = await db()
+    .from("perfis_publicos")
+    .select("id,usuario,nome,foto,livros:dados->livros")
+    .in("id", sigo);
+  if (error) throw error;
+  const chave = (t: string) =>
+    t
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, " ")
+      .trim();
+  for (const p of data ?? []) {
+    const livros = (p as unknown as { livros?: LivroSalvo[] }).livros ?? [];
+    const pessoa = { id: p.id, usuario: p.usuario, nome: p.nome, foto: p.foto };
+    for (const m of meus)
+      if (
+        livros.some(
+          (l) =>
+            l.status === "lendo" &&
+            (l.id === m.id || chave(l.titulo ?? "") === chave(m.titulo)),
+        )
+      )
+        mapa.set(m.id, [...(mapa.get(m.id) ?? []), pessoa]);
+  }
+  return mapa;
+}
+
 export async function lendoOMesmo(
   meus: { id: string; titulo: string }[],
 ): Promise<{ pessoa: PessoaResumo; livro: LivroSalvo }[]> {
