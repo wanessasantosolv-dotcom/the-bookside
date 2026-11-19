@@ -143,7 +143,7 @@ export default function PerfilPage() {
           </div>
 
           {/* números */}
-          <Link href="/numeros" aria-label="ver seus números" className="relative mt-5 flex border-y border-[var(--linha)]">
+          <Link href="/numeros" aria-label="ver sua jornada" className="relative mt-5 flex border-y border-[var(--linha)]">
             {[
               { n: lidos.length, r: "lidos" },
               { n: lendo.length, r: "lendo" },

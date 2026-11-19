@@ -231,7 +231,7 @@ export function PerfilWeb({
 
         <Link
           href={href.numeros}
-          aria-label={outra ? "ver os lidos" : "ver seus números"}
+          aria-label={outra ? "ver os lidos" : "ver sua jornada"}
           className="mb-10 grid grid-cols-4 border-y border-fio"
         >
           {[

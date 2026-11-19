@@ -2,12 +2,13 @@
 
 import { Voltar } from "@/components/Voltar";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { useHidratado } from "@/components/PerfilHidratacao";
 import { NumerosWeb } from "@/components/numeros/NumerosWeb";
 import { Botao } from "@/components/ui/Botao";
-import { calcularNumeros, numero } from "@/lib/numeros";
+import { calcularNumeros, numero, wrappedLiberado } from "@/lib/numeros";
 import { usePerfil } from "@/lib/perfil-store";
 
 const cartao = "rounded-[14px] border border-rosa-claro/30 bg-creme/5 p-[18px]";
@@ -16,6 +17,11 @@ const etiqueta =
 
 export default function RetrospectivaPage() {
   const hidratado = useHidratado();
+  const router = useRouter();
+  // o wrapped pessoal só abre em dezembro
+  useEffect(() => {
+    if (!wrappedLiberado()) router.replace("/numeros");
+  }, [router]);
   const livros = usePerfil((s) => s.livros);
   const meta = usePerfil((s) => s.meta);
   const nome = usePerfil((s) => s.nome);
@@ -53,7 +59,7 @@ export default function RetrospectivaPage() {
         <header className="flex items-center justify-between pt-2">
           <Voltar
             padrao="/numeros"
-            rotulo="números"
+            rotulo="jornada"
             className="-ml-2 flex min-h-11 items-center px-2 text-[13px] font-semibold text-rosa-claro"
           />
           <span className="text-[10px] font-semibold tracking-[.14em] text-rosa-claro uppercase">

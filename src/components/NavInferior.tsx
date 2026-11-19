@@ -41,7 +41,7 @@ export const abas = [
   {
     id: "numeros",
     href: "/numeros",
-    rotulo: "números",
+    rotulo: "jornada",
     icone: (
       <>
         <path d="M12 16v5" />
@@ -68,7 +68,7 @@ export const abas = [
 
 export type Aba = (typeof abas)[number]["id"];
 
-/** Menu inferior do app: início · estantes · clubes · números · perfil. */
+/** Menu inferior do app: início · estantes · clubes · jornada · perfil. */
 export function NavInferior({ ativa }: { ativa: Aba }) {
   return (
     <nav
