@@ -45,6 +45,12 @@ export function LendoAgora({
             : `você está lendo ${lendo.length} livros`}
         </h2>
         <Link
+          href="/story?tipo=lendo"
+          className={`mr-3 ml-auto text-[10px] font-bold tracking-[.1em] uppercase ${escura ? "text-rosa-claro" : "text-bordo"}`}
+        >
+          story ✦
+        </Link>
+        <Link
           href="/estantes"
           className={
             escura

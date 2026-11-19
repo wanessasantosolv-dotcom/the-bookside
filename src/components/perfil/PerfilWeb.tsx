@@ -176,7 +176,7 @@ export function PerfilWeb({
                   onClick={compartilhar}
                   className={botaoHero}
                 >
-                  {copiado ? "link copiado ✓" : "compartilhar"}
+                  {copiado ? "link copiado ✓" : "compartilhar perfil"}
                 </button>
               </>
             )}

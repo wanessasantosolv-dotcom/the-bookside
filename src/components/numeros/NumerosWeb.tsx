@@ -8,6 +8,7 @@ import { usePerfil } from "@/lib/perfil-store";
 import { ExtremosDoAno } from "@/components/numeros/Extremos";
 import { FormatosDoAno } from "@/components/numeros/Formatos";
 import { MesAMes } from "@/components/numeros/MesAMes";
+import { MesEmRevista } from "@/components/numeros/MesEmRevista";
 import { corDoLivro } from "@/lib/cores";
 import {
   mediaTexto,
@@ -222,6 +223,8 @@ function ConteudoUnificado({
           </p>
         )}
       </section>
+      <MesEmRevista web />
+
       <ExtremosDoAno n={n} web />
 
       <FormatosDoAno n={n} web />

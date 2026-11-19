@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ExtremosDoAno } from "@/components/numeros/Extremos";
 import { FormatosDoAno } from "@/components/numeros/Formatos";
 import { MesAMes } from "@/components/numeros/MesAMes";
+import { MesEmRevista } from "@/components/numeros/MesEmRevista";
 import {
   bloco,
   NumerosShell,
@@ -174,6 +175,7 @@ export default function NumerosAnoPage() {
                 ) : null}
               </div>
 
+              <MesEmRevista />
               <ExtremosDoAno n={n} />
               <FormatosDoAno n={n} />
               <MesAMes n={n} />

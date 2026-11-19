@@ -333,6 +333,17 @@ export default function LivroPage() {
                 </span>
               </Link>
             ) : null}
+            {status === "lido" || status === "lendo" ? (
+              <Link
+                href={`/story?tipo=${status === "lido" ? "terminei" : "lendo"}&livro=${livro.id}`}
+                className="mx-6 mt-3 flex min-h-11 items-center justify-between rounded-md border border-bordo/40 bg-rosa-fundo px-4 lg:mx-0"
+              >
+                <span className="text-[13px] font-semibold text-bordo">
+                  compartilhar no story ✦
+                </span>
+                <span className="text-sm text-bordo">→</span>
+              </Link>
+            ) : null}
 
             {livro.sinopse ? (
               <section className="mt-6 px-6 lg:hidden">
