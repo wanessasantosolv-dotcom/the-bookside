@@ -151,10 +151,21 @@ function Lista() {
         )}
         <Link
           href="/ler-junto"
-          className="mt-5 flex items-center gap-4 rounded-xl border border-dashed border-bordo/40 px-5 py-4 hover:border-bordo lg:max-w-[560px] lg:rounded-[6px]"
+          className="group relative mt-5 flex items-center gap-4 overflow-hidden rounded-xl border border-bordo/20 bg-[linear-gradient(135deg,var(--color-rosa-fundo),var(--color-creme-quente)_70%)] px-5 py-4 shadow-[0_14px_26px_-18px_rgba(43,20,32,.3)] transition-colors hover:border-bordo lg:max-w-[560px] lg:rounded-[6px]"
         >
-          <span className="text-2xl">📖</span>
-          <span className="min-w-0 flex-1">
+          <span
+            aria-hidden
+            className="absolute -top-3 -right-2 text-[52px] text-bordo/[.08]"
+          >
+            📖
+          </span>
+          <span
+            aria-hidden
+            className="relative flex size-11 flex-none items-center justify-center rounded-full border border-dashed border-bordo bg-creme text-xl"
+          >
+            📖
+          </span>
+          <span className="relative min-w-0 flex-1">
             <span className="block font-display text-lg font-semibold italic text-bordo lg:font-revista lg:font-normal">
               ler junto com um amigo
             </span>
@@ -162,7 +173,9 @@ function Lista() {
               o mesmo livro, cada um na sua página — sem precisar de clube
             </span>
           </span>
-          <span className="text-sm font-semibold text-bordo">→</span>
+          <span className="relative text-sm font-semibold text-bordo transition-transform group-hover:translate-x-0.5">
+            →
+          </span>
         </Link>
         <p className="mt-6 text-center lg:text-left">
           <Link

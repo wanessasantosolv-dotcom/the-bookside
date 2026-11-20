@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { CapaLivro } from "@/components/CapaLivro";
@@ -85,18 +86,26 @@ function UmaPorVez() {
     (s) => s.livros.filter((l) => l.status === "quero").length,
   );
   const indicacoes = useIndicacoes();
+  // livro pedido de fora (ex.: a recomendação do início) — essa é a leitura
+  // que a pessoa clicou, então ela tem que ser a primeira da fila
+  const pedido = useSearchParams().get("livro");
   // a fila fica parada durante a visita (os livros guardados não somem do meio dela)
   const [fila, setFila] = useState<Indicacao[] | null>(null);
   const [indice, setIndice] = useState(0);
   const [perguntarTermino, setPerguntarTermino] = useState(false);
   useEffect(() => {
-    if (fila === null && !indicacoes.carregando)
-      setFila(
-        [...indicacoes.lista].sort(
-          (a, b) => Number(!!b.sinopse) - Number(!!a.sinopse),
-        ),
+    if (fila === null && !indicacoes.carregando) {
+      const ordenada = [...indicacoes.lista].sort(
+        (a, b) => Number(!!b.sinopse) - Number(!!a.sinopse),
       );
-  }, [fila, indicacoes.carregando, indicacoes.lista]);
+      const i = pedido ? ordenada.findIndex((l) => l.id === pedido) : -1;
+      setFila(
+        i > 0
+          ? [ordenada[i], ...ordenada.slice(0, i), ...ordenada.slice(i + 1)]
+          : ordenada,
+      );
+    }
+  }, [fila, indicacoes.carregando, indicacoes.lista, pedido]);
   // a versão mais nova do livro (a reserva ganha capa e sinopse depois que chega)
   const naFila = fila?.[indice];
   const livro =

@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { CapaLivro } from "@/components/CapaLivro";
 import { PerguntaTermino } from "@/components/PerguntaTermino";
@@ -117,7 +116,6 @@ function Linha({
   escura: boolean;
   lendoJuntoCom?: string;
 }) {
-  const router = useRouter();
   const editarLivro = usePerfil((s) => s.editarLivro);
   const [editando, setEditando] = useState(false);
   const [perguntarTermino, setPerguntarTermino] = useState(false);
@@ -303,7 +301,6 @@ function Linha({
               paginaAtual: l.paginas,
             });
             celebrarTermino(l, usePerfil.getState());
-            router.push(`/livro/${l.id}/avaliar`);
           }}
         />
       ) : null}

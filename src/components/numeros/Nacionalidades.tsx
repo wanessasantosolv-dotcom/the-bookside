@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { MapaPaises } from "@/components/numeros/MapaPaises";
 import { bandeira, paisesDasAutoras, type Pais } from "@/lib/nacionalidade";
 import { usePerfil } from "@/lib/perfil-store";
 
@@ -60,7 +61,10 @@ export function Nacionalidades({ web }: { web?: boolean }) {
               mais lido: {bandeira(lista[0].pais.codigo)} {lista[0].pais.nome}
             </span>
           </p>
-          <ul className={`mt-4 grid gap-2.5 ${web ? "grid-cols-2" : ""}`}>
+          <div className="mt-4">
+            <MapaPaises lista={lista} />
+          </div>
+          <ul className={`mt-5 grid gap-2.5 ${web ? "grid-cols-2" : ""}`}>
             {lista.slice(0, 10).map(({ pais, qtd }) => (
               <li key={pais.nome} className="flex items-center gap-3">
                 <span className="w-7 text-center text-xl">

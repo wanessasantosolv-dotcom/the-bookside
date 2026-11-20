@@ -146,7 +146,6 @@ function Leitura() {
         livroId: l!.livro.id,
       });
       setPagina("");
-      router.push(`/livro/${l!.livro.id}/avaliar`);
       return;
     }
     setPagina("");

@@ -31,12 +31,15 @@ export function Celebracao() {
   const fechar = useCelebracao((s) => s.fechar);
   const pequeno = atual?.tipo === "amei" || atual?.tipo === "favorito";
 
+  // com botões de ação (terminou um livro), dá mais tempo antes de fechar sozinho
+  const comAcoes =
+    (atual?.tipo === "livro" || atual?.tipo === "meta") && !!atual?.livroId;
   useEffect(() => {
     if (!atual) return;
     navigator.vibrate?.(pequeno ? 30 : [40, 60, 40]);
-    const t = setTimeout(fechar, pequeno ? 1400 : 4200);
+    const t = setTimeout(fechar, pequeno ? 1400 : comAcoes ? 6500 : 4200);
     return () => clearTimeout(t);
-  }, [atual, fechar, pequeno]);
+  }, [atual, fechar, pequeno, comAcoes]);
 
   const confete = useMemo(() => {
     if (!atual) return [];
@@ -141,13 +144,28 @@ export function Celebracao() {
               ) : null}
               {(atual.tipo === "livro" || atual.tipo === "meta") &&
               atual.livroId ? (
-                <Link
-                  href={`/story?tipo=terminei&livro=${atual.livroId}`}
-                  onClick={(e) => e.stopPropagation()}
-                  className="mt-4 flex min-h-11 items-center justify-center gap-1.5 rounded-pill bg-bordo text-[13px] font-semibold text-creme"
-                >
-                  compartilhar no story ✦
-                </Link>
+                <div className="mt-4 flex flex-col gap-2">
+                  <Link
+                    href={`/livro/${atual.livroId}/avaliar`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      fechar();
+                    }}
+                    className="flex min-h-11 items-center justify-center gap-1.5 rounded-pill bg-bordo text-[13px] font-semibold text-creme"
+                  >
+                    fazer a ficha ✎
+                  </Link>
+                  <Link
+                    href={`/story?tipo=terminei&livro=${atual.livroId}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      fechar();
+                    }}
+                    className="flex min-h-11 items-center justify-center gap-1.5 rounded-pill border border-bordo text-[13px] font-semibold text-bordo"
+                  >
+                    compartilhar no story ✦
+                  </Link>
+                </div>
               ) : null}
               <span className="mt-3 block text-[11px] font-semibold text-bordo">
                 toque para fechar

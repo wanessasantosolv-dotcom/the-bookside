@@ -51,8 +51,10 @@ function Progresso({ livro }: { livro: LivroSalvo }) {
       paginaAtual: terminou ? paginas || atual : atual,
       ...(terminou ? { lidoEm } : {}),
     });
+    // terminando, a celebração mesmo oferece "fazer a ficha"; sem terminar,
+    // volta pra página do livro normalmente
     if (terminou) celebrarTermino(livro, usePerfil.getState());
-    router.push(terminou ? `/livro/${livro.id}/avaliar` : `/livro/${livro.id}`);
+    else router.push(`/livro/${livro.id}`);
   }
 
   return (

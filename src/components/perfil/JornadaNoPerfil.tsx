@@ -33,23 +33,30 @@ export function JornadaNoPerfil() {
 
   return (
     <div className="space-y-6">
-      {/* o resumo, sempre à vista: a ficha "registro de leitura" */}
+      {/* o resumo, sempre à vista: a ficha "registro de leitura" — em destaque,
+          diferente dos outros cartões, porque é o número mais importante da jornada */}
       <div className="space-y-2">
-        <div className={`${bloco} pb-4`}>
-          <div className="flex items-center justify-between border-b border-linha pb-2.5">
-            <span className="font-maquina text-[9px] tracking-[.12em] text-rosa-antigo uppercase">
+        <div className="relative overflow-hidden rounded-[6px] border border-bordo/25 bg-[linear-gradient(160deg,var(--color-rosa-fundo),var(--color-creme-quente)_65%)] px-[18px] pt-4 pb-5 shadow-[0_18px_34px_-24px_rgba(43,20,32,.45)]">
+          <span
+            aria-hidden
+            className="absolute -top-4 -right-4 text-[72px] text-bordo/[.07]"
+          >
+            ✦
+          </span>
+          <div className="relative flex items-center justify-between border-b border-bordo/15 pb-2.5">
+            <span className="font-maquina text-[9.5px] tracking-[.14em] text-bordo uppercase">
               registro de leitura · {n.ano}
             </span>
-            <span className="font-maquina text-[9px] tracking-[.1em] text-cinza uppercase">
+            <span className="font-maquina text-[9px] tracking-[.1em] text-rosa-antigo uppercase">
               {n.meta ? `${n.total} / ${n.meta}` : `${n.total} livros`}
             </span>
           </div>
-          <div className="mt-3 flex items-center gap-4">
+          <div className="relative mt-4 flex items-center gap-4">
             <span
               aria-hidden
-              className="flex size-[62px] flex-none -rotate-6 items-center justify-center rounded-full border-[1.6px] border-dashed border-bordo text-center"
+              className="flex size-[76px] flex-none -rotate-6 items-center justify-center rounded-full border-[2px] border-dashed border-bordo bg-creme text-center shadow-[0_8px_16px_-10px_rgba(43,20,32,.35)]"
             >
-              <span className="font-display text-base leading-none font-bold text-bordo italic">
+              <span className="font-display text-[22px] leading-none font-bold text-bordo italic">
                 {n.meta ? `${Math.round(pct)}%` : "✦"}
               </span>
             </span>
@@ -58,7 +65,7 @@ export function JornadaNoPerfil() {
               {n.meta ? (
                 n.faltam ? (
                   <>
-                    <p className="mt-2 font-accent text-[17px] leading-[1.3] italic">
+                    <p className="mt-2 font-display text-[20px] leading-[1.25] font-semibold italic text-ameixa">
                       faltam {n.faltam} {n.faltam === 1 ? "livro" : "livros"}{" "}
                       para fechar o ano
                     </p>
@@ -67,13 +74,13 @@ export function JornadaNoPerfil() {
                     </p>
                   </>
                 ) : (
-                  <p className="mt-2 font-accent text-[17px] leading-[1.3] italic">
+                  <p className="mt-2 font-display text-[20px] leading-[1.25] font-semibold italic text-ameixa">
                     meta batida! tudo agora é bônus ✦
                   </p>
                 )
               ) : (
                 <>
-                  <p className="mt-2 font-accent text-[17px] leading-[1.3] italic">
+                  <p className="mt-2 font-display text-[20px] leading-[1.25] font-semibold italic text-ameixa">
                     sem meta este ano
                   </p>
                   <Link

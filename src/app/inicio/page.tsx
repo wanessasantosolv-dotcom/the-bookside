@@ -140,7 +140,7 @@ function IndicacaoDoDia({ compacto = false }: { compacto?: boolean } = {}) {
   if (compacto)
     return (
       <Link
-        href="/descobrir"
+        href={`/descobrir?livro=${encodeURIComponent(livro.id)}`}
         className="flex w-[172px] flex-none flex-col rounded-[14px] border border-linha bg-creme-quente p-3"
       >
         <div className="flex items-center gap-2.5">
@@ -164,7 +164,7 @@ function IndicacaoDoDia({ compacto = false }: { compacto?: boolean } = {}) {
     );
   return (
     <Link
-      href="/descobrir"
+      href={`/descobrir?livro=${encodeURIComponent(livro.id)}`}
       className="flex items-center gap-4 rounded-xl border border-linha bg-creme-quente p-4 hover:border-bordo lg:rounded-[4px] lg:border-fio lg:bg-transparent lg:p-5 lg:hover:bg-papel"
     >
       <CapaLivro

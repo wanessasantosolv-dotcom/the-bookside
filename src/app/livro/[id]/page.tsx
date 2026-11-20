@@ -236,10 +236,10 @@ export default function LivroPage() {
       ...(s === "lendo" ? { iniciadoEm: livro!.iniciadoEm ?? agora } : {}),
       ...(s === "lido" ? { lidoEm, paginaAtual: livro!.paginas } : {}),
     });
-    // terminou agora (não era lido antes): comemora e segue pra ficha de avaliação
+    // terminou agora (não era lido antes): comemora — a própria celebração
+    // oferece "fazer a ficha" e "compartilhar", sem brigar com a animação
     if (s === "lido" && livro!.status !== "lido") {
       celebrarTermino(livro!, usePerfil.getState());
-      router.push(`/livro/${livro!.id}/avaliar`);
     }
   }
 
