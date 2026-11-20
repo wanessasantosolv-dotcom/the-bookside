@@ -12,8 +12,8 @@ export function coresDoTema(id: string | null | undefined): CSSProperties | unde
   const escuro = "escuro" in t;
   const mistura = (cor: string, pct: number, com: string) => `color-mix(in srgb, ${cor} ${pct}%, ${com})`;
 
-  // temas claros: como no perfil, o papel continua creme e só o destaque muda
-  // (títulos, botões, abas, links e os toques de cor)
+  // temas claros: o papel ganha a cor do tema (cada um com o seu fundo),
+  // os cartões ficam um tom mais claro, e o destaque muda junto
   const destaque = escuro ? t.destaque : t.texto;
   const cores: Record<string, string> = {
     "--color-bordo": destaque,
@@ -24,6 +24,19 @@ export function coresDoTema(id: string | null | undefined): CSSProperties | unde
     "--color-rosa-claro": mistura(t.destaque, 40, "#F9F5EE"),
     "--color-rosa-fundo": mistura(t.destaque, 12, "#F9F5EE"),
   };
+  // no modo escuro do app o papel claro não entra (o fundo continua escuro)
+  const modoEscuro =
+    typeof document !== "undefined" &&
+    document.documentElement.dataset.modo === "escuro";
+  if (!escuro && !modoEscuro)
+    Object.assign(cores, {
+      "--color-creme": t.papel,
+      "--color-jornal": t.papel,
+      "--color-papel": t.papel,
+      "--color-creme-quente": mistura("#FFFFFF", 45, t.papel),
+      "--color-rosa-fundo": mistura(t.destaque, 12, t.papel),
+      "--color-rosa-claro": mistura(t.destaque, 40, t.papel),
+    });
   if (escuro) {
     // tema escuro: a página inteira escurece, como no perfil
     Object.assign(cores, {

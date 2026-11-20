@@ -38,7 +38,8 @@ export function Aparencia() {
     return () => {
       for (const k of nomes) raiz.style.removeProperty(k);
     };
-  }, [tema, temaNoApp]);
+    // aparencia: o papel claro do tema sai/volta quando muda o modo escuro
+  }, [tema, temaNoApp, aparencia]);
   return null;
 }
 
