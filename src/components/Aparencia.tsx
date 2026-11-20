@@ -5,6 +5,20 @@ import { usePerfil } from "@/lib/perfil-store";
 import { temas } from "@/lib/dados";
 import { coresDoTema } from "@/lib/tema";
 
+/** o app está no modo escuro? (a escolha da pessoa ou o sistema, no "automático") */
+export function useModoEscuro() {
+  const aparencia = usePerfil((s) => s.aparencia ?? "claro");
+  const [doSistema, setDoSistema] = useState(false);
+  useEffect(() => {
+    const mq = matchMedia("(prefers-color-scheme: dark)");
+    const ler = () => setDoSistema(mq.matches);
+    ler();
+    mq.addEventListener("change", ler);
+    return () => mq.removeEventListener("change", ler);
+  }, []);
+  return aparencia === "escuro" || (aparencia === "sistema" && doSistema);
+}
+
 /** Mantém o modo escuro/claro do app em dia com a escolha da pessoa (e com o sistema, no "automático"). */
 export function Aparencia() {
   const aparencia = usePerfil((s) => s.aparencia ?? "claro");
@@ -26,12 +40,13 @@ export function Aparencia() {
   // o tema do perfil no app todo (se a pessoa ligou em configurações)
   const tema = usePerfil((s) => s.tema);
   const temaNoApp = usePerfil((s) => !s.temaSoNoPerfil);
+  const modoEscuro = useModoEscuro();
   useEffect(() => {
     const raiz = document.documentElement;
     const t = temas.find((x) => x.id === tema);
     if (temaNoApp && t && "escuro" in t) raiz.dataset.temaEscuro = "1";
     else delete raiz.dataset.temaEscuro;
-    const cores = (temaNoApp ? coresDoTema(tema) : undefined) ?? {};
+    const cores = (temaNoApp ? coresDoTema(tema, modoEscuro) : undefined) ?? {};
     const nomes = Object.keys(cores);
     for (const [k, v] of Object.entries(cores))
       if (k.startsWith("--")) raiz.style.setProperty(k, String(v));
@@ -39,7 +54,7 @@ export function Aparencia() {
       for (const k of nomes) raiz.style.removeProperty(k);
     };
     // aparencia: o papel claro do tema sai/volta quando muda o modo escuro
-  }, [tema, temaNoApp, aparencia]);
+  }, [tema, temaNoApp, modoEscuro]);
   return null;
 }
 
@@ -68,7 +83,9 @@ export function AlternarAparencia({
   return (
     <button
       type="button"
-      aria-label={escuro ? "trocar para o modo claro" : "trocar para o modo escuro"}
+      aria-label={
+        escuro ? "trocar para o modo claro" : "trocar para o modo escuro"
+      }
       onClick={() => atualizar({ aparencia: escuro ? "claro" : "escuro" })}
       className={className}
     >

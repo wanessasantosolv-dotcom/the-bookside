@@ -6,11 +6,15 @@ import { temas } from "@/lib/dados";
  * cor de destaque, como no perfil; no tema escuro, a página toda escurece.
  * Biblioteca clássica é o visual padrão do app, então não troca nada.
  */
-export function coresDoTema(id: string | null | undefined): CSSProperties | undefined {
+export function coresDoTema(
+  id: string | null | undefined,
+  modoEscuroDoApp?: boolean,
+): CSSProperties | undefined {
   const t = temas.find((x) => x.id === id);
   if (!t || t.id === "biblioteca-classica") return undefined;
   const escuro = "escuro" in t;
-  const mistura = (cor: string, pct: number, com: string) => `color-mix(in srgb, ${cor} ${pct}%, ${com})`;
+  const mistura = (cor: string, pct: number, com: string) =>
+    `color-mix(in srgb, ${cor} ${pct}%, ${com})`;
 
   // temas claros: o papel ganha a cor do tema (cada um com o seu fundo),
   // os cartões ficam um tom mais claro, e o destaque muda junto
@@ -26,8 +30,9 @@ export function coresDoTema(id: string | null | undefined): CSSProperties | unde
   };
   // no modo escuro do app o papel claro não entra (o fundo continua escuro)
   const modoEscuro =
-    typeof document !== "undefined" &&
-    document.documentElement.dataset.modo === "escuro";
+    modoEscuroDoApp ??
+    (typeof document !== "undefined" &&
+      document.documentElement.dataset.modo === "escuro");
   if (!escuro && !modoEscuro)
     Object.assign(cores, {
       "--color-creme": t.papel,
@@ -36,6 +41,15 @@ export function coresDoTema(id: string | null | undefined): CSSProperties | unde
       "--color-creme-quente": mistura("#FFFFFF", 45, t.papel),
       "--color-rosa-fundo": mistura(t.destaque, 12, t.papel),
       "--color-rosa-claro": mistura(t.destaque, 40, t.papel),
+    });
+  if (!escuro && modoEscuro)
+    // tema claro no modo escuro do app: os fundos rosados misturam com o escuro
+    Object.assign(cores, {
+      "--color-bordo": mistura(t.destaque, 65, "#F5EFE6"),
+      "--color-bordo-escuro": mistura(t.destaque, 65, "#F5EFE6"),
+      "--color-vinho": mistura(t.destaque, 65, "#F5EFE6"),
+      "--color-rosa-fundo": mistura(t.destaque, 16, "var(--color-creme)"),
+      "--color-rosa-claro": mistura(t.destaque, 55, "var(--color-creme)"),
     });
   if (escuro) {
     // tema escuro: a página inteira escurece, como no perfil

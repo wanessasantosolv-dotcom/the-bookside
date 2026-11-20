@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, type CSSProperties } from "react";
 import { AppShell } from "@/components/AppShell";
+import { useModoEscuro } from "@/components/Aparencia";
 import { CapaLivro } from "@/components/CapaLivro";
 import { PerfilWeb } from "@/components/perfil/PerfilWeb";
 import {
@@ -17,6 +18,7 @@ import { BotaoSeguir, CartaoAtividade } from "@/components/social/Pessoas";
 import { lembrarLivros } from "@/lib/catalogo";
 import { corDoLivro } from "@/lib/cores";
 import { temas } from "@/lib/dados";
+import { coresDoTema } from "@/lib/tema";
 import { perfilInicial, usePerfil, type Perfil } from "@/lib/perfil-store";
 import {
   atividadesDe,
@@ -29,6 +31,7 @@ import {
 import { arquetipos, type ArquetipoId } from "@/lib/teste";
 
 function PerfilDela({ usuario }: { usuario: string }) {
+  const modoEscuro = useModoEscuro();
   const router = useRouter();
   const eu = useMeuId();
   const meuUsuario = usePerfil((s) => s.usuario);
@@ -98,7 +101,12 @@ function PerfilDela({ usuario }: { usuario: string }) {
   const emComum = lidos.filter((l) => meusLivros.has(l.id)).length;
 
   const estilo = {
-    "--papel": escuro ? tema.papel : "var(--color-creme)",
+    // o fundo e as cores do tema (cada tema claro com o seu papel; no modo escuro do app, fica escuro)
+    ...(coresDoTema(tema.id, modoEscuro) as Record<string, string> | undefined),
+    "--papel":
+      escuro || (!modoEscuro && tema.id !== "biblioteca-classica")
+        ? tema.papel
+        : "var(--color-creme)",
     "--tinta": escuro ? "#F5EFE6" : "var(--color-ameixa)",
     "--acc-base": escuro
       ? tema.texto
