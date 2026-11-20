@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-/** "o ano do clube": a retrospectiva e a revista em PDF, sempre à vista */
+/** "o ano do clube": a retrospectiva, sempre à vista */
 export function CartaoAnoDoClube({ clubeId }: { clubeId: string }) {
   const ano = new Date().getFullYear();
   return (
@@ -10,7 +10,7 @@ export function CartaoAnoDoClube({ clubeId }: { clubeId: string }) {
           o ano do clube ✦
         </span>
         <span className="mt-0.5 block font-accent text-sm italic text-cinza">
-          a retrospectiva de {ano} e a revista em PDF
+          a retrospectiva de {ano}
         </span>
       </span>
       <Link
@@ -18,12 +18,6 @@ export function CartaoAnoDoClube({ clubeId }: { clubeId: string }) {
         className="flex min-h-10 items-center rounded-pill bg-bordo px-4 text-xs font-semibold text-creme"
       >
         retrospectiva
-      </Link>
-      <Link
-        href={`/revista/${clubeId}`}
-        className="flex min-h-10 items-center rounded-pill border border-bordo px-4 text-xs font-semibold text-bordo"
-      >
-        revista (PDF)
       </Link>
     </div>
   );

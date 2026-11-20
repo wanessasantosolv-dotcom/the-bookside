@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { CapaLivro } from "@/components/CapaLivro";
 import { corDoLivro } from "@/lib/cores";
-import { anoDaRetrospectiva, mesDoReview } from "@/lib/numeros";
+import { mesDoReview } from "@/lib/numeros";
 import { usePerfil } from "@/lib/perfil-store";
 
 const MESES = [
@@ -27,45 +27,12 @@ const MESES = [
  */
 export function ProntoPraVoce() {
   const livros = usePerfil((s) => s.livros);
-  const anoRetro = anoDaRetrospectiva();
   const review = mesDoReview();
-  if (!anoRetro && !review) return null;
+  if (!review) return null;
 
   const lidosDe = (prefixo: string) =>
     livros.filter((l) => l.status === "lido" && l.lidoEm?.startsWith(prefixo));
   const cartoes = [];
-
-  if (anoRetro) {
-    const doAno = lidosDe(String(anoRetro));
-    cartoes.push(
-      <Link
-        key="retro"
-        href="/numeros/retrospectiva"
-        className="inverso group relative block overflow-hidden rounded-xl bg-gradient-to-br from-ameixa via-bordo-escuro to-bordo p-5 text-creme lg:rounded-[6px] lg:p-6"
-      >
-        <span
-          aria-hidden
-          className="absolute -top-3 right-4 text-[64px] leading-none text-ouro/30"
-        >
-          ✦
-        </span>
-        <span className="relative block text-[10px] font-semibold tracking-[.2em] text-rosa-claro uppercase">
-          chegou ✦ retrospectiva do ano
-        </span>
-        <span className="relative mt-1.5 block font-display text-[26px] leading-tight font-semibold italic lg:font-revista lg:text-[30px] lg:font-normal">
-          seu {anoRetro} em livros
-        </span>
-        <span className="relative mt-1 block text-[13px] text-rosa-claro/90">
-          {doAno.length} {doAno.length === 1 ? "livro" : "livros"} — veja o seu
-          ano inteiro
-        </span>
-        <Capas livros={doAno} />
-        <span className="relative mt-4 inline-flex h-10 items-center rounded-pill bg-creme px-5 text-[13px] font-semibold text-bordo transition-transform group-hover:-translate-y-0.5">
-          abrir a retrospectiva →
-        </span>
-      </Link>,
-    );
-  }
 
   if (review) {
     const chave = `${review.ano}-${String(review.mes + 1).padStart(2, "0")}`;

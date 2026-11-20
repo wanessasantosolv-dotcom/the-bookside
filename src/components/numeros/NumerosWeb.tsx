@@ -11,12 +11,7 @@ import { MesAMes } from "@/components/numeros/MesAMes";
 import { Nacionalidades } from "@/components/numeros/Nacionalidades";
 import { MesEmRevista } from "@/components/numeros/MesEmRevista";
 import { corDoLivro } from "@/lib/cores";
-import {
-  mediaTexto,
-  numero,
-  type Numeros,
-  wrappedLiberado,
-} from "@/lib/numeros";
+import { mediaTexto, numero, type Numeros } from "@/lib/numeros";
 
 const CORES_GENERO = [
   "var(--color-bordo)",
@@ -27,7 +22,7 @@ const CORES_GENERO = [
   "#464052",
 ];
 
-/** Números na versão web: banner bordô + tudo numa tela só (exceto a retrospectiva, que vira um "wrapped" à parte). */
+/** Números na versão web: banner bordô + tudo numa tela só. */
 export function NumerosWeb({
   n,
   nome,
@@ -314,15 +309,6 @@ function ConteudoUnificado({
           </ol>
         </section>
       </div>
-      {wrappedLiberado() ? (
-        <Link
-          href="/numeros/retrospectiva"
-          className="inverso flex h-[58px] items-center justify-between rounded-md bg-ameixa px-7 text-sm font-semibold text-creme hover:bg-bordo-escuro"
-        >
-          <span>gerar o wrapped de {n.ano} ✦</span>
-          <span aria-hidden>→</span>
-        </Link>
-      ) : null}
     </>
   );
 }

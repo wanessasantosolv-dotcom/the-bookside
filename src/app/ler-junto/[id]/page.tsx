@@ -53,6 +53,23 @@ function Leitura() {
   useEffect(() => {
     if (!l || !eus || sincronizou.current) return;
     sincronizou.current = true;
+    // entrar numa leitura junta sem o livro na estante: entra como "lendo"
+    // agora mesmo, pra aparecer em "você está lendo" e contar nas métricas
+    if (!daEstante && !eus.terminou)
+      editarLivro(
+        {
+          id: l.livro.id,
+          titulo: l.livro.titulo,
+          autor: l.livro.autor,
+          capa: l.livro.capa,
+        },
+        {
+          status: "lendo",
+          iniciadoEm: new Date().toISOString(),
+          paginaAtual: eus.pagina,
+          paginas: l.livro.paginas,
+        },
+      );
     const p =
       daEstante?.status === "lido"
         ? (l.livro.paginas ?? daEstante.paginas ?? eus.pagina)
@@ -61,7 +78,7 @@ function Leitura() {
       atualizarMinhaPagina(l.id, p, daEstante?.status === "lido")
         .then(() => consulta.recarregar())
         .catch(() => {});
-  }, [l, eus, daEstante, consulta]);
+  }, [l, eus, daEstante, consulta, editarLivro]);
 
   if (consulta.erro)
     return <ErroOuFalta erro={consulta.erro} onTentar={consulta.recarregar} />;

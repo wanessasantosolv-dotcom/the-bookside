@@ -264,21 +264,15 @@ export default function RetrospectivaDoClube() {
           </div>
         )}
 
-        <div className="mt-8 flex flex-col gap-2.5 sm:flex-row">
+        <div className="mt-8">
           <button
             type="button"
             onClick={compartilhar}
             disabled={!w.lidos}
-            className="flex min-h-12 flex-1 items-center justify-center rounded-pill bg-creme text-sm font-semibold text-ameixa disabled:opacity-50"
+            className="flex min-h-12 w-full items-center justify-center rounded-pill bg-creme text-sm font-semibold text-ameixa disabled:opacity-50"
           >
             compartilhar ✧
           </button>
-          <Link
-            href={`/revista/${clube.id}?ano=${ano}`}
-            className="flex min-h-12 flex-1 items-center justify-center rounded-pill border border-rosa-claro/50 text-sm font-semibold text-creme"
-          >
-            ver a revista do clube (PDF)
-          </Link>
         </div>
         <p
           role="status"

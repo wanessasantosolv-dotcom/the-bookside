@@ -5,14 +5,13 @@ import type { ReactNode } from "react";
 import { AppShell } from "@/components/AppShell";
 import { useHidratado } from "@/components/PerfilHidratacao";
 import { NumerosWeb } from "@/components/numeros/NumerosWeb";
-import { calcularNumeros, wrappedLiberado, type Numeros } from "@/lib/numeros";
+import { calcularNumeros, type Numeros } from "@/lib/numeros";
 import { usePerfil } from "@/lib/perfil-store";
 
 const abas = [
   { id: "ano", href: "/numeros", rotulo: "o ano" },
   { id: "generos", href: "/numeros/generos", rotulo: "gêneros" },
   { id: "calendario", href: "/numeros/calendario", rotulo: "calendário" },
-  { id: "retro", href: "/numeros/retrospectiva", rotulo: "retrospectiva" },
 ] as const;
 
 export const bloco =
@@ -85,18 +84,16 @@ export function NumerosShell({
           aria-label="seções da jornada"
           className="mx-6 mt-5 flex gap-1 rounded-pill bg-linha/70 p-1"
         >
-          {abas
-            .filter((a) => a.id !== "retro" || wrappedLiberado())
-            .map((a) => (
-              <Link
-                key={a.id}
-                href={a.href}
-                aria-current={a.id === aba ? "page" : undefined}
-                className={`flex h-[34px] flex-1 items-center justify-center rounded-pill text-xs font-semibold ${a.id === aba ? "bg-bordo text-creme" : "text-cinza"}`}
-              >
-                {a.rotulo}
-              </Link>
-            ))}
+          {abas.map((a) => (
+            <Link
+              key={a.id}
+              href={a.href}
+              aria-current={a.id === aba ? "page" : undefined}
+              className={`flex h-[34px] flex-1 items-center justify-center rounded-pill text-xs font-semibold ${a.id === aba ? "bg-bordo text-creme" : "text-cinza"}`}
+            >
+              {a.rotulo}
+            </Link>
+          ))}
         </nav>
         <div className="flex flex-1 flex-col gap-3.5 px-6 pt-5 pb-6">
           {children(n)}

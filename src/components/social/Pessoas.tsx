@@ -292,7 +292,7 @@ export function CartaoAtividade({
           ) : a.texto ? (
             <blockquote
               className={`mt-2 line-clamp-4 font-accent leading-[1.4] italic lg:font-revista ${
-                a.tipo === "trecho" ? "text-[15px] text-bordo" : "text-sm"
+                a.tipo === "trecho" ? "text-[15px] text-rosa-antigo" : "text-sm"
               }`}
             >
               “{a.texto}”

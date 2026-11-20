@@ -4,6 +4,7 @@ import { CapaAuto } from "@/components/CapaAuto";
 import Link from "next/link";
 import { useState } from "react";
 import { AppShell } from "@/components/AppShell";
+import { AlternarAparencia } from "@/components/Aparencia";
 import { ConviteTeste } from "@/components/ConviteTeste";
 import { LendoAgora } from "@/components/feed/LendoAgora";
 import { ProntoPraVoce } from "@/components/feed/ProntoPraVoce";
@@ -114,6 +115,7 @@ function Topo({ nome }: { nome: string }) {
           </svg>
           <span className="hidden lg:inline">novidades</span>
         </Link>
+        <AlternarAparencia />
         <Link
           href="/perfil"
           aria-label="seu perfil"
