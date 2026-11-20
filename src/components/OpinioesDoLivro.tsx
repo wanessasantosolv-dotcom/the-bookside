@@ -21,7 +21,7 @@ const virgula = (n: number) =>
     maximumFractionDigits: 1,
   });
 const rotuloSecao =
-  "text-[10px] font-semibold tracking-[.16em] text-cinza uppercase";
+  "font-maquina text-[9px] tracking-[.12em] text-rosa-antigo uppercase";
 
 /** "o que os leitores acham": notas médias, opiniões do app, a crítica e onde ler mais resenhas. */
 export function OpinioesDoLivro({
@@ -63,8 +63,10 @@ export function OpinioesDoLivro({
   const mediaApp = doApp?.filter((o) => o.nota).map((o) => Number(o.nota));
 
   return (
-    <div className="rounded-md border border-linha p-4 lg:rounded-[4px] lg:border-fio lg:p-5">
-      <p className={rotuloSecao}>o que os leitores acham</p>
+    <div className="rounded-[2px] border border-dashed border-linha bg-creme-quente p-4 lg:p-5">
+      <p className="font-maquina text-[9px] tracking-[.12em] text-rosa-antigo uppercase">
+        o que os leitores acham
+      </p>
 
       {/* notas médias */}
       <div className="mt-3 space-y-1">
