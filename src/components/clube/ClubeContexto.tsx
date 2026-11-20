@@ -340,13 +340,15 @@ export function ClubeProvedor({
   const { c, membros } = consulta.dados;
   const papel = membros.find((m) => m.usuario_id === eu)?.papel ?? null;
   const base = `/clubes/${c.id}`;
-  const comAbas = [
-    base,
-    `${base}/feed`,
-    `${base}/biblioteca`,
-    `${base}/leitura`,
-    `${base}/agenda`,
-  ].includes(pathname);
+  // além das 5 seções principais, a leitura de um livro e o perfil de um
+  // membro também mantêm a barra do clube — sem isso, a navegação some
+  // assim que a pessoa entra mais fundo e ela precisa ficar voltando
+  const comAbas =
+    [base, `${base}/feed`, `${base}/biblioteca`, `${base}/leitura`, `${base}/agenda`].includes(
+      pathname,
+    ) ||
+    pathname.startsWith(`${base}/livro/`) ||
+    pathname.startsWith(`${base}/membro/`);
 
   return (
     <Contexto.Provider

@@ -7,7 +7,9 @@ import { CapaLivro } from "@/components/CapaLivro";
 import { PerguntaTermino } from "@/components/PerguntaTermino";
 import { celebrarTermino } from "@/lib/celebrar";
 import { corDoLivro } from "@/lib/cores";
+import { minhasLeiturasJuntas } from "@/lib/lerjunto";
 import { usePerfil, type LivroSalvo } from "@/lib/perfil-store";
+import { nomeDe, useConsulta, useMeuId } from "@/lib/social";
 
 /**
  * Todos os livros que a pessoa está lendo, com a página de agora — atualizável ali mesmo.
@@ -23,6 +25,8 @@ export function LendoAgora({
   semCartao?: boolean;
 } = {}) {
   const livros = usePerfil((s) => s.livros);
+  const eu = useMeuId();
+  const juntas = useConsulta(() => minhasLeiturasJuntas().catch(() => []), []);
   const lendo = livros
     .filter((l) => l.status === "lendo")
     .sort((a, b) =>
@@ -32,6 +36,16 @@ export function LendoAgora({
     );
   if (!lendo.length) return null;
   const escura = tema === "escura";
+  // quem mais está lendo junto cada um desses livros (se houver)
+  const juntoPorLivro = new Map<string, string>();
+  for (const j of juntas.dados ?? []) {
+    const outras = j.pessoas.filter((p) => p.usuario_id !== eu);
+    if (outras.length)
+      juntoPorLivro.set(
+        j.livro.id,
+        outras.map((p) => nomeDe(p.pessoa)).join(" · "),
+      );
+  }
 
   const conteudo = (
     <>
@@ -72,7 +86,13 @@ export function LendoAgora({
         }
       >
         {lendo.map((l, i) => (
-          <Linha key={l.id} l={l} indice={i} escura={escura} />
+          <Linha
+            key={l.id}
+            l={l}
+            indice={i}
+            escura={escura}
+            lendoJuntoCom={juntoPorLivro.get(l.id)}
+          />
         ))}
       </ul>
     </>
@@ -90,10 +110,12 @@ function Linha({
   l,
   indice,
   escura,
+  lendoJuntoCom,
 }: {
   l: LivroSalvo;
   indice: number;
   escura: boolean;
+  lendoJuntoCom?: string;
 }) {
   const router = useRouter();
   const editarLivro = usePerfil((s) => s.editarLivro);
@@ -140,6 +162,17 @@ function Linha({
         <p className={`truncate text-xs ${escura ? "text-rosa-claro/80" : "text-cinza"}`}>
           {l.autor}
         </p>
+        {lendoJuntoCom ? (
+          <span
+            className={`mt-1 inline-flex min-h-6 items-center gap-1 rounded-pill px-2 text-[10px] font-semibold ${
+              escura
+                ? "bg-creme/15 text-rosa-claro"
+                : "bg-rosa-fundo text-bordo"
+            }`}
+          >
+            ✦ lendo junto com {lendoJuntoCom}
+          </span>
+        ) : null}
         {editando ? (
           <form
             onSubmit={(e) => {
