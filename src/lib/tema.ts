@@ -16,8 +16,8 @@ export function coresDoTema(
   const mistura = (cor: string, pct: number, com: string) =>
     `color-mix(in srgb, ${cor} ${pct}%, ${com})`;
 
-  // temas claros: o papel ganha a cor do tema (cada um com o seu fundo),
-  // os cartões ficam um tom mais claro, e o destaque muda junto
+  // temas claros: o papel continua creme e só o destaque muda
+  // (títulos, botões, abas, links e os toques de cor)
   const destaque = escuro ? t.destaque : t.texto;
   const cores: Record<string, string> = {
     "--color-bordo": destaque,
@@ -28,20 +28,11 @@ export function coresDoTema(
     "--color-rosa-claro": mistura(t.destaque, 40, "#F9F5EE"),
     "--color-rosa-fundo": mistura(t.destaque, 12, "#F9F5EE"),
   };
-  // no modo escuro do app o papel claro não entra (o fundo continua escuro)
+  // no modo escuro do app, o destaque do tema claro clareia para dar leitura
   const modoEscuro =
     modoEscuroDoApp ??
     (typeof document !== "undefined" &&
       document.documentElement.dataset.modo === "escuro");
-  if (!escuro && !modoEscuro)
-    Object.assign(cores, {
-      "--color-creme": t.papel,
-      "--color-jornal": t.papel,
-      "--color-papel": t.papel,
-      "--color-creme-quente": mistura("#FFFFFF", 45, t.papel),
-      "--color-rosa-fundo": mistura(t.destaque, 12, t.papel),
-      "--color-rosa-claro": mistura(t.destaque, 40, t.papel),
-    });
   if (!escuro && modoEscuro)
     // tema claro no modo escuro do app: os fundos rosados misturam com o escuro
     Object.assign(cores, {
