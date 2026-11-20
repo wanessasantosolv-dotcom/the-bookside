@@ -9,28 +9,32 @@ import type { LivroSalvo } from "@/lib/perfil-store";
 
 type Cartao = {
   rot: string;
+  icone: string;
   livros: LivroSalvo[];
   info: (l: LivroSalvo) => string;
 };
 
-/** "os extremos do ano": as notas mais altas e mais baixas, o livro mais rápido e o mais demorado. */
+/** "os extremos do ano": as notas mais altas e mais baixas, o livro mais rápido e o mais demorado,
+ * como uma fita de selos — compacta, pra caber tudo numa olhada só. */
 export function ExtremosDoAno({ n, web }: { n: Numeros; web?: boolean }) {
   const nota = (l: LivroSalvo) => estrelas(l.nota);
   const cartoes: Cartao[] = [
-    { rot: "as notas mais altas", livros: n.maisAmados, info: nota },
-    { rot: "as notas mais baixas", livros: n.menosAmados, info: nota },
+    { rot: "nota mais alta", icone: "★", livros: n.maisAmados, info: nota },
+    { rot: "nota mais baixa", icone: "☆", livros: n.menosAmados, info: nota },
     n.maisRapido
       ? {
-          rot: "o mais rápido",
+          rot: "mais rápido",
+          icone: "⚡",
           livros: [n.maisRapido.l],
-          info: () => `lido ${textoDias(n.maisRapido!.dias)}`,
+          info: () => textoDias(n.maisRapido!.dias),
         }
       : null,
     n.maisDemorado
       ? {
-          rot: "o que mais demorou",
+          rot: "mais demorou",
+          icone: "⏳",
           livros: [n.maisDemorado.l],
-          info: () => `lido ${textoDias(n.maisDemorado!.dias)}`,
+          info: () => textoDias(n.maisDemorado!.dias),
         }
       : null,
   ].filter((c): c is Cartao => !!c && c.livros.length > 0);
@@ -57,49 +61,49 @@ export function ExtremosDoAno({ n, web }: { n: Numeros; web?: boolean }) {
       </h2>
       {cartoes.length ? (
         <div
-          className={`grid gap-3 ${web ? "grid-cols-2 gap-[18px] xl:grid-cols-4" : "grid-cols-1 min-[480px]:grid-cols-2"}`}
+          className={`grid gap-2.5 ${web ? "grid-cols-4 gap-3" : "grid-cols-2"}`}
         >
-          {cartoes.map((c) => (
-            <div
-              key={c.rot}
-              className={`rounded-md border border-linha bg-creme-quente p-3.5 ${web ? "rounded-[4px] bg-transparent p-5" : ""}`}
-            >
-              <p
-                className={
-                  web
-                    ? "font-revista text-base text-ameixa italic"
-                    : "font-display text-[15px] leading-tight font-semibold italic text-bordo"
-                }
+          {cartoes.map((c) => {
+            const principal = c.livros[0];
+            const resto = c.livros.slice(1);
+            return (
+              <div
+                key={c.rot}
+                className={`rounded-md bg-rosa-fundo p-3 text-center ${web ? "rounded-[4px] p-4" : ""}`}
               >
-                {c.rot}
-              </p>
-              <ul className="mt-3 space-y-2.5">
-                {c.livros.map((l) => (
-                  <li key={l.id}>
-                    <Link
-                      href={`/livro/${l.id}`}
-                      className="flex items-center gap-2.5"
-                    >
-                      <CapaLivro
-                        titulo={l.titulo}
-                        capa={l.capa}
-                        cor={corDoLivro(l.id)}
-                        className={`${c.livros.length === 1 ? "w-12" : "w-8"} flex-none [&>span:last-child]:hidden`}
-                      />
-                      <span className="min-w-0">
-                        <span className="block truncate text-[13px] font-semibold">
-                          {l.titulo}
-                        </span>
-                        <span className="block text-[11px] text-bordo">
-                          {c.info(l)}
-                        </span>
-                      </span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+                <span aria-hidden className="block text-base text-bordo">
+                  {c.icone}
+                </span>
+                <p className="font-maquina mt-1 text-[7.5px] leading-tight tracking-[.06em] text-bordo uppercase">
+                  {c.rot}
+                </p>
+                <Link
+                  href={`/livro/${principal.id}`}
+                  className="mt-2.5 flex items-center gap-2 text-left"
+                >
+                  <CapaLivro
+                    titulo={principal.titulo}
+                    capa={principal.capa}
+                    cor={corDoLivro(principal.id)}
+                    className="w-7 flex-none [&>span:last-child]:hidden"
+                  />
+                  <span className="min-w-0">
+                    <span className="block truncate text-[11.5px] font-semibold">
+                      {principal.titulo}
+                    </span>
+                    <span className="block text-[10px] text-bordo">
+                      {c.info(principal)}
+                    </span>
+                  </span>
+                </Link>
+                {resto.length ? (
+                  <p className="mt-1.5 truncate text-[9.5px] text-cinza">
+                    também: {resto.map((l) => l.titulo).join(", ")}
+                  </p>
+                ) : null}
+              </div>
+            );
+          })}
         </div>
       ) : null}
       {dica ? (
