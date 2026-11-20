@@ -297,6 +297,15 @@ export default function FichasDoLivroPage() {
             </div>
           </div>
 
+          {l.estado === "lido" ? (
+            <Link
+              href={`/clubes/${clube.id}/concluido/${l.id}`}
+              className="mt-3 inline-flex min-h-11 items-center text-[13px] font-semibold text-bordo underline underline-offset-4"
+            >
+              compartilhar no story ✦
+            </Link>
+          ) : null}
+
           <h2 className="mt-7 text-[10px] font-semibold tracking-[.16em] text-bordo uppercase">
             as fichas do clube
           </h2>

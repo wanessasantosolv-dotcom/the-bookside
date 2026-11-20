@@ -109,10 +109,10 @@ export const capaSegura = (url?: string) =>
       ? url
       : `/api/imagem?url=${encodeURIComponent(url)}`;
 
-const estrelasTexto = (n?: number) =>
+export const estrelasTexto = (n?: number) =>
   n ? "★".repeat(Math.floor(n)) + (n % 1 ? "½" : "") : "";
 
-function Capa({
+export function Capa({
   l,
   largura,
   girar = 0,
@@ -169,7 +169,7 @@ function Capa({
 }
 
 /** a moldura comum: 360×640 (vira 1080×1920), marca no topo e o @ embaixo */
-const Moldura = forwardRef<
+export const Moldura = forwardRef<
   HTMLDivElement,
   { e: EstiloStory; usuario: string; children: ReactNode }
 >(function Moldura({ e, usuario, children }, ref) {
@@ -261,14 +261,14 @@ const Moldura = forwardRef<
   );
 });
 
-const eyebrow = (e: EstiloStory): React.CSSProperties => ({
+export const eyebrow = (e: EstiloStory): React.CSSProperties => ({
   fontSize: 10,
   letterSpacing: ".24em",
   textTransform: "uppercase",
   fontWeight: 700,
   color: e.destaque,
 });
-const tituloStyle = (tamanho: number): React.CSSProperties => ({
+export const tituloStyle = (tamanho: number): React.CSSProperties => ({
   fontFamily: "var(--font-fraunces), Georgia, serif",
   fontStyle: "italic",
   fontSize: tamanho,
@@ -276,7 +276,7 @@ const tituloStyle = (tamanho: number): React.CSSProperties => ({
   fontWeight: 400,
 });
 
-const dataLonga = (iso?: string) =>
+export const dataLonga = (iso?: string) =>
   iso
     ? new Date(iso).toLocaleDateString("pt-BR", {
         day: "numeric",

@@ -404,7 +404,7 @@ export default function LeituraPage() {
               )
                 return;
               await encerrarLeitura(lendo.id);
-              router.push(`/clubes/${clube.id}/escolher?depois=encerrar`);
+              router.push(`/clubes/${clube.id}/concluido/${lendo.id}`);
             }}
             className="mt-3 min-h-11 text-xs font-semibold text-cinza underline underline-offset-4 hover:text-bordo"
           >
