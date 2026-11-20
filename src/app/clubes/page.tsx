@@ -61,7 +61,7 @@ function Cartao({
             {selo}
           </span>
         </div>
-        <div className="flex gap-4 px-4 pt-3 pb-4 lg:px-5">
+        <div className="relative flex gap-4 px-4 pt-3 pb-4 lg:px-5">
           {c.foto ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
