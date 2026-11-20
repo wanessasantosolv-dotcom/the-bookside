@@ -196,6 +196,7 @@ function BannerDesafios() {
   return (
     <Link
       href="/desafios"
+      data-tour="desafios"
       className="relative block -rotate-1 rounded-[2px] border border-linha bg-creme-quente px-5 py-5 pr-16 shadow-[0_14px_26px_-18px_rgba(43,20,32,.3)] hover:border-bordo lg:rounded-[4px]"
     >
       <span
@@ -662,9 +663,11 @@ export default function InicioPage() {
               </div>
             </div>
 
-            {/* ===== trilha "pra você" (celular e computador) ===== */}
+            {/* ===== trilha "pra você" (só celular — no computador, a recomendação já mora na lateral) ===== */}
             <div className="mt-3.5 flex gap-2.5 overflow-x-auto px-6 pb-1 lg:mx-0 lg:px-0 lg:pb-0">
-              <IndicacaoDoDia compacto />
+              <span className="contents lg:hidden">
+                <IndicacaoDoDia compacto />
+              </span>
               {/* depois de feito, o resultado fica no perfil (não no feed) */}
               {!bookside ? <BannerTeste compacto /> : null}
             </div>
@@ -689,6 +692,7 @@ export default function InicioPage() {
           </div>
 
           <aside className="hidden space-y-5 lg:block">
+            <IndicacaoDoDia />
             <BannerDesafios />
             <AmigasLendoWeb />
           </aside>

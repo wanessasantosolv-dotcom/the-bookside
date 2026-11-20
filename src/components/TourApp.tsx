@@ -21,7 +21,7 @@ const PASSOS: Passo[] = [
     alvo: "lendo",
     titulo: "o que você está lendo",
     texto:
-      "atualize a página em que parou, abra o modo foco (⏱) para ler com cronômetro e marque “terminei” quando acabar.",
+      "atualize a página em que parou, abra o modo foco (⏱) para ler com cronômetro e marque “terminei” quando acabar. dá para ler o mesmo livro junto com uma amiga, cada uma na sua página, sem precisar de clube — é o “ler junto”.",
   },
   {
     alvo: "publicar",
@@ -46,6 +46,12 @@ const PASSOS: Passo[] = [
     titulo: "novidades",
     texto:
       "curtidas, comentários, novos seguidores e avisos dos seus clubes ficam aqui.",
+  },
+  {
+    alvo: "desafios",
+    titulo: "desafios de leitura",
+    texto:
+      "metas e desafios pra se desafiar: sozinha, com amigas ou com o clube. escolha um modelo ou crie o seu.",
   },
   {
     alvo: "aba-estantes",
