@@ -31,6 +31,17 @@ export default function EditarClubePage() {
   const [capa, setCapa] = useState<string | null>(clube.capa);
   const [foto, setFoto] = useState<string | null>(clube.foto ?? null);
   const [tema, setTema] = useState<string>(clube.tema ?? temas[0].id);
+  const POR_PAGINA_TEMA = 4;
+  const [paginaTema, setPaginaTema] = useState(() =>
+    Math.max(
+      0,
+      Math.floor(
+        temas.findIndex((t) => t.id === (clube.tema ?? temas[0].id)) /
+          POR_PAGINA_TEMA,
+      ),
+    ),
+  );
+  const totalPaginasTema = Math.ceil(temas.length / POR_PAGINA_TEMA);
   const [limite, setLimite] = useState<string>(
     clube.limite_sugestoes ? String(clube.limite_sugestoes) : "",
   );
@@ -135,45 +146,106 @@ export default function EditarClubePage() {
           <p className="mt-1 font-accent text-[13px] italic text-cinza">
             define a cor de destaque do cabeçalho do clube.
           </p>
-          <div className="mt-2 grid grid-cols-4 gap-2.5">
-            {temas.map((t) => {
-              const marcado = t.id === tema;
-              return (
-                <label key={t.id} className="block">
-                  <input
-                    type="radio"
-                    name="tema"
-                    className="sr-only"
-                    checked={marcado}
-                    onChange={() => setTema(t.id)}
-                  />
-                  <span
-                    aria-label={t.nome}
-                    className={`flex aspect-square w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-md border-2 p-1 text-center ${
-                      marcado
-                        ? "shadow-[0_6px_14px_-8px_rgba(43,20,32,.5)]"
-                        : "border-transparent"
-                    }`}
-                    style={{
-                      background: t.papel,
-                      borderColor: marcado ? t.destaque : "transparent",
-                    }}
-                  >
-                    <span
-                      aria-hidden
-                      className="size-4 rounded-full"
-                      style={{ background: t.destaque }}
-                    />
-                    <span
-                      className="text-[9px] leading-tight font-semibold"
-                      style={{ color: t.texto }}
-                    >
-                      {t.nome}
-                    </span>
-                  </span>
-                </label>
-              );
-            })}
+          <div className="mt-2 flex items-center gap-2">
+            <button
+              type="button"
+              aria-label="temas anteriores"
+              disabled={paginaTema === 0}
+              onClick={() => setPaginaTema((p) => Math.max(0, p - 1))}
+              className="flex size-9 flex-none items-center justify-center rounded-full border border-bege text-bordo disabled:opacity-30"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+            </button>
+            <div className="grid flex-1 grid-cols-4 gap-2.5">
+              {temas
+                .slice(
+                  paginaTema * POR_PAGINA_TEMA,
+                  paginaTema * POR_PAGINA_TEMA + POR_PAGINA_TEMA,
+                )
+                .map((t) => {
+                  const marcado = t.id === tema;
+                  return (
+                    <label key={t.id} className="block">
+                      <input
+                        type="radio"
+                        name="tema"
+                        className="sr-only"
+                        checked={marcado}
+                        onChange={() => setTema(t.id)}
+                      />
+                      <span
+                        aria-label={t.nome}
+                        className={`flex aspect-square w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-md border-2 p-1 text-center ${
+                          marcado
+                            ? "shadow-[0_6px_14px_-8px_rgba(43,20,32,.5)]"
+                            : "border-transparent"
+                        }`}
+                        style={{
+                          background: t.papel,
+                          borderColor: marcado ? t.destaque : "transparent",
+                        }}
+                      >
+                        <span
+                          aria-hidden
+                          className="size-4 rounded-full"
+                          style={{ background: t.destaque }}
+                        />
+                        <span
+                          className="text-[9px] leading-tight font-semibold"
+                          style={{ color: t.texto }}
+                        >
+                          {t.nome}
+                        </span>
+                      </span>
+                    </label>
+                  );
+                })}
+            </div>
+            <button
+              type="button"
+              aria-label="mais temas"
+              disabled={paginaTema === totalPaginasTema - 1}
+              onClick={() =>
+                setPaginaTema((p) => Math.min(totalPaginasTema - 1, p + 1))
+              }
+              className="flex size-9 flex-none items-center justify-center rounded-full border border-bege text-bordo disabled:opacity-30"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M9 18l6-6-6-6" />
+              </svg>
+            </button>
+          </div>
+          <div className="mt-2.5 flex justify-center gap-1.5">
+            {Array.from({ length: totalPaginasTema }, (_, i) => (
+              <button
+                key={i}
+                type="button"
+                aria-label={`página ${i + 1} de temas`}
+                aria-current={i === paginaTema}
+                onClick={() => setPaginaTema(i)}
+                className={`size-1.5 rounded-full ${i === paginaTema ? "bg-bordo" : "bg-linha"}`}
+              />
+            ))}
           </div>
         </fieldset>
         <fieldset className="space-y-4">

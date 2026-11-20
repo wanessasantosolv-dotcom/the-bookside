@@ -1,8 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { CapaLivro } from "@/components/CapaLivro";
+import { PerguntaTermino } from "@/components/PerguntaTermino";
+import { celebrarTermino } from "@/lib/celebrar";
 import { corDoLivro } from "@/lib/cores";
 import { usePerfil, type LivroSalvo } from "@/lib/perfil-store";
 
@@ -92,8 +95,10 @@ function Linha({
   indice: number;
   escura: boolean;
 }) {
+  const router = useRouter();
   const editarLivro = usePerfil((s) => s.editarLivro);
   const [editando, setEditando] = useState(false);
+  const [perguntarTermino, setPerguntarTermino] = useState(false);
   const [pagina, setPagina] = useState(String(l.paginaAtual ?? ""));
   const [total, setTotal] = useState(String(l.paginas ?? ""));
   const pct =
@@ -237,8 +242,9 @@ function Linha({
               >
                 foco ⏱
               </Link>
-              <Link
-                href={`/livro/${l.id}`}
+              <button
+                type="button"
+                onClick={() => setPerguntarTermino(true)}
                 className={
                   escura
                     ? "ml-auto flex min-h-8 items-center gap-1 rounded-pill bg-creme px-2.5 py-1 text-[10px] font-bold text-bordo"
@@ -246,11 +252,28 @@ function Linha({
                 }
               >
                 terminei ✓
-              </Link>
+              </button>
             </p>
           </>
         )}
       </div>
+      {perguntarTermino ? (
+        <PerguntaTermino
+          titulo={l.titulo}
+          inicial={l.lidoEm}
+          onCancelar={() => setPerguntarTermino(false)}
+          onConfirmar={(lidoEm) => {
+            setPerguntarTermino(false);
+            editarLivro(l, {
+              status: "lido",
+              lidoEm,
+              paginaAtual: l.paginas,
+            });
+            celebrarTermino(l, usePerfil.getState());
+            router.push(`/livro/${l.id}/avaliar`);
+          }}
+        />
+      ) : null}
     </li>
   );
 }

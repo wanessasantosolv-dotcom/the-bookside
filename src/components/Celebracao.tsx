@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo } from "react";
 import { CapaLivro } from "@/components/CapaLivro";
 import { corDoLivro } from "@/lib/cores";
@@ -102,9 +103,11 @@ export function Celebracao() {
             </span>
           ))}
           <div className="absolute inset-0 flex items-center justify-center px-6">
-            <button
-              type="button"
+            <div
+              role="button"
+              tabIndex={0}
               onClick={fechar}
+              onKeyDown={(e) => e.key === "Enter" && fechar()}
               className="celebra-cartao pointer-events-auto w-full max-w-[340px] rounded-[20px] bg-creme px-6 pt-6 pb-5 text-center shadow-[0_30px_60px_-20px_rgba(43,20,32,.55)]"
             >
               <span className="block text-[10px] font-semibold tracking-[.22em] text-bordo uppercase">
@@ -136,10 +139,20 @@ export function Celebracao() {
                   {atual.texto}
                 </span>
               ) : null}
-              <span className="mt-4 block text-[11px] font-semibold text-bordo">
+              {(atual.tipo === "livro" || atual.tipo === "meta") &&
+              atual.livroId ? (
+                <Link
+                  href={`/story?tipo=terminei&livro=${atual.livroId}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="mt-4 flex min-h-11 items-center justify-center gap-1.5 rounded-pill bg-bordo text-[13px] font-semibold text-creme"
+                >
+                  compartilhar no story ✦
+                </Link>
+              ) : null}
+              <span className="mt-3 block text-[11px] font-semibold text-bordo">
                 toque para fechar
               </span>
-            </button>
+            </div>
           </div>
         </>
       )}

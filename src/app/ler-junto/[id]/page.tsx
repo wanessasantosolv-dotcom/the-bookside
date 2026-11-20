@@ -14,6 +14,7 @@ import {
   apagarLeitura,
   apagarRecado,
   atualizarMinhaPagina,
+  definirPaginasDaLeitura,
   mandarRecado,
   minhasLeiturasJuntas,
   recadosDe,
@@ -37,6 +38,7 @@ function Leitura() {
     return { l: todas.find((x) => x.id === id) ?? null, recados };
   }, [id]);
   const [pagina, setPagina] = useState("");
+  const [paginasTotal, setPaginasTotal] = useState("");
   const [texto, setTexto] = useState("");
   const [comSpoiler, setComSpoiler] = useState(true);
   const [revelados, setRevelados] = useState<string[]>([]);
@@ -92,6 +94,14 @@ function Leitura() {
     const p = terminou
       ? total || Number(pagina) || 0
       : Math.max(0, Math.round(Number(pagina) || 0));
+    // livro entrou na leitura junta sem o total de páginas: registra agora,
+    // pra barra de progresso de todo mundo parar de ficar travada em 0%
+    if (!total && Number(paginasTotal) > 0)
+      await definirPaginasDaLeitura(
+        l!.id,
+        l!.livro,
+        Math.round(Number(paginasTotal)),
+      ).catch(() => {});
     await atualizarMinhaPagina(l!.id, p, terminou);
     // a estante pessoal acompanha
     editarLivro(
@@ -110,13 +120,18 @@ function Leitura() {
           }
         : { status: "lendo", paginaAtual: p, paginas: total || undefined },
     );
-    if (terminou)
+    if (terminou) {
       celebrar({
         tipo: "livro",
         titulo: l!.livro.titulo,
         capa: l!.livro.capa ?? "",
         texto: "terminou a leitura junta ✦",
+        livroId: l!.livro.id,
       });
+      setPagina("");
+      router.push(`/livro/${l!.livro.id}/avaliar`);
+      return;
+    }
     setPagina("");
     consulta.recarregar();
   }
@@ -207,6 +222,23 @@ function Leitura() {
           </ul>
           {eus && !eus.terminou ? (
             <div className="mt-5 flex flex-wrap items-center gap-2">
+              {!total ? (
+                <>
+                  <p className="w-full font-accent text-xs italic text-cinza">
+                    esse livro entrou sem o total de páginas — por isso a
+                    barra não se mexe. diga quantas páginas ele tem:
+                  </p>
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    min={1}
+                    value={paginasTotal}
+                    onChange={(e) => setPaginasTotal(e.target.value)}
+                    placeholder="quantas páginas tem o livro?"
+                    className="h-11 w-[200px] rounded-pill border border-bege bg-creme px-4 text-sm outline-none focus:border-bordo"
+                  />
+                </>
+              ) : null}
               <input
                 type="number"
                 inputMode="numeric"

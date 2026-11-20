@@ -9,6 +9,8 @@ export type Celebracao = {
   titulo: string;
   texto?: string;
   capa?: string;
+  /** id do livro, para oferecer "compartilhar no story" quando for um término de leitura */
+  livroId?: string;
 };
 
 type Estado = {
@@ -31,7 +33,7 @@ export const celebrar = (c: Omit<Celebracao, "id">) =>
  * (chamar depois de salvar o livro como lido)
  */
 export function celebrarTermino(
-  livro: { titulo: string; capa?: string },
+  livro: { id: string; titulo: string; capa?: string },
   estado: { livros: { status?: string; lidoEm?: string }[]; meta: number | null },
 ) {
   const ano = String(new Date().getFullYear());
@@ -43,6 +45,7 @@ export function celebrarTermino(
       tipo: "meta",
       titulo: `${estado.meta} livros em ${ano}!`,
       texto: "você bateu a sua meta do ano. tudo agora é bônus ✦",
+      livroId: livro.id,
     });
   celebrar({
     tipo: "livro",
@@ -51,5 +54,6 @@ export function celebrarTermino(
     texto: estado.meta
       ? `livro nº ${lidosNoAno} de ${estado.meta} em ${ano}`
       : `livro nº ${lidosNoAno} em ${ano}`,
+    livroId: livro.id,
   });
 }

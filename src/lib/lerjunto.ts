@@ -149,6 +149,22 @@ export async function atualizarMinhaPagina(
   if (error) throw error;
 }
 
+/**
+ * Registra quantas páginas o livro tem (quando ele entrou na leitura junta sem
+ * esse dado) — sem isso a barra de progresso de todo mundo fica sempre em 0%.
+ */
+export async function definirPaginasDaLeitura(
+  id: string,
+  livro: LivroJunto,
+  paginas: number,
+) {
+  const { error } = await db()
+    .from("leituras_juntas")
+    .update({ livro: { ...livro, paginas } })
+    .eq("id", id);
+  if (error) throw error;
+}
+
 export async function chamarAmigo(id: string, usuarioId: string) {
   const { error } = await db()
     .from("leitura_junta_pessoas")

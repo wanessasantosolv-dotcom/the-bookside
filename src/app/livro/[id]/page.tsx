@@ -236,9 +236,11 @@ export default function LivroPage() {
       ...(s === "lendo" ? { iniciadoEm: livro!.iniciadoEm ?? agora } : {}),
       ...(s === "lido" ? { lidoEm, paginaAtual: livro!.paginas } : {}),
     });
-    // terminou agora (não era lido antes): comemora
-    if (s === "lido" && livro!.status !== "lido")
+    // terminou agora (não era lido antes): comemora e segue pra ficha de avaliação
+    if (s === "lido" && livro!.status !== "lido") {
       celebrarTermino(livro!, usePerfil.getState());
+      router.push(`/livro/${livro!.id}/avaliar`);
+    }
   }
 
   function alternarEstante(eid: string) {
