@@ -27,148 +27,105 @@ function subtitulo(n: Numeros) {
   return `${n.total} de ${n.meta} livros · ${n.ritmo === "no ritmo" ? "você está no ritmo ✦" : "dá tempo de alcançar ✧"}`;
 }
 
-/** Anel da meta: quanto do ano já foi lido. */
-function AnelMeta({ n }: { n: Numeros }) {
-  const r = 54;
-  const volta = 2 * Math.PI * r;
-  const pct = n.meta ? Math.min(1, n.total / n.meta) : 0;
-  return (
-    <svg
-      width="124"
-      height="124"
-      viewBox="0 0 124 124"
-      className="flex-none"
-      role="img"
-      aria-label={
-        n.meta ? `${n.total} de ${n.meta} livros` : `${n.total} livros`
-      }
-    >
-      <circle
-        cx="62"
-        cy="62"
-        r={r}
-        fill="none"
-        stroke="#F0E6DC"
-        strokeWidth="12"
-      />
-      {n.meta ? (
-        <circle
-          cx="62"
-          cy="62"
-          r={r}
-          fill="none"
-          stroke="var(--color-bordo)"
-          strokeWidth="12"
-          strokeLinecap="round"
-          strokeDasharray={volta}
-          strokeDashoffset={volta * (1 - pct)}
-          transform="rotate(-90 62 62)"
-        />
-      ) : null}
-      <text
-        x="62"
-        y="60"
-        textAnchor="middle"
-        className="font-display"
-        fontStyle="italic"
-        fontWeight="700"
-        fontSize="30"
-        fill="var(--color-bordo)"
-      >
-        {n.total}
-      </text>
-      <text
-        x="62"
-        y="80"
-        textAnchor="middle"
-        fontWeight="500"
-        fontSize="11"
-        fill="#7A6A6E"
-      >
-        {n.meta ? `de ${n.meta}` : "livros"}
-      </text>
-    </svg>
-  );
-}
-
 export default function NumerosAnoPage() {
   return (
     <NumerosShell aba="ano" titulo="este ano" subtitulo={subtitulo}>
       {(n) => (
         <>
-          <div
-            className={`${bloco} flex animate-subir items-center gap-[18px]`}
-          >
-            <AnelMeta n={n} />
-            <div>
-              <p className="eyebrow text-bordo">meta de leitura</p>
-              {n.meta ? (
-                n.faltam ? (
-                  <>
-                    <p className="mt-2 font-accent text-[19px] leading-[1.3] italic">
-                      faltam {n.faltam} {n.faltam === 1 ? "livro" : "livros"}
-                      <br />
-                      para fechar o ano
+          <div className={`${bloco} animate-subir pb-4`}>
+            <div className="flex items-center justify-between border-b border-linha pb-2.5">
+              <span className="font-maquina text-[9px] tracking-[.12em] text-rosa-antigo uppercase">
+                registro de leitura · {n.ano}
+              </span>
+              <span className="font-maquina text-[9px] tracking-[.1em] text-cinza uppercase">
+                {n.meta ? `${n.total} / ${n.meta}` : `${n.total} livros`}
+              </span>
+            </div>
+            <div className="mt-3 flex items-center gap-4">
+              <span
+                aria-hidden
+                className="flex size-[62px] flex-none -rotate-6 items-center justify-center rounded-full border-[1.6px] border-dashed border-bordo text-center"
+              >
+                <span className="font-display text-base leading-none font-bold text-bordo italic">
+                  {n.meta
+                    ? `${Math.round(Math.min(1, n.total / n.meta) * 100)}%`
+                    : "✦"}
+                </span>
+              </span>
+              <div className="min-w-0">
+                <p className="eyebrow text-bordo">meta de leitura</p>
+                {n.meta ? (
+                  n.faltam ? (
+                    <>
+                      <p className="mt-2 font-accent text-[17px] leading-[1.3] italic">
+                        faltam {n.faltam} {n.faltam === 1 ? "livro" : "livros"}
+                        <br />
+                        para fechar o ano
+                      </p>
+                      <p className="mt-2 text-[13px] text-cinza">
+                        cerca de {n.porSemana.toLocaleString("pt-BR")} por semana
+                        ✧
+                      </p>
+                    </>
+                  ) : (
+                    <p className="mt-2 font-accent text-[17px] leading-[1.3] italic">
+                      meta batida! tudo agora é bônus ✦
                     </p>
-                    <p className="mt-2 text-[13px] text-cinza">
-                      cerca de {n.porSemana.toLocaleString("pt-BR")} por semana
-                      ✧
-                    </p>
-                  </>
+                  )
                 ) : (
-                  <p className="mt-2 font-accent text-[19px] leading-[1.3] italic">
-                    meta batida! tudo agora é bônus ✦
-                  </p>
-                )
-              ) : (
-                <>
-                  <p className="mt-2 font-accent text-[19px] leading-[1.3] italic">
-                    sem meta este ano
-                  </p>
-                  <Link
-                    href="/perfil/editar"
-                    className="mt-1 inline-flex min-h-11 items-center text-[13px] font-semibold text-bordo"
-                  >
-                    definir uma meta →
-                  </Link>
-                </>
-              )}
+                  <>
+                    <p className="mt-2 font-accent text-[17px] leading-[1.3] italic">
+                      sem meta este ano
+                    </p>
+                    <Link
+                      href="/perfil/editar"
+                      className="mt-1 inline-flex min-h-11 items-center text-[13px] font-semibold text-bordo"
+                    >
+                      definir uma meta →
+                    </Link>
+                  </>
+                )}
+              </div>
             </div>
           </div>
 
           {n.total ? (
             <>
-              <div className={`${bloco} flex px-2.5 py-3.5`}>
-                {[
-                  {
-                    v: n.paginasConhecidas ? numero(n.paginas) : "—",
-                    r: "páginas",
-                  },
-                  { v: mediaTexto(n.media), r: "média" },
-                  {
-                    v: n.paginasPorLivro ? numero(n.paginasPorLivro) : "—",
-                    r: "págs/livro",
-                  },
-                ].map((c, i) => (
-                  <div
-                    key={c.r}
-                    className={`flex-1 text-center ${i ? "border-l border-linha" : ""}`}
-                  >
-                    <span className="block font-display text-[26px] leading-none font-bold italic text-bordo">
-                      {c.v}
-                    </span>
-                    <span className="mt-[7px] block text-[10px] leading-[1.2] font-medium text-cinza">
-                      {c.r}
-                    </span>
-                  </div>
-                ))}
+              <div className={`${bloco} pt-3.5`}>
+                <div className="grid grid-cols-3 gap-2.5">
+                  {[
+                    {
+                      v: n.paginasConhecidas ? numero(n.paginas) : "—",
+                      r: "páginas",
+                    },
+                    { v: mediaTexto(n.media), r: "média" },
+                    {
+                      v: n.paginasPorLivro ? numero(n.paginasPorLivro) : "—",
+                      r: "págs/livro",
+                    },
+                  ].map((c) => (
+                    <div
+                      key={c.r}
+                      className="border-t border-dashed border-linha pt-2 text-center"
+                    >
+                      <span className="block font-display text-[24px] leading-none font-bold italic text-bordo">
+                        {c.v}
+                      </span>
+                      <span className="font-maquina mt-[7px] block text-[8.5px] leading-[1.2] tracking-[.06em] text-cinza uppercase">
+                        {c.r}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               <div className={`${bloco} pt-3.5`}>
-                <p className="eyebrow mb-3 text-bordo">livros por mês</p>
+                <p className="font-maquina mb-3 block text-[9.5px] tracking-[.12em] text-rosa-antigo uppercase">
+                  livros por mês
+                </p>
                 <GraficoMeses n={n} />
                 {n.maisForte ? (
-                  <p className="mt-3 font-accent text-[13px] italic text-cinza">
+                  <p className="mt-3 border-t border-dashed border-linha pt-2.5 font-accent text-[13px] italic text-cinza">
                     {n.maisForte.mes} foi seu mês mais forte, com{" "}
                     {n.maisForte.livros}{" "}
                     {n.maisForte.livros === 1 ? "livro" : "livros"} ✦
@@ -179,16 +136,26 @@ export default function NumerosAnoPage() {
               <MesEmRevista />
               <Link
                 href="/desafios"
-                className="inverso mb-4 flex items-center gap-4 rounded-xl bg-gradient-to-br from-[#2B4C7E] to-[#2b1420] p-5 text-creme"
+                className={`${bloco} mb-4 flex items-center justify-between gap-3 hover:border-bordo`}
               >
-                <span className="text-3xl">🏆</span>
-                <span className="min-w-0 flex-1">
-                  <span className="block font-display text-[20px] font-semibold italic">
+                <span className="min-w-0">
+                  <span className="font-maquina block text-[9px] tracking-[.12em] text-rosa-antigo uppercase">
+                    na sua jornada também
+                  </span>
+                  <span className="mt-1 block font-display text-[19px] leading-tight font-semibold italic text-ameixa">
                     desafios de leitura
                   </span>
-                  <span className="block text-[13px] text-rosa-claro">
-                    sozinha, com amigos ou com o clube →
+                  <span className="mt-0.5 block text-xs text-cinza">
+                    sozinha, com amigos ou com o clube
                   </span>
+                </span>
+                <span
+                  aria-hidden
+                  className="font-maquina flex size-9 flex-none rotate-[6deg] items-center justify-center rounded-full border border-dashed border-ouro text-center text-[7px] leading-tight text-ouro"
+                >
+                  ver
+                  <br />
+                  mais
                 </span>
               </Link>
               <ExtremosDoAno n={n} />

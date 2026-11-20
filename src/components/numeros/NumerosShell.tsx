@@ -16,7 +16,7 @@ const abas = [
 ] as const;
 
 export const bloco =
-  "rounded-md border border-linha bg-creme-quente px-[18px] py-4";
+  "relative rounded-[2px] border border-linha bg-creme-quente px-[18px] py-4";
 
 /** Topo comum da "jornada" (antes "números") (celular) + a versão web no computador. */
 export function NumerosShell({
@@ -56,7 +56,7 @@ export function NumerosShell({
         totalVidaToda={totalVidaToda}
         anoInicio={anoInicio}
       />
-      <div className="flex flex-1 flex-col lg:hidden">
+      <div className="papel-pontilhado flex flex-1 flex-col lg:hidden">
         {/* a capa do perfil, como no computador */}
         <div
           aria-hidden
@@ -66,10 +66,12 @@ export function NumerosShell({
           }
         />
         <header className="flex items-center justify-between px-6 pt-2">
-          <span className="flex min-h-11 items-center text-[13px] font-semibold">
-            sua jornada
+          <span className="font-maquina flex min-h-11 items-center text-[10px] tracking-[.12em] text-rosa-antigo uppercase">
+            cartão de leitura
           </span>
-          <span className="eyebrow !text-[10px] text-cinza">{n.ano}</span>
+          <span className="font-maquina text-[10px] tracking-[.1em] text-cinza uppercase">
+            {n.ano}
+          </span>
         </header>
         <div className="animate-subir px-6 pt-1">
           <h1 className="font-display text-[32px] leading-[1.1] font-semibold italic text-bordo">

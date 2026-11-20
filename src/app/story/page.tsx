@@ -222,13 +222,13 @@ function Conteudo() {
     );
 
   const pilula = (on: boolean) =>
-    `flex h-9 items-center rounded-pill border px-[13px] text-xs font-semibold whitespace-nowrap ${
-      on
-        ? "border-bordo bg-bordo text-creme"
-        : "border-bege bg-creme-quente text-ameixa"
+    `flex h-10 items-center rounded-pill px-4 text-xs font-semibold whitespace-nowrap transition-colors ${
+      on ? "bg-bordo text-creme shadow-sm" : "text-cinza hover:text-ameixa"
     }`;
   const campo =
-    "h-11 w-full rounded-[12px] border border-bege bg-creme-quente px-3 text-sm text-ameixa outline-none focus:border-bordo lg:rounded-[4px]";
+    "h-12 w-full border-0 border-b-[1.5px] border-ameixa bg-transparent px-0 font-display text-[17px] italic text-ameixa outline-none focus:border-bordo";
+  const rotuloCampo =
+    "font-maquina mb-2 block text-[10px] tracking-[.12em] text-rosa-antigo uppercase";
 
   return (
     <div className="flex flex-1 flex-col px-6 pt-2 pb-10 lg:bg-jornal lg:px-12 lg:pt-8">
@@ -245,11 +245,11 @@ function Conteudo() {
       </p>
 
       <div className="mt-6 lg:grid lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start lg:gap-12">
-        <div className="space-y-5">
+        <div className="space-y-6 rounded-[20px] bg-creme-quente p-5 shadow-[0_20px_40px_-26px_rgba(43,20,32,.22)] lg:p-7">
           <div
             role="radiogroup"
             aria-label="o que compartilhar"
-            className="flex flex-wrap gap-2"
+            className="inline-flex flex-wrap gap-1 rounded-pill bg-linha/60 p-1"
           >
             {(
               [
@@ -273,9 +273,7 @@ function Conteudo() {
 
           {tipo === "terminei" ? (
             <label className="block">
-              <span className="mb-1.5 block text-[11px] font-semibold tracking-[.12em] text-bordo uppercase">
-                qual livro?
-              </span>
+              <span className={rotuloCampo}>qual livro?</span>
               <select
                 value={livroId}
                 onChange={(ev) => setLivroId(ev.target.value)}
@@ -291,9 +289,7 @@ function Conteudo() {
           ) : null}
           {tipo === "mes" ? (
             <label className="block">
-              <span className="mb-1.5 block text-[11px] font-semibold tracking-[.12em] text-bordo uppercase">
-                qual mês?
-              </span>
+              <span className={rotuloCampo}>qual mês?</span>
               <select
                 value={mesSel}
                 onChange={(ev) => setMesSel(ev.target.value)}
@@ -313,9 +309,7 @@ function Conteudo() {
 
           {opcoes.length ? (
             <div>
-              <span className="mb-1.5 block text-[11px] font-semibold tracking-[.12em] text-bordo uppercase">
-                o que aparece
-              </span>
+              <span className={rotuloCampo}>o que aparece</span>
               <div className="flex flex-wrap gap-2">
                 {opcoes.map(([k, r]) => {
                   const on = mostrar[k] !== false;
@@ -449,7 +443,7 @@ function BotaoCompartilhar({
       type="button"
       onClick={onClick}
       disabled={gerando || desabilitado}
-      className="flex h-12 w-full items-center justify-center gap-2 rounded-pill bg-bordo px-8 text-sm font-semibold text-creme hover:bg-bordo-suave disabled:opacity-45 lg:w-auto"
+      className="flex h-12 w-full items-center justify-center gap-2 rounded-pill bg-ameixa px-8 text-sm font-semibold text-creme hover:bg-bordo-escuro disabled:opacity-45 lg:w-auto"
     >
       <svg
         aria-hidden
