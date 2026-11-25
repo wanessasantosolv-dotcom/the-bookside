@@ -188,7 +188,13 @@ export function Lombada({ livro, altura }: { livro: LivroSalvo; altura: number }
   // a variação de altura e o desenho são estáveis por livro (não mudam a cada render)
   const semente = [...livro.id].reduce((t, c) => t + c.charCodeAt(0), 0);
   const h = Math.round(altura * (0.8 + ((semente % 17) / 17) * 0.2));
-  const w = Math.round(Math.max(24, Math.min(48, 16 + pags / 18)));
+  const len = livro.titulo.length;
+  // títulos longos ganham uma lombada um pouco mais larga, para caber em mais linhas
+  const w = Math.round(Math.max(len > 26 ? 34 : len > 14 ? 28 : 24, Math.min(48, 16 + pags / 18)));
+  // o título inteiro: até 3 linhas verticais, com a letra diminuindo conforme o tamanho
+  const linhas = w >= 40 ? 3 : w >= 28 ? 2 : 1;
+  const espaco = h * 0.62;
+  const tamanhoLetra = Math.max(7, Math.min(13, (espaco * linhas) / (len * 0.62)));
   const daCapa = useCorDaCapa(livro.capa);
   const fundo = daCapa ?? corDoLivro(livro.id);
   const tinta = tintaSobre(fundo);
@@ -207,7 +213,10 @@ export function Lombada({ livro, altura }: { livro: LivroSalvo; altura: number }
     : null;
   const sobrenome = livro.autor.split(/\s+/).filter(Boolean).pop() ?? "";
   const titulo = (
-    <span className={`block max-h-full truncate leading-none [writing-mode:vertical-rl] rotate-180 ${estiloDoTitulo(traduzirGenero(livro.genero), semente)}`}>
+    <span
+      style={{ fontSize: tamanhoLetra, maxWidth: w - 6 }}
+      className={`block max-h-full overflow-hidden text-center leading-[1.08] break-words whitespace-normal [writing-mode:vertical-rl] rotate-180 ${estiloDoTitulo(traduzirGenero(livro.genero), semente)}`}
+    >
       {livro.titulo}
     </span>
   );

@@ -331,12 +331,7 @@ export default function EstantesPage() {
       <AvisoRemovido />
       <div className="mx-auto w-full max-w-[1240px] px-5 pt-4 pb-16 text-ameixa sm:px-8 lg:px-14 lg:pt-12">
         {/* cabeçalho editorial */}
-        <header className="flex flex-wrap items-end justify-between gap-4 pb-6">
-          <div>
-            <p className="text-[11px] font-bold tracking-[.14em] text-bordo">the bookside / biblioteca pessoal</p>
-            <h1 className="mt-2 font-revista text-[38px] leading-none text-bordo italic sm:text-[52px]">minhas estantes.</h1>
-            <p className="mt-2 text-[14px] text-tinta-suave sm:text-[15px]">histórias vividas e tantas outras por descobrir.</p>
-          </div>
+        <header className="flex flex-wrap items-center justify-end gap-4 pb-2">
           <div className="flex items-center gap-4">
             <Link href="/estantes/importar" className="text-[13px] text-cinza underline decoration-bege underline-offset-4 hover:text-bordo">
               importar lista
