@@ -383,3 +383,13 @@ body {
 .story-conteudo > * {
   flex-shrink: 0;
 }
+
+/* nenhuma tela arrasta para o lado: só os carrosséis rolam na horizontal
+   (clip, e não hidden, para não quebrar os cabeçalhos e abas fixos) */
+html,
+body {
+  overflow-x: clip;
+}
+main {
+  overflow-x: clip;
+}
