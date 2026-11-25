@@ -1,7 +1,7 @@
 "use client";
 
 import { toJpeg } from "html-to-image";
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode, type TouchEvent } from "react";
 import { ImagemSegura } from "@/components/journal/Revista";
 import type { Paleta } from "@/lib/journal";
 import { pdfDeImagens, type PaginaJpeg } from "@/lib/pdf";
@@ -155,10 +155,10 @@ export function Folhear({ folhas, rotulo, paleta }: { folhas: Folha[]; rotulo: s
   );
 
   const gestos = {
-    onTouchStart: (e: React.TouchEvent) => {
+    onTouchStart: (e: TouchEvent) => {
       toque.current = e.touches[0].clientX;
     },
-    onTouchEnd: (e: React.TouchEvent) => {
+    onTouchEnd: (e: TouchEvent) => {
       if (toque.current === null) return;
       const dx = e.changedTouches[0].clientX - toque.current;
       toque.current = null;
@@ -173,7 +173,7 @@ export function Folhear({ folhas, rotulo, paleta }: { folhas: Folha[]; rotulo: s
           <div
             key={pagina}
             className="h-full w-full motion-safe:animate-[folha_.55s_cubic-bezier(.2,.7,.2,1)]"
-            style={{ transformOrigin: sentido === "prox" ? "left center" : "right center", ["--giro" as string]: sentido === "prox" ? "-75deg" : "75deg" }}
+            style={{ transformOrigin: sentido === "prox" ? "left center" : "right center", "--giro": sentido === "prox" ? "-75deg" : "75deg" } as CSSProperties}
           >
             {pag(pagina, "unica")}
           </div>
@@ -282,7 +282,6 @@ export function ExportarPdf({
       cancelado = true;
     };
     // roda uma vez por exportação
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
