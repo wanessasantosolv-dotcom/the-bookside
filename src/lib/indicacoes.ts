@@ -169,7 +169,8 @@ function parteEmPortugues(t: string) {
 }
 
 /** é edição em português? (o Google diz o idioma; a sinopse confirma) */
-const emPortugues = (l: LivroBusca) =>
+/** edição em português (idioma da edição + o título/sinopse não parecem inglês) */
+export const emPortugues = (l: LivroBusca) =>
   l.idioma === "pt" && !pareceIngles(`${l.titulo} ${l.sinopse ?? ""}`);
 
 /** gênero da estante (em português ou como o Google manda) → assunto de busca */

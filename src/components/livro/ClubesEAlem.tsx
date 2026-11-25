@@ -9,6 +9,7 @@ import { chaveTitulo, livrosDoGoogle, type LivroBusca } from "@/lib/catalogo";
 import { clubesComLivro, type ClubeDoLivro } from "@/lib/clubes";
 import { corDoLivro } from "@/lib/cores";
 import { useMeuId } from "@/lib/social";
+import { emPortugues } from "@/lib/indicacoes";
 
 const nota1 = (n: number) =>
   n.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
@@ -204,22 +205,31 @@ export function AlemDoLivro({
         .catch(() => vivo && setDoAutor([]));
     if (!livro.genero) setParecidos([]);
     else
-      livrosDoGoogle(`subject:"${livro.genero}"`, "pt")
-        .then(
-          (l) =>
-            vivo &&
-            setParecidos(
-              l
-                .filter(
-                  (x) =>
-                    x.capa &&
-                    chaveTitulo(x.titulo) !== daqui &&
-                    !naEstante.has(chaveTitulo(x.titulo)) &&
-                    chaveTitulo(x.autor) !== chaveTitulo(livro.autor),
-                )
-                .slice(0, 12),
-            ),
-        )
+      // só edições em português: pelo assunto e pelo nome do gênero, juntos
+      Promise.all([
+        livrosDoGoogle(`subject:"${livro.genero}"`, "pt").catch(() => [] as LivroBusca[]),
+        livrosDoGoogle(livro.genero, "pt").catch(() => [] as LivroBusca[]),
+      ])
+        .then(([a, b]) => {
+          if (!vivo) return;
+          const vistos = new Set<string>();
+          setParecidos(
+            [...a, ...b]
+              .filter((x) => {
+                const k = chaveTitulo(x.titulo);
+                if (vistos.has(k)) return false;
+                vistos.add(k);
+                return (
+                  !!x.capa &&
+                  emPortugues(x) &&
+                  k !== daqui &&
+                  !naEstante.has(k) &&
+                  chaveTitulo(x.autor) !== chaveTitulo(livro.autor)
+                );
+              })
+              .slice(0, 12),
+          );
+        })
         .catch(() => vivo && setParecidos([]));
     return () => {
       vivo = false;
@@ -247,7 +257,7 @@ export function AlemDoLivro({
             livros={parecidos}
           />
           {parecidos?.length ? (
-            <p className="mt-2 text-[11px] text-cinza">do mesmo gênero: {livro.genero}.</p>
+            <p className="mt-2 text-[11px] text-cinza">edições em português do mesmo gênero.</p>
           ) : null}
         </div>
       </div>

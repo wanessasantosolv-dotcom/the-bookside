@@ -476,13 +476,47 @@ export default function LivroPage() {
           <div className="mt-2 grid animate-subir gap-6 lg:mt-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_minmax(0,2fr)] lg:gap-10">
             <div className="flex gap-4 lg:contents">
               <div className="w-[116px] flex-none sm:w-[140px] lg:w-full">
-                <CapaLivro
-                  key={livro.capa}
-                  titulo={livro.titulo}
-                  capa={livro.capa}
-                  cor={corDoLivro(livro.id)}
-                  className="w-full shadow-[0_22px_40px_-22px_rgba(43,20,32,.55)] [&>span:last-child]:text-sm lg:[&>span:last-child]:text-lg"
-                />
+                {salvo ? (
+                  <button
+                    type="button"
+                    onClick={() => setTrocandoCapa(true)}
+                    aria-label="trocar a capa"
+                    className="group relative block w-full"
+                  >
+                    <CapaLivro
+                      key={livro.capa}
+                      titulo={livro.titulo}
+                      capa={livro.capa}
+                      cor={corDoLivro(livro.id)}
+                      className="w-full shadow-[0_22px_40px_-22px_rgba(43,20,32,.55)] [&>span:last-child]:text-sm lg:[&>span:last-child]:text-lg"
+                    />
+                    {/* no computador, aparece ao passar o mouse */}
+                    <span className="pointer-events-none absolute inset-x-2 bottom-2 hidden items-center justify-center rounded-pill bg-creme/95 py-2 text-[12px] font-semibold text-bordo opacity-0 shadow-sm transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100 lg:flex">
+                      trocar capa
+                    </span>
+                  </button>
+                ) : (
+                  <CapaLivro
+                    key={livro.capa}
+                    titulo={livro.titulo}
+                    capa={livro.capa}
+                    cor={corDoLivro(livro.id)}
+                    className="w-full shadow-[0_22px_40px_-22px_rgba(43,20,32,.55)] [&>span:last-child]:text-sm lg:[&>span:last-child]:text-lg"
+                  />
+                )}
+                {salvo ? (
+                  <button
+                    type="button"
+                    onClick={() => setTrocandoCapa(true)}
+                    className="mt-2 flex min-h-10 w-full items-center justify-center gap-1.5 rounded-pill border border-bege text-[12px] font-semibold text-bordo hover:border-bordo"
+                  >
+                    <svg aria-hidden width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M4 7h3l2-3h6l2 3h3v13H4z" />
+                      <circle cx="12" cy="13" r="3.5" />
+                    </svg>
+                    trocar capa
+                  </button>
+                ) : null}
               </div>
               <div className="min-w-0 flex-1 lg:pt-1">
                 {editorial ? (
