@@ -35,32 +35,6 @@ const LIMITE_FAVORITOS = 4;
 const plural = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um : varios}`;
 const agora = () => new Date().toISOString();
 
-// ───────── cabeçalho e indicadores ─────────
-
-function Indicadores({ livros }: { livros: LivroSalvo[] }) {
-  const conta = new Map<StatusLivro, number>();
-  for (const l of livros) conta.set(statusDe(l), (conta.get(statusDe(l)) ?? 0) + 1);
-  const itens = [
-    { nome: "livros", qtd: livros.length },
-    ...ORDEM_STATUS.filter((s) => s === "lendo" || s === "lido" || s === "quero" || conta.get(s)).map((s) => ({
-      nome: s === "lido" ? "lidos" : s === "pausado" ? "pausados" : s === "abandonado" ? "abandonados" : NOME_STATUS[s],
-      qtd: conta.get(s) ?? 0,
-    })),
-  ];
-  return (
-    <dl className="grid grid-cols-4 border-y border-linha py-4 sm:flex sm:justify-around lg:border-fio">
-      {itens.map((x, i) => (
-        <div key={x.nome} className={`text-center sm:flex-1 ${i ? "sm:border-l sm:border-linha lg:border-fio" : ""} ${i > 3 ? "hidden sm:block" : ""}`}>
-          <dt className="order-2 text-[11px] text-tinta-suave sm:text-[13px]">{x.nome}</dt>
-          <dd className="font-revista text-[24px] leading-none text-bordo tabular-nums sm:text-[30px]">
-            {String(x.qtd).padStart(2, "0")}
-          </dd>
-        </div>
-      ))}
-    </dl>
-  );
-}
-
 // ───────── janelinha para renomear / confirmar ─────────
 
 function Janela({ titulo, children, onFechar }: { titulo: string; children: ReactNode; onFechar: () => void }) {
@@ -377,7 +351,6 @@ export default function EstantesPage() {
           </div>
         </header>
 
-        {livros.length ? <Indicadores livros={livros} /> : null}
 
         <LendoJunto />
 
