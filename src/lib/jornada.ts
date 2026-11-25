@@ -248,11 +248,14 @@ export type GeneroDoAno = {
  * Os gêneros do ano. Cada livro tem um gênero só no app, então nenhum livro
  * conta duas vezes. Os sem gênero ficam de fora da conta (e são avisados).
  */
-export function generosDoAno(lidos: LivroSalvo[]) {
+export function generosDoAno(
+  lidos: LivroSalvo[],
+  generoDe: (l: LivroSalvo) => string | undefined = generoDoLivro,
+) {
   const por = new Map<string, LivroSalvo[]>();
   let semGenero = 0;
   for (const l of lidos) {
-    const g = generoDoLivro(l)?.trim().toLowerCase();
+    const g = generoDe(l)?.trim().toLowerCase();
     if (!g) {
       semGenero++;
       continue;

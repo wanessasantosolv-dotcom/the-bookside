@@ -32,7 +32,8 @@ import {
   type GeneroAutoria,
   type Pais,
 } from "@/lib/nacionalidade";
-import { calcularNumeros, mesDoReview, type Numeros } from "@/lib/numeros";
+import { calcularNumeros, generoDoLivro, mesDoReview, type Numeros } from "@/lib/numeros";
+import { useGenerosRefinados } from "@/lib/generos";
 import { usePerfil, type LivroSalvo } from "@/lib/perfil-store";
 
 /*
@@ -547,20 +548,24 @@ function Marcaram({ lidos }: { lidos: LivroSalvo[] }) {
 
 // ───────── entre os meses ─────────
 
-function LinhaMes({ rotulo, l }: { rotulo: string; l: LivroSalvo }) {
+/** uma coluna do mês: rótulo, nota e as capas (empates lado a lado) */
+function ColunaMes({ rotulo, livros }: { rotulo: string; livros: LivroSalvo[] }) {
+  const nota = livros[0]?.nota;
   return (
-    <Link href={`/livro/${l.id}`} className="group flex items-center gap-2.5">
-      {capaDe(l, "w-[30px] !rounded-[3px] [&>span:last-child]:hidden")}
-      <span className="min-w-0">
-        <span className="block text-[11px] text-cinza">{rotulo}</span>
-        <span className="block truncate text-[13px] font-semibold text-ameixa group-hover:text-bordo">
-          {l.titulo}
-        </span>
-      </span>
-      {l.nota ? (
-        <span className="ml-auto flex-none text-[11px] text-bordo tabular-nums">{nota1(l.nota)} ★</span>
-      ) : null}
-    </Link>
+    <div className="min-w-0">
+      <p className="text-[10px] font-semibold tracking-[.12em] text-cinza uppercase">{rotulo}</p>
+      <ul className="mt-2 flex flex-wrap gap-1.5">
+        {livros.map((l) => (
+          <li key={l.id} className={livros.length > 2 ? "w-[34px]" : "w-[52px]"}>
+            <Link href={`/livro/${l.id}`} title={l.titulo} className="block transition-transform hover:-translate-y-0.5">
+              {capaDe(l, "w-full !rounded-[4px] [&>span:last-child]:hidden")}
+              <span className="sr-only">{l.titulo}</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+      {nota ? <p className="mt-1.5 text-[12px] font-semibold text-bordo tabular-nums">{nota1(nota)} ★</p> : null}
+    </div>
   );
 }
 
@@ -569,52 +574,46 @@ function CartaoMes({ m }: { m: MesDoAno }) {
   const destacados = new Set([...m.melhores, ...m.piores]);
   const outros = m.livros.filter((l) => !destacados.has(l));
   return (
-    <li className="w-[78%] flex-none snap-start rounded-[12px] border border-linha p-3.5 sm:w-[calc((100%-24px)/3)] lg:rounded-[10px] lg:border-fio">
+    <li className="w-[78%] flex-none snap-start rounded-[12px] border border-linha p-4 sm:w-[calc((100%-24px)/3)] lg:rounded-[10px] lg:border-fio">
       <p className="flex items-baseline justify-between gap-2">
         <span className="text-[15px] font-semibold text-ameixa">{maiuscula(m.mes)}</span>
         <span className="text-[11px] text-cinza">{plural(m.total, "livro", "livros")}</span>
       </p>
-      <div className="mt-3 space-y-2.5">
-        {m.melhores.length ? (
-          m.melhores.map((l) => (
-            <LinhaMes
-              key={l.id}
-              rotulo={m.piores.length ? (m.melhores.length > 1 ? "mais amados (empate)" : "mais amado") : "destaque do mês"}
-              l={l}
-            />
-          ))
-        ) : (
-          <p className="text-[11px] text-cinza">sem notas neste mês</p>
-        )}
-        {m.piores.map((l) => (
-          <LinhaMes
-            key={l.id}
-            rotulo={m.piores.length > 1 ? "menos amados (empate)" : "menos amado"}
-            l={l}
-          />
-        ))}
-        {aberto && outros.length ? (
-          <ul className="flex flex-wrap gap-1.5 border-t border-linha pt-2.5 lg:border-fio">
-            {outros.map((l) => (
-              <li key={l.id} className="w-[30px]">
-                <Link href={`/livro/${l.id}`} title={l.titulo}>
-                  {capaDe(l, "w-full !rounded-[3px] [&>span:last-child]:hidden")}
-                  <span className="sr-only">{l.titulo}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        ) : null}
-      </div>
+      {m.melhores.length ? (
+        <div className={`mt-3 grid gap-3 ${m.piores.length ? "grid-cols-2 divide-x divide-linha lg:divide-fio" : ""}`}>
+          <ColunaMes rotulo={m.piores.length ? "mais amado" : "destaque"} livros={m.melhores} />
+          {m.piores.length ? (
+            <div className="pl-3">
+              <ColunaMes rotulo="menos amado" livros={m.piores} />
+            </div>
+          ) : null}
+        </div>
+      ) : (
+        <p className="mt-3 text-[11px] text-cinza">sem notas neste mês</p>
+      )}
       {outros.length ? (
-        <button
-          type="button"
-          aria-expanded={aberto}
-          onClick={() => setAberto((v) => !v)}
-          className="mt-2.5 text-[11px] font-semibold text-bordo hover:underline"
-        >
-          {aberto ? "mostrar menos" : `+ ${plural(outros.length, "outro livro", "outros livros")}`}
-        </button>
+        <>
+          {aberto ? (
+            <ul className="mt-3 flex flex-wrap gap-1.5 border-t border-linha pt-3 lg:border-fio">
+              {outros.map((l) => (
+                <li key={l.id} className="w-[30px]">
+                  <Link href={`/livro/${l.id}`} title={l.titulo}>
+                    {capaDe(l, "w-full !rounded-[3px] [&>span:last-child]:hidden")}
+                    <span className="sr-only">{l.titulo}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          <button
+            type="button"
+            aria-expanded={aberto}
+            onClick={() => setAberto((v) => !v)}
+            className="mt-2.5 text-[11px] font-semibold text-bordo hover:underline"
+          >
+            {aberto ? "mostrar menos" : `+ ${plural(outros.length, "outro livro", "outros livros")}`}
+          </button>
+        </>
       ) : null}
     </li>
   );
@@ -942,8 +941,14 @@ function LinhaGenero({ g }: { g: GeneroDoAno }) {
   );
 }
 
-function OQueMaisLeu({ lidos }: { lidos: LivroSalvo[] }) {
-  const { lista, semGenero, comGenero } = generosDoAno(lidos);
+function OQueMaisLeu({
+  lidos,
+  generoDe,
+}: {
+  lidos: LivroSalvo[];
+  generoDe: (l: LivroSalvo) => string | undefined;
+}) {
+  const { lista, semGenero, comGenero } = generosDoAno(lidos, generoDe);
   const [todos, setTodos] = useState(false);
   return (
     <div>
@@ -1000,7 +1005,9 @@ function Retrato({
   n,
   paises,
   generos,
+  generoDe,
 }: {
+  generoDe: (l: LivroSalvo) => string | undefined;
   n: Numeros;
   paises: Record<string, Pais | null> | null;
   generos: Record<string, GeneroAutoria | null> | null;
@@ -1009,7 +1016,7 @@ function Retrato({
   const nPaises = paises
     ? new Set(lidos.map((l) => paises[l.autor.toLowerCase()]?.nome).filter(Boolean)).size
     : null;
-  const { lista } = generosDoAno(lidos);
+  const { lista } = generosDoAno(lidos, generoDe);
   const principal = lista[0] && (lista.length === 1 || lista[0].qtd > lista[1].qtd) ? lista[0] : null;
   const f = formatosComParte(n);
   const formatoTop = [...f.lista].sort((a, b) => b.qtd - a.qtd)[0];
@@ -1266,13 +1273,14 @@ function NomesQueVoltam({
 
 function RetratoLiterario({ n }: { n: Numeros }) {
   const { paises, generos } = useAutorias(n.lidos);
+  const generoDe = useGenerosRefinados(n.lidos, generoDoLivro);
   return (
     <>
-      <Retrato n={n} paises={paises} generos={generos} />
+      <Retrato n={n} paises={paises} generos={generos} generoDe={generoDe} />
       <Secao titulo="o que suas leituras revelam">
         <div className="space-y-8 lg:space-y-10">
           <div className="grid gap-8 lg:grid-cols-2 lg:gap-10">
-            <OQueMaisLeu lidos={n.lidos} />
+            <OQueMaisLeu lidos={n.lidos} generoDe={generoDe} />
             <QuemEscreveu lidos={n.lidos} generos={generos} />
           </div>
           <div className="space-y-8 border-t border-linha pt-6 lg:border-fio">
