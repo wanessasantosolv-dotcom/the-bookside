@@ -5,9 +5,11 @@
  */
 import {
   diasDeLeitura,
+  generoDoLivro,
   paginasDoLivro,
   type Numeros,
 } from "@/lib/numeros";
+import type { GeneroAutoria } from "@/lib/nacionalidade";
 import type { LivroSalvo } from "@/lib/perfil-store";
 
 export const MESES = [
@@ -200,4 +202,172 @@ export function formatosComParte(n: Numeros) {
         .every((l) => !!paginasDoLivro(l)),
     })),
   };
+}
+
+// ───────── gêneros, autorias e diversidade ─────────
+
+
+/**
+ * As pessoas de um livro. O app guarda a autoria num texto só; quando há
+ * coautoria ela vem separada por vírgula, "&" ou ";". Cada livro conta uma
+ * vez para cada pessoa (e uma vez só no total).
+ */
+export function autoresDoLivro(autor: string): string[] {
+  return [
+    ...new Set(
+      autor
+        .split(/\s*(?:,|&|;)\s*/)
+        .map((a) => a.trim())
+        .filter((a) => a.length > 1 && !/^autoria|desconhecid/i.test(a)),
+    ),
+  ];
+}
+
+const mediaDe = (ls: LivroSalvo[]) => {
+  const ns = ls.map((l) => l.nota).filter((n): n is number => !!n);
+  return ns.length ? ns.reduce((t, n) => t + n, 0) / ns.length : null;
+};
+
+export type GeneroDoAno = {
+  nome: string;
+  qtd: number;
+  parte: number;
+  media: number | null;
+  livros: LivroSalvo[];
+};
+
+/**
+ * Os gêneros do ano. Cada livro tem um gênero só no app, então nenhum livro
+ * conta duas vezes. Os sem gênero ficam de fora da conta (e são avisados).
+ */
+export function generosDoAno(lidos: LivroSalvo[]) {
+  const por = new Map<string, LivroSalvo[]>();
+  let semGenero = 0;
+  for (const l of lidos) {
+    const g = generoDoLivro(l)?.trim().toLowerCase();
+    if (!g) {
+      semGenero++;
+      continue;
+    }
+    por.set(g, [...(por.get(g) ?? []), l]);
+  }
+  const comGenero = lidos.length - semGenero;
+  const lista: GeneroDoAno[] = [...por.entries()]
+    .map(([nome, livros]) => ({
+      nome,
+      qtd: livros.length,
+      parte: comGenero ? livros.length / comGenero : 0,
+      media: mediaDe(livros),
+      livros,
+    }))
+    .sort((a, b) => b.qtd - a.qtd || a.nome.localeCompare(b.nome));
+  return { lista, semGenero, comGenero };
+}
+
+/** até 5 blocos no treemap; o resto (e quem tem menos de 6%) vira "outros" */
+export function agruparGeneros(lista: GeneroDoAno[], max = 5) {
+  const principais: GeneroDoAno[] = [];
+  const outros: GeneroDoAno[] = [];
+  for (const g of lista)
+    if (principais.length < max && (g.parte >= 0.06 || principais.length < 2))
+      principais.push(g);
+    else outros.push(g);
+  if (outros.length === 1) return { principais: [...principais, outros[0]], outros: [] };
+  return { principais, outros };
+}
+
+export type Bloco<T> = { item: T; x: number; y: number; w: number; h: number };
+
+/**
+ * Treemap simples: divide a área em dois grupos de soma parecida, cortando
+ * pelo lado mais comprido, e repete. Posições em % (0–100).
+ */
+export function treemap<T>(
+  itens: { item: T; valor: number }[],
+  x = 0,
+  y = 0,
+  w = 100,
+  h = 100,
+): Bloco<T>[] {
+  if (!itens.length) return [];
+  if (itens.length === 1) return [{ item: itens[0].item, x, y, w, h }];
+  const total = itens.reduce((t, i) => t + i.valor, 0) || 1;
+  let soma = 0;
+  let corte = 1;
+  for (let i = 0; i < itens.length - 1; i++) {
+    soma += itens[i].valor;
+    corte = i + 1;
+    if (soma >= total / 2) break;
+  }
+  const a = itens.slice(0, corte);
+  const b = itens.slice(corte);
+  const pa = a.reduce((t, i) => t + i.valor, 0) / total;
+  // o retângulo é mais largo que alto? (a área do treemap tem proporção ~2:1)
+  return w * 2 >= h
+    ? [...treemap(a, x, y, w * pa, h), ...treemap(b, x + w * pa, y, w * (1 - pa), h)]
+    : [...treemap(a, x, y, w, h * pa), ...treemap(b, x, y + h * pa, w, h * (1 - pa))];
+}
+
+export type AutorDoAno = {
+  nome: string;
+  qtd: number;
+  media: number | null;
+  livros: LivroSalvo[];
+};
+
+/** o ranking de quem mais apareceu no ano (coautoria conta para cada pessoa) */
+export function rankingDeAutores(lidos: LivroSalvo[]): AutorDoAno[] {
+  const por = new Map<string, { nome: string; livros: LivroSalvo[] }>();
+  for (const l of lidos)
+    for (const nome of autoresDoLivro(l.autor)) {
+      const k = nome.toLowerCase();
+      const x = por.get(k) ?? { nome, livros: [] };
+      x.livros.push(l);
+      por.set(k, x);
+    }
+  return [...por.values()]
+    .map((x) => ({ nome: x.nome, qtd: x.livros.length, media: mediaDe(x.livros), livros: x.livros }))
+    .sort(
+      (a, b) =>
+        b.qtd - a.qtd ||
+        (b.media ?? 0) - (a.media ?? 0) ||
+        a.nome.localeCompare(b.nome),
+    );
+}
+
+export type CategoriaAutoria = GeneroAutoria | "mista" | "desconhecida";
+
+export const rotuloAutoria: Record<CategoriaAutoria, string> = {
+  feminina: "autoria feminina",
+  masculina: "autoria masculina",
+  "nao-binaria": "autoria não binária",
+  outra: "outras identidades",
+  mista: "coautoria mista",
+  desconhecida: "não informado",
+};
+
+/**
+ * A autoria de cada livro do ano (um livro conta uma vez): pelo gênero
+ * declarado de quem escreveu. Coautoria com gêneros diferentes = "mista";
+ * se alguém do livro não tem dado, o livro fica como "não informado".
+ */
+export function diversidadeDeAutoria(
+  lidos: LivroSalvo[],
+  generoDe: (autor: string) => GeneroAutoria | null | undefined,
+) {
+  const conta = new Map<CategoriaAutoria, number>();
+  for (const l of lidos) {
+    const gs = autoresDoLivro(l.autor).map((a) => generoDe(a));
+    const cat: CategoriaAutoria =
+      !gs.length || gs.some((g) => !g)
+        ? "desconhecida"
+        : new Set(gs).size > 1
+          ? "mista"
+          : (gs[0] as GeneroAutoria);
+    conta.set(cat, (conta.get(cat) ?? 0) + 1);
+  }
+  const ordem: CategoriaAutoria[] = ["feminina", "masculina", "nao-binaria", "outra", "mista", "desconhecida"];
+  return ordem
+    .map((c) => ({ categoria: c, qtd: conta.get(c) ?? 0, parte: lidos.length ? (conta.get(c) ?? 0) / lidos.length : 0 }))
+    .filter((x) => x.qtd || x.categoria === "feminina" || x.categoria === "masculina" || x.categoria === "desconhecida");
 }

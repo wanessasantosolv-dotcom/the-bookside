@@ -89,3 +89,82 @@ export async function paisesDasAutoras(autores: string[]) {
   }
   return cache;
 }
+
+// ───────── gênero de quem escreveu (o que está declarado no Wikidata) ─────────
+
+/**
+ * Categorias de autoria. Vêm só do que está declarado no Wikidata (P21,
+ * "sexo ou gênero") — nunca do nome. Sem dado, fica "desconhecido".
+ */
+export type GeneroAutoria = "feminina" | "masculina" | "nao-binaria" | "outra";
+
+const CACHE_GENERO = "bookside-autoria-genero-v1";
+const GENEROS_WD: Record<string, GeneroAutoria> = {
+  Q6581072: "feminina", // mulher
+  Q1052281: "feminina", // mulher trans
+  Q6581097: "masculina", // homem
+  Q2449503: "masculina", // homem trans
+  Q48270: "nao-binaria", // não binário
+  Q505371: "nao-binaria", // agênero
+  Q1097630: "outra", // intersexo
+  Q18116794: "nao-binaria", // gênero fluido
+};
+
+function lerCacheGenero(): Record<string, GeneroAutoria | null> {
+  try {
+    return JSON.parse(localStorage.getItem(CACHE_GENERO) ?? "{}");
+  } catch {
+    return {};
+  }
+}
+function gravarCacheGenero(c: Record<string, GeneroAutoria | null>) {
+  try {
+    localStorage.setItem(CACHE_GENERO, JSON.stringify(c));
+  } catch {
+    /* sem armazenamento */
+  }
+}
+
+async function generoDaAutora(autor: string): Promise<GeneroAutoria | null> {
+  const busca = (await fetch(
+    `${API}&action=wbsearchentities&type=item&limit=5&language=pt&uselang=pt&search=${encodeURIComponent(autor)}`,
+  ).then((r) => r.json())) as { search?: { id: string }[] };
+  const ids = (busca.search ?? []).map((s) => s.id);
+  if (!ids.length) return null;
+  const ents = (await fetch(
+    `${API}&action=wbgetentities&props=claims&ids=${ids.join("|")}`,
+  ).then((r) => r.json())) as { entities?: Record<string, Ent> };
+  // a primeira que é pessoa (P31 = Q5); escritoras com obra (P800) têm preferência
+  const pessoas = ids
+    .map((id) => ents.entities?.[id])
+    .filter((e) =>
+      e?.claims?.P31?.some(
+        (c) => (c.mainsnak?.datavalue?.value as { id?: string })?.id === "Q5",
+      ),
+    );
+  const pessoa = pessoas.find((e) => e?.claims?.P800?.length) ?? pessoas[0];
+  const id = (pessoa?.claims?.P21?.[0]?.mainsnak?.datavalue?.value as {
+    id?: string;
+  })?.id;
+  if (!id) return null;
+  return GENEROS_WD[id] ?? "outra";
+}
+
+/** o gênero declarado de várias autorias (de 3 em 3, guardando no aparelho); sem dado = null */
+export async function generosDasAutoras(autores: string[]) {
+  const cache = lerCacheGenero();
+  const faltam = [...new Set(autores)].filter(
+    (a) => a && !a.startsWith("autoria") && !(a.toLowerCase() in cache),
+  );
+  for (let i = 0; i < faltam.length; i += 3) {
+    const lote = faltam.slice(i, i + 3);
+    const r = await Promise.all(
+      lote.map((a) => generoDaAutora(a).catch(() => undefined)),
+    );
+    lote.forEach((a, k) => {
+      if (r[k] !== undefined) cache[a.toLowerCase()] = r[k]!;
+    });
+    gravarCacheGenero(cache);
+  }
+  return cache;
+}
