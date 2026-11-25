@@ -1,213 +1,842 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { ExtremosDoAno } from "@/components/numeros/Extremos";
-import { FormatosDoAno } from "@/components/numeros/Formatos";
-import { MesAMes } from "@/components/numeros/MesAMes";
-import { MesEmRevista } from "@/components/numeros/MesEmRevista";
-import { Nacionalidades } from "@/components/numeros/Nacionalidades";
-import { bloco } from "@/components/numeros/NumerosShell";
-import { GraficoMeses } from "@/components/numeros/NumerosWeb";
-import { calcularNumeros, mediaTexto, numero } from "@/lib/numeros";
-import { usePerfil } from "@/lib/perfil-store";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { CapaLivro } from "@/components/CapaLivro";
+import { MapaPaises } from "@/components/numeros/MapaPaises";
+import { linkDaAutoria } from "@/lib/autores";
+import { corDoLivro } from "@/lib/cores";
+import {
+  anosComLeitura,
+  destaquesDoAno,
+  diasDoMes,
+  formatosComParte,
+  horasEstimadas,
+  mesesDoAno,
+  MESES,
+  type Destaque,
+  type MesDoAno,
+} from "@/lib/jornada";
+import { bandeira, paisesDasAutoras, type Pais } from "@/lib/nacionalidade";
+import { calcularNumeros, mesDoReview, type Numeros } from "@/lib/numeros";
+import { usePerfil, type LivroSalvo } from "@/lib/perfil-store";
 
-type Parte = "ano" | "destaques" | "jeito";
-const partes: { id: Parte; nome: string }[] = [
-  { id: "ano", nome: "o ano" },
-  { id: "destaques", nome: "destaques" },
-  { id: "jeito", nome: "seu jeito de ler" },
-];
-
-/**
- * A jornada dentro do perfil, em partes (uma de cada vez):
- * o ano (números, meta, meses) · destaques (extremos, mês a mês) ·
- * seu jeito de ler (formatos, países). Calendário e desafios ficam nos atalhos.
+/*
+ * A Jornada: uma retrospectiva literária numa página só, em estilo de
+ * revista. Dois blocos com fundo (a meta e o mês em revista); o resto fica
+ * direto sobre o papel do app, separado por fios finos, números e capas.
  */
-export function JornadaNoPerfil() {
-  const livros = usePerfil((s) => s.livros);
-  const meta = usePerfil((s) => s.meta);
-  const [parte, setParte] = useState<Parte>("ano");
-  const n = calcularNumeros(livros, meta);
-  const pct = n.meta ? Math.min(100, (n.total / n.meta) * 100) : 0;
 
+const numero = (n: number) => n.toLocaleString("pt-BR");
+const nota1 = (n: number) =>
+  n.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const plural = (n: number, um: string, varios: string) =>
+  `${numero(n)} ${n === 1 ? um : varios}`;
+const maiuscula = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
+
+/** uma seção sobre o papel: fio em cima, título e (às vezes) uma ação à direita */
+function Secao({
+  titulo,
+  acao,
+  children,
+}: {
+  titulo: string;
+  acao?: ReactNode;
+  children: ReactNode;
+}) {
   return (
-    <div className="space-y-6">
-      {/* o resumo, sempre à vista: a ficha "registro de leitura" — em destaque,
-          diferente dos outros cartões, porque é o número mais importante da jornada */}
-      <div className="space-y-2">
-        <div className="relative overflow-hidden rounded-[6px] border border-bordo/25 bg-[linear-gradient(160deg,var(--color-rosa-fundo),var(--color-creme-quente)_65%)] px-[18px] pt-4 pb-5 shadow-[0_18px_34px_-24px_rgba(43,20,32,.45)]">
+    <section className="border-t border-linha pt-5 lg:border-fio lg:pt-6">
+      <header className="mb-4 flex items-baseline justify-between gap-3">
+        <h3 className="font-display text-[20px] leading-tight font-semibold italic text-ameixa lg:font-revista lg:text-[24px] lg:font-normal">
+          {titulo}
+        </h3>
+        {acao}
+      </header>
+      {children}
+    </section>
+  );
+}
+
+const linkAcao =
+  "flex-none text-[12px] font-semibold text-cinza hover:text-bordo";
+const rotulo =
+  "text-[10px] font-semibold tracking-[.14em] text-cinza uppercase";
+
+const capaDe = (l: LivroSalvo, className: string) => (
+  <CapaLivro titulo={l.titulo} capa={l.capa} cor={corDoLivro(l.id)} className={className} />
+);
+
+// ───────── cabeçalho ─────────
+
+function Cabecalho({
+  anos,
+  ano,
+  onAno,
+}: {
+  anos: number[];
+  ano: number;
+  onAno: (a: number) => void;
+}) {
+  return (
+    <header className="flex items-start justify-between gap-4">
+      <div>
+        <h2 className="font-display text-[30px] leading-[1.05] font-semibold italic text-bordo lg:font-revista lg:text-[40px] lg:font-normal lg:text-tinta">
+          sua jornada
+        </h2>
+        <p className="mt-1 font-accent text-[14px] italic text-cinza">
+          uma vida entre páginas.
+        </p>
+      </div>
+      <label className="relative flex-none">
+        <span className="sr-only">ano da jornada</span>
+        <select
+          value={ano}
+          onChange={(e) => onAno(Number(e.target.value))}
+          disabled={anos.length < 2}
+          className="h-11 appearance-none rounded-[10px] border border-linha bg-creme-quente pr-9 pl-3.5 font-maquina text-[13px] text-ameixa outline-none focus:border-bordo disabled:opacity-100 lg:border-fio"
+        >
+          {anos.map((a) => (
+            <option key={a} value={a}>
+              {a}
+            </option>
+          ))}
+        </select>
+        {anos.length > 1 ? (
           <span
             aria-hidden
-            className="absolute -top-4 -right-4 text-[72px] text-bordo/[.07]"
+            className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-[10px] text-cinza"
           >
-            ✦
+            ▾
           </span>
-          <div className="relative flex items-center justify-between border-b border-bordo/15 pb-2.5">
-            <span className="font-maquina text-[9.5px] tracking-[.14em] text-bordo uppercase">
-              registro de leitura · {n.ano}
-            </span>
-            <span className="font-maquina text-[9px] tracking-[.1em] text-rosa-antigo uppercase">
-              {n.meta ? `${n.total} / ${n.meta}` : `${n.total} livros`}
-            </span>
-          </div>
-          <div className="relative mt-4 flex items-center gap-4">
-            <span
-              aria-hidden
-              className="flex size-[76px] flex-none -rotate-6 items-center justify-center rounded-full border-[2px] border-dashed border-bordo bg-creme text-center shadow-[0_8px_16px_-10px_rgba(43,20,32,.35)]"
+        ) : null}
+      </label>
+    </header>
+  );
+}
+
+// ───────── seu ano em números ─────────
+
+function AnoEmNumeros({ n, atual }: { n: Numeros; atual: boolean }) {
+  // a meta é do ano corrente; nos anos passados, só o total
+  const meta = atual ? n.meta : null;
+  const pct = meta ? Math.min(100, (n.total / meta) * 100) : 0;
+  const indicadores: { valor: string; rotulo: string; nota?: string }[] = [
+    {
+      valor: n.paginasConhecidas ? numero(n.paginas) : "—",
+      rotulo: "páginas lidas",
+      nota:
+        n.paginasConhecidas && n.paginasConhecidas < n.total
+          ? `de ${plural(n.paginasConhecidas, "livro", "livros")} com páginas`
+          : undefined,
+    },
+    {
+      valor: n.media !== null ? nota1(n.media) : "—",
+      rotulo: "nota média",
+      nota: n.media === null && n.total ? "sem notas ainda" : undefined,
+    },
+    {
+      valor: n.paginasPorLivro ? numero(n.paginasPorLivro) : "—",
+      rotulo: "páginas por livro",
+    },
+  ];
+  return (
+    <div className="grid gap-3 lg:grid-cols-[1.45fr_1fr] lg:gap-4">
+      {/* a meta: o bloco de maior peso da página */}
+      <div className="inverso flex flex-col justify-between rounded-[14px] bg-bordo px-5 py-5 text-creme lg:rounded-[10px] lg:px-6">
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-[10px] font-semibold tracking-[.18em] text-rosa-claro uppercase">
+            {meta ? "meta de leitura" : `lidos em ${n.ano}`}
+          </p>
+          {atual ? (
+            <Link
+              href="/perfil/editar"
+              className="text-[11px] font-semibold text-rosa-claro/90 underline-offset-4 hover:underline"
             >
-              <span className="font-display text-[22px] leading-none font-bold text-bordo italic">
-                {n.meta ? `${Math.round(pct)}%` : "✦"}
-              </span>
-            </span>
-            <div className="min-w-0">
-              <p className="eyebrow text-bordo">meta de leitura</p>
-              {n.meta ? (
-                n.faltam ? (
-                  <>
-                    <p className="mt-2 font-display text-[20px] leading-[1.25] font-semibold italic text-ameixa">
-                      faltam {n.faltam} {n.faltam === 1 ? "livro" : "livros"}{" "}
-                      para fechar o ano
-                    </p>
-                    <p className="mt-1 text-[13px] text-cinza">
-                      cerca de {n.porSemana.toLocaleString("pt-BR")} por semana ✧
-                    </p>
-                  </>
-                ) : (
-                  <p className="mt-2 font-display text-[20px] leading-[1.25] font-semibold italic text-ameixa">
-                    meta batida! tudo agora é bônus ✦
-                  </p>
-                )
-              ) : (
-                <>
-                  <p className="mt-2 font-display text-[20px] leading-[1.25] font-semibold italic text-ameixa">
-                    sem meta este ano
-                  </p>
-                  <Link
-                    href="/perfil/editar"
-                    className="mt-1 inline-flex min-h-11 items-center text-[13px] font-semibold text-bordo"
-                  >
-                    definir uma meta →
-                  </Link>
-                </>
-              )}
-            </div>
-          </div>
+              {meta ? "editar meta" : "definir uma meta"}
+            </Link>
+          ) : null}
         </div>
-        {n.total ? (
-          <div className={`${bloco} pt-3.5`}>
-            <div className="grid grid-cols-3 gap-2.5">
-              {[
-                {
-                  v: n.paginasConhecidas ? numero(n.paginas) : "—",
-                  r: "páginas",
-                },
-                { v: mediaTexto(n.media), r: "média" },
-                {
-                  v: n.paginasPorLivro ? numero(n.paginasPorLivro) : "—",
-                  r: "págs/livro",
-                },
-              ].map((c) => (
-                <div
-                  key={c.r}
-                  className="border-t border-dashed border-linha pt-2 text-center"
-                >
-                  <span className="block font-display text-[24px] leading-none font-bold italic text-bordo">
-                    {c.v}
-                  </span>
-                  <span className="font-maquina mt-[7px] block text-[8.5px] leading-[1.2] tracking-[.06em] text-cinza uppercase">
-                    {c.r}
-                  </span>
-                </div>
-              ))}
+        <div className="mt-3 flex items-baseline justify-between gap-3">
+          <p className="flex items-baseline gap-1.5">
+            <b className="font-display text-[44px] leading-none font-semibold tabular-nums lg:font-revista lg:text-[52px] lg:font-normal">
+              {n.total}
+            </b>
+            <span className="text-[14px] text-rosa-claro">
+              {meta ? `/ ${meta} livros` : n.total === 1 ? "livro" : "livros"}
+            </span>
+          </p>
+          {meta ? (
+            <span className="font-display text-[22px] font-semibold tabular-nums lg:font-revista lg:font-normal">
+              {pct.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%
+            </span>
+          ) : null}
+        </div>
+        {meta ? (
+          <>
+            <div
+              className="mt-3 h-[5px] overflow-hidden rounded-full bg-creme/25"
+              role="progressbar"
+              aria-valuemin={0}
+              aria-valuemax={meta}
+              aria-valuenow={n.total}
+              aria-label="progresso da meta"
+            >
+              <span className="block h-full rounded-full bg-rosa-claro" style={{ width: `${pct}%` }} />
             </div>
+            <p className="mt-3 text-[12px] text-rosa-claro">
+              {n.faltam
+                ? `mais ${plural(n.faltam, "livro", "livros")} para a sua meta · cerca de ${n.porSemana.toLocaleString("pt-BR")} por semana.`
+                : "meta batida! tudo agora é bônus."}
+            </p>
+          </>
+        ) : (
+          <p className="mt-3 text-[12px] text-rosa-claro">
+            {atual
+              ? "sem meta este ano. defina um número e acompanhe o ritmo por aqui."
+              : `terminados entre janeiro e dezembro de ${n.ano}.`}
+          </p>
+        )}
+      </div>
+
+      {/* os indicadores: uma lista fina, número à esquerda e nome à direita */}
+      <dl className="rounded-[14px] border border-linha px-4 lg:rounded-[10px] lg:border-fio">
+        {indicadores.map((x, i) => (
+          <div
+            key={x.rotulo}
+            className={`flex items-center justify-between gap-3 py-3.5 ${i ? "border-t border-linha lg:border-fio" : ""}`}
+          >
+            <dd className="font-display text-[22px] leading-none font-semibold text-ameixa tabular-nums lg:font-revista lg:text-[24px] lg:font-normal">
+              {x.valor}
+            </dd>
+            <dt className="text-right text-[12px] text-cinza">
+              {x.rotulo}
+              {x.nota ? <span className="block text-[10px]">{x.nota}</span> : null}
+            </dt>
+          </div>
+        ))}
+      </dl>
+    </div>
+  );
+}
+
+// ───────── mês em revista ─────────
+
+function MesEmRevista({ livros, ano }: { livros: LivroSalvo[]; ano: number }) {
+  // aparece do penúltimo dia do mês até o dia 5 do seguinte (ver mesDoReview)
+  const aberto = mesDoReview();
+  if (!aberto || aberto.ano !== ano) return null;
+  const chave = `${aberto.ano}-${String(aberto.mes + 1).padStart(2, "0")}`;
+  const doMes = livros.filter(
+    (l) => l.status === "lido" && l.lidoEm?.startsWith(chave),
+  );
+  const paginas = doMes.reduce((t, l) => t + (l.paginas ?? 0), 0);
+  const notas = doMes.map((l) => l.nota).filter((x): x is number => !!x);
+  const media = notas.length ? notas.reduce((t, x) => t + x, 0) / notas.length : null;
+  const favorito = [...doMes].sort(
+    (a, b) =>
+      (b.nota ?? 0) - (a.nota ?? 0) ||
+      (b.lidoEm ?? "").localeCompare(a.lidoEm ?? ""),
+  )[0];
+  const nome = MESES[aberto.mes];
+  const conteudo = (
+    <>
+      <div className="min-w-0 flex-1">
+        <p className="font-maquina text-[10px] tracking-[.12em] text-cinza uppercase">
+          the bookside · edição {aberto.mes + 1}
+        </p>
+        <h3 className="mt-1.5 font-display text-[24px] leading-tight font-semibold italic text-ameixa lg:font-revista lg:text-[30px] lg:font-normal">
+          {maiuscula(nome)} em revista
+        </h3>
+        <p className="mt-1 text-[12px] text-tinta-suave">
+          {doMes.length ? (
+            <>
+              {plural(doMes.length, "livro", "livros")}
+              {paginas ? ` · ${numero(paginas)} páginas` : ""}
+              {media !== null ? ` · ${nota1(media)} estrelas` : ""}
+            </>
+          ) : (
+            `nenhum livro terminado em ${nome} ainda — termine um e ele vira capa.`
+          )}
+        </p>
+        {doMes.length ? (
+          <span className="mt-3 inline-block text-[12px] font-semibold text-bordo group-hover:underline">
+            sua retrospectiva mensal ↗
+          </span>
+        ) : null}
+      </div>
+      {favorito ? (
+        <span className="flex flex-none flex-col items-center">
+          {capaDe(favorito, "w-[58px] shadow-[0_10px_18px_-10px_rgba(43,20,32,.5)] lg:w-[70px] [&>span:last-child]:hidden")}
+          <span className="sr-only">favorito do mês: {favorito.titulo}</span>
+        </span>
+      ) : null}
+    </>
+  );
+  const caixa =
+    "group flex items-center gap-4 rounded-[14px] bg-[color-mix(in_srgb,var(--color-bege)_45%,var(--color-creme))] px-5 py-4 lg:rounded-[10px] lg:px-6";
+  // o story 9:16 (para compartilhar) já sai da tela de story
+  return doMes.length ? (
+    <Link href={`/story?tipo=mes&mes=${chave}`} className={caixa}>
+      {conteudo}
+    </Link>
+  ) : (
+    <div className={caixa}>{conteudo}</div>
+  );
+}
+
+// ───────── dias entre páginas ─────────
+
+function DiasEntrePaginas({ livros }: { livros: LivroSalvo[] }) {
+  const hoje = new Date();
+  const dias = useMemo(() => diasDoMes(livros), [livros]);
+  const faixa = useRef<HTMLUListElement>(null);
+  // começa mostrando os dias mais recentes
+  useEffect(() => {
+    const el = faixa.current;
+    if (el) el.scrollLeft = el.scrollWidth;
+  }, [dias.length]);
+  const comLeitura = dias.filter((d) => d.livros.length).length;
+  const mes = MESES[hoje.getMonth()];
+  return (
+    <Secao
+      titulo="dias entre páginas"
+      acao={
+        <Link href="/numeros/calendario" className={linkAcao}>
+          ver calendário ›
+        </Link>
+      }
+    >
+      <ul
+        ref={faixa}
+        className="-mx-4 flex snap-x gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] lg:mx-0 lg:gap-3 lg:px-0"
+        aria-label={`dias de leitura em ${mes}`}
+      >
+        {dias.map((d) => {
+          const l = d.livros[0];
+          const mais = d.livros.length - 1;
+          const eHoje = d.data.getDate() === hoje.getDate();
+          return (
+            <li key={d.chave} className="w-[64px] flex-none snap-end lg:w-[104px]">
+              {l ? (
+                <Link
+                  href={`/livro/${l.id}`}
+                  className="relative block"
+                  aria-label={`dia ${d.data.getDate()}: ${d.livros.map((x) => x.titulo).join(", ")}`}
+                >
+                  {capaDe(l, "w-full !rounded-[8px] [&>span:last-child]:hidden")}
+                  {mais > 0 ? (
+                    <span className="absolute top-1.5 right-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-ameixa/85 px-1 text-[9px] font-bold text-creme">
+                      +{mais}
+                    </span>
+                  ) : null}
+                </Link>
+              ) : (
+                <span
+                  aria-label={`dia ${d.data.getDate()}: sem leitura`}
+                  className="block aspect-[2/3] rounded-[8px] bg-linha/45"
+                />
+              )}
+              <span
+                className={`mt-1.5 block text-center text-[11px] tabular-nums ${eHoje ? "font-semibold text-bordo" : "text-cinza"}`}
+              >
+                {d.data.getDate()}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+      <p className="mt-2 text-[12px] text-cinza">
+        {comLeitura
+          ? `${plural(comLeitura, "dia", "dias")} com livro aberto em ${mes}.`
+          : `nenhum dia de leitura marcado em ${mes} ainda.`}
+      </p>
+    </Secao>
+  );
+}
+
+// ───────── o ritmo ─────────
+
+function Ritmo({ n }: { n: Numeros }) {
+  // o ano todo no gráfico (os meses que ainda não chegaram ficam vazios)
+  const meses = MESES.map((mes, i) => ({
+    mes,
+    livros: n.porMes[i]?.livros ?? 0,
+    futuro: i >= n.porMes.length,
+  }));
+  const max = Math.max(1, ...meses.map((m) => m.livros));
+  const forte = n.maisForte;
+  const alto = 150;
+  return (
+    <Secao titulo="o ritmo das suas leituras">
+      <div className="grid gap-6 sm:grid-cols-[1fr_180px] sm:items-end lg:grid-cols-[1fr_220px] lg:gap-10">
+        <figure>
+          <div
+            className="flex items-end gap-[5px] lg:gap-3"
+            style={{ height: alto }}
+            role="img"
+            aria-label={`livros por mês: ${meses
+              .filter((m) => !m.futuro)
+              .map((m) => `${m.mes} ${m.livros}`)
+              .join(", ")}`}
+          >
+            {meses.map((m) => {
+              const destaque = forte && m.mes === forte.mes;
+              return (
+                <span
+                  key={m.mes}
+                  className="block flex-1 rounded-t-[3px]"
+                  title={m.futuro ? undefined : `${m.mes}: ${m.livros}`}
+                  style={{
+                    height: m.futuro ? 0 : m.livros ? Math.max(8, (m.livros / max) * alto) : 3,
+                    background: !m.livros
+                      ? "var(--color-linha)"
+                      : destaque
+                        ? "var(--color-ameixa)"
+                        : "color-mix(in srgb, var(--color-rosa-antigo) 50%, var(--color-creme))",
+                  }}
+                />
+              );
+            })}
+          </div>
+          <div aria-hidden className="mt-2 flex gap-[5px] lg:gap-3">
+            {meses.map((m) => (
+              <span
+                key={m.mes}
+                className={`flex-1 text-center text-[9px] uppercase lg:text-[10px] ${
+                  forte && m.mes === forte.mes ? "font-semibold text-ameixa" : "text-cinza"
+                }`}
+              >
+                <span className="lg:hidden">{m.mes[0]}</span>
+                <span className="hidden lg:inline">{m.mes.slice(0, 3)}</span>
+              </span>
+            ))}
+          </div>
+        </figure>
+        {forte ? (
+          <div className="sm:pb-8">
+            <p className={rotulo}>seu mês mais forte</p>
+            <p className="mt-1.5 font-display text-[30px] leading-none font-semibold italic text-ameixa lg:font-revista lg:text-[36px] lg:font-normal">
+              {maiuscula(forte.mes)}
+            </p>
+            <p className="mt-1.5 text-[13px] text-tinta-suave">
+              {plural(forte.livros, "livro lido", "livros lidos")}
+            </p>
+            <p className="mt-1 font-accent text-[13px] italic text-cinza">
+              seu mês mais literário do ano.
+            </p>
           </div>
         ) : null}
       </div>
+    </Secao>
+  );
+}
 
-      <MesEmRevista />
+// ───────── leituras que marcaram ─────────
 
-      {/* atalho: desafios agora mora no início */}
-      <Link
-        href="/numeros/calendario"
-        className={`${bloco} flex items-center justify-between gap-3 hover:border-bordo`}
-      >
-        <span className="min-w-0">
-          <span className="font-maquina block text-[9px] tracking-[.12em] text-rosa-antigo uppercase">
-            na sua jornada também
-          </span>
-          <span className="mt-1 block font-display text-[19px] leading-tight font-semibold italic text-ameixa">
-            calendário de leitura
-          </span>
-          <span className="mt-0.5 block text-xs text-cinza">
-            as capas de cada dia em que você leu
-          </span>
-        </span>
-        <span
-          aria-hidden
-          className="font-maquina flex size-9 flex-none rotate-[6deg] items-center justify-center rounded-full border border-dashed border-ouro text-center text-[7px] leading-tight text-ouro"
-        >
-          ver
-          <br />
-          mais
-        </span>
+function ItemDestaque({ d }: { d: Destaque }) {
+  const [abertos, setAbertos] = useState(false);
+  const [l, ...empates] = d.livros;
+  return (
+    <li className="flex min-w-0 flex-col">
+      <p className="mb-2 text-[12px] text-cinza">{maiuscula(d.rotulo.replace(/^a /, ""))}</p>
+      <Link href={`/livro/${l.id}`} className="group block">
+        {capaDe(
+          l,
+          "w-full !rounded-[8px] shadow-[0_14px_26px_-16px_rgba(43,20,32,.5)] transition-transform group-hover:-translate-y-1 [&>span:last-child]:text-[11px]",
+        )}
+        <p className="mt-3 text-[15px] font-semibold text-ameixa tabular-nums">{d.valor}</p>
+        <p className="mt-0.5 line-clamp-2 text-[13px] leading-snug text-tinta-suave group-hover:text-bordo">
+          {l.titulo}
+        </p>
       </Link>
-
-      {/* as partes */}
-      <div
-        role="tablist"
-        aria-label="partes da jornada"
-        className="flex gap-1.5 overflow-x-auto [scrollbar-width:none]"
-      >
-        {partes.map((p) => (
+      <Link href={linkDaAutoria(l.autor)} className="truncate text-[11px] text-cinza hover:text-bordo">
+        {l.autor}
+      </Link>
+      {empates.length ? (
+        <>
           <button
-            key={p.id}
             type="button"
-            role="tab"
-            aria-selected={parte === p.id}
-            onClick={() => setParte(p.id)}
-            className={`flex h-9 flex-none items-center rounded-pill border px-4 text-xs font-semibold whitespace-nowrap ${
-              parte === p.id
-                ? "border-bordo bg-bordo text-creme"
-                : "border-bege bg-creme-quente text-ameixa"
-            }`}
+            aria-expanded={abertos}
+            onClick={() => setAbertos((v) => !v)}
+            className="mt-2 w-fit text-[11px] font-semibold text-bordo underline-offset-4 hover:underline"
           >
-            {p.nome}
+            {abertos ? "esconder empates" : `empatado com mais ${empates.length}`}
           </button>
+          {abertos ? (
+            <ul className="mt-2 flex flex-wrap gap-1.5">
+              {empates.map((e) => (
+                <li key={e.id} className="w-[38px]">
+                  <Link href={`/livro/${e.id}`} title={e.titulo}>
+                    {capaDe(e, "w-full !rounded-[4px] [&>span:last-child]:hidden")}
+                    <span className="sr-only">{e.titulo}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </>
+      ) : null}
+    </li>
+  );
+}
+
+function Marcaram({ lidos }: { lidos: LivroSalvo[] }) {
+  const destaques = destaquesDoAno(lidos);
+  return (
+    <Secao titulo="leituras que marcaram seu ano">
+      {destaques.length ? (
+        <ul className="grid grid-cols-2 gap-x-4 gap-y-7 sm:grid-cols-4 lg:gap-x-6">
+          {destaques.map((d) => (
+            <ItemDestaque key={d.id} d={d} />
+          ))}
+        </ul>
+      ) : (
+        <p className="font-accent text-sm italic text-cinza">
+          dê notas e marque quando começou e terminou cada livro — os destaques do
+          ano aparecem aqui.
+        </p>
+      )}
+      {destaques.length && !destaques.some((d) => d.id === "rapida") ? (
+        <p className="mt-5 text-[12px] text-cinza">
+          a mais rápida e a mais demorada aparecem quando os livros têm data de
+          início e de fim.
+        </p>
+      ) : null}
+    </Secao>
+  );
+}
+
+// ───────── entre os meses ─────────
+
+function LinhaMes({ rotulo, l }: { rotulo: string; l: LivroSalvo }) {
+  return (
+    <Link href={`/livro/${l.id}`} className="group flex items-center gap-2.5">
+      {capaDe(l, "w-[30px] !rounded-[3px] [&>span:last-child]:hidden")}
+      <span className="min-w-0">
+        <span className="block text-[11px] text-cinza">{rotulo}</span>
+        <span className="block truncate text-[13px] font-semibold text-ameixa group-hover:text-bordo">
+          {l.titulo}
+        </span>
+      </span>
+      {l.nota ? (
+        <span className="ml-auto flex-none text-[11px] text-bordo tabular-nums">{nota1(l.nota)} ★</span>
+      ) : null}
+    </Link>
+  );
+}
+
+function CartaoMes({ m }: { m: MesDoAno }) {
+  return (
+    <li className="w-[78%] flex-none snap-start rounded-[12px] border border-linha p-3.5 sm:w-[calc((100%-24px)/3)] lg:rounded-[10px] lg:border-fio">
+      <p className="flex items-baseline justify-between gap-2">
+        <span className="text-[15px] font-semibold text-ameixa">{maiuscula(m.mes)}</span>
+        <span className="text-[11px] text-cinza">{plural(m.total, "livro", "livros")}</span>
+      </p>
+      <div className="mt-3 space-y-2.5">
+        {m.melhor ? (
+          <LinhaMes rotulo={m.pior ? "mais amado" : "destaque do mês"} l={m.melhor} />
+        ) : (
+          <>
+            <ul className="flex gap-1.5">
+              {m.livros.slice(0, 5).map((l) => (
+                <li key={l.id} className="w-[30px]">
+                  <Link href={`/livro/${l.id}`}>
+                    {capaDe(l, "w-full !rounded-[3px] [&>span:last-child]:hidden")}
+                    <span className="sr-only">{l.titulo}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            <p className="text-[11px] text-cinza">sem notas neste mês</p>
+          </>
+        )}
+        {m.pior ? <LinhaMes rotulo="menos amado" l={m.pior} /> : null}
+      </div>
+    </li>
+  );
+}
+
+function EntreOsMeses({ lidos }: { lidos: LivroSalvo[] }) {
+  const meses = mesesDoAno(lidos);
+  const faixa = useRef<HTMLUListElement>(null);
+  useEffect(() => {
+    const el = faixa.current;
+    if (el) el.scrollLeft = el.scrollWidth;
+  }, [meses.length]);
+  const andar = (dir: number) => {
+    const el = faixa.current;
+    if (el) el.scrollBy({ left: dir * el.clientWidth * 0.8, behavior: "smooth" });
+  };
+  if (!meses.length) return null;
+  return (
+    <Secao
+      titulo="entre os meses"
+      acao={
+        meses.length > 3 ? (
+          <span className="flex items-center gap-1">
+            <span className="mr-1 hidden text-[12px] text-cinza sm:inline">explorar meses</span>
+            {[
+              { d: -1, r: "meses anteriores", s: "‹" },
+              { d: 1, r: "próximos meses", s: "›" },
+            ].map((b) => (
+              <button
+                key={b.d}
+                type="button"
+                aria-label={b.r}
+                onClick={() => andar(b.d)}
+                className="flex size-8 items-center justify-center rounded-full text-[15px] text-cinza hover:bg-rosa-fundo hover:text-bordo"
+              >
+                {b.s}
+              </button>
+            ))}
+          </span>
+        ) : undefined
+      }
+    >
+      <ul
+        ref={faixa}
+        className="-mx-4 flex snap-x gap-3 overflow-x-auto scroll-smooth px-4 [scrollbar-width:none] lg:mx-0 lg:px-0"
+      >
+        {meses.map((m) => (
+          <CartaoMes key={m.mes} m={m} />
         ))}
+      </ul>
+    </Secao>
+  );
+}
+
+// ───────── seu jeito de ler ─────────
+
+const corDoFormato: Record<string, string> = {
+  fisico: "var(--color-ameixa)",
+  ebook: "var(--color-rosa-antigo)",
+  audio: "var(--color-oliva)",
+};
+
+function Formatos({ n }: { n: Numeros }) {
+  const f = formatosComParte(n);
+  const maior = Math.max(1, ...f.lista.map((x) => x.qtd));
+  return (
+    <div>
+      <h4 className="mb-3 text-[13px] text-tinta-suave">papel, tela ou ouvidos</h4>
+      {!f.marcados ? (
+        <p className="font-accent text-sm italic text-cinza">
+          marque na página de cada livro se foi físico, e-book ou audiolivro — e
+          descubra de que time você é.
+        </p>
+      ) : (
+        <>
+          <ul className="space-y-3.5">
+            {f.lista.map((x) => (
+              <li key={x.id}>
+                <div className="flex items-baseline justify-between gap-3 text-[13px]">
+                  <span className="text-ameixa">{maiuscula(x.nome)}</span>
+                  <span className="text-cinza tabular-nums">
+                    {x.qtd ? plural(x.qtd, "livro", "livros") : "nenhum"}
+                    {x.qtd ? ` · ${Math.round(x.parte * 100)}%` : ""}
+                  </span>
+                </div>
+                <div className="mt-1.5 h-[6px] overflow-hidden rounded-full bg-linha/60">
+                  <span
+                    className="block h-full rounded-full"
+                    style={{ width: `${(x.qtd / maior) * 100}%`, background: corDoFormato[x.id] }}
+                  />
+                </div>
+                {x.qtd ? (
+                  <p className="mt-1 text-[11px] text-cinza">
+                    {[
+                      x.paginas && x.paginasConhecidas ? `${numero(x.paginas)} págs.` : null,
+                      x.media !== null ? `${nota1(x.media)} ★` : null,
+                      x.id === "audio" && x.paginas
+                        ? `≈ ${plural(horasEstimadas(x.paginas), "hora", "horas")} de audição (estimativa)`
+                        : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </p>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+          {f.semFormato ? (
+            <p className="mt-4 text-[11px] text-cinza">
+              {plural(f.semFormato, "livro ficou", "livros ficaram")} sem formato
+              marcado e não entra{f.semFormato === 1 ? "" : "m"} nessa conta.
+            </p>
+          ) : null}
+        </>
+      )}
+    </div>
+  );
+}
+
+function Mundo({ lidos }: { lidos: LivroSalvo[] }) {
+  const chave = [...new Set(lidos.map((l) => l.autor))].sort().join("|");
+  const [paises, setPaises] = useState<Record<string, Pais | null> | null>(null);
+  useEffect(() => {
+    let vivo = true;
+    setPaises(null);
+    paisesDasAutoras(chave ? chave.split("|") : [])
+      .then((c) => vivo && setPaises({ ...c }))
+      .catch(() => vivo && setPaises({}));
+    return () => {
+      vivo = false;
+    };
+  }, [chave]);
+  const conta = new Map<string, { pais: Pais; qtd: number }>();
+  for (const l of lidos) {
+    const p = paises?.[l.autor.toLowerCase()];
+    if (!p) continue;
+    const x = conta.get(p.nome) ?? { pais: p, qtd: 0 };
+    x.qtd++;
+    conta.set(p.nome, x);
+  }
+  const lista = [...conta.values()].sort((a, b) => b.qtd - a.qtd);
+  const total = lista.reduce((t, x) => t + x.qtd, 0);
+  return (
+    <div>
+      <h4 className="mb-3 text-[13px] text-tinta-suave">um mundo entre páginas</h4>
+      <div className="rounded-[12px] border border-linha p-3 lg:rounded-[10px] lg:border-fio lg:p-4">
+        {paises === null ? (
+          <div aria-hidden className="aspect-[800/380] animate-pulse rounded-[8px] bg-linha/50" />
+        ) : !lista.length ? (
+          <p className="py-6 text-center font-accent text-sm italic text-cinza">
+            ainda não achamos de onde são as autoras desses livros.
+          </p>
+        ) : (
+          <>
+            <MapaPaises lista={lista} />
+            <ol className="mt-3 grid grid-cols-2 gap-x-5 gap-y-1">
+              {lista.slice(0, 6).map(({ pais, qtd }) => (
+                <li key={pais.nome} className="flex items-baseline justify-between gap-2 py-0.5 text-[12px]">
+                  <span className="truncate text-ameixa">
+                    <span aria-hidden>{bandeira(pais.codigo)}</span> {pais.nome}
+                  </span>
+                  <span className="text-cinza tabular-nums">{Math.round((qtd / total) * 100)}%</span>
+                </li>
+              ))}
+            </ol>
+            <p className="mt-2 text-[10px] text-cinza">
+              {plural(lista.length, "país", "países")} · pela nacionalidade das autoras · fonte: Wikidata
+            </p>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ───────── identidade ─────────
+
+function Atalho({
+  href,
+  titulo,
+  texto,
+}: {
+  href: string;
+  titulo: string;
+  texto: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="group block rounded-[12px] border border-linha px-4 py-3.5 hover:border-bordo lg:rounded-[10px] lg:border-fio"
+    >
+      <span className="block text-[14px] font-semibold text-ameixa group-hover:text-bordo">
+        {titulo} <span aria-hidden className="text-[11px]">↗</span>
+      </span>
+      <span className="mt-0.5 block truncate text-[12px] text-cinza">{texto}</span>
+    </Link>
+  );
+}
+
+function Identidade({ n }: { n: Numeros }) {
+  const generos = n.generos
+    .filter((g) => g.nome !== "sem gênero")
+    .slice(0, 3)
+    .map((g) => maiuscula(g.nome));
+  const autoras = n.autores.slice(0, 3).map((a) => a.nome);
+  return (
+    <section className="grid gap-3 border-t border-linha pt-5 sm:grid-cols-2 lg:border-fio lg:pt-6">
+      <Atalho
+        href="/numeros/generos"
+        titulo="seus gêneros"
+        texto={generos.length ? generos.join(" · ") : "descubra o que você mais lê"}
+      />
+      <Atalho
+        href="/numeros/generos"
+        titulo="suas autoras"
+        texto={autoras.length ? autoras.join(" · ") : "descubra quem você mais leu"}
+      />
+    </section>
+  );
+}
+
+// ───────── a página ─────────
+
+export function JornadaNoPerfil() {
+  const livros = usePerfil((s) => s.livros);
+  const meta = usePerfil((s) => s.meta);
+  const anoAtual = new Date().getFullYear();
+  const anos = useMemo(() => anosComLeitura(livros), [livros]);
+  const [ano, setAno] = useState(anoAtual);
+  const n = useMemo(() => calcularNumeros(livros, meta, ano), [livros, meta, ano]);
+  const atual = ano === anoAtual;
+  const semData = livros.filter((l) => l.status === "lido" && !l.lidoEm).length;
+
+  return (
+    <div className="space-y-6 pb-6 lg:space-y-8">
+      <Cabecalho anos={anos} ano={ano} onAno={setAno} />
+
+      <div className="space-y-3 lg:space-y-4">
+        <AnoEmNumeros n={n} atual={atual} />
+        <MesEmRevista livros={livros} ano={ano} />
       </div>
 
-      {parte === "ano" ? (
-        <div className="space-y-6">
-          <section className={`${bloco} pt-3.5`}>
-            <p className="font-maquina mb-3 block text-[9.5px] tracking-[.12em] text-rosa-antigo uppercase">
-              livros por mês
-            </p>
-            <GraficoMeses n={n} />
-            {n.maisForte ? (
-              <p className="mt-3 border-t border-dashed border-linha pt-2.5 font-accent text-[13px] italic text-cinza">
-                {n.maisForte.mes} foi seu mês mais forte ✦
-              </p>
-            ) : null}
-          </section>
-        </div>
-      ) : parte === "destaques" ? (
-        <div className="space-y-2">
-          <ExtremosDoAno n={n} />
-          <MesAMes n={n} />
-        </div>
+      {atual ? <DiasEntrePaginas livros={livros} /> : null}
+
+      {n.total ? (
+        <>
+          <Ritmo n={n} />
+          <Marcaram lidos={n.lidos} />
+          <EntreOsMeses lidos={n.lidos} />
+          <Secao titulo="seu jeito de ler">
+            <div className="grid gap-8 lg:grid-cols-2 lg:gap-8">
+              <Formatos n={n} />
+              <Mundo lidos={n.lidos} />
+            </div>
+          </Secao>
+          <Identidade n={n} />
+        </>
       ) : (
-        <div className="space-y-2">
-          <FormatosDoAno n={n} />
-          <Nacionalidades />
-          <Link
-            href="/numeros/generos"
-            className="inline-flex min-h-10 items-center text-[13px] font-semibold text-bordo underline underline-offset-4"
-          >
-            ver gêneros e autoras que mais leu →
-          </Link>
+        <div className="border-t border-linha pt-8 text-center lg:border-fio">
+          <p className="font-display text-[22px] font-semibold italic text-ameixa lg:font-revista lg:font-normal">
+            {atual ? "a jornada deste ano começa no primeiro livro" : `nenhum livro terminado em ${ano}`}
+          </p>
+          <p className="mx-auto mt-2 max-w-[420px] text-[13px] text-cinza">
+            quando você marca um livro como lido, com a data, ele entra aqui: ritmo,
+            destaques, formatos e de onde vêm as autoras.
+          </p>
+          {atual ? (
+            <Link
+              href="/buscar"
+              className="mt-5 inline-flex h-11 items-center rounded-pill bg-bordo px-6 text-[13px] font-semibold text-creme"
+            >
+              adicionar um livro
+            </Link>
+          ) : null}
         </div>
       )}
+
+      {semData ? (
+        <p className="border-t border-linha pt-4 text-[11px] text-cinza lg:border-fio">
+          {plural(semData, "livro lido está", "livros lidos estão")} sem data e
+          não entra{semData === 1 ? "" : "m"} nos números por ano.{" "}
+          <Link href="/estantes/lidos" className="font-semibold text-bordo underline underline-offset-2">
+            colocar datas
+          </Link>
+        </p>
+      ) : null}
     </div>
   );
 }
