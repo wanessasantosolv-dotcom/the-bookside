@@ -74,6 +74,11 @@ const PELOS_ASSUNTOS: [RegExp, string][] = [
   [/family|famil/, "drama familiar"],
   [/coming of age|bildungsroman/, "formação"],
   [/short stories|contos/, "contos"],
+  [/magic(al)? realism|realismo magico/, "realismo mágico"],
+  [/\bwar\b|\bwars\b|guerra|military/, "ficção de guerra"],
+  [/self-help|autoajuda|personal growth/, "autoajuda"],
+  [/essays|ensaios/, "ensaios"],
+  [/contemporary|contemporanea|women|domestic|literary/, "ficção contemporânea"],
 ];
 
 /** gêneros que não dizem muito: valem uma busca por algo melhor */
@@ -101,7 +106,7 @@ function generoDosAssuntos(assuntos: string[]): string | undefined {
   return PELOS_ASSUNTOS.find(([re]) => re.test(texto))?.[1];
 }
 
-const CACHE = "bookside-generos-v1";
+const CACHE = "bookside-generos-v2";
 function lerCache(): Record<string, string | null> {
   try {
     return JSON.parse(localStorage.getItem(CACHE) ?? "{}");
@@ -115,6 +120,25 @@ function gravarCache(c: Record<string, string | null>) {
   } catch {
     /* sem armazenamento */
   }
+}
+
+/** a categoria detalhada da ficha do Google Books (ex.: "Fiction / Thrillers / Suspense") */
+async function categoriasNoGoogle(l: LivroSalvo): Promise<string[]> {
+  const autor = l.autor && !/^autoria/i.test(l.autor) ? `+inauthor:"${l.autor}"` : "";
+  const busca = await fetch(
+    `https://www.googleapis.com/books/v1/volumes?q=intitle:"${encodeURIComponent(l.titulo)}"${encodeURIComponent(autor)}&maxResults=3&fields=items(id)`,
+  );
+  if (!busca.ok) return [];
+  const ids = ((await busca.json()) as { items?: { id: string }[] }).items?.map((x) => x.id) ?? [];
+  const fichas = await Promise.all(
+    ids.slice(0, 2).map((id) =>
+      fetch(`https://www.googleapis.com/books/v1/volumes/${id}?fields=volumeInfo/categories`)
+        .then((r) => (r.ok ? r.json() : {}))
+        .then((d: { volumeInfo?: { categories?: string[] } }) => d.volumeInfo?.categories ?? [])
+        .catch(() => [] as string[]),
+    ),
+  );
+  return fichas.flat();
 }
 
 async function assuntosNaOpenLibrary(l: LivroSalvo): Promise<string[]> {
@@ -151,7 +175,7 @@ export function useGenerosRefinados(livros: LivroSalvo[], generoBase: (l: LivroS
       for (let i = 0; i < faltam.length; i += 4) {
         const lote = faltam.slice(i, i + 4);
         const r = await Promise.all(
-          lote.map((l) => assuntosNaOpenLibrary(l).then(generoDosAssuntos).catch(() => undefined)),
+          lote.map((l) => generoRefinadoDe(l).then((g) => g ?? undefined).catch(() => undefined)),
         );
         lote.forEach((l, k) => {
           cache[l.id] = r[k] ?? null;
@@ -179,9 +203,14 @@ export function generoGenerico(g?: string) {
 export async function generoRefinadoDe(l: LivroSalvo): Promise<string | null> {
   const cache = lerCache();
   if (l.id in cache) return cache[l.id];
-  const g = await assuntosNaOpenLibrary(l)
-    .then(generoDosAssuntos)
-    .catch(() => undefined);
+  // primeiro a categoria detalhada do Google; se não disser nada, os assuntos da Open Library
+  const g =
+    (await categoriasNoGoogle(l)
+      .then(generoDosAssuntos)
+      .catch(() => undefined)) ??
+    (await assuntosNaOpenLibrary(l)
+      .then(generoDosAssuntos)
+      .catch(() => undefined));
   cache[l.id] = g ?? null;
   gravarCache(cache);
   return g ?? null;
