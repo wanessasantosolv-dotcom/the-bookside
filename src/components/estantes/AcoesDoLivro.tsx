@@ -6,7 +6,7 @@ import { todasAsEstantes } from "@/lib/estantes";
 import { usePerfil, type LivroSalvo, type StatusLivro } from "@/lib/perfil-store";
 
 const ORDEM_STATUS: StatusLivro[] = ["lendo", "lido", "quero", "pausado", "abandonado"];
-const LIMITE_FAVORITOS = 4;
+const LIMITE_FAVORITOS = 6;
 const agora = () => new Date().toISOString();
 
 /** janelinha de confirmação no estilo do app */

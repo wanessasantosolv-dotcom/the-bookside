@@ -96,7 +96,7 @@ export function JornadaResumida({ p, nome }: { p: Perfil; nome: string }) {
 
 type EstanteDela = { id: string; nome: string; livros: LivroSalvo[] };
 
-export function estantesDela(p: Perfil): EstanteDela[] {
+export function estantesDela(p: Perfil, incluirPrivadas = false): EstanteDela[] {
   const favoritos = (p.favoritos ?? []).map((id) => p.livros.find((l) => l.id === id)).filter((l): l is LivroSalvo => !!l);
   const de = (s: string) => p.livros.filter((l) => (l.status ?? "lendo") === s);
   return [
@@ -106,19 +106,19 @@ export function estantesDela(p: Perfil): EstanteDela[] {
     { id: "quero-ler", nome: "quero ler", livros: de("quero") },
     // só as estantes que ela deixou públicas
     ...(p.estantesProprias ?? [])
-      .filter((e) => e.publica)
+      .filter((e) => incluirPrivadas || e.publica)
       .map((e) => ({ id: e.id, nome: e.nome, livros: p.livros.filter((l) => l.estantes?.includes(e.id)) })),
   ].filter((e) => e.livros.length);
 }
 
-export function EstantesDela({ p, base, nome }: { p: Perfil; base: string; nome: string }) {
-  const lista = estantesDela(p);
+export function EstantesDela({ p, base, nome, propria }: { p: Perfil; base: string; nome: string; propria?: boolean }) {
+  const lista = estantesDela(p, propria);
   if (!lista.length) return null;
   return (
     <section aria-labelledby="estantes-dela" className="mt-8">
       <div className="mb-3 flex items-baseline justify-between border-b border-[var(--linha,#E7DCD3)] pb-2">
         <h2 id="estantes-dela" className="font-revista text-[22px] leading-none italic">
-          estantes de {nome}
+          {propria ? "suas estantes" : `estantes de ${nome}`}
         </h2>
       </div>
       <ul className="grid gap-x-8 gap-y-6 sm:grid-cols-2">

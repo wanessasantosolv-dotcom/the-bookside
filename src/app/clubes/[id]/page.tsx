@@ -343,17 +343,17 @@ export default function ClubeInicioPage() {
       {amados.length ? (
         <>
           <p className="mb-2 text-[12px] text-cinza">{escolhidos.length ? "escolhidos pelo clube" : "os mais bem avaliados nas fichas"}</p>
-          <div className="flex items-end gap-3 overflow-x-auto px-2 pt-2 [scrollbar-width:none]">
+          <div className="flex items-end gap-4 overflow-x-auto px-3 pt-2 [scrollbar-width:none]">
             {amados.map(({ l }) => (
-              <Link key={l.id} href={`/clubes/${clube.id}/livro/${l.id}`} className="w-[62px] flex-none transition-transform hover:-translate-y-1">
+              <Link key={l.id} href={`/clubes/${clube.id}/livro/${l.id}`} className="w-[84px] flex-none transition-transform hover:-translate-y-1 lg:w-[104px]">
                 <CapaAuto livro={l.livro} className="w-full [&>span:last-child]:hidden" />
               </Link>
             ))}
           </div>
           <PrateleiraMadeira className="relative -mt-[5px]" />
-          <ul className="mt-2 flex gap-3 overflow-hidden px-2 text-[11px] text-tinta-suave">
+          <ul className="mt-2 flex gap-4 overflow-hidden px-3 text-[12px] text-tinta-suave">
             {amados.map(({ l, m, n }) => (
-              <li key={l.id} className="w-[62px] flex-none text-center" title={n ? `${n} ${n === 1 ? "ficha" : "fichas"}` : undefined}>
+              <li key={l.id} className="w-[84px] flex-none text-center lg:w-[104px]" title={n ? `${n} ${n === 1 ? "ficha" : "fichas"}` : undefined}>
                 {m !== null ? `${virgula(m)}★` : "—"}
               </li>
             ))}
@@ -370,6 +370,7 @@ export default function ClubeInicioPage() {
       <div className="min-w-0 space-y-10">
         {leitura}
         {lendo ? <Turma membros={membros} turma={turma} eu={eu} clubeId={clube.id} /> : null}
+        {amamos}
         {/* no celular, o encontro vem logo depois da turma */}
         {proximo ? (
           <div className="lg:hidden">
@@ -393,7 +394,6 @@ export default function ClubeInicioPage() {
         ) : null}
         {quemEsta}
         <SugerirRapido clubeId={clube.id} votacao={modoDe(clube) === "votacao"} fila={sugestoes} membros={membros} eu={eu} />
-        {amamos}
       </aside>
     </div>
   );

@@ -19,7 +19,7 @@ import { useVoltar } from "@/lib/navegacao";
 import { usePerfil, type LivroSalvo } from "@/lib/perfil-store";
 import { semPublicar } from "@/lib/social";
 
-const MAXIMO = 4;
+const MAXIMO = 6;
 
 const semAcento = (t: string) =>
   t
@@ -124,12 +124,12 @@ function Escolha({ inicial }: { inicial: string[] }) {
             seus favoritos
           </h1>
           <p className="mt-2 font-accent text-[15px] italic text-cinza">
-            até 4 livros que contam quem você é. eles ficam em destaque no seu
+            de 4 a 6 livros que contam quem você é. eles ficam em destaque no seu
             perfil.
           </p>
 
-          {/* os 4 lugares */}
-          <ol className="mt-5 grid grid-cols-4 gap-2.5 sm:gap-4">
+          {/* os 6 lugares */}
+          <ol className="mt-5 grid grid-cols-3 gap-2.5 sm:grid-cols-6 sm:gap-4">
             {Array.from({ length: MAXIMO }, (_, i) => {
               const l = porId.get(escolhidos[i]);
               return (

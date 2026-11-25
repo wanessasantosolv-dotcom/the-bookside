@@ -157,6 +157,8 @@ export type Perfil = {
   edicoes?: Record<string, EdicaoSalva>;
   /** id do livro cuja resenha a pessoa fixou no topo da aba resenhas */
   resenhaFixada?: string | null;
+  /** a citação favorita do perfil (escolhida entre os trechos salvos) */
+  citacaoPerfil?: { texto: string; livro?: string; autor?: string; livroId?: string } | null;
   /** aparência do app: claro, escuro ou igual ao celular/computador */
   aparencia: "claro" | "escuro" | "sistema";
   /** as cores do tema do perfil valem para o app inteiro */
@@ -209,6 +211,7 @@ export const perfilInicial: Perfil = {
   novidadesVistasEm: null,
   edicoes: {},
   resenhaFixada: null,
+  citacaoPerfil: null,
   passados: [],
   removidos: [],
   aparencia: "claro",

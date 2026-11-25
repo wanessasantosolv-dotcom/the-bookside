@@ -3,10 +3,10 @@
 import { Voltar } from "@/components/Voltar";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { CapaLivro } from "@/components/CapaLivro";
-import { PerfilWeb } from "@/components/perfil/PerfilWeb";
+import { PerfilEditorial, type AbaDoPerfil } from "@/components/perfil/PerfilEditorial";
 import { EstantesDela, JornadaResumida } from "@/components/perfil/DaAmiga";
 import {
   Carregando,
@@ -140,8 +140,25 @@ function SecaoMatch({
   );
 }
 
+const ABAS_DELA: AbaDoPerfil[] = ["geral", "jornada", "resenhas", "estantes"];
+const abaDaUrl = (): AbaDoPerfil => {
+  const a = new URLSearchParams(window.location.search).get("aba") as AbaDoPerfil | null;
+  return a && ABAS_DELA.includes(a) ? a : "geral";
+};
+
 function PerfilDela({ usuario }: { usuario: string }) {
   const router = useRouter();
+  const [aba, setAba] = useState<AbaDoPerfil>("geral");
+  useEffect(() => {
+    setAba(abaDaUrl());
+    const voltar = () => setAba(abaDaUrl());
+    window.addEventListener("popstate", voltar);
+    return () => window.removeEventListener("popstate", voltar);
+  }, []);
+  function mudarAba(a: AbaDoPerfil) {
+    setAba(a);
+    window.history.pushState(null, "", a === "geral" ? `/u/${usuario}` : `/u/${usuario}?aba=${a}`);
+  }
   const eu = useMeuId();
   const meuUsuario = usePerfil((s) => s.usuario);
   const modoEscuro = useModoEscuro();
@@ -235,217 +252,50 @@ function PerfilDela({ usuario }: { usuario: string }) {
     </span>
   );
 
+  const nomeCurto = (p.nome || p.usuario).split(" ")[0].toLowerCase();
+  const resenhasDela = p.livros
+    .filter((l) => l.resenha?.trim())
+    .sort((a, b) => (b.lidoEm ?? "").localeCompare(a.lidoEm ?? ""));
+
   return (
     <div style={estilo} className="acc-tema">
-      <PerfilWeb
-        perfil={p}
-        tema={tema}
-        arquetipo={arquetipo}
-        lidos={lidos}
-        lendo={lendo}
-        quero={quero}
-        favoritos={favoritos}
-        acoes={
-          <BotaoSeguir
-            id={pessoa.id}
-            seguindo={seguindo}
-            escuro
-            onMudar={consulta.recarregar}
-          />
-        }
-        detalhe={seguidores}
-        extra={
-          <>
-            <JornadaResumida p={p} nome={(p.nome || p.usuario).split(" ")[0].toLowerCase()} />
-            <EstantesDela p={p} base={base} nome={(p.nome || p.usuario).split(" ")[0].toLowerCase()} />
-            <SecaoMatch match={match} nome={p.nome || p.usuario} />
-          </>
-        }
-        links={{
-          numeros: `${base}/lidos`,
-          favoritos: `${base}/lidos`,
-          lidos: `${base}/lidos`,
-          quero: `${base}/lidos?estante=quero`,
-        }}
-      />
-
-      <div className="flex min-h-dvh flex-col bg-[var(--papel)] text-[var(--tinta)] lg:hidden">
-        <div
-          className={`relative h-[170px] bg-cover bg-center ${p.capaImagem ? "" : `pat-${p.capa}`}`}
-          style={
-            p.capaImagem
-              ? { backgroundImage: `url("${p.capaImagem}")` }
-              : undefined
-          }
-        >
-          <Voltar
-            padrao="/inicio"
-            className="absolute top-3 left-4 flex min-h-10 items-center rounded-pill bg-creme/90 px-4 text-[13px] font-semibold text-bordo"
-          />
-        </div>
-        <section className="relative -mt-8 rounded-t-[34px] bg-[var(--papel)] px-6 pb-8">
-          <div className="mx-auto -mt-[52px] size-[104px] overflow-hidden rounded-full border-4 border-[var(--papel)] bg-linha">
-            {p.foto ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={p.foto}
-                alt={`foto de ${p.nome}`}
-                className="size-full object-cover object-[50%_30%]"
-              />
-            ) : (
-              <span className="flex size-full items-center justify-center font-display text-4xl font-semibold italic text-bordo">
-                {(p.nome || "?").slice(0, 1).toLowerCase()}
-              </span>
-            )}
-          </div>
-          <h1 className="mt-4 text-center font-display text-[32px] leading-none font-semibold italic text-[var(--acc)]">
-            {p.nome || p.usuario}
-          </h1>
-          <p className="mt-2.5 text-center text-xs text-[var(--suave)]">
-            @{p.usuario}
-          </p>
-          <div className="mt-1.5 flex justify-center text-xs text-[var(--suave)]">
-            {seguidores}
-          </div>
-          {p.frase ? (
-            <p className="mx-4 mt-3 text-center font-accent text-[15px] leading-5 italic text-[var(--acc)]">
-              {p.frase}
-            </p>
-          ) : null}
-          <div className="mt-4 flex justify-center gap-2">
-            <BotaoSeguir
-              id={pessoa.id}
-              seguindo={seguindo}
-              onMudar={consulta.recarregar}
-            />
-          </div>
-          {arquetipo ? (
-            <p className="mt-3 text-center text-[10px] font-semibold tracking-[.1em] text-[var(--acc)] uppercase">
-              {arquetipo.nome.replace(/^a /, "")}
-            </p>
-          ) : null}
-
-          <Link
-            href={`${base}/lidos`}
-            className="mt-5 flex border-y border-[var(--linha)]"
-          >
-            {[
-              {
-                n: numerosDoPerfil(p).noAno,
-                r: `em ${new Date().getFullYear()}`,
-              },
-              { n: lidos.length, r: "ao todo" },
-              { n: lendo.length, r: "lendo" },
-              { n: emComum, r: "em comum" },
-            ].map((s, i) => (
-              <span
-                key={s.r}
-                className={`flex h-14 flex-1 flex-col items-center justify-center ${i ? "border-l border-[var(--linha)]" : ""}`}
-              >
-                <b className="font-display text-xl leading-none font-semibold text-[var(--acc)]">
-                  {s.n}
-                </b>
-                <span className="mt-1 text-[9px] font-semibold tracking-[.1em] text-[var(--suave)] uppercase">
-                  {s.r}
-                </span>
-              </span>
-            ))}
-          </Link>
-
-          <h2 className="mt-6 font-display text-[22px] font-semibold italic text-[var(--acc)]">
-            favoritos dela
-          </h2>
-          {favoritos.length ? (
-            <ul className="mt-2 grid grid-cols-4 gap-2">
-              {favoritos.map((l) => (
-                <li key={l.id}>
-                  <Link href={`/livro/${l.id}`}>
-                    <CapaLivro
-                      titulo={l.titulo}
-                      capa={l.capa}
-                      cor={corDoLivro(l.id)}
-                      className="w-full"
-                    />
+      <PerfilEditorial
+        p={p}
+        proprio={false}
+        pessoaId={pessoa.id}
+        numeros={numeros}
+        acoesDela={<BotaoSeguir id={pessoa.id} seguindo={seguindo} escuro onMudar={consulta.recarregar} />}
+        match={match}
+        aba={aba}
+        onAba={mudarAba}
+        conteudoAba={{
+          jornada: <JornadaResumida p={p} nome={nomeCurto} />,
+          resenhas: resenhasDela.length ? (
+            <ul className="border-t border-[var(--linha)]">
+              {resenhasDela.map((l) => (
+                <li key={l.id} className="flex gap-4 border-b border-[var(--linha)] py-6">
+                  <Link href={`/livro/${l.id}`} className="w-[72px] flex-none lg:w-[90px]">
+                    <CapaLivro titulo={l.titulo} capa={l.capa} cor={corDoLivro(l.id)} className="w-full [&>span:last-child]:hidden" />
                   </Link>
+                  <div className="min-w-0 flex-1">
+                    <Link href={`/livro/${l.id}`} className="font-revista text-[20px] leading-tight text-[var(--acc)] hover:underline">
+                      {l.titulo}
+                    </Link>
+                    <p className="mt-0.5 text-[12px] text-[var(--suave)]">
+                      {l.autor}
+                      {l.nota ? <span className="ml-2 text-[var(--acc)]">{estrelas(l.nota)}</span> : null}
+                    </p>
+                    <p className="mt-3 line-clamp-6 text-[15px] leading-[1.65] whitespace-pre-line">{l.resenha}</p>
+                  </div>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="mt-1 font-accent text-sm italic text-[var(--suave)]">
-              nenhum favorito escolhido ainda.
-            </p>
-          )}
-
-          <JornadaResumida p={p} nome={(p.nome || p.usuario).split(" ")[0].toLowerCase()} />
-          <EstantesDela p={p} base={base} nome={(p.nome || p.usuario).split(" ")[0].toLowerCase()} />
-
-          <SecaoMatch match={match} nome={p.nome || p.usuario} id="match" />
-
-          {lidos.length ? (
-            <>
-              <div className="mt-7 flex items-baseline justify-between">
-                <h2 className="font-display text-[22px] font-semibold italic text-[var(--acc)]">
-                  últimos lidos
-                </h2>
-                <Link
-                  href={`${base}/lidos`}
-                  className="py-2 text-[10px] font-semibold tracking-[.12em] text-[var(--acc)] uppercase"
-                >
-                  ver todos →
-                </Link>
-              </div>
-              <ul className="mt-1">
-                {lidos.slice(0, 5).map((l) => (
-                  <li
-                    key={l.id}
-                    className="border-t border-[var(--linha)] first:border-0"
-                  >
-                    <Link
-                      href={`/livro/${l.id}`}
-                      className="flex items-center gap-3 py-2.5"
-                    >
-                      <CapaLivro
-                        titulo={l.titulo}
-                        capa={l.capa}
-                        cor={corDoLivro(l.id)}
-                        className="w-[38px] flex-none [&>span:last-child]:hidden"
-                      />
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate font-display text-[15px] font-semibold italic">
-                          {l.titulo}
-                        </span>
-                        <span className="mt-0.5 block text-[11px] text-[var(--suave)]">
-                          {l.lidoEm
-                            ? `lido em ${new Date(l.lidoEm).toLocaleDateString("pt-BR", { day: "numeric", month: "short", year: "numeric" })}`
-                            : "sem data"}
-                          {l.nota ? (
-                            <span className="ml-2 text-[var(--acc)]">
-                              {estrelas(l.nota)}
-                            </span>
-                          ) : null}
-                        </span>
-                      </span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </>
-          ) : null}
-
-          {atividades.length ? (
-            <>
-              <h2 className="mt-7 font-display text-[22px] font-semibold italic text-[var(--acc)]">
-                o que ela anda lendo
-              </h2>
-              <div className="mt-3 space-y-3 text-ameixa">
-                {atividades.map((a) => (
-                  <CartaoAtividade key={a.id} a={a} pessoa={pessoa} />
-                ))}
-              </div>
-            </>
-          ) : null}
-        </section>
-      </div>
+            <p className="text-[14px] text-[var(--suave)]">este leitor ainda não publicou resenhas.</p>
+          ),
+          estantes: <EstantesDela p={p} base={base} nome={nomeCurto} />,
+        }}
+      />
     </div>
   );
 }
