@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { corDoLivro } from "@/lib/cores";
 import { tintaSobre, useCorDaCapa } from "@/lib/corDaCapa";
 import { estrelas } from "@/lib/estantes";
@@ -164,15 +164,20 @@ function Detalhes({ l }: { l: LivroSalvo }) {
   );
 }
 
-/** a lombada: um detalhe ampliado da capa sob um véu da cor principal, com o título inteiro */
-export function Lombada({ livro, altura }: { livro: LivroSalvo; altura: number }) {
+/** altura e largura da lombada (estáveis por livro) */
+export function medidasDaLombada(livro: LivroSalvo, altura: number) {
   const pags = livro.paginas ?? 320;
-  // altura e recorte estáveis por livro (não mudam a cada render)
   const semente = [...livro.id].reduce((t, c) => t + c.charCodeAt(0), 0);
   const h = Math.round(altura * (0.8 + ((semente % 17) / 17) * 0.2));
   const len = livro.titulo.length;
-  // títulos longos ganham uma lombada um pouco mais larga, para caber em mais linhas
   const w = Math.round(Math.max(len > 26 ? 34 : len > 14 ? 28 : 24, Math.min(48, 16 + pags / 18)));
+  return { semente, h, w, len };
+}
+
+/** a lombada: um detalhe ampliado da capa sob um véu da cor principal, com o título inteiro */
+export function Lombada({ livro, altura }: { livro: LivroSalvo; altura: number }) {
+  // títulos longos ganham uma lombada um pouco mais larga (ver medidasDaLombada)
+  const { semente, h, w, len } = medidasDaLombada(livro, altura);
   // o título inteiro: até 3 linhas verticais, com a letra diminuindo conforme o tamanho
   const linhas = w >= 40 ? 3 : w >= 28 ? 2 : 1;
   const tamanhoLetra = Math.max(7, Math.min(13, (h * 0.62 * linhas) / (len * 0.82)));
@@ -229,10 +234,12 @@ export function LivroNaPrateleira({
   face?: Face;
   ordem?: number;
 }) {
+  const larguraCapa = Math.round(altura * 0.66);
+  const abre = face === "lombadas" ? Math.max(0, larguraCapa - medidasDaLombada(livro, altura).w) : 0;
   return (
     <li
-      className="group relative flex-none snap-start animate-subir hover:z-30 focus-within:z-30 motion-reduce:animate-none"
-      style={{ animationDelay: `${Math.min(ordem, 12) * 45}ms` }}
+      className="group relative flex-none snap-start animate-subir transition-[margin] duration-500 ease-[cubic-bezier(.2,.8,.2,1)] hover:z-30 hover:mr-[var(--abre)] focus-within:z-30 focus-within:mr-[var(--abre)] motion-reduce:animate-none motion-reduce:transition-none"
+      style={{ animationDelay: `${Math.min(ordem, 12) * 45}ms`, ["--abre" as string]: `${abre}px` } as CSSProperties}
     >
       <Link
         href={`/livro/${livro.id}`}
@@ -249,7 +256,9 @@ export function LivroNaPrateleira({
               aria-hidden
               className="pointer-events-none absolute bottom-0 left-0 origin-left opacity-0 transition-[transform,opacity] duration-500 ease-[cubic-bezier(.2,.8,.2,1)] [transform:rotateY(88deg)] group-hover:opacity-100 group-hover:[transform:rotateY(0deg)] group-focus-within:opacity-100 group-focus-within:[transform:rotateY(0deg)] motion-reduce:transition-none"
             >
-              <CapaDoLivro livro={livro} altura={altura} className="shadow-[6px_10px_22px_-8px_rgba(43,20,32,.55)]" />
+              <span className="block overflow-hidden rounded-[2px] shadow-[6px_10px_22px_-8px_rgba(43,20,32,.55)]" style={{ width: larguraCapa, height: altura }}>
+                <CapaDoLivro livro={livro} altura={altura} className="!max-w-none !min-w-full !object-cover !shadow-none" />
+              </span>
             </span>
           </span>
         ) : (
