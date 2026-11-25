@@ -1034,6 +1034,8 @@ function Retrato({
 
 // ───────── quem escreveu suas leituras ─────────
 
+const pct0 = (p: number) => `${Math.round(p * 100)}%`;
+
 const COR_AUTORIA: Record<CategoriaAutoria, string> = {
   feminina: "var(--color-bordo)",
   masculina: "color-mix(in srgb, var(--color-oliva) 60%, var(--color-creme))",
