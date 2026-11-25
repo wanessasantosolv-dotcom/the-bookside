@@ -1345,7 +1345,7 @@ function RetratoLiterario({ n }: { n: Numeros }) {
             <Mundo lidos={n.lidos} paises={paises} />
             <div>
               <h4 className="mb-3 font-display text-[18px] font-semibold text-ameixa lg:font-revista lg:text-[20px] lg:font-normal">
-                do papel aos fones
+                como você lê
               </h4>
               <Formatos n={n} />
             </div>
