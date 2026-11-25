@@ -26,6 +26,7 @@ import {
   type MesDoAno,
 } from "@/lib/jornada";
 import {
+  bandeira,
   generosDasAutoras,
   paisesDasAutoras,
   type GeneroAutoria,
@@ -670,13 +671,6 @@ function EntreOsMeses({ lidos }: { lidos: LivroSalvo[] }) {
 
 // ───────── seu jeito de ler ─────────
 
-/** fundo suave de cada formato (como fichas coloridas) */
-const fundoDoFormato: Record<string, string> = {
-  fisico: "color-mix(in srgb, var(--color-rosa-antigo) 16%, var(--color-creme))",
-  ebook: "color-mix(in srgb, var(--color-oliva) 15%, var(--color-creme))",
-  audio: "color-mix(in srgb, var(--color-rosa-antigo) 12%, var(--color-creme))",
-};
-
 function Icone({ d, className = "" }: { d: string; className?: string }) {
   return (
     <svg
@@ -713,55 +707,64 @@ function Formatos({ n }: { n: Numeros }) {
     );
   return (
     <div>
-      <ul className="space-y-2.5">
+      <ul className="grid grid-cols-3 divide-x divide-linha lg:divide-fio">
         {f.lista.map((x) => (
-          <li
-            key={x.id}
-            className="flex items-center gap-3 rounded-[14px] px-4 py-3.5 lg:rounded-[12px]"
-            style={{ background: fundoDoFormato[x.id] }}
-          >
-            <Icone d={x.icone} className="flex-none text-ameixa" />
-            <span className="w-[68px] flex-none font-display text-[17px] font-semibold text-ameixa lg:font-revista lg:font-normal">
+          <li key={x.id} className="px-3 first:pl-0 last:pr-0 sm:px-5">
+            <span className="flex items-center gap-1.5 text-[13px] text-tinta-suave">
+              <Icone d={x.icone} className="!size-4 flex-none text-rosa-antigo" />
               {maiuscula(x.curto)}
             </span>
-            <span className="min-w-0 flex-1">
-              <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-tinta-suave">
-                <span>{x.qtd ? plural(x.qtd, "livro", "livros") : "nenhum"}</span>
-                {x.qtd && x.paginas && x.paginasConhecidas ? (
-                  <>
-                    <span aria-hidden className="h-4 w-px bg-ameixa/20" />
-                    <span>{numero(x.paginas)} pág.</span>
-                  </>
-                ) : null}
-              </span>
-              {x.id === "audio" && x.qtd && x.paginas ? (
-                <span className="mt-1 flex items-center gap-1 text-[11px] text-cinza">
-                  <Icone d={ICONE_RELOGIO} className="!size-3.5" />≈{" "}
-                  {numero(horasEstimadas(x.paginas))} h de audição
-                  <span className="sr-only"> (estimativa pelas páginas)</span>
-                </span>
-              ) : null}
-            </span>
-            {x.media !== null ? (
-              <span className="flex-none text-[14px] font-semibold text-ameixa tabular-nums">
-                <span aria-hidden className="mr-1 text-rosa-antigo">☆</span>
-                {nota1(x.media)}
-              </span>
-            ) : null}
+            <p className="mt-2 flex items-baseline gap-1.5">
+              <b className="font-display text-[30px] leading-none font-semibold text-ameixa tabular-nums lg:font-revista lg:text-[36px] lg:font-normal">
+                {x.qtd ? Math.round(x.parte * 100) : "—"}
+              </b>
+              {x.qtd ? <span className="text-[14px] text-cinza">%</span> : null}
+            </p>
+            <div className="mt-2 h-[3px] overflow-hidden rounded-full bg-linha/60">
+              <span className="block h-full rounded-full" style={{ width: `${x.parte * 100}%`, background: corDoFormato[x.id] }} />
+            </div>
+            <p className="mt-2 text-[12px] leading-snug text-cinza">
+              {x.qtd ? (
+                <>
+                  {plural(x.qtd, "livro", "livros")}
+                  {x.paginas && x.paginasConhecidas ? (
+                    <>
+                      <br />
+                      {numero(x.paginas)} págs.
+                    </>
+                  ) : null}
+                  {x.media !== null ? (
+                    <>
+                      <br />
+                      {nota1(x.media)} ★
+                    </>
+                  ) : null}
+                  {x.id === "audio" && x.paginas ? (
+                    <>
+                      <br />≈ {numero(horasEstimadas(x.paginas))} h de audição*
+                    </>
+                  ) : null}
+                </>
+              ) : (
+                "nenhum este ano"
+              )}
+            </p>
           </li>
         ))}
       </ul>
-      <p className="mt-3 text-[11px] text-cinza">
-        {f.lista.some((x) => x.id === "audio" && x.qtd)
-          ? "as horas de áudio são uma estimativa pelas páginas. "
-          : ""}
-        {f.semFormato
-          ? `${plural(f.semFormato, "livro ficou", "livros ficaram")} sem formato marcado.`
-          : ""}
+      <p className="mt-4 text-[11px] text-cinza">
+        {f.lista.some((x) => x.id === "audio" && x.qtd) ? "* estimativa pelas páginas. " : ""}
+        {f.semFormato ? `${plural(f.semFormato, "livro ficou", "livros ficaram")} sem formato marcado.` : ""}
       </p>
     </div>
   );
 }
+
+const corDoFormato: Record<string, string> = {
+  fisico: "var(--color-ameixa)",
+  ebook: "var(--color-rosa-antigo)",
+  audio: "var(--color-oliva)",
+};
 
 /** cores dos países mais lidos (as mesmas no mapa e na legenda); o resto vai em "outros" */
 const CORES_PAISES = [
@@ -805,6 +808,7 @@ function Mundo({
   lidos: LivroSalvo[];
   paises: Record<string, Pais | null> | null;
 }) {
+  const [todos, setTodos] = useState(false);
   const conta = new Map<string, { pais: Pais; qtd: number }>();
   for (const l of lidos) {
     const p = paises?.[l.autor.toLowerCase()];
@@ -855,6 +859,32 @@ function Mundo({
           </ul>
         </div>
       )}
+      {lista.length > legenda.length - (outros.length ? 1 : 0) ? (
+        <div className="mt-3 border-t border-linha pt-3 lg:border-fio">
+          <button
+            type="button"
+            aria-expanded={todos}
+            onClick={() => setTodos((v) => !v)}
+            className="text-[12px] font-semibold text-bordo hover:underline"
+          >
+            {todos ? "esconder a lista" : `ver todos os ${lista.length} países`}
+          </button>
+          {todos ? (
+            <ol className="mt-3 grid gap-x-8 gap-y-1.5 text-[13px] sm:grid-cols-2">
+              {lista.map(({ pais, qtd }, i) => (
+                <li key={pais.nome} className="flex items-baseline gap-2.5">
+                  <span className="w-5 text-[11px] text-cinza tabular-nums">{i + 1}</span>
+                  <span aria-hidden>{bandeira(pais.codigo)}</span>
+                  <span className="min-w-0 flex-1 truncate text-ameixa">{pais.nome}</span>
+                  <span className="text-cinza tabular-nums">
+                    {plural(qtd, "livro", "livros")} · {pct(qtd)}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          ) : null}
+        </div>
+      ) : null}
       {lista.length ? (
         <p className="mt-2 text-[10px] text-cinza">
           {plural(lista.length, "país", "países")} · pela nacionalidade das autoras · fonte: Wikidata
@@ -1143,7 +1173,7 @@ function NomesQueVoltam({
     (f) => f.id === "todos" || ranking.some((a) => generoDe(a.nome) === f.id),
   );
   const lista = ranking.filter((a) => filtro === "todos" || generoDe(a.nome) === filtro);
-  const visiveis = todos ? lista : lista.slice(0, 5);
+  const visiveis = todos ? lista : lista.slice(0, 3);
   if (!ranking.length) return null;
   return (
     <div>
@@ -1207,6 +1237,11 @@ function NomesQueVoltam({
                     <span className="sr-only">{l.titulo}</span>
                   </Link>
                 ))}
+                {a.livros.length > 3 ? (
+                  <span className="flex aspect-[2/3] w-[26px] items-center justify-center rounded-[3px] bg-rosa-fundo text-[10px] font-semibold text-bordo ring-2 ring-creme">
+                    +{a.livros.length - 3}
+                  </span>
+                ) : null}
               </span>
             </li>
           );
@@ -1215,14 +1250,14 @@ function NomesQueVoltam({
       {!visiveis.length ? (
         <p className="mt-3 font-accent text-sm italic text-cinza">ninguém com esse filtro neste ano.</p>
       ) : null}
-      {lista.length > 5 ? (
+      {lista.length > 3 ? (
         <button
           type="button"
           onClick={() => setTodos((v) => !v)}
           aria-expanded={todos}
           className="mt-2 text-[12px] font-semibold text-bordo hover:underline"
         >
-          {todos ? "mostrar só os 5 primeiros" : `ver o ranking completo (${lista.length})`}
+          {todos ? "mostrar só os 3 primeiros" : `ver o ranking completo (${lista.length})`}
         </button>
       ) : null}
     </div>
@@ -1240,7 +1275,7 @@ function RetratoLiterario({ n }: { n: Numeros }) {
             <OQueMaisLeu lidos={n.lidos} />
             <QuemEscreveu lidos={n.lidos} generos={generos} />
           </div>
-          <div className="grid gap-6 border-t border-linha pt-6 lg:grid-cols-[1.35fr_1fr] lg:items-start lg:gap-8 lg:border-fio">
+          <div className="space-y-8 border-t border-linha pt-6 lg:border-fio">
             <Mundo lidos={n.lidos} paises={paises} />
             <div>
               <h4 className="mb-3 font-display text-[18px] font-semibold text-ameixa lg:font-revista lg:text-[20px] lg:font-normal">
