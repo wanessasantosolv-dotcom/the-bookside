@@ -2,6 +2,7 @@
 
 import { Voltar } from "@/components/Voltar";
 import Link from "next/link";
+import { traduzirGenero } from "@/lib/generos";
 import { celebrar, celebrarTermino } from "@/lib/celebrar";
 import { notFound, useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -436,7 +437,7 @@ export default function LivroPage() {
     if (!livro!.amei) celebrar({ tipo: "amei", titulo: livro!.titulo });
   }
 
-  const editorial = [livro.genero, livro.ano].filter(Boolean).join(" · ");
+  const editorial = [traduzirGenero(livro.genero), livro.ano].filter(Boolean).join(" · ");
   const biblio = [
     livro.paginas ? `${livro.paginas} páginas` : null,
     livro.idioma ? (idiomas[livro.idioma] ?? livro.idioma) : null,
@@ -490,10 +491,6 @@ export default function LivroPage() {
                       cor={corDoLivro(livro.id)}
                       className="w-full shadow-[0_22px_40px_-22px_rgba(43,20,32,.55)] [&>span:last-child]:text-sm lg:[&>span:last-child]:text-lg"
                     />
-                    {/* no computador, aparece ao passar o mouse */}
-                    <span className="pointer-events-none absolute inset-x-2 bottom-2 hidden items-center justify-center rounded-pill bg-creme/95 py-2 text-[12px] font-semibold text-bordo opacity-0 shadow-sm transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100 lg:flex">
-                      trocar capa
-                    </span>
                   </button>
                 ) : (
                   <CapaLivro
@@ -555,7 +552,7 @@ export default function LivroPage() {
                 {livro.genero ? (
                   <ul className="mt-3 flex flex-wrap gap-1.5">
                     <li className="rounded-pill bg-rosa-fundo px-3 py-1 text-[12px] text-ameixa">
-                      {livro.genero}
+                      {traduzirGenero(livro.genero)}
                     </li>
                   </ul>
                 ) : null}
