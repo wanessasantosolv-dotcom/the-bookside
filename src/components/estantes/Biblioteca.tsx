@@ -312,7 +312,16 @@ export type AcaoDoMenu =
   | { tipo: "link"; nome: string; href: string }
   | { tipo: "botao"; nome: string; onClick: () => void; perigo?: boolean };
 
-export function MenuDeAcoes({ rotulo, acoes }: { rotulo: string; acoes: AcaoDoMenu[] }) {
+export function MenuDeAcoes({
+  rotulo,
+  acoes,
+  semTexto,
+}: {
+  rotulo: string;
+  acoes: AcaoDoMenu[];
+  /** só os três pontos, sem a palavra "gerenciar" */
+  semTexto?: boolean;
+}) {
   const [aberto, setAberto] = useState(false);
   const caixa = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -341,10 +350,10 @@ export function MenuDeAcoes({ rotulo, acoes }: { rotulo: string; acoes: AcaoDoMe
         className="flex h-9 items-center gap-1.5 rounded-full px-2.5 text-[12px] font-semibold text-cinza hover:bg-bordo/5 hover:text-bordo"
       >
         <Icone d={ICONES.pontos} />
-        <span className="hidden lg:inline">gerenciar</span>
+        {semTexto ? null : <span className="hidden lg:inline">gerenciar</span>}
       </button>
       {aberto ? (
-        <ul role="menu" className="absolute top-full right-0 z-30 mt-1 min-w-[200px] rounded-[8px] border border-linha bg-papel py-1.5 shadow-[0_10px_28px_-14px_rgba(43,20,32,.4)] lg:right-auto lg:left-0">
+        <ul role="menu" className={`absolute top-full right-0 z-30 mt-1 min-w-[200px] rounded-[8px] border border-linha bg-papel py-1.5 shadow-[0_10px_28px_-14px_rgba(43,20,32,.4)] ${semTexto ? "" : "lg:right-auto lg:left-0"}`}>
           {acoes.map((a) => (
             <li key={a.nome} role="none">
               {a.tipo === "link" ? (

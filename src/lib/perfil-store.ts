@@ -155,6 +155,8 @@ export type Perfil = {
   novidadesVistasEm: string | null;
   /** as edições fechadas do The Bookside Journal ("2026-11" → edição) */
   edicoes?: Record<string, EdicaoSalva>;
+  /** id do livro cuja resenha a pessoa fixou no topo da aba resenhas */
+  resenhaFixada?: string | null;
   /** aparência do app: claro, escuro ou igual ao celular/computador */
   aparencia: "claro" | "escuro" | "sistema";
   /** as cores do tema do perfil valem para o app inteiro */
@@ -206,6 +208,7 @@ export const perfilInicial: Perfil = {
   tourVisto: false,
   novidadesVistasEm: null,
   edicoes: {},
+  resenhaFixada: null,
   passados: [],
   removidos: [],
   aparencia: "claro",
