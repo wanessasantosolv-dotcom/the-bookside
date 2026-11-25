@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { CapaLivro } from "@/components/CapaLivro";
-import { PerguntaTermino } from "@/components/PerguntaTermino";
+import { dadosDoTermino, PerguntaTermino } from "@/components/PerguntaTermino";
 import { celebrarTermino } from "@/lib/celebrar";
 import { corDoLivro } from "@/lib/cores";
 import { minhasLeiturasJuntas } from "@/lib/lerjunto";
@@ -293,11 +293,13 @@ function Linha({
           titulo={l.titulo}
           inicial={l.lidoEm}
           onCancelar={() => setPerguntarTermino(false)}
-          onConfirmar={(lidoEm) => {
+          notaInicial={l.nota}
+          formatoInicial={l.formato}
+          onConfirmar={(t) => {
             setPerguntarTermino(false);
             editarLivro(l, {
               status: "lido",
-              lidoEm,
+              ...dadosDoTermino(t),
               paginaAtual: l.paginas,
             });
             celebrarTermino(l, usePerfil.getState());

@@ -19,15 +19,26 @@ import {
   normalizar,
   type ItemImport,
 } from "@/lib/importar";
-import { usePerfil, type LivroSalvo } from "@/lib/perfil-store";
+import {
+  usePerfil,
+  type FormatoLivro,
+  type LivroSalvo,
+  type Reacao,
+} from "@/lib/perfil-store";
+import { lerCsv, lerXlsx, planilhaParaItens } from "@/lib/planilha";
+import { reacoes } from "@/lib/reacoes";
+import { formatos } from "@/lib/formatos";
 import { semPublicar } from "@/lib/social";
 
 type Linha = {
   item: ItemImport;
   opcoes: LivroBusca[];
   escolhido: number;
+  /** AAAA-MM-DD; vazio = sem data */
   lidoEm: string;
   nota: number;
+  reacao?: Reacao;
+  formato?: FormatoLivro;
   incluir: boolean;
   /** busca manual aberta nesta linha */
   termo?: string;
@@ -74,8 +85,10 @@ export default function ImportarPage() {
         item,
         opcoes,
         escolhido: opcoes.length ? 0 : -1,
-        lidoEm: item.lidoEm ?? hoje(),
+        lidoEm: item.lidoEm ?? "",
         nota: item.nota ?? 0,
+        reacao: item.reacao,
+        formato: item.formato,
         incluir: true,
       });
       setProgresso({ feito: i + 1, total: itens.length });
@@ -87,17 +100,28 @@ export default function ImportarPage() {
 
   async function abrirArquivo(f: File | undefined) {
     if (!f) return;
+    const nome = f.name.toLowerCase();
     try {
+      if (/\.(xlsx|xlsm)$/.test(nome))
+        return await procurar(planilhaParaItens(await lerXlsx(await f.arrayBuffer())));
+      if (/\.xls$/.test(nome))
+        return setErro(
+          "esse é o excel antigo (.xls). no excel, use “salvar como” .xlsx ou .csv e tente de novo.",
+        );
       const conteudo = await f.text();
+      if (/\.(csv|tsv)$/.test(nome))
+        return await procurar(planilhaParaItens(lerCsv(conteudo)));
       await procurar(
-        f.name.endsWith(".json") ||
+        nome.endsWith(".json") ||
           conteudo.trim().startsWith("[") ||
           conteudo.trim().startsWith("{")
           ? lerArquivo(conteudo)
           : lerLista(conteudo),
       );
     } catch {
-      setErro("não consegui ler esse arquivo.");
+      setErro(
+        "não consegui ler esse arquivo. aceito excel (.xlsx), .csv, .json ou .txt.",
+      );
     }
   }
 
@@ -158,8 +182,13 @@ export default function ImportarPage() {
         const paginas = l.item.paginas ?? achado?.paginas ?? existente?.paginas;
         const it = l.item;
         editarLivro(base, {
-          status: "lido",
-          lidoEm: new Date(`${l.lidoEm}T12:00:00`).toISOString(),
+          status: l.reacao === "abandonei" ? "abandonado" : "lido",
+          lidoEm: l.lidoEm
+            ? new Date(`${l.lidoEm}T12:00:00`).toISOString()
+            : existente?.lidoEm,
+          ...(l.reacao ? { reacao: l.reacao } : {}),
+          ...(l.reacao === "favoritado" ? { amei: true } : {}),
+          ...(l.formato ? { formato: l.formato } : {}),
           iniciadoEm: it.iniciadoEm
             ? new Date(`${it.iniciadoEm}T12:00:00`).toISOString()
             : existente?.iniciadoEm,
@@ -242,8 +271,14 @@ export default function ImportarPage() {
               />
             </label>
             <p className="mt-2 text-xs text-cinza">
-              a data é quando você terminou. as estrelas são opcionais — dá para
-              escolher na próxima tela.
+              a data é quando você terminou e é opcional, assim como as
+              estrelas — dá para ajustar tudo na próxima tela.
+            </p>
+            <p className="mt-1 text-xs text-cinza">
+              também dá para abrir uma planilha do excel (.xlsx) ou .csv com
+              colunas como <b>título</b>, <b>autor</b>, <b>data</b>,{" "}
+              <b>nota</b>, <b>veredito</b> e <b>resenha</b> — o export do
+              goodreads funciona direto.
             </p>
             {erro ? (
               <p role="alert" className="mt-3 text-[13px] text-bordo">
@@ -269,7 +304,7 @@ export default function ImportarPage() {
               <input
                 ref={arquivo}
                 type="file"
-                accept=".json,.txt,application/json,text/plain"
+                accept=".xlsx,.xlsm,.xls,.csv,.tsv,.json,.txt,application/json,text/plain,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 className="sr-only"
                 tabIndex={-1}
                 onChange={(e) => {
@@ -286,7 +321,29 @@ export default function ImportarPage() {
               {linhas.filter((l) => l.incluir).length} de {linhas.length} livros
               vão para os lidos. nada disso aparece no feed dos amigos.
             </p>
-            <ul className="mt-5">
+            <div className="mt-4 flex flex-wrap gap-2 text-xs">
+              <button
+                type="button"
+                onClick={() =>
+                  setLinhas((ls) => ls!.map((l) => ({ ...l, lidoEm: "" })))
+                }
+                className="min-h-9 rounded-pill border border-bege px-3.5 font-semibold text-ameixa hover:border-bordo"
+              >
+                todos sem data
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  setLinhas((ls) =>
+                    ls!.map((l) => ({ ...l, lidoEm: l.item.lidoEm ?? "" })),
+                  )
+                }
+                className="min-h-9 rounded-pill border border-bege px-3.5 font-semibold text-ameixa hover:border-bordo"
+              >
+                voltar às datas da lista
+              </button>
+            </div>
+            <ul className="mt-3">
               {linhas.map((l, i) => {
                 const achado =
                   l.escolhido >= 0 ? l.opcoes[l.escolhido] : undefined;
@@ -399,18 +456,29 @@ export default function ImportarPage() {
                             tente só o título, ou o título em inglês.
                           </p>
                         ) : null}
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <label className="flex items-center gap-2 text-xs text-cinza">
                             terminei em
                             <input
                               type="date"
                               value={l.lidoEm}
+                              max={hoje()}
                               onChange={(e) =>
                                 mudar(i, { lidoEm: e.target.value })
                               }
                               className="min-h-10 rounded-md border border-linha bg-creme-quente px-2 text-sm text-ameixa"
                             />
                           </label>
+                          <button
+                            type="button"
+                            aria-pressed={!l.lidoEm}
+                            onClick={() =>
+                              mudar(i, { lidoEm: l.lidoEm ? "" : hoje() })
+                            }
+                            className={`min-h-10 rounded-pill px-3 text-xs font-semibold ${!l.lidoEm ? "bg-bordo text-creme" : "border border-bege text-ameixa"}`}
+                          >
+                            sem data
+                          </button>
                           <label className="flex items-center gap-2 text-xs text-cinza">
                             nota
                             <select
@@ -427,6 +495,61 @@ export default function ImportarPage() {
                               ))}
                             </select>
                           </label>
+                        </div>
+                        <div
+                          role="group"
+                          aria-label="veredito"
+                          className="flex flex-wrap gap-1.5"
+                        >
+                          {reacoes.map((r) => {
+                            const on = l.reacao === r.id;
+                            return (
+                              <button
+                                key={r.id}
+                                type="button"
+                                aria-pressed={on}
+                                onClick={() =>
+                                  mudar(i, { reacao: on ? undefined : r.id })
+                                }
+                                className={`flex h-8 items-center gap-1 rounded-pill border px-2.5 text-[11px] font-semibold ${on ? "text-white" : "border-bege text-ameixa"}`}
+                                style={
+                                  on
+                                    ? { background: r.cor, borderColor: r.cor }
+                                    : undefined
+                                }
+                              >
+                                <span
+                                  aria-hidden
+                                  style={on ? undefined : { color: r.cor }}
+                                >
+                                  {r.emoji}
+                                </span>
+                                {r.nome}
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <div
+                          role="group"
+                          aria-label="como leu"
+                          className="flex flex-wrap gap-1.5"
+                        >
+                          {formatos.map((f) => {
+                            const on = l.formato === f.id;
+                            return (
+                              <button
+                                key={f.id}
+                                type="button"
+                                aria-pressed={on}
+                                onClick={() =>
+                                  mudar(i, { formato: on ? undefined : f.id })
+                                }
+                                className={`h-8 rounded-pill px-3 text-[11px] font-semibold ${on ? "bg-bordo text-creme" : "border border-bege text-ameixa"}`}
+                              >
+                                {f.curto}
+                              </button>
+                            );
+                          })}
                         </div>
                         {l.item.personagem ||
                         l.item.citacao ||

@@ -6,8 +6,13 @@ import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { CapaLivro } from "@/components/CapaLivro";
 import { useHidratado } from "@/components/PerfilHidratacao";
-import { PerguntaTermino } from "@/components/PerguntaTermino";
-import { chaveTitulo } from "@/lib/catalogo";
+import {
+  dadosDoTermino,
+  PerguntaTermino,
+  type Termino,
+} from "@/components/PerguntaTermino";
+import { buscarLivros, chaveTitulo, sinopseDaObra } from "@/lib/catalogo";
+import { estrelas } from "@/lib/estantes";
 import {
   lembrarPassado,
   migrarPassados,
@@ -78,6 +83,71 @@ export default function DescobrirPage() {
   );
 }
 
+/**
+ * A sinopse da indicação: a que veio junto ou, se não veio (como nos livros
+ * em alta no the bookside), a do catálogo, buscada na hora.
+ */
+function useSinopse(livro: Indicacao | undefined) {
+  const [buscadas, setBuscadas] = useState<Record<string, string | null>>({});
+  const id = livro?.id;
+  const titulo = livro?.titulo ?? "";
+  const autor = livro?.autor ?? "";
+  const precisa = !!livro && !livro.sinopse && !(livro.id in buscadas);
+  useEffect(() => {
+    if (!precisa || !id) return;
+    const ctrl = new AbortController();
+    (async () => {
+      // pelo código do catálogo; se não for de lá, pelo título e autoria
+      const daObra = await sinopseDaObra(id, ctrl.signal).catch(() => undefined);
+      if (daObra) return daObra;
+      const achados = await buscarLivros(`${titulo} ${autor}`.trim()).catch(
+        () => [],
+      );
+      return achados.find(
+        (l) => l.sinopse && chaveTitulo(l.titulo) === chaveTitulo(titulo),
+      )?.sinopse;
+    })()
+      .then((s) => !ctrl.signal.aborted && setBuscadas((b) => ({ ...b, [id]: s ?? null })))
+      .catch(() => setBuscadas((b) => ({ ...b, [id]: null })));
+    return () => ctrl.abort();
+  }, [precisa, id, titulo, autor]);
+  if (!livro) return undefined;
+  return livro.sinopse ?? buscadas[livro.id] ?? undefined;
+}
+
+/** a nota de quem leu no the bookside (e um pedacinho de resenha) */
+function OQueAcharam({ livro }: { livro: Indicacao }) {
+  if (!livro.notaApp && !livro.resenhaApp) return null;
+  return (
+    <div className="mt-3 rounded-[10px] border border-linha bg-creme px-3.5 py-2.5 text-left lg:border-fio">
+      {livro.notaApp ? (
+        <p className="flex flex-wrap items-baseline gap-x-2 text-[12px]">
+          <b className="font-display text-[18px] leading-none font-semibold text-bordo">
+            {livro.notaApp.toLocaleString("pt-BR", {
+              minimumFractionDigits: 1,
+              maximumFractionDigits: 1,
+            })}
+          </b>
+          <span className="tracking-[1px] text-bordo">
+            {estrelas(Math.round(livro.notaApp * 2) / 2)}
+          </span>
+          <span className="text-cinza">
+            {livro.avaliacoesApp === 1
+              ? "nota de 1 leitora do the bookside"
+              : `média de ${livro.avaliacoesApp ?? "várias"} leitoras do the bookside`}
+          </span>
+        </p>
+      ) : null}
+      {livro.resenhaApp ? (
+        <p className="mt-1.5 line-clamp-3 text-[13px] leading-[1.5] text-tinta-suave">
+          <b className="font-semibold text-ameixa">{livro.resenhaApp.de}:</b>{" "}
+          {livro.resenhaApp.texto}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 /* ───────── uma por vez ───────── */
 
 function UmaPorVez() {
@@ -114,10 +184,11 @@ function UmaPorVez() {
       (l) => chaveTitulo(l.titulo) === chaveTitulo(naFila.titulo),
     ) ??
       naFila);
+  const sinopse = useSinopse(livro);
 
-  function responder(status: StatusLivro | null, lidoEm?: string) {
+  function responder(status: StatusLivro | null, termino?: Termino) {
     if (!livro) return;
-    if (status === "lido" && !lidoEm) return setPerguntarTermino(true);
+    if (status === "lido" && !termino) return setPerguntarTermino(true);
     if (!status) lembrarPassado(livro.titulo);
     else
       guardarLivro({
@@ -126,7 +197,7 @@ function UmaPorVez() {
         autor: livro.autor,
         capa: livro.capa,
         status,
-        ...(lidoEm ? { lidoEm } : {}),
+        ...(termino ? dadosDoTermino(termino) : {}),
       });
     setIndice((i) => i + 1);
   }
@@ -208,9 +279,10 @@ function UmaPorVez() {
               {livro.ano ? ` · ${livro.ano}` : ""}
               {livro.paginas ? ` · ${livro.paginas} páginas` : ""}
             </p>
-            {livro.sinopse ? (
-              <p className="mt-3 line-clamp-6 text-[13px] leading-normal text-cinza lg:line-clamp-[9] lg:text-[15px] lg:leading-[1.6]">
-                {livro.sinopse}
+            <OQueAcharam livro={livro} />
+            {sinopse ? (
+              <p className="mt-3 line-clamp-6 text-[13px] leading-normal text-tinta-suave lg:line-clamp-[9] lg:text-[15px] lg:leading-[1.6]">
+                {sinopse}
               </p>
             ) : null}
             <div className="mt-5 flex justify-center gap-7 sm:justify-start">
@@ -272,9 +344,9 @@ function UmaPorVez() {
         <PerguntaTermino
           titulo={livro.titulo}
           onCancelar={() => setPerguntarTermino(false)}
-          onConfirmar={(lidoEm) => {
+          onConfirmar={(t) => {
             setPerguntarTermino(false);
-            responder("lido", lidoEm);
+            responder("lido", t);
           }}
         />
       ) : null}

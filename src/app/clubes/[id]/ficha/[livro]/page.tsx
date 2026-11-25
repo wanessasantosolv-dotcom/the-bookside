@@ -22,6 +22,7 @@ import {
   fichasDe,
   livroDoClube,
   salvarFicha,
+  apagarFicha,
   type Ficha,
   type LivroDoClube,
 } from "@/lib/clubes";
@@ -99,6 +100,24 @@ function Formulario({ l, minha }: { l: LivroDoClube; minha: Ficha | null }) {
     }
   }
 
+  async function excluir() {
+    if (
+      !confirm(
+        "excluir a sua ficha deste livro? ela sai do mural do clube. a sua estante não muda.",
+      )
+    )
+      return;
+    setEnviando(true);
+    setErro(null);
+    try {
+      await apagarFicha(l);
+      router.push(`/clubes/${clube.id}/livro/${l.id}`);
+    } catch {
+      setErro("não deu para excluir agora. tente de novo.");
+      setEnviando(false);
+    }
+  }
+
   return (
     <form onSubmit={publicar} className="flex min-h-[70dvh] flex-col">
       {enviando ? (
@@ -146,6 +165,16 @@ function Formulario({ l, minha }: { l: LivroDoClube; minha: Ficha | null }) {
             </label>
           ) : null}
         </FichaLeitura>
+        {minha ? (
+          <button
+            type="button"
+            onClick={excluir}
+            disabled={enviando}
+            className="mt-4 min-h-11 text-xs font-semibold text-cinza underline underline-offset-4 hover:text-bordo"
+          >
+            excluir minha ficha
+          </button>
+        ) : null}
       </div>
       {erro ? (
         <p role="alert" className="mt-4 px-6 text-[13px] text-bordo lg:px-0">

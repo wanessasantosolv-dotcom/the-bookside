@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PontoNovidades } from "@/components/social/AvisoNovidades";
 
 export const abas = [
   {
@@ -79,7 +80,7 @@ export function NavInferior({ ativa }: { ativa: Aba }) {
             href={a.href}
             data-tour={`aba-${a.id}`}
             aria-current={on ? "page" : undefined}
-            className={`flex min-h-11 min-w-[52px] flex-col items-center justify-center gap-[5px] text-[10px] leading-none ${
+            className={`relative flex min-h-11 min-w-[52px] flex-col items-center justify-center gap-[5px] text-[10px] leading-none ${
               on ? "font-bold text-bordo" : "font-medium text-cinza"
             }`}
           >
@@ -97,6 +98,9 @@ export function NavInferior({ ativa }: { ativa: Aba }) {
               {a.icone}
             </svg>
             {a.rotulo}
+            {a.id === "inicio" ? (
+              <PontoNovidades className="top-1 right-3" />
+            ) : null}
           </Link>
         );
       })}

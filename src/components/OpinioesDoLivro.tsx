@@ -131,8 +131,10 @@ export function OpinioesDoLivro({
                         </span>
                       ) : null}
                       {o.resenha ? (
-                        <span className="mt-0.5 line-clamp-4 block font-accent text-[13px] italic text-cinza">
-                          “{o.resenha}”
+                        <span
+                          className={`mt-1 block text-[14px] leading-[1.5] break-words whitespace-pre-line text-tinta-suave ${abertas ? "" : "line-clamp-6"}`}
+                        >
+                          {o.resenha}
                         </span>
                       ) : null}
                     </span>

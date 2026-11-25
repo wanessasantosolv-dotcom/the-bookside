@@ -5,16 +5,20 @@ import { CapaAuto } from "@/components/CapaAuto";
 import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
 import { lembrarLivros } from "@/lib/catalogo";
+import { autoriaConhecida, linkDaAutoria } from "@/lib/autores";
 import { estrelas } from "@/lib/estantes";
 import {
+  comentariosDe,
   contagemSeguidores,
   curtir,
   nomeDe,
+  pessoasPorId,
   quandoFoi,
   seguir,
   useMeuId,
   verbo,
   type Atividade,
+  type Comentario,
   type PessoaResumo,
 } from "@/lib/social";
 
@@ -262,7 +266,16 @@ export function CartaoAtividade({
                 </h3>
               </Link>
 
-              <p className="mt-0.5 text-xs text-cinza">{a.livro.autor}</p>
+              {autoriaConhecida(a.livro.autor) ? (
+                <Link
+                  href={linkDaAutoria(a.livro.autor)}
+                  className="mt-0.5 block text-xs text-cinza hover:text-bordo hover:underline"
+                >
+                  {a.livro.autor}
+                </Link>
+              ) : (
+                <p className="mt-0.5 text-xs text-cinza">{a.livro.autor}</p>
+              )}
             </>
           )}
           {a.nota ? (
@@ -290,13 +303,17 @@ export function CartaoAtividade({
               {a.texto}
             </p>
           ) : a.texto ? (
-            <blockquote
-              className={`mt-2 line-clamp-4 font-accent leading-[1.4] italic lg:font-revista ${
-                a.tipo === "trecho" ? "text-[15px] text-rosa-antigo" : "text-sm"
-              }`}
-            >
-              “{a.texto}”
-            </blockquote>
+            a.tipo === "trecho" ? (
+              <blockquote className="mt-2 line-clamp-5 font-accent text-[15px] leading-[1.45] italic text-bordo lg:font-revista">
+                “{a.texto}”
+              </blockquote>
+            ) : (
+              <p
+                className={`mt-2 text-[14px] leading-[1.5] break-words whitespace-pre-line text-tinta-suave ${linkComentarios ? "line-clamp-6" : ""}`}
+              >
+                {a.texto}
+              </p>
+            )
           ) : null}
           <div className="mt-3 flex items-center gap-1 text-[11px] font-semibold text-cinza">
             <button
@@ -320,7 +337,86 @@ export function CartaoAtividade({
           </div>
         </div>
       </div>
+      {linkComentarios && comentarios ? (
+        <PreviaComentarios
+          atividadeId={a.id}
+          total={comentarios}
+          versao={a.ultimoComentarioEm ?? ""}
+        />
+      ) : null}
     </article>
+  );
+}
+
+/**
+ * Os últimos comentários de uma publicação, direto no feed — para a conversa
+ * aparecer junto do que foi comentado (e não só nas novidades).
+ */
+function PreviaComentarios({
+  atividadeId,
+  total,
+  versao,
+}: {
+  atividadeId: string;
+  total: number;
+  versao: string;
+}) {
+  const [lista, setLista] = useState<
+    { c: Comentario; pessoa: PessoaResumo | null }[] | null
+  >(null);
+  useEffect(() => {
+    let vivo = true;
+    comentariosDe(atividadeId)
+      .then(async (todos) => {
+        const ultimos = todos.slice(-2);
+        const pessoas = await pessoasPorId(ultimos.map((c) => c.autor));
+        if (vivo)
+          setLista(
+            ultimos.map((c) => ({ c, pessoa: pessoas.get(c.autor) ?? null })),
+          );
+      })
+      .catch(() => vivo && setLista([]));
+    return () => {
+      vivo = false;
+    };
+  }, [atividadeId, total, versao]);
+  if (!lista?.length) return null;
+  return (
+    <div className="mt-3 border-t border-linha pt-3 lg:border-fio">
+      {total > lista.length ? (
+        <Link
+          href={`/atividade/${atividadeId}`}
+          className="mb-2 block text-[11px] font-semibold text-cinza hover:text-bordo"
+        >
+          ver os {total} comentários
+        </Link>
+      ) : null}
+      <ul className="space-y-2.5">
+        {lista.map(({ c, pessoa }) => (
+          <li key={c.id} className="flex gap-2">
+            <Avatar pessoa={pessoa} tamanho={22} className="mt-0.5" />
+            <p className="min-w-0 flex-1 text-[13px] leading-[1.45] break-words text-ameixa">
+              <Link
+                href={pessoa?.usuario ? `/u/${pessoa.usuario}` : "#"}
+                className="font-semibold"
+              >
+                {nomeDe(pessoa)}
+              </Link>{" "}
+              <span className="text-tinta-suave">{c.texto}</span>
+              <span className="ml-1.5 text-[10px] font-semibold tracking-[.08em] whitespace-nowrap text-cinza uppercase">
+                {quandoFoi(c.criado_em)}
+              </span>
+            </p>
+          </li>
+        ))}
+      </ul>
+      <Link
+        href={`/atividade/${atividadeId}`}
+        className="mt-2 inline-flex min-h-8 items-center text-[11px] font-semibold text-bordo hover:underline"
+      >
+        responder →
+      </Link>
+    </div>
   );
 }
 

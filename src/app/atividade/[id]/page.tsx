@@ -120,7 +120,7 @@ function Conversa({ id }: { id: string }) {
               </Link>
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-semibold">{nomeDe(p)}</p>
-                <p className="mt-0.5 text-sm leading-normal break-words whitespace-pre-line">
+                <p className="mt-0.5 text-[14px] leading-[1.5] break-words whitespace-pre-line text-ameixa">
                   {c.texto}
                 </p>
                 <p className="mt-1 flex items-center gap-3 text-[10px] font-semibold tracking-[.1em] text-cinza uppercase">

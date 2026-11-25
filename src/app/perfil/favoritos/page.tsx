@@ -8,7 +8,11 @@ import { useMemo, useState } from "react";
 import { CapaLivro } from "@/components/CapaLivro";
 import { CadastroManual } from "@/components/clube/CadastroManual";
 import { useHidratado } from "@/components/PerfilHidratacao";
-import { PerguntaTermino } from "@/components/PerguntaTermino";
+import {
+  dadosDoTermino,
+  PerguntaTermino,
+  type Termino,
+} from "@/components/PerguntaTermino";
 import { useBuscaLivros, type LivroBusca } from "@/lib/catalogo";
 import { corDoLivro } from "@/lib/cores";
 import { useVoltar } from "@/lib/navegacao";
@@ -74,13 +78,13 @@ function Escolha({ inicial }: { inicial: string[] }) {
   }
 
   /** livro que não estava na estante: entra como lido (sem virar novidade no feed) e já vira favorito */
-  function adicionarLido(l: LivroBusca, lidoEm: string) {
+  function adicionarLido(l: LivroBusca, termino: Termino) {
     semPublicar(() =>
       editarLivro(
         { id: l.id, titulo: l.titulo, autor: l.autor, capa: l.capa },
         {
           status: "lido",
-          lidoEm,
+          ...dadosDoTermino(termino),
           paginas: l.paginas,
           paginaAtual: l.paginas,
           genero: l.genero,
@@ -348,7 +352,7 @@ function Escolha({ inicial }: { inicial: string[] }) {
         <PerguntaTermino
           titulo={deFora.titulo}
           onCancelar={() => setDeFora(null)}
-          onConfirmar={(lidoEm) => adicionarLido(deFora, lidoEm)}
+          onConfirmar={(t) => adicionarLido(deFora, t)}
         />
       ) : null}
     </TelaApp>

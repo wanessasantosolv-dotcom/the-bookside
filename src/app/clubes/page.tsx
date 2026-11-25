@@ -9,6 +9,7 @@ import { ComConta, ErroOuFalta, Vazio } from "@/components/social/Estados";
 import { andamento, meusClubes, modoDe, type ResumoClube } from "@/lib/clubes";
 import { temas } from "@/lib/dados";
 import { coresDoTema } from "@/lib/tema";
+import { useModoEscuro } from "@/components/Aparencia";
 import { pessoasPorId, useConsulta, useMeuId } from "@/lib/social";
 
 function Cartao({
@@ -20,6 +21,7 @@ function Cartao({
   pessoas: Awaited<ReturnType<typeof pessoasPorId>>;
   eu: string | null;
 }) {
+  const modoEscuro = useModoEscuro();
   const lista = c.membros.map((id) => pessoas.get(id)!).filter(Boolean);
   const nomes = lista.map((p) => (p.id === eu ? "você" : p.nome || p.usuario)).join(" · ");
   const and = c.lendo ? andamento(c.lendo) : null;
@@ -35,7 +37,7 @@ function Cartao({
 
   const tema = temas.find((t) => t.id === c.tema);
   return (
-    <li style={coresDoTema(c.tema)}>
+    <li style={coresDoTema(c.tema, modoEscuro)}>
       <Link
         href={`/clubes/${c.id}`}
         className="group block overflow-hidden rounded-xl border border-linha bg-creme-quente transition-colors hover:border-bordo lg:rounded-[6px] lg:border-fio"

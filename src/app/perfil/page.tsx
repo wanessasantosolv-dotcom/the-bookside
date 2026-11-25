@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { CSSProperties } from "react";
 import { CapaLivro } from "@/components/CapaLivro";
 import { AppShell } from "@/components/AppShell";
 import { AbasPerfil, type AbaPerfil } from "@/components/perfil/AbasPerfil";
@@ -16,6 +15,9 @@ import { MeusSeguidores } from "@/components/social/Pessoas";
 import { useHidratado } from "@/components/PerfilHidratacao";
 import { corDoLivro } from "@/lib/cores";
 import { temas } from "@/lib/dados";
+import { estiloDoPerfil } from "@/lib/tema";
+import { numerosDoPerfil, porDataDeLeitura } from "@/lib/estantes";
+import { useModoEscuro } from "@/components/Aparencia";
 import { usePerfil } from "@/lib/perfil-store";
 import { arquetipos, type ArquetipoId } from "@/lib/teste";
 import { useTeste } from "@/lib/teste-store";
@@ -32,8 +34,8 @@ export default function PerfilPage() {
     if (a === "jornada" || a === "resenhas") setAba(a);
   }, []);
   const p = usePerfil();
+  const modoEscuro = useModoEscuro();
   const tema = temas.find((t) => t.id === p.tema) ?? temas[0];
-  const escuro = "escuro" in tema;
 
   if (!hidratado) return <AppShell aba="perfil">{null}</AppShell>;
   const conteudoAba =
@@ -43,7 +45,9 @@ export default function PerfilPage() {
       <ResenhasLista />
     ) : null;
 
-  const lidos = p.livros.filter((l) => l.status === "lido");
+  const lidos = p.livros
+    .filter((l) => l.status === "lido")
+    .sort(porDataDeLeitura);
   const lendo = p.livros.filter((l) => !l.status || l.status === "lendo");
   const quero = p.livros.filter((l) => l.status === "quero");
   // só os livros que a pessoa escolheu como favoritos (nada é preenchido sozinho)
@@ -63,17 +67,7 @@ export default function PerfilPage() {
     router.push("/teste/resultado");
   }
 
-  const estilo = {
-    "--papel": escuro ? tema.papel : "var(--color-creme)",
-    "--tinta": escuro ? "#F5EFE6" : "var(--color-ameixa)",
-    "--acc-base": escuro
-      ? tema.texto
-      : tema.id === "biblioteca-classica"
-        ? "#6B0D24"
-        : tema.texto,
-    "--suave": escuro ? "#CFC3B8" : "var(--color-cinza)",
-    "--linha": escuro ? "rgba(245,239,230,.18)" : "var(--color-linha)",
-  } as CSSProperties;
+  const estilo = estiloDoPerfil(tema, modoEscuro);
 
   const estantes = [
     {
@@ -262,10 +256,10 @@ export default function PerfilPage() {
                 className="relative mt-5 flex border-y border-[var(--linha)]"
               >
                 {[
-                  { n: lidos.length, r: "lidos" },
+                  numerosDoPerfil(p).destaque,
+                  { n: lidos.length, r: "lidos ao todo" },
                   { n: lendo.length, r: "lendo" },
                   { n: quero.length, r: "quero ler" },
-                  { n: p.meta ?? "—", r: `meta ${new Date().getFullYear()}` },
                 ].map((s, i) => (
                   <span
                     key={s.r}

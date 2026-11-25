@@ -3,6 +3,7 @@ import type { CSSProperties, ReactNode } from "react";
 import { ExigeConta } from "@/components/ExigeConta";
 import { abas, NavInferior, type Aba } from "@/components/NavInferior";
 import { TourApp } from "@/components/TourApp";
+import { PontoNovidades, VigiaNovidades } from "@/components/social/AvisoNovidades";
 
 /**
  * Casca das telas principais do app.
@@ -32,6 +33,7 @@ export function AppShell({
     >
       <ExigeConta />
       <TourApp />
+      <VigiaNovidades />
       <aside className="hidden lg:sticky lg:top-0 lg:block lg:h-dvh lg:w-[236px] lg:flex-none lg:border-r lg:border-fio lg:px-7 lg:py-8">
         <Link href="/inicio" aria-label="the bookside · início" className="mb-10 block">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -49,7 +51,10 @@ export function AppShell({
                 className={`flex min-h-11 items-center gap-2.5 font-texto text-[13px] font-semibold ${on ? "text-vinho" : "text-grafite hover:text-tinta"}`}
               >
                 <span aria-hidden className="size-1.5 rounded-full bg-current opacity-50" />
-                {a.rotulo}
+                <span className="relative">
+                  {a.rotulo}
+                  {a.id === "inicio" ? <PontoNovidades className="-top-0.5 -right-3" /> : null}
+                </span>
               </Link>
             );
           })}

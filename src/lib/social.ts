@@ -49,6 +49,8 @@ export type Atividade = {
   criado_em: string;
   curtidas: { autor: string }[];
   comentarios: { count: number }[];
+  /** quando chegou o último comentário (o feed sobe a publicação) */
+  ultimoComentarioEm?: string | null;
 };
 export type Comentario = {
   id: string;
@@ -265,7 +267,60 @@ export async function feedDeAmigas(): Promise<Atividade[]> {
     .order("criado_em", { ascending: false })
     .limit(60);
   if (error) throw error;
-  return semLivrosTirados((data ?? []) as unknown as Atividade[]);
+  const lista = (data ?? []) as unknown as Atividade[];
+  return semLivrosTirados(await comConversaRecente(lista));
+}
+
+/**
+ * Publicações com comentário novo sobem no feed (como numa conversa):
+ * inclui as minhas publicações mais antigas que alguém comentou nos últimos
+ * 14 dias e ordena tudo pelo último movimento (publicação ou comentário).
+ */
+async function comConversaRecente(lista: Atividade[]): Promise<Atividade[]> {
+  const eu = meuId();
+  if (!eu) return lista;
+  const desde = new Date(Date.now() - 14 * 86_400_000).toISOString();
+  try {
+    const ids = lista.map((a) => a.id);
+    const [doFeed, nasMinhas] = await Promise.all([
+      ids.length
+        ? db()
+            .from("comentarios")
+            .select("atividade_id,criado_em")
+            .in("atividade_id", ids)
+            .gt("criado_em", desde)
+        : Promise.resolve({ data: [], error: null }),
+      db()
+        .from("comentarios")
+        .select("atividade_id,criado_em,atividade:atividades!inner(autor)")
+        .eq("atividade.autor", eu)
+        .gt("criado_em", desde)
+        .order("criado_em", { ascending: false })
+        .limit(40),
+    ]);
+    const ultimo = new Map<string, string>();
+    for (const c of [...(doFeed.data ?? []), ...(nasMinhas.data ?? [])]) {
+      const atual = ultimo.get(c.atividade_id);
+      if (!atual || c.criado_em > atual) ultimo.set(c.atividade_id, c.criado_em);
+    }
+    const faltam = [...ultimo.keys()].filter((id) => !ids.includes(id));
+    if (faltam.length) {
+      const { data } = await db()
+        .from("atividades")
+        .select(CAMPOS_ATIVIDADE)
+        .in("id", faltam);
+      lista = [...lista, ...((data ?? []) as unknown as Atividade[])];
+    }
+    const movimento = (a: Atividade) => {
+      const c = ultimo.get(a.id);
+      return c && c > a.criado_em ? c : a.criado_em;
+    };
+    return lista
+      .map((a) => ({ ...a, ultimoComentarioEm: ultimo.get(a.id) ?? null }))
+      .sort((a, b) => movimento(b).localeCompare(movimento(a)));
+  } catch {
+    return lista;
+  }
 }
 
 /**
@@ -866,6 +921,43 @@ export async function novidades(): Promise<Novidade[]> {
       };
     })
     .sort((a, b) => b.quando.localeCompare(a.quando));
+}
+
+/**
+ * Quantas novidades chegaram depois de `desde` (curtidas, comentários,
+ * seguidores e encontros dos clubes). Só conta, sem trazer os itens:
+ * é o que acende o sininho no app e o número na aba do navegador.
+ */
+export async function contarNovidades(desde: string | null): Promise<number> {
+  const eu = meuId();
+  if (!eu || !supabase) return 0;
+  const corte = desde ?? new Date(Date.now() - 14 * 86_400_000).toISOString();
+  const conta = { count: "exact" as const, head: true };
+  const [curt, coment, seg, enc] = await Promise.all([
+    db()
+      .from("curtidas")
+      .select("autor,atividade:atividades!inner(autor)", conta)
+      .eq("atividade.autor", eu)
+      .neq("autor", eu)
+      .gt("criado_em", corte),
+    db()
+      .from("comentarios")
+      .select("autor,atividade:atividades!inner(autor)", conta)
+      .eq("atividade.autor", eu)
+      .neq("autor", eu)
+      .gt("criado_em", corte),
+    db()
+      .from("seguidores")
+      .select("seguidor", conta)
+      .eq("seguido", eu)
+      .gt("criado_em", corte),
+    db()
+      .from("encontros")
+      .select("id", conta)
+      .neq("criado_por", eu)
+      .gt("criado_em", corte),
+  ]);
+  return [curt, coment, seg, enc].reduce((t, r) => t + (r.count ?? 0), 0);
 }
 
 // ───────── utilidades de tela ─────────

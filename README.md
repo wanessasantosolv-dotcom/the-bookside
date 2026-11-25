@@ -34,6 +34,8 @@ Abra http://localhost:3000 (o app é mobile: use o modo celular do navegador, 39
 | `/livro/[id]`, `/livro/[id]/progresso`, `/livro/[id]/avaliar` | página do livro · lendo agora / progresso · avaliar |
 | `/numeros`, `/numeros/generos`, `/numeros/retrospectiva` | seus números: meta, páginas, meses, gêneros, autores e retrospectiva (no computador: layout web) |
 | `/inicio`, `/clubes`, `/em-breve` | provisórias (com o menu do app) |
+| `/autor/[nome]` | página da autoria: foto, biografia (Wikipédia/Wikidata), livros na estante e principais livros |
+| `/match` | match de leitoras: quem lê parecido com você (livros, notas, autorias e gêneros) |
 
 ## Versão web
 
@@ -55,6 +57,8 @@ Com o Supabase ligado, cada leitora tem conta (e-mail + senha) e o perfil inteir
    - `NEXT_PUBLIC_SUPABASE_URL` = Project URL
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY` (ou `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`) = chave anon / publishable
    e faça um **Redeploy**. (Nunca use a chave `service_role` no app.)
+
+**Já tem o banco criado?** Rode também `supabase/atualizacao-2026-11.sql` (o "em alta" do descobrir passa a trazer sinopse, nota e resenha de quem leu).
 
 Para rodar no computador com a nuvem, copie `.env.example` para `.env.local` e preencha.
 

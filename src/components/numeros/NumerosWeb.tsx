@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useState, type CSSProperties } from "react";
 import { CapaLivro } from "@/components/CapaLivro";
 import { temas } from "@/lib/dados";
+import { destaqueWebDoTema } from "@/lib/tema";
+import { linkDaAutoria } from "@/lib/autores";
 import { usePerfil } from "@/lib/perfil-store";
 import { ExtremosDoAno } from "@/components/numeros/Extremos";
 import { FormatosDoAno } from "@/components/numeros/Formatos";
@@ -292,9 +294,12 @@ function ConteudoUnificado({
                 <span className="font-maquina text-xs font-bold text-bordo">
                   {String(i + 1).padStart(2, "0")}—
                 </span>
-                <span className="font-revista text-base text-ameixa italic">
+                <Link
+                  href={linkDaAutoria(a.nome)}
+                  className="font-revista text-base text-ameixa italic hover:text-bordo hover:underline"
+                >
                   {a.nome}
-                </span>
+                </Link>
                 <span className="ml-auto text-xs text-cinza">
                   {a.qtd} {a.qtd === 1 ? "livro" : "livros"}
                   {a.media ? ` · ${mediaTexto(a.media)}` : ""}
@@ -594,10 +599,7 @@ function Cabecalho({
 /** as cores dos cartões vêm do tema do perfil */
 function coresDaJornada(id: string): CSSProperties {
   const t = temas.find((x) => x.id === id) ?? temas[0];
-  const acc =
-    "escuro" in t
-      ? `color-mix(in srgb, ${t.destaque} 60%, #2B1420)`
-      : t.destaque;
+  const acc = destaqueWebDoTema(t);
   return {
     ["--acc-base" as string]: acc,
   };

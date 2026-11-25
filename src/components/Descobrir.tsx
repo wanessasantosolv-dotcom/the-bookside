@@ -3,7 +3,11 @@
 import { Voltar } from "@/components/Voltar";
 import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
-import { PerguntaTermino } from "@/components/PerguntaTermino";
+import {
+  dadosDoTermino,
+  PerguntaTermino,
+  type Termino,
+} from "@/components/PerguntaTermino";
 import { CapaLivro } from "@/components/CapaLivro";
 import { BotaoLink } from "@/components/ui/Botao";
 import { Tela } from "@/components/ui/Tela";
@@ -48,10 +52,10 @@ export function Descobrir({
   const livro = fila?.[indice];
   const queroLer = livros.filter((l) => l.status === "quero").length;
 
-  function responder(status: StatusLivro | null, lidoEm?: string) {
+  function responder(status: StatusLivro | null, termino?: Termino) {
     // "já li" pergunta quando a pessoa terminou
     if (!livro) return;
-    if (status === "lido" && !lidoEm) return setPerguntarTermino(true);
+    if (status === "lido" && !termino) return setPerguntarTermino(true);
     if (!status) lembrarPassado(livro.titulo);
     if (status)
       guardarLivro({
@@ -60,7 +64,7 @@ export function Descobrir({
         autor: livro.autor,
         capa: livro.capa,
         status,
-        ...(lidoEm ? { lidoEm } : {}),
+        ...(termino ? dadosDoTermino(termino) : {}),
       });
     setIndice((i) => i + 1);
   }
@@ -225,9 +229,9 @@ export function Descobrir({
         <PerguntaTermino
           titulo={livro.titulo}
           onCancelar={() => setPerguntarTermino(false)}
-          onConfirmar={(lidoEm) => {
+          onConfirmar={(t) => {
             setPerguntarTermino(false);
-            responder("lido", lidoEm);
+            responder("lido", t);
           }}
         />
       ) : null}
