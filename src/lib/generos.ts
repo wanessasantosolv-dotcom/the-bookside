@@ -168,3 +168,21 @@ export function useGenerosRefinados(livros: LivroSalvo[], generoBase: (l: LivroS
   }, [chave]);
   return (l: LivroSalvo) => refinados[l.id] ?? traduzirGenero(generoBase(l));
 }
+
+/** o gênero do livro é genérico (ou falta)? */
+export function generoGenerico(g?: string) {
+  if (!g) return true;
+  return GENERICOS.has(sem(g)) || GENERICOS.has(sem(traduzirGenero(g) ?? ""));
+}
+
+/** o gênero mais fino de um livro (do aparelho, se já buscou; senão, pelos assuntos da Open Library) */
+export async function generoRefinadoDe(l: LivroSalvo): Promise<string | null> {
+  const cache = lerCache();
+  if (l.id in cache) return cache[l.id];
+  const g = await assuntosNaOpenLibrary(l)
+    .then(generoDosAssuntos)
+    .catch(() => undefined);
+  cache[l.id] = g ?? null;
+  gravarCache(cache);
+  return g ?? null;
+}

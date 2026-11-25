@@ -1,3 +1,4 @@
+import { VigiaGeneros } from "@/components/VigiaGeneros";
 import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
 import { ExigeConta } from "@/components/ExigeConta";
@@ -34,6 +35,7 @@ export function AppShell({
       <ExigeConta />
       <TourApp />
       <VigiaNovidades />
+      <VigiaGeneros />
       <aside className="hidden lg:sticky lg:top-0 lg:block lg:h-dvh lg:w-[236px] lg:flex-none lg:border-r lg:border-fio lg:px-7 lg:py-8">
         <Link href="/inicio" aria-label="the bookside · início" className="mb-10 block">
           {/* eslint-disable-next-line @next/next/no-img-element */}
