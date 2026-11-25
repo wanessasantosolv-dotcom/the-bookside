@@ -99,7 +99,7 @@ function Leitura({ chave }: { chave: string }) {
     { id: "ritmo", el: <SeuRitmo ed={edicao} textos={textos} cor={cor} /> },
     { id: "leu", el: <OQueVoceLeu ed={edicao} textos={textos} cor={cor} /> },
     { id: "autorias", el: <QuemEscreveu ed={edicao} cor={cor} /> },
-    ...(margens.length ? [{ id: "margens", el: <NasMargens margens={margens} cor={cor} /> }] : []),
+    ...(margens.trechos.length || margens.resenhas.length || margens.anotacoes.length ? [{ id: "margens", el: <NasMargens margens={margens} cor={cor} /> }] : []),
     { id: "mood", sangrada: true, el: <Mood textos={textos} paleta={paleta} style={{ height: "100%", borderRadius: 0, display: "flex", flexDirection: "column", justifyContent: "center" }} /> },
   ];
 
