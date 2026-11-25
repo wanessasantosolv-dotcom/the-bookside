@@ -57,7 +57,8 @@ export function MapaPaises({
           <Geographies geography={GEO_URL}>
             {({ geographies }) =>
               geographies.map((geo) => {
-                const achado = porId.get(String(geo.id));
+                // o mapa guarda alguns códigos com zero na frente ("076" = Brasil)
+                const achado = porId.get(String(Number(geo.id)));
                 const opacidade = achado
                   ? corDoPais
                     ? 1

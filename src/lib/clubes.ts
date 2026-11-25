@@ -1149,3 +1149,68 @@ export async function anoDoClube(
     foraDoClube,
   };
 }
+
+export type ClubeDoLivro = {
+  clube: Clube;
+  livro: LivroDoClube;
+  membros: Membro[];
+  /** média das fichas do clube para este livro (null = sem fichas) */
+  media: number | null;
+  avaliacoes: number;
+};
+
+/**
+ * Os meus clubes que têm este livro (pelo código ou pelo mesmo título),
+ * com as fichas e as pessoas — para a página do livro.
+ */
+export async function clubesComLivro(
+  livroId: string,
+  titulo: string,
+): Promise<ClubeDoLivro[]> {
+  const eu = meuId();
+  if (!eu) return [];
+  const { data: minhas, error } = await db()
+    .from("membros")
+    .select("clube_id")
+    .eq("usuario_id", eu);
+  if (error) throw error;
+  const ids = (minhas ?? []).map((m) => m.clube_id as string);
+  if (!ids.length) return [];
+  const chave = (t: string) =>
+    t
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, " ")
+      .trim();
+  const { data: livros, error: e2 } = await db()
+    .from("clube_livros")
+    .select(CAMPOS_LIVRO)
+    .in("clube_id", ids)
+    .in("estado", ["lendo", "lido"]);
+  if (e2) throw e2;
+  const doLivro = ((livros ?? []) as LivroDoClube[]).filter(
+    (l) => l.livro.id === livroId || chave(l.livro.titulo) === chave(titulo),
+  );
+  if (!doLivro.length) return [];
+  const saida = await Promise.all(
+    doLivro.map(async (l) => {
+      const [c, membros, fichas] = await Promise.all([
+        clube(l.clube_id),
+        membrosDe(l.clube_id),
+        fichasDe(l.id).catch(() => [] as Ficha[]),
+      ]);
+      const notas = fichas.map((f) => f.nota).filter((n): n is number => !!n);
+      return c
+        ? {
+            clube: c,
+            livro: l,
+            membros,
+            media: media(notas),
+            avaliacoes: notas.length,
+          }
+        : null;
+    }),
+  );
+  return saida.filter((x): x is ClubeDoLivro => x !== null);
+}

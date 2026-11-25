@@ -62,7 +62,15 @@ export type LivroSalvo = {
   /** quando este livro foi mudado pela última vez (para juntar celular e computador) */
   atualizadoEm?: string;
   /** trechos marcados (ex.: destaques importados do Kindle) */
-  trechos?: { texto: string; em?: string; origem?: "kindle" | "app" }[];
+  trechos?: {
+    texto: string;
+    em?: string;
+    origem?: "kindle" | "app";
+    /** página do trecho, quando a pessoa anotou */
+    pagina?: number;
+  }[];
+  /** leituras anteriores (quando a pessoa começa uma releitura) */
+  releituras?: { iniciadoEm?: string; lidoEm?: string; nota?: number; formato?: FormatoLivro }[];
   /** ids das estantes criadas pela pessoa onde o livro está */
   estantes?: string[];
 };

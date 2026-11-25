@@ -2,24 +2,35 @@
 
 import { Voltar } from "@/components/Voltar";
 import Link from "next/link";
-import { SeletorFormato } from "@/components/SeletorFormato";
 import { celebrar, celebrarTermino } from "@/lib/celebrar";
-import { TrechosMarcados } from "@/components/TrechosMarcados";
 import { notFound, useParams, useRouter } from "next/navigation";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { CapaLivro } from "@/components/CapaLivro";
 import { TrocarCapa } from "@/components/TrocarCapa";
 import { lembrarRemovido } from "@/components/AvisoRemovido";
-import { AmigasComLivro } from "@/components/social/AmigasComLivro";
 import {
   dadosDoTermino,
   PerguntaTermino,
   type Termino,
 } from "@/components/PerguntaTermino";
-import { OpinioesDoLivro } from "@/components/OpinioesDoLivro";
 import { useHidratado } from "@/components/PerfilHidratacao";
-import { livroLembrado, sinopseDaObra } from "@/lib/catalogo";
+import { AcoesDoLivro } from "@/components/livro/AcoesDoLivro";
+import { MeuCapitulo } from "@/components/livro/MeuCapitulo";
+import { Margens } from "@/components/livro/Margens";
+import {
+  EntreLeitores,
+  NaSuaRede,
+  notasDoApp,
+  OQueDisseram,
+  useComunidade,
+} from "@/components/livro/Comunidade";
+import {
+  AlemDoLivro,
+  ClubesDoLivro,
+  useClubesDoLivro,
+} from "@/components/livro/ClubesEAlem";
+import { chaveTitulo, livroLembrado, sinopseDaObra } from "@/lib/catalogo";
 import { corDoLivro } from "@/lib/cores";
 import {
   estrelas,
@@ -27,6 +38,8 @@ import {
   infoDoLivro,
   todasAsEstantes,
 } from "@/lib/estantes";
+import { bandeira, paisesDasAutoras, type Pais } from "@/lib/nacionalidade";
+import { criticaNaWikipedia, type Critica } from "@/lib/opinioes";
 import { reacaoDe } from "@/lib/reacoes";
 import { autoriaConhecida, linkDaAutoria } from "@/lib/autores";
 import {
@@ -34,100 +47,6 @@ import {
   type LivroSalvo,
   type StatusLivro,
 } from "@/lib/perfil-store";
-
-/** ícones de traço fino usados na ficha de leitura (sem emoji). */
-const iconePausar = (
-  <>
-    <rect x="7" y="5" width="3.2" height="14" rx="1" />
-    <rect x="13.8" y="5" width="3.2" height="14" rx="1" />
-  </>
-);
-const iconeAbandonei = (
-  <>
-    <circle cx="12" cy="12" r="8" />
-    <path d="M9.2 9.2l5.6 5.6M14.8 9.2l-5.6 5.6" />
-  </>
-);
-const iconeCompartilhar = (
-  <path d="M12 3v12M7 8l5-5 5 5M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5" />
-);
-const iconeLerJunto = (
-  <>
-    <circle cx="8.5" cy="8.3" r="3" />
-    <path d="M3 20c0-3 2.5-5.5 5.5-5.5S14 17 14 20" />
-    <circle cx="16.5" cy="8" r="2.2" />
-    <path d="M15 12.3c2.3.5 4 2.6 4 5.2" />
-  </>
-);
-const iconeFoco = (
-  <>
-    <circle cx="12" cy="12" r="8" />
-    <path d="M12 8v4l3 2" />
-  </>
-);
-
-function Linha({
-  d,
-  className = "",
-}: {
-  d: ReactNode;
-  className?: string;
-}) {
-  return (
-    <svg
-      aria-hidden
-      width="17"
-      height="17"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.7"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      {d}
-    </svg>
-  );
-}
-
-/** um "selo" quadrado com ícone + rótulo, para as ações da ficha de leitura. */
-function AcaoFicha({
-  href,
-  icone,
-  rotulo,
-  extra,
-  escura,
-}: {
-  href: string;
-  icone: ReactNode;
-  rotulo: string;
-  extra?: string;
-  escura?: boolean;
-}) {
-  return (
-    <Link
-      href={href}
-      className={`flex min-w-[88px] flex-1 flex-col items-center gap-1.5 rounded-[2px] border border-dashed px-2.5 py-3 text-center transition-colors ${
-        escura
-          ? "border-creme/30 bg-ameixa text-creme hover:border-creme/60"
-          : "border-ouro/70 bg-creme text-bordo hover:border-bordo"
-      }`}
-    >
-      <Linha d={icone} />
-      <span className="text-[10.5px] leading-tight font-semibold">
-        {rotulo}
-      </span>
-      {extra ? (
-        <span
-          className={`text-[9px] leading-none ${escura ? "text-rosa-claro" : "text-cinza"}`}
-        >
-          {extra}
-        </span>
-      ) : null}
-    </Link>
-  );
-}
 
 /**
  * A ficha de leitura já preenchida, na página do livro: nota e veredito no
@@ -252,50 +171,125 @@ function FichaNoLivro({
   );
 }
 
-const acoes: { status: StatusLivro; rotulo: string; icone: ReactNode }[] = [
-  {
-    status: "lendo",
-    rotulo: "lendo",
-    icone: (
-      <svg
-        width="18"
-        height="18"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-      >
-        <path d="M4 19.5V5.5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v14" />
-        <path d="M6.5 22a2 2 0 0 1-2-2v0a2 2 0 0 1 2-2H19" />
-      </svg>
-    ),
-  },
-  {
-    status: "lido",
-    rotulo: "já li",
-    icone: (
-      <svg
-        width="18"
-        height="18"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.4"
-      >
-        <path d="M20 6 9 17l-5-5" />
-      </svg>
-    ),
-  },
-  {
-    status: "quero",
-    rotulo: "quero ler",
-    icone: (
-      <svg width="16" height="18" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M6 3a2 2 0 0 0-2 2v16l8-5.5L20 21V5a2 2 0 0 0-2-2Z" />
-      </svg>
-    ),
-  },
-];
+const idiomas: Record<string, string> = {
+  pt: "português",
+  "pt-BR": "português",
+  en: "inglês",
+  es: "espanhol",
+  fr: "francês",
+  it: "italiano",
+  de: "alemão",
+};
+
+const nota1 = (n: number) =>
+  n.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
+/** de onde é quem escreveu (Wikidata, guardado no aparelho) */
+function usePaisDoAutor(autor: string) {
+  const [pais, setPais] = useState<Pais | null>(null);
+  useEffect(() => {
+    let vivo = true;
+    if (!autoriaConhecida(autor)) return;
+    paisesDasAutoras([autor])
+      .then((c) => vivo && setPais(c[autor.toLowerCase()] ?? null))
+      .catch(() => {});
+    return () => {
+      vivo = false;
+    };
+  }, [autor]);
+  return pais;
+}
+
+/** "Sobre a obra": a sinopse sobre o papel, com "continuar lendo" e o resto numa expansão */
+function SobreAObra({
+  livro,
+}: {
+  livro: { titulo: string; autor: string; sinopse?: string; ano?: number; isbn?: string; idioma?: string; paginas?: number };
+}) {
+  const [aberta, setAberta] = useState(false);
+  const [mais, setMais] = useState(false);
+  const [critica, setCritica] = useState<Critica | null | undefined>(undefined);
+  useEffect(() => {
+    if (!mais || critica !== undefined) return;
+    criticaNaWikipedia(livro.titulo, livro.autor)
+      .then((c) => setCritica(c))
+      .catch(() => setCritica(null));
+  }, [mais, critica, livro.titulo, livro.autor]);
+  const longa = (livro.sinopse?.length ?? 0) > 360;
+  const ficha = [
+    livro.ano ? ["publicação", String(livro.ano)] : null,
+    livro.paginas ? ["páginas", String(livro.paginas)] : null,
+    livro.idioma ? ["idioma da edição", idiomas[livro.idioma] ?? livro.idioma] : null,
+    livro.isbn ? ["ISBN", livro.isbn] : null,
+  ].filter((x): x is string[] => !!x);
+  return (
+    <div>
+      <h2 className="font-display text-[24px] leading-tight font-semibold text-bordo lg:font-revista lg:text-[30px] lg:font-normal lg:text-tinta">
+        Sobre a obra
+      </h2>
+      {livro.sinopse ? (
+        <>
+          <p
+            className={`mt-3 max-w-[62ch] text-[15px] leading-[1.7] text-tinta-suave ${aberta ? "" : "line-clamp-5"}`}
+          >
+            {livro.sinopse}
+          </p>
+          {longa ? (
+            <button
+              type="button"
+              aria-expanded={aberta}
+              onClick={() => setAberta((v) => !v)}
+              className="mt-2 text-[13px] font-semibold text-bordo hover:underline"
+            >
+              {aberta ? "mostrar menos ⌃" : "continuar lendo ⌄"}
+            </button>
+          ) : null}
+        </>
+      ) : (
+        <p className="mt-3 font-accent text-sm italic text-cinza">
+          ainda não temos a sinopse deste livro.
+        </p>
+      )}
+      <div className="mt-4">
+        <button
+          type="button"
+          aria-expanded={mais}
+          onClick={() => setMais((v) => !v)}
+          className="text-[12px] font-semibold text-cinza hover:text-bordo"
+        >
+          {mais ? "menos detalhes" : "detalhes da edição e da crítica"} {mais ? "⌃" : "⌄"}
+        </button>
+        {mais ? (
+          <div className="mt-3 space-y-4 border-t border-linha pt-3 lg:border-fio">
+            {ficha.length ? (
+              <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-[13px]">
+                {ficha.map(([r, v]) => (
+                  <div key={r}>
+                    <dt className="text-[11px] text-cinza">{r}</dt>
+                    <dd className="text-ameixa">{v}</dd>
+                  </div>
+                ))}
+              </dl>
+            ) : null}
+            {critica === undefined ? (
+              <p className="text-[12px] text-cinza">procurando o que a crítica disse…</p>
+            ) : critica ? (
+              <div>
+                <p className="text-[11px] text-cinza">o que a crítica disse</p>
+                <p className="mt-1 text-[14px] leading-[1.6] text-tinta-suave">{critica.texto}</p>
+                <a href={critica.url} target="_blank" rel="noreferrer" className="mt-1 inline-block text-[12px] font-semibold text-bordo underline underline-offset-2">
+                  na Wikipédia{critica.idioma === "en" ? " (em inglês)" : ""} ↗
+                </a>
+              </div>
+            ) : (
+              <p className="text-[12px] text-cinza">não achamos texto da crítica sobre este livro.</p>
+            )}
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
 
 export default function LivroPage() {
   const { id } = useParams<{ id: string }>();
@@ -320,12 +314,27 @@ export default function LivroPage() {
     return () => c.abort();
   }, [id]);
 
+  const encontrado = hidratado ? infoDoLivro(id, livros, livroLembrado(id)) : null;
+  const ref = encontrado
+    ? { id: encontrado.id, titulo: encontrado.titulo, autor: encontrado.autor }
+    : { id, titulo: "", autor: "" };
+  const comunidade = useComunidade(ref);
+  const clubes = useClubesDoLivro(ref.id, ref.titulo);
+  const pais = usePaisDoAutor(ref.autor);
+  const tenho = useMemo(() => new Set(livros.map((l) => chaveTitulo(l.titulo))), [livros]);
+
   if (!hidratado || saindo) return <AppShell aba="estantes">{null}</AppShell>;
-  const encontrado = infoDoLivro(id, livros, livroLembrado(id));
   if (!encontrado) notFound();
-  const livro = { ...encontrado, sinopse: encontrado.sinopse ?? sinopseOL };
+  // o que veio da busca pode trazer idioma e ISBN da edição
+  const daBusca = encontrado as typeof encontrado & { idioma?: string; isbn?: string };
+  const livro = {
+    ...encontrado,
+    idioma: daBusca.idioma,
+    isbn: daBusca.isbn,
+    sinopse: encontrado.sinopse ?? sinopseOL,
+  };
   const salvo = livros.some((l) => l.id === id);
-  const status = salvo ? (livro.status ?? "lendo") : null;
+  const status: StatusLivro | null = salvo ? (livro.status ?? "lendo") : null;
   const base = {
     id: livro.id,
     titulo: livro.titulo,
@@ -333,20 +342,13 @@ export default function LivroPage() {
     capa: livro.capa,
     genero: livro.genero,
   };
-  const estantesProprias = todasAsEstantes(proprias ?? []).filter(
-    (e) => e.propria,
-  );
-  const progresso =
-    livro.paginas && livro.paginaAtual
-      ? Math.round((livro.paginaAtual / livro.paginas) * 100)
-      : null;
+  const estantesProprias = todasAsEstantes(proprias ?? []).filter((e) => e.propria);
   const temFicha = !!(
     livro.nota ||
     livro.reacao ||
     livro.personagem ||
     livro.citacao ||
     livro.resenha ||
-    livro.anotacao ||
     (livro.notas && Object.values(livro.notas).some(Boolean))
   );
   const voltar =
@@ -357,6 +359,10 @@ export default function LivroPage() {
         : status === "lendo"
           ? { href: "/estantes/lendo", r: "lendo" }
           : { href: "/estantes", r: "estantes" };
+
+  // a nota da comunidade (the bookside) para a linha de cima
+  const notas = notasDoApp(comunidade);
+  const mediaApp = notas.length ? notas.reduce((t, n) => t + n, 0) / notas.length : null;
 
   function tirarDaEstante() {
     const salvoAgora = livros.find((l) => l.id === id);
@@ -376,11 +382,15 @@ export default function LivroPage() {
   function marcar(s: StatusLivro, termino?: Termino) {
     // "já li" sempre pergunta quando a pessoa terminou
     if (s === "lido" && !termino) return setPerguntarTermino(true);
+    if (s === "abandonado" && !confirm("marcar como abandonado? ele sai do lendo agora e vai para os abandonados."))
+      return;
     const agora = new Date().toISOString();
     editarLivro(base, {
       status: s,
       paginas: livro!.paginas,
       ...(s === "lendo" ? { iniciadoEm: livro!.iniciadoEm ?? agora } : {}),
+      ...(s === "pausado" ? { paradoEm: agora } : {}),
+      ...(s === "abandonado" ? { paradoEm: agora, reacao: "abandonei" as const } : {}),
       ...(s === "lido" && termino
         ? { ...dadosDoTermino(termino), paginaAtual: livro!.paginas }
         : {}),
@@ -392,413 +402,200 @@ export default function LivroPage() {
     }
   }
 
+  /** começa de novo: a leitura anterior vai para o histórico */
+  function reler() {
+    if (!confirm("começar uma releitura? a leitura anterior fica guardada no histórico.")) return;
+    editarLivro(base, {
+      releituras: [
+        ...(livro!.releituras ?? []),
+        {
+          iniciadoEm: livro!.iniciadoEm,
+          lidoEm: livro!.lidoEm,
+          nota: livro!.nota,
+          formato: livro!.formato,
+        },
+      ],
+      status: "lendo",
+      iniciadoEm: new Date().toISOString(),
+      lidoEm: undefined,
+      paginaAtual: 0,
+      paginas: livro!.paginas,
+    });
+  }
+
   function alternarEstante(eid: string) {
     const atual = livro!.estantes ?? [];
     editarLivro(base, {
       status: livro!.status ?? "quero",
-      estantes: atual.includes(eid)
-        ? atual.filter((x) => x !== eid)
-        : [...atual, eid],
+      estantes: atual.includes(eid) ? atual.filter((x) => x !== eid) : [...atual, eid],
     });
   }
 
-  const titulo =
-    "font-display text-[28px] leading-[1.08] font-semibold italic text-bordo lg:font-revista lg:text-[40px] lg:leading-[1.1] lg:font-normal lg:text-tinta";
-  const secao =
-    "eyebrow text-bordo lg:text-[10px] lg:tracking-[.18em] lg:text-grafite";
+  function alternarAmei() {
+    editarLivro(base, { status: livro!.status ?? "lido", amei: !livro!.amei });
+    if (!livro!.amei) celebrar({ tipo: "amei", titulo: livro!.titulo });
+  }
+
+  const editorial = [livro.genero, livro.ano].filter(Boolean).join(" · ");
+  const biblio = [
+    livro.paginas ? `${livro.paginas} páginas` : null,
+    livro.idioma ? (idiomas[livro.idioma] ?? livro.idioma) : null,
+    pais ? `${pais.nome} ${bandeira(pais.codigo)}` : null,
+  ].filter(Boolean);
+
+  const acoes = (
+    <AcoesDoLivro
+      id={livro.id}
+      titulo={livro.titulo}
+      status={status}
+      amei={!!livro.amei}
+      estantes={estantesProprias}
+      naEstante={livro.estantes ?? []}
+      salvo={salvo}
+      onMarcar={(s) => marcar(s)}
+      onAmei={alternarAmei}
+      onEstante={alternarEstante}
+      onTrocarCapa={() => setTrocandoCapa(true)}
+      onTirar={tirarDaEstante}
+    />
+  );
 
   return (
     <AppShell aba="estantes">
       <div className="flex flex-1 flex-col lg:bg-jornal">
-        <header className="flex items-center justify-between px-6 pt-2 lg:bg-papel lg:px-14 lg:pt-6">
-          {/* volta para a tela de onde a pessoa veio; aberto direto pelo link, vai para a estante */}
-          <Voltar
-            padrao={voltar.href}
-            className="-ml-2 flex min-h-11 items-center px-2 text-[13px] font-semibold text-bordo"
-          />
-          <span className="eyebrow !text-[10px] text-cinza">o livro</span>
-        </header>
-
-        {/* topo: capa + dados */}
-        <div className="flex animate-subir gap-[18px] px-6 pt-2 lg:gap-11 lg:border-b lg:border-fio lg:bg-papel lg:px-14 lg:pt-4 lg:pb-12">
-          <div className="flex flex-none flex-col items-center">
-            <CapaLivro
-              key={livro.capa}
-              titulo={livro.titulo}
-              capa={livro.capa}
-              cor={corDoLivro(livro.id)}
-              className="w-[120px] [&>span:last-child]:text-sm lg:w-[200px] lg:shadow-[10px_10px_0_#C9A46A] lg:[&>span:last-child]:text-xl"
+        <div className="mx-auto w-full max-w-[1180px] px-6 pb-12 lg:px-12 lg:pt-6">
+          <header className="flex items-center justify-between pt-2 lg:pt-0">
+            {/* volta para a tela de onde a pessoa veio; aberto direto pelo link, vai para a estante */}
+            <Voltar
+              padrao={voltar.href}
+              className="-ml-2 flex min-h-11 items-center px-2 text-[13px] font-semibold text-bordo"
             />
-            {salvo ? (
-              <button
-                type="button"
-                onClick={() => setTrocandoCapa(true)}
-                className="mt-1 min-h-11 px-2 text-xs font-semibold text-bordo underline underline-offset-4 lg:mt-4"
-              >
-                trocar capa
-              </button>
-            ) : null}
-          </div>
-          <div className="min-w-0 flex-1 lg:max-w-[920px] lg:pt-2">
-            {livro.genero ? (
-              <p className="hidden text-[10px] font-semibold tracking-[.18em] text-grafite uppercase lg:mb-2.5 lg:block">
-                {livro.genero}
-              </p>
-            ) : null}
-            <h1 className={titulo}>{livro.titulo}</h1>
-            <p className="mt-[7px] font-accent text-sm italic text-cinza lg:font-texto lg:text-sm lg:not-italic">
-              {autoriaConhecida(livro.autor) ? (
-                <Link
-                  href={linkDaAutoria(livro.autor)}
-                  className="underline decoration-bege underline-offset-4 hover:text-bordo hover:decoration-bordo"
-                >
-                  {livro.autor}
-                </Link>
-              ) : (
-                livro.autor
-              )}
-              <span className="hidden lg:inline">
-                {livro.paginas ? ` · ${livro.paginas} páginas` : ""}
-              </span>
-            </p>
-            <p className="mt-2.5 text-[13px] text-cinza lg:hidden">
-              {[livro.paginas ? `${livro.paginas} páginas` : null, livro.ano]
-                .filter(Boolean)
-                .join(" · ")}
-            </p>
-            {livro.genero ? (
-              <span className="mt-2.5 inline-block rounded-pill bg-linha/70 px-2 py-1 text-[9px] font-semibold text-bordo lg:hidden">
-                {livro.genero}
-              </span>
-            ) : null}
-            {livro.nota ? (
-              <>
-                <p className="eyebrow mt-3.5 mb-1 text-bordo lg:hidden">
-                  sua nota
-                </p>
-                <p className="text-[15px] font-semibold tracking-[2px] text-bordo lg:mt-4 lg:text-lg">
-                  {estrelas(livro.nota)}
-                </p>
-              </>
-            ) : null}
-            {livro.sinopse ? (
-              <p className="mt-[18px] hidden max-w-[880px] text-[15px] leading-[1.65] text-tinta-suave lg:block">
-                {livro.sinopse}
-              </p>
-            ) : null}
+          </header>
 
-            <div className="mt-[22px] hidden gap-3.5 lg:flex">
-              {!salvo ? (
-                <button
-                  type="button"
-                  onClick={() => marcar("quero")}
-                  className="rounded-pill bg-vinho px-[22px] py-3 text-[11px] font-bold tracking-[.1em] text-jornal uppercase"
-                >
-                  + adicionar à estante
-                </button>
-              ) : null}
-              <Link
-                href={`/livro/${livro.id}/avaliar`}
-                className="rounded-pill border border-vinho px-[22px] py-3 text-[11px] font-bold tracking-[.1em] text-vinho uppercase"
-              >
-                avaliar
-              </Link>
-              {status === "lendo" ? (
-                <Link
-                  href={`/livro/${livro.id}/progresso`}
-                  className="rounded-pill border border-vinho px-[22px] py-3 text-[11px] font-bold tracking-[.1em] text-vinho uppercase"
-                >
-                  atualizar progresso
-                </Link>
-              ) : null}
-            </div>
-          </div>
-        </div>
-
-        <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-11 lg:px-14 lg:pt-10 lg:pb-16">
-          <div>
-            {/* status */}
-            <fieldset className="mt-5 px-6 lg:mt-0 lg:px-0">
-              <legend className="sr-only">status do livro</legend>
-              <div className="flex items-center gap-2.5">
-                <div className="flex flex-1 overflow-hidden rounded-pill border-[1.5px] border-bordo">
-                  {acoes.map((a, i) => {
-                    const on = status === a.status;
-                    return (
-                      <button
-                        key={a.status}
-                        type="button"
-                        aria-pressed={on}
-                        onClick={() => marcar(a.status)}
-                        className={`flex h-11 flex-1 items-center justify-center gap-1.5 text-[12.5px] font-semibold ${
-                          i ? "border-l border-bordo/25" : ""
-                        } ${on ? "bg-bordo text-creme" : "bg-transparent text-bordo"}`}
-                      >
-                        <span className="flex h-[16px] w-[16px] flex-none items-center justify-center [&_svg]:h-full [&_svg]:w-full">
-                          {a.icone}
-                        </span>
-                        {a.rotulo}
-                      </button>
-                    );
-                  })}
-                </div>
-                {/* o coraçãozinho de "amei" (não mexe nos favoritos do perfil) */}
-                <button
-                  type="button"
-                  aria-pressed={!!livro.amei}
-                  aria-label={livro.amei ? "tirar o amei" : "marcar que amei"}
-                  title={livro.amei ? "você amou este livro" : "amei"}
-                  onClick={() => {
-                    editarLivro(base, {
-                      status: livro.status ?? "lido",
-                      amei: !livro.amei,
-                    });
-                    if (!livro.amei)
-                      celebrar({ tipo: "amei", titulo: livro.titulo });
-                  }}
-                  key={livro.amei ? "amei" : "nao"}
-                  className={`flex h-11 w-11 flex-none items-center justify-center rounded-full border-[1.5px] transition-transform active:scale-90 ${livro.amei ? "pulo-coracao" : ""} ${
-                    livro.amei
-                      ? "border-bordo bg-bordo text-creme"
-                      : "border-bordo text-bordo"
+          {/* ───── linha 1: capa · o livro · meu capítulo ───── */}
+          <div className="mt-2 grid animate-subir gap-6 lg:mt-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_minmax(0,2fr)] lg:gap-10">
+            <div className="flex gap-4 lg:contents">
+              <div className="w-[116px] flex-none sm:w-[140px] lg:w-full">
+                <CapaLivro
+                  key={livro.capa}
+                  titulo={livro.titulo}
+                  capa={livro.capa}
+                  cor={corDoLivro(livro.id)}
+                  className="w-full shadow-[0_22px_40px_-22px_rgba(43,20,32,.55)] [&>span:last-child]:text-sm lg:[&>span:last-child]:text-lg"
+                />
+              </div>
+              <div className="min-w-0 flex-1 lg:pt-1">
+                {editorial ? (
+                  <p className="text-[10px] font-semibold tracking-[.14em] text-bordo uppercase lg:text-[11px]">
+                    {editorial}
+                  </p>
+                ) : null}
+                <h1
+                  className={`mt-1 font-display leading-[1.05] font-semibold text-bordo lg:font-revista lg:font-normal lg:text-tinta ${
+                    livro.titulo.length > 50 ? "text-[22px] lg:text-[34px]" : "text-[28px] lg:text-[44px]"
                   }`}
                 >
-                  <svg
-                    aria-hidden
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    fill={livro.amei ? "currentColor" : "none"}
-                    stroke="currentColor"
-                    strokeWidth="1.9"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.5-7 10-7 10z" />
-                  </svg>
-                </button>
-              </div>
-            </fieldset>
-
-            {/* a ficha de leitura: formato, progresso/avaliação e as ações, tudo num só lugar */}
-            {status ? (
-              <div className="mx-6 mt-5 rounded-[2px] border border-linha bg-creme-quente p-4 lg:mx-0 lg:p-5">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="font-maquina text-[9px] tracking-[.12em] text-rosa-antigo uppercase">
-                    sua ficha de leitura
-                  </span>
-                  {status === "pausado" || status === "abandonado" ? (
-                    <span className="flex items-center gap-2 text-[11px] font-semibold text-ameixa">
-                      {status === "pausado" ? "pausado" : "abandonado"}
-                      {livro.paradoEm
-                        ? ` desde ${new Date(livro.paradoEm).toLocaleDateString("pt-BR", { day: "numeric", month: "short" })}`
-                        : ""}
-                      <button
-                        type="button"
-                        onClick={() => marcar("lendo")}
-                        className="min-h-6 text-bordo underline underline-offset-4"
-                      >
-                        voltar a ler
-                      </button>
-                    </span>
-                  ) : status === "lendo" ? (
-                    <div className="flex gap-1.5">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          editarLivro(base, {
-                            status: "pausado",
-                            paradoEm: new Date().toISOString(),
-                          })
-                        }
-                        className="flex h-8 items-center gap-1 rounded-pill border border-linha px-3 text-[11px] font-semibold text-ameixa hover:border-bordo"
-                      >
-                        <Linha d={iconePausar} className="!size-3.5" />
-                        pausar
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (
-                            !confirm(
-                              "marcar como abandonado? ele sai do lendo agora e vai para os abandonados.",
-                            )
-                          )
-                            return;
-                          editarLivro(base, {
-                            status: "abandonado",
-                            reacao: "abandonei",
-                            paradoEm: new Date().toISOString(),
-                          });
-                        }}
-                        className="flex h-8 items-center gap-1 rounded-pill border border-linha px-3 text-[11px] font-semibold text-ameixa hover:border-bordo"
-                      >
-                        <Linha d={iconeAbandonei} className="!size-3.5" />
-                        abandonei
-                      </button>
-                    </div>
-                  ) : null}
-                </div>
-
-                <SeletorFormato
-                  valor={livro.formato}
-                  onChange={(formato) => editarLivro(base, { formato })}
-                  className="mt-4"
-                />
-
-                {status === "lendo" ? (
-                  <Link
-                    href={`/livro/${livro.id}/progresso`}
-                    className="mt-4 block border-t border-dashed border-linha pt-4"
-                  >
-                    <div className="flex items-baseline justify-between">
-                      <span className="eyebrow text-bordo">lendo agora</span>
-                      <span className="text-xs font-semibold text-bordo">
-                        {progresso !== null ? `${progresso}%` : "atualizar →"}
-                      </span>
-                    </div>
-                    <div className="mt-2.5 h-2 overflow-hidden rounded-full bg-linha/70">
-                      <i
-                        className="block h-full rounded-full bg-bordo"
-                        style={{ width: `${progresso ?? 0}%` }}
-                      />
-                    </div>
-                    <p className="mt-2 text-xs text-cinza">
-                      {livro.paginaAtual && livro.paginas
-                        ? `página ${livro.paginaAtual} de ${livro.paginas}`
-                        : "quantas páginas já foram? toque para atualizar"}
-                    </p>
-                  </Link>
-                ) : null}
-                {status === "lido" ? (
-                  <Link
-                    href={`/livro/${livro.id}/avaliar`}
-                    className="mt-4 flex min-h-11 items-center justify-between border-t border-dashed border-linha pt-4"
-                  >
-                    <span className="text-[13px] font-semibold">
-                      {livro.nota ? "editar sua avaliação" : "avaliar este livro"}
-                    </span>
-                    <span className="text-sm text-bordo">
-                      {livro.nota ? estrelas(livro.nota) : "★ →"}
-                    </span>
-                  </Link>
-                ) : null}
-
-                {status === "lido" ||
-                status === "lendo" ||
-                status === "quero" ? (
-                  <div className="mt-4 flex flex-wrap gap-2 border-t border-dashed border-linha pt-4">
-                    {status === "lido" || status === "lendo" ? (
-                      <AcaoFicha
-                        href={`/story?tipo=${status === "lido" ? "terminei" : "lendo"}&livro=${livro.id}`}
-                        icone={iconeCompartilhar}
-                        rotulo="story"
-                      />
-                    ) : null}
-                    {status === "lendo" || status === "quero" ? (
-                      <AcaoFicha
-                        href={`/ler-junto/novo?livro=${livro.id}`}
-                        icone={iconeLerJunto}
-                        rotulo="ler junto"
-                      />
-                    ) : null}
-                    {status === "lendo" ? (
-                      <AcaoFicha
-                        href={`/foco?livro=${livro.id}`}
-                        icone={iconeFoco}
-                        rotulo="modo foco"
-                        escura
-                        extra={(() => {
-                          const min = (livro.sessoes ?? []).reduce(
-                            (t, x) => t + x.minutos,
-                            0,
-                          );
-                          return min
-                            ? `${min >= 60 ? `${Math.floor(min / 60)}h${String(min % 60).padStart(2, "0")}` : `${min} min`}`
-                            : "cronômetro";
-                        })()}
-                      />
-                    ) : null}
-                  </div>
-                ) : null}
-              </div>
-            ) : null}
-
-            {livro.trechos?.length ? (
-              <TrechosMarcados trechos={livro.trechos} />
-            ) : null}
-
-            {livro.sinopse ? (
-              <section className="mt-6 px-6 lg:hidden">
-                <p className={secao}>sinopse</p>
-                <p className="mt-2 text-[13px] leading-normal">
-                  {livro.sinopse}
+                  {livro.titulo}
+                </h1>
+                <p className="mt-1.5 text-[14px] text-tinta-suave lg:text-[15px]">
+                  {autoriaConhecida(livro.autor) ? (
+                    <Link href={linkDaAutoria(livro.autor)} className="hover:text-bordo hover:underline">
+                      {livro.autor} →
+                    </Link>
+                  ) : (
+                    livro.autor
+                  )}
                 </p>
-              </section>
-            ) : null}
-
-            {temFicha ? (
-              <FichaNoLivro
-                livro={livro}
-                onExcluir={() => {
-                  if (
-                    !confirm(
-                      "excluir a sua ficha? a nota, os critérios, a personagem, o trecho e a resenha somem. o livro continua na estante.",
-                    )
-                  )
-                    return;
-                  editarLivro(base, fichaApagada);
-                }}
-              />
-            ) : null}
-
-            {estantesProprias.length ? (
-              <section className="mt-6 px-6 lg:px-0">
-                <p className={secao}>suas estantes</p>
-                <div className="mt-2.5 flex flex-wrap gap-2">
-                  {estantesProprias.map((e) => {
-                    const on = !!livro.estantes?.includes(e.id);
-                    return (
-                      <button
-                        key={e.id}
-                        type="button"
-                        aria-pressed={on}
-                        onClick={() => alternarEstante(e.id)}
-                        className={`flex h-11 items-center gap-1.5 rounded-pill border px-3.5 text-xs font-semibold ${on ? "border-bordo bg-bordo text-creme" : "border-bege bg-creme-quente"}`}
-                      >
-                        <span
-                          aria-hidden
-                          className="size-2.5 rounded-full"
-                          style={{ background: e.etiqueta.fundo }}
-                        />
-                        {e.nome}
-                      </button>
-                    );
-                  })}
-                </div>
-              </section>
-            ) : null}
+                {mediaApp !== null ? (
+                  <p className="mt-3 flex items-baseline gap-1.5">
+                    <span className="text-[18px] text-ouro">★</span>
+                    <b className="text-[18px] font-semibold text-ameixa tabular-nums">{nota1(mediaApp)}</b>
+                    <span className="text-[13px] text-cinza">
+                      ({notas.length} {notas.length === 1 ? "avaliação" : "avaliações"})
+                    </span>
+                  </p>
+                ) : null}
+                {biblio.length ? (
+                  <p className="mt-2.5 text-[13px] text-tinta-suave">{biblio.join(" · ")}</p>
+                ) : null}
+                {livro.genero ? (
+                  <ul className="mt-3 flex flex-wrap gap-1.5">
+                    <li className="rounded-pill bg-rosa-fundo px-3 py-1 text-[12px] text-ameixa">
+                      {livro.genero}
+                    </li>
+                  </ul>
+                ) : null}
+                <div className="mt-5 hidden lg:block">{acoes}</div>
+              </div>
+            </div>
+            <div className="lg:hidden">{acoes}</div>
+            <MeuCapitulo
+              livro={livro}
+              status={status}
+              onMarcar={(s) => marcar(s)}
+              onFormato={(formato) => editarLivro(base, { formato })}
+              onPausar={() => marcar("pausado")}
+              onAbandonar={() => marcar("abandonado")}
+              onReler={reler}
+            />
           </div>
 
-          <aside className="mt-6 px-6 pb-8 lg:mt-0 lg:px-0 lg:pb-0">
-            <div className="rounded-[2px] border border-dashed border-linha bg-creme-quente p-4 lg:p-5">
-              <p className="font-maquina text-[9px] tracking-[.12em] text-rosa-antigo uppercase">
-                entre seus amigos
-              </p>
-              <AmigasComLivro livroId={livro.id} />
+          {/* ───── linha 2: sobre a obra · nas suas margens ───── */}
+          <div className="mt-9 grid gap-9 border-t border-linha pt-7 lg:mt-12 lg:grid-cols-2 lg:gap-0 lg:divide-x lg:divide-fio lg:border-fio lg:pt-9">
+            <div className="lg:pr-10">
+              <SobreAObra livro={livro} />
             </div>
-            <div className="mt-4">
-              <OpinioesDoLivro livro={livro} />
+            <div className="lg:pl-10">
+              <Margens
+                key={livro.id}
+                livro={livro}
+                salvo={salvo}
+                onTrechos={(trechos) => editarLivro(base, { status: status ?? "lendo", trechos })}
+                onAnotacao={(anotacao) => editarLivro(base, { status: status ?? "lendo", anotacao })}
+                ficha={
+                  temFicha ? (
+                    <FichaNoLivro
+                      livro={livro}
+                      onExcluir={() => {
+                        if (
+                          !confirm(
+                            "excluir a sua ficha? a nota, os critérios, a personagem, o trecho e a resenha somem. o livro continua na estante.",
+                          )
+                        )
+                          return;
+                        editarLivro(base, fichaApagada);
+                      }}
+                    />
+                  ) : null
+                }
+              />
             </div>
-            {salvo ? (
-              <button
-                type="button"
-                onClick={tirarDaEstante}
-                className="mt-4 min-h-11 text-xs font-semibold text-cinza underline underline-offset-4 hover:text-bordo"
-              >
-                tirar da estante
-              </button>
+          </div>
+
+          {/* ───── linhas 3 e 4: entre leitores · rede · resenhas · clubes ───── */}
+          <div className="mt-9 flex flex-col gap-9 border-t border-linha pt-7 lg:mt-12 lg:grid lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:gap-x-12 lg:gap-y-12 lg:border-fio lg:pt-9">
+            <div className="order-1 lg:col-start-1 lg:row-start-1">
+              <EntreLeitores c={comunidade} />
+            </div>
+            <div className="order-2 lg:col-start-2 lg:row-start-1 lg:border-l lg:border-fio lg:pl-12">
+              <NaSuaRede c={comunidade} />
+            </div>
+            {clubes?.length ? (
+              <div className="order-3 lg:col-start-2 lg:row-start-2 lg:border-l lg:border-fio lg:pl-12">
+                <ClubesDoLivro lista={clubes} />
+              </div>
             ) : null}
-          </aside>
+            <div
+              className={`order-4 lg:row-start-2 ${clubes?.length ? "lg:col-start-1" : "lg:col-span-2"}`}
+            >
+              <OQueDisseram c={comunidade} livro={livro} />
+            </div>
+          </div>
+
+          {/* ───── linha 5: para além deste livro ───── */}
+          <div className="mt-9 lg:mt-12">
+            <AlemDoLivro livro={livro} naEstante={tenho} />
+          </div>
         </div>
       </div>
       {trocandoCapa ? (
@@ -807,18 +604,16 @@ export default function LivroPage() {
           autor={livro.autor}
           atual={livro.capa}
           onFechar={() => setTrocandoCapa(false)}
-          onEscolher={(capa) =>
-            editarLivro(base, { capa, capaEscolhida: true })
-          }
+          onEscolher={(capa) => editarLivro(base, { capa, capaEscolhida: true })}
         />
       ) : null}
       {perguntarTermino ? (
         <PerguntaTermino
           titulo={livro.titulo}
           inicial={livro.lidoEm}
-          onCancelar={() => setPerguntarTermino(false)}
           notaInicial={livro.nota}
           formatoInicial={livro.formato}
+          onCancelar={() => setPerguntarTermino(false)}
           onConfirmar={(t) => {
             setPerguntarTermino(false);
             marcar("lido", t);

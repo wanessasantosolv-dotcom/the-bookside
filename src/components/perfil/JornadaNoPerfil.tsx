@@ -721,7 +721,7 @@ const CORES_PAISES = [
   "color-mix(in srgb, var(--color-oliva) 55%, var(--color-creme))",
   "var(--color-oliva)",
 ];
-const COR_OUTROS = "color-mix(in srgb, var(--color-rosa-antigo) 35%, var(--color-creme))";
+const COR_OUTROS = "color-mix(in srgb, var(--color-rosa-antigo) 60%, var(--color-creme))";
 
 /** países e gênero declarado de quem escreveu (Wikidata), buscados uma vez para a seção toda */
 function useAutorias(lidos: LivroSalvo[]) {
