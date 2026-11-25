@@ -333,7 +333,7 @@ export function FilaDaPrateleira({
     <div className="relative min-w-0">
       <ul
         ref={trilho}
-        className={`flex snap-x snap-proximity items-end overflow-x-auto ${face === "lombadas" ? "gap-[3px] sm:gap-1" : "gap-3 sm:gap-4"} overscroll-x-contain px-3 pt-24 -mt-20 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden`}
+        className={`pointer-events-none flex snap-x snap-proximity items-end overflow-x-auto [&>li]:pointer-events-auto ${face === "lombadas" ? "gap-[3px] sm:gap-1" : "gap-3 sm:gap-4"} overscroll-x-contain px-3 pt-24 -mt-20 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden`}
       >
         {visiveis.map((l, i) => (
           <LivroNaPrateleira key={l.id} livro={l} altura={altura} face={face} ordem={i} />

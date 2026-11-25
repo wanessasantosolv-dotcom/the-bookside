@@ -2,6 +2,7 @@
 
 import { CapaAuto } from "@/components/CapaAuto";
 import Link from "next/link";
+import { useState } from "react";
 import { useClube } from "@/components/clube/ClubeContexto";
 import { Carregando, ErroOuFalta, Vazio } from "@/components/social/Estados";
 import { Avatar, CartaoAtividade } from "@/components/social/Pessoas";
@@ -30,8 +31,9 @@ type Item =
     };
 
 /** O feed do clube (atividades, leituras e encontros) — mostrado no início do clube. */
-export function FeedDoClube() {
+export function FeedDoClube({ limite }: { limite?: number } = {}) {
   const { clube, membros } = useClube();
+  const [todas, setTodas] = useState(false);
   const consulta = useConsulta(async () => {
     const [atividades, livros, encontros] = await Promise.all([
       atividadesDoClube(clube.id),
@@ -84,12 +86,13 @@ export function FeedDoClube() {
       href: `/clubes/${clube.id}/agenda`,
     })),
   ].sort((a, b) => b.quando.localeCompare(a.quando));
+  const visiveis = limite && !todas ? itens.slice(0, limite) : itens;
 
   return (
     <div>
       <div className="space-y-3">
         {itens.length ? (
-          itens.map((i) =>
+          visiveis.map((i) =>
             i.tipo === "atividade" ? (
               <CartaoAtividade
                 key={i.a.id}
@@ -142,7 +145,15 @@ export function FeedDoClube() {
           />
         )}
       </div>
-      {itens.length ? (
+      {visiveis.length < itens.length ? (
+        <button
+          type="button"
+          onClick={() => setTodas(true)}
+          className="mt-4 flex min-h-10 items-center text-[13px] font-semibold text-bordo hover:underline"
+        >
+          ver as outras {itens.length - visiveis.length} atividades
+        </button>
+      ) : itens.length ? (
         <p className="py-8 text-center font-accent text-[13px] italic text-cinza">
           isso é tudo por enquanto ✦
         </p>
