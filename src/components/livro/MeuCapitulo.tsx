@@ -53,10 +53,26 @@ function TrocaFormato({
             role="radio"
             aria-checked={on}
             onClick={() => onChange(on ? undefined : f.id)}
-            className={`h-8 rounded-pill px-3 text-[12px] font-semibold ${
+            className={`flex h-9 items-center gap-1.5 rounded-pill px-3.5 text-[12px] font-semibold ${
               on ? "bg-creme text-bordo" : "border border-creme/35 text-creme hover:border-creme/70"
             }`}
           >
+            <svg
+              aria-hidden
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="flex-none"
+            >
+              {f.icone.split(" M").map((d, i) => (
+                <path key={i} d={i ? `M${d}` : d} />
+              ))}
+            </svg>
             {f.curto}
           </button>
         );

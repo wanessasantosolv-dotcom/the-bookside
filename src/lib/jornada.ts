@@ -371,3 +371,24 @@ export function diversidadeDeAutoria(
     .map((c) => ({ categoria: c, qtd: conta.get(c) ?? 0, parte: lidos.length ? (conta.get(c) ?? 0) / lidos.length : 0 }))
     .filter((x) => x.qtd || x.categoria === "feminina" || x.categoria === "masculina" || x.categoria === "desconhecida");
 }
+
+/**
+ * Quantos dias do ano tiveram livro aberto (de quando começou até quando
+ * terminou cada leitura; o que está sendo lido conta até hoje).
+ */
+export function diasDeLeituraNoAno(livros: LivroSalvo[], ano: number, hoje = new Date()) {
+  const inicioAno = new Date(ano, 0, 1);
+  const fimAno = ano === hoje.getFullYear() ? hoje : new Date(ano, 11, 31);
+  const dias = new Set<string>();
+  for (const l of livros) {
+    if (l.status !== "lido" && l.status !== "lendo") continue;
+    const fim = l.status === "lido" ? (l.lidoEm ? new Date(l.lidoEm) : null) : hoje;
+    if (!fim) continue;
+    const ini = l.iniciadoEm ? new Date(l.iniciadoEm) : fim;
+    const a = ini < inicioAno ? inicioAno : ini;
+    const b = fim > fimAno ? fimAno : fim;
+    for (let d = new Date(a.getFullYear(), a.getMonth(), a.getDate()); d <= b; d.setDate(d.getDate() + 1))
+      dias.add(chaveDia(d));
+  }
+  return dias.size;
+}

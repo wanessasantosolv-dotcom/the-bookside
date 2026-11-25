@@ -7,7 +7,6 @@ import { MapaPaises } from "@/components/numeros/MapaPaises";
 import { linkDaAutoria } from "@/lib/autores";
 import { corDoLivro } from "@/lib/cores";
 import {
-  agruparGeneros,
   anosComLeitura,
   autoresDoLivro,
   destaquesDoAno,
@@ -15,7 +14,7 @@ import {
   generosDoAno,
   rankingDeAutores,
   rotuloAutoria,
-  treemap,
+  diasDeLeituraNoAno,
   type CategoriaAutoria,
   type GeneroDoAno,
   diasDoMes,
@@ -94,11 +93,14 @@ function Cabecalho({
   return (
     <header className="flex items-start justify-between gap-4">
       <div>
-        <h2 className="font-display text-[30px] leading-[1.05] font-semibold italic text-bordo lg:font-revista lg:text-[40px] lg:font-normal lg:text-tinta">
-          sua jornada
+        <p className="text-[10px] font-semibold tracking-[.16em] text-cinza uppercase">
+          jornada de leitura
+        </p>
+        <h2 className="mt-1 font-display text-[30px] leading-[1.05] font-semibold text-bordo lg:font-revista lg:text-[40px] lg:font-normal lg:text-tinta">
+          Um ano entre páginas.
         </h2>
         <p className="mt-1 font-accent text-[14px] italic text-cinza">
-          uma vida entre páginas.
+          sua trajetória, hábitos e descobertas literárias em um só lugar.
         </p>
       </div>
       <label className="relative flex-none">
@@ -130,7 +132,7 @@ function Cabecalho({
 
 // ───────── seu ano em números ─────────
 
-function AnoEmNumeros({ n, atual }: { n: Numeros; atual: boolean }) {
+function AnoEmNumeros({ n, atual, dias }: { n: Numeros; atual: boolean; dias: number }) {
   // a meta é do ano corrente; nos anos passados, só o total
   const meta = atual ? n.meta : null;
   const pct = meta ? Math.min(100, (n.total / meta) * 100) : 0;
@@ -151,6 +153,11 @@ function AnoEmNumeros({ n, atual }: { n: Numeros; atual: boolean }) {
     {
       valor: n.paginasPorLivro ? numero(n.paginasPorLivro) : "—",
       rotulo: "páginas por livro",
+    },
+    {
+      valor: dias ? numero(dias) : "—",
+      rotulo: "dias de leitura",
+      nota: !dias && n.total ? "marque quando começou cada livro" : undefined,
     },
   ];
   return (
@@ -240,61 +247,78 @@ function MesEmRevista({ livros, ano }: { livros: LivroSalvo[]; ano: number }) {
   const aberto = mesDoReview();
   if (!aberto || aberto.ano !== ano) return null;
   const chave = `${aberto.ano}-${String(aberto.mes + 1).padStart(2, "0")}`;
-  const doMes = livros.filter(
-    (l) => l.status === "lido" && l.lidoEm?.startsWith(chave),
-  );
+  const doMes = livros
+    .filter((l) => l.status === "lido" && l.lidoEm?.startsWith(chave))
+    .sort(
+      (a, b) =>
+        (b.nota ?? 0) - (a.nota ?? 0) ||
+        (b.lidoEm ?? "").localeCompare(a.lidoEm ?? ""),
+    );
   const paginas = doMes.reduce((t, l) => t + (l.paginas ?? 0), 0);
-  const notas = doMes.map((l) => l.nota).filter((x): x is number => !!x);
-  const media = notas.length ? notas.reduce((t, x) => t + x, 0) / notas.length : null;
-  const favorito = [...doMes].sort(
-    (a, b) =>
-      (b.nota ?? 0) - (a.nota ?? 0) ||
-      (b.lidoEm ?? "").localeCompare(a.lidoEm ?? ""),
-  )[0];
   const nome = MESES[aberto.mes];
-  const conteudo = (
-    <>
-      <div className="min-w-0 flex-1">
-        <p className="font-maquina text-[10px] tracking-[.12em] text-cinza uppercase">
-          the bookside · edição {aberto.mes + 1}
-        </p>
-        <h3 className="mt-1.5 font-display text-[24px] leading-tight font-semibold italic text-ameixa lg:font-revista lg:text-[30px] lg:font-normal">
-          {maiuscula(nome)} em revista
-        </h3>
-        <p className="mt-1 text-[12px] text-tinta-suave">
+  // as capas empilhadas: o favorito na frente
+  const capas = doMes.slice(0, 3).reverse();
+  return (
+    <article className="inverso relative overflow-hidden rounded-[14px] bg-bordo text-creme lg:rounded-[10px]">
+      <div className="flex items-center gap-5 px-5 py-5 lg:px-7 lg:py-6">
+        <div className="min-w-0 flex-1">
+          <p className="text-[10px] font-semibold tracking-[.18em] text-creme uppercase">
+            the bookside journal
+          </p>
+          <p className="mt-0.5 font-maquina text-[10px] tracking-[.1em] text-rosa-claro uppercase">
+            vol. {aberto.mes + 1} / {aberto.ano}
+          </p>
+          <h3 className="mt-3 font-display text-[30px] leading-[1.02] font-semibold lg:font-revista lg:text-[40px] lg:font-normal">
+            {maiuscula(nome)}
+            <br />
+            em revista.
+          </h3>
+          <p className="mt-2 text-[13px] leading-snug text-rosa-claro">
+            {doMes.length ? (
+              <>
+                {plural(doMes.length, "história", "histórias")}
+                {paginas ? `. ${numero(paginas)} páginas.` : "."}
+                <br />
+                um mês inteiro de descobertas.
+              </>
+            ) : (
+              `nenhum livro terminado em ${nome} ainda — termine um e ele vira capa.`
+            )}
+          </p>
           {doMes.length ? (
-            <>
-              {plural(doMes.length, "livro", "livros")}
-              {paginas ? ` · ${numero(paginas)} páginas` : ""}
-              {media !== null ? ` · ${nota1(media)} estrelas` : ""}
-            </>
-          ) : (
-            `nenhum livro terminado em ${nome} ainda — termine um e ele vira capa.`
-          )}
-        </p>
-        {doMes.length ? (
-          <span className="mt-3 inline-block text-[12px] font-semibold text-bordo group-hover:underline">
-            sua retrospectiva mensal ↗
-          </span>
+            <Link
+              href={`/story?tipo=mes&mes=${chave}`}
+              className="mt-4 inline-flex min-h-10 items-center text-[11px] font-bold tracking-[.14em] text-creme uppercase hover:underline"
+            >
+              abrir edição →
+            </Link>
+          ) : null}
+        </div>
+        {capas.length ? (
+          <div aria-hidden className="relative h-[132px] w-[110px] flex-none lg:h-[168px] lg:w-[150px]">
+            {capas.map((l, i) => {
+              const frente = i === capas.length - 1;
+              return (
+                <div
+                  key={l.id}
+                  className="absolute bottom-0"
+                  style={{
+                    left: `${(capas.length - 1 - i) * -14 + 26}%`,
+                    transform: `rotate(${frente ? 3 : -6 + i * 4}deg)`,
+                    zIndex: i,
+                  }}
+                >
+                  {capaDe(
+                    l,
+                    `${frente ? "w-[78px] lg:w-[104px]" : "w-[66px] lg:w-[88px]"} shadow-[0_14px_24px_-12px_rgba(0,0,0,.55)] [&>span:last-child]:hidden`,
+                  )}
+                </div>
+              );
+            })}
+          </div>
         ) : null}
       </div>
-      {favorito ? (
-        <span className="flex flex-none flex-col items-center">
-          {capaDe(favorito, "w-[58px] shadow-[0_10px_18px_-10px_rgba(43,20,32,.5)] lg:w-[70px] [&>span:last-child]:hidden")}
-          <span className="sr-only">favorito do mês: {favorito.titulo}</span>
-        </span>
-      ) : null}
-    </>
-  );
-  const caixa =
-    "group flex items-center gap-4 rounded-[14px] bg-[color-mix(in_srgb,var(--color-bege)_45%,var(--color-creme))] px-5 py-4 lg:rounded-[10px] lg:px-6";
-  // o story 9:16 (para compartilhar) já sai da tela de story
-  return doMes.length ? (
-    <Link href={`/story?tipo=mes&mes=${chave}`} className={caixa}>
-      {conteudo}
-    </Link>
-  ) : (
-    <div className={caixa}>{conteudo}</div>
+    </article>
   );
 }
 
@@ -497,9 +521,9 @@ function ItemDestaque({ d }: { d: Destaque }) {
 function Marcaram({ lidos }: { lidos: LivroSalvo[] }) {
   const destaques = destaquesDoAno(lidos);
   return (
-    <Secao titulo="leituras que marcaram seu ano">
+    <Secao titulo="histórias que deixaram marcas">
       {destaques.length ? (
-        <ul className="grid grid-cols-2 gap-x-4 gap-y-7 sm:grid-cols-4 lg:gap-x-6">
+        <ul className="grid grid-cols-2 gap-x-4 gap-y-7 sm:grid-cols-[1.35fr_1fr_1fr_1fr] sm:items-end lg:gap-x-6">
           {destaques.map((d) => (
             <ItemDestaque key={d.id} d={d} />
           ))}
@@ -540,6 +564,8 @@ function LinhaMes({ rotulo, l }: { rotulo: string; l: LivroSalvo }) {
 }
 
 function CartaoMes({ m }: { m: MesDoAno }) {
+  const [aberto, setAberto] = useState(false);
+  const outros = m.livros.filter((l) => l !== m.melhor && l !== m.pior);
   return (
     <li className="w-[78%] flex-none snap-start rounded-[12px] border border-linha p-3.5 sm:w-[calc((100%-24px)/3)] lg:rounded-[10px] lg:border-fio">
       <p className="flex items-baseline justify-between gap-2">
@@ -550,22 +576,32 @@ function CartaoMes({ m }: { m: MesDoAno }) {
         {m.melhor ? (
           <LinhaMes rotulo={m.pior ? "mais amado" : "destaque do mês"} l={m.melhor} />
         ) : (
-          <>
-            <ul className="flex gap-1.5">
-              {m.livros.slice(0, 5).map((l) => (
-                <li key={l.id} className="w-[30px]">
-                  <Link href={`/livro/${l.id}`}>
-                    {capaDe(l, "w-full !rounded-[3px] [&>span:last-child]:hidden")}
-                    <span className="sr-only">{l.titulo}</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-            <p className="text-[11px] text-cinza">sem notas neste mês</p>
-          </>
+          <p className="text-[11px] text-cinza">sem notas neste mês</p>
         )}
-        {m.pior ? <LinhaMes rotulo="menos amado" l={m.pior} /> : null}
+        {aberto && m.pior ? <LinhaMes rotulo="menos amado" l={m.pior} /> : null}
+        {aberto && (outros.length || !m.melhor) ? (
+          <ul className="flex flex-wrap gap-1.5 pt-1">
+            {(m.melhor ? outros : m.livros).map((l) => (
+              <li key={l.id} className="w-[30px]">
+                <Link href={`/livro/${l.id}`} title={l.titulo}>
+                  {capaDe(l, "w-full !rounded-[3px] [&>span:last-child]:hidden")}
+                  <span className="sr-only">{l.titulo}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        ) : null}
       </div>
+      {m.pior || outros.length || !m.melhor ? (
+        <button
+          type="button"
+          aria-expanded={aberto}
+          onClick={() => setAberto((v) => !v)}
+          className="mt-2.5 text-[11px] font-semibold text-bordo hover:underline"
+        >
+          {aberto ? "mostrar menos" : "ver o mês inteiro"}
+        </button>
+      ) : null}
     </li>
   );
 }
@@ -584,7 +620,7 @@ function EntreOsMeses({ lidos }: { lidos: LivroSalvo[] }) {
   if (!meses.length) return null;
   return (
     <Secao
-      titulo="entre os meses"
+      titulo="doze meses, muitas histórias"
       acao={
         meses.length > 3 ? (
           <span className="flex items-center gap-1">
@@ -780,7 +816,7 @@ function Mundo({
     <div className="rounded-[16px] border border-linha px-4 py-4 lg:rounded-[12px] lg:border-fio lg:px-5">
       <h4 className="flex items-center gap-2 font-display text-[17px] font-semibold text-ameixa lg:font-revista lg:font-normal">
         <Icone d={ICONE_GLOBO} className="text-ameixa" />
-        de onde vêm suas leituras
+        de onde vieram suas histórias
       </h4>
       {paises === null ? (
         <div aria-hidden className="mt-3 aspect-[800/380] animate-pulse rounded-[8px] bg-linha/50" />
@@ -815,167 +851,184 @@ function Mundo({
   );
 }
 
-// ───────── seu universo literário (gêneros) ─────────
+// ───────── o que você mais leu (gêneros) ─────────
 
-const CORES_GENERO = [
-  { fundo: "var(--color-ameixa)", texto: "var(--color-creme)" },
-  { fundo: "color-mix(in srgb, var(--color-rosa-antigo) 45%, var(--color-creme))", texto: "var(--color-ameixa)" },
-  { fundo: "color-mix(in srgb, var(--color-oliva) 40%, var(--color-creme))", texto: "var(--color-ameixa)" },
-  { fundo: "color-mix(in srgb, var(--color-ouro) 40%, var(--color-creme))", texto: "var(--color-ameixa)" },
-  { fundo: "color-mix(in srgb, var(--color-bordo) 70%, var(--color-ameixa))", texto: "var(--color-creme)" },
-];
-const COR_OUTROS_GENERO = {
-  fundo: "color-mix(in srgb, var(--color-bege) 45%, var(--color-creme))",
-  texto: "var(--color-ameixa)",
-};
-const pct0 = (p: number) => `${Math.round(p * 100)}%`;
-
-function DetalheGenero({ g, onFechar }: { g: GeneroDoAno; onFechar: () => void }) {
+function LinhaGenero({ g }: { g: GeneroDoAno }) {
+  const [aberto, setAberto] = useState(false);
   return (
-    <div className="mt-3 border-t border-linha pt-3 lg:border-fio" aria-live="polite">
-      <div className="flex items-baseline justify-between gap-3">
-        <p className="font-display text-[18px] font-semibold italic text-ameixa lg:font-revista lg:font-normal">
-          {g.nome}
-        </p>
-        <button
-          type="button"
-          onClick={onFechar}
-          className="text-[11px] font-semibold text-cinza hover:text-bordo"
-        >
-          fechar
-        </button>
-      </div>
-      <p className="mt-0.5 text-[12px] text-cinza">
-        {plural(g.qtd, "livro", "livros")} · {pct0(g.parte)} das leituras
-        {g.media !== null ? ` · média ${nota1(g.media)} ★` : " · sem notas"}
-      </p>
-      <ul className="mt-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
-        {g.livros.map((l) => (
-          <li key={l.id} className="w-[48px] flex-none">
-            <Link href={`/livro/${l.id}`} title={l.titulo}>
-              {capaDe(l, "w-full !rounded-[4px] [&>span:last-child]:hidden")}
-              <span className="sr-only">{l.titulo}</span>
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </div>
+    <li className="border-t border-linha first:border-t-0 lg:border-fio">
+      <button
+        type="button"
+        aria-expanded={aberto}
+        onClick={() => setAberto((v) => !v)}
+        className="grid w-full grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 py-3 text-left"
+      >
+        <span className="min-w-0">
+          <span className="block truncate text-[15px] font-semibold text-ameixa">{maiuscula(g.nome)}</span>
+          <span className="block text-[11px] text-cinza">{plural(g.qtd, "livro", "livros")}</span>
+        </span>
+        <span className="font-display text-[20px] text-bordo tabular-nums lg:font-revista">
+          {Math.round(g.parte * 100)}%
+        </span>
+        <span aria-hidden className="flex w-[84px] justify-end gap-1">
+          {g.livros.slice(0, 3).map((l) => (
+            <span key={l.id} className="w-[24px]">
+              {capaDe(l, "w-full !rounded-[2px] [&>span:last-child]:hidden")}
+            </span>
+          ))}
+        </span>
+      </button>
+      {aberto ? (
+        <div className="pb-3.5">
+          <p className="text-[12px] text-cinza">
+            {g.media !== null ? `média ${nota1(g.media)} ★` : "sem notas neste gênero"}
+          </p>
+          <ul className="mt-2 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
+            {g.livros.map((l) => (
+              <li key={l.id} className="w-[46px] flex-none">
+                <Link href={`/livro/${l.id}`} title={l.titulo}>
+                  {capaDe(l, "w-full !rounded-[4px] [&>span:last-child]:hidden")}
+                  <span className="sr-only">{l.titulo}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+    </li>
   );
 }
 
-function Universo({ lidos }: { lidos: LivroSalvo[] }) {
+function OQueMaisLeu({ lidos }: { lidos: LivroSalvo[] }) {
   const { lista, semGenero, comGenero } = generosDoAno(lidos);
-  const { principais, outros } = agruparGeneros(lista);
-  const [aberto, setAberto] = useState<string | null>(null);
-  const [verOutros, setVerOutros] = useState(false);
-  const itens = [
-    ...principais.map((g, i) => ({ g, cor: CORES_GENERO[i % CORES_GENERO.length], outros: false })),
-    ...(outros.length
-      ? [
-          {
-            g: {
-              nome: "outros",
-              qtd: outros.reduce((t, x) => t + x.qtd, 0),
-              parte: outros.reduce((t, x) => t + x.parte, 0),
-              media: null,
-              livros: outros.flatMap((x) => x.livros),
-            } as GeneroDoAno,
-            cor: COR_OUTROS_GENERO,
-            outros: true,
-          },
-        ]
-      : []),
-  ];
-  const blocos = treemap(itens.map((it) => ({ item: it, valor: it.g.qtd })));
-  const selecionado =
-    lista.find((g) => g.nome === aberto) ?? null;
+  const [todos, setTodos] = useState(false);
   return (
     <div>
       <h4 className="font-display text-[18px] font-semibold text-ameixa lg:font-revista lg:text-[20px] lg:font-normal">
-        seu universo literário
+        o que você mais leu
       </h4>
-      <p className="mt-0.5 text-[12px] text-cinza">os gêneros que mais marcaram suas leituras.</p>
+      <p className="mt-0.5 text-[12px] text-cinza">toque num gênero para ver os livros.</p>
       {!comGenero ? (
         <p className="mt-4 font-accent text-sm italic text-cinza">
           nenhum livro deste ano tem gênero no catálogo ainda.
         </p>
       ) : (
         <>
-          <div className="relative mt-3 aspect-[2/1] overflow-hidden rounded-[12px]">
-            {blocos.map(({ item, x, y, w, h }) => {
-              const pequeno = w < 22 || h < 34;
-              const ativo = item.outros ? verOutros : aberto === item.g.nome;
-              return (
-                <button
-                  key={item.g.nome}
-                  type="button"
-                  aria-expanded={ativo}
-                  aria-label={`${item.g.nome}: ${plural(item.g.qtd, "livro", "livros")}, ${pct0(item.g.parte)}`}
-                  onClick={() => {
-                    if (item.outros) {
-                      setVerOutros((v) => !v);
-                      setAberto(null);
-                    } else {
-                      setAberto(ativo ? null : item.g.nome);
-                      setVerOutros(false);
-                    }
-                  }}
-                  className="absolute overflow-hidden border-2 border-creme p-2.5 text-left transition-[filter] hover:brightness-95 lg:p-3"
-                  style={{
-                    left: `${x}%`,
-                    top: `${y}%`,
-                    width: `${w}%`,
-                    height: `${h}%`,
-                    background: item.cor.fundo,
-                    color: item.cor.texto,
-                    outline: ativo ? "2px solid var(--color-bordo)" : undefined,
-                    outlineOffset: -4,
-                  }}
-                >
-                  <span className={`block truncate font-semibold ${pequeno ? "text-[11px]" : "text-[13px]"}`}>
-                    {maiuscula(item.g.nome)}
-                  </span>
-                  <span
-                    className={`block font-display leading-none font-semibold lg:font-revista lg:font-normal ${pequeno ? "text-[15px]" : "text-[26px] lg:text-[30px]"}`}
-                  >
-                    {pct0(item.g.parte)}
-                  </span>
-                  {!pequeno ? (
-                    <span className="mt-1 block text-[11px] opacity-80">
-                      {plural(item.g.qtd, "livro", "livros")}
-                    </span>
-                  ) : null}
-                </button>
-              );
-            })}
-          </div>
-          {verOutros ? (
-            <ul className="mt-3 flex flex-wrap gap-1.5 border-t border-linha pt-3 lg:border-fio">
-              {outros.map((g) => (
-                <li key={g.nome}>
-                  <button
-                    type="button"
-                    onClick={() => setAberto(aberto === g.nome ? null : g.nome)}
-                    aria-pressed={aberto === g.nome}
-                    className={`h-8 rounded-pill px-3 text-[12px] ${aberto === g.nome ? "bg-ameixa text-creme" : "border border-bege text-ameixa"}`}
-                  >
-                    {g.nome} · {g.qtd}
-                  </button>
-                </li>
-              ))}
-            </ul>
+          <ul className="mt-2">
+            {(todos ? lista : lista.slice(0, 4)).map((g) => (
+              <LinhaGenero key={g.nome} g={g} />
+            ))}
+          </ul>
+          {lista.length > 4 ? (
+            <button
+              type="button"
+              aria-expanded={todos}
+              onClick={() => setTodos((v) => !v)}
+              className="mt-1 text-[12px] font-semibold text-bordo hover:underline"
+            >
+              {todos ? "mostrar menos" : `ver todos os gêneros (${lista.length})`}
+            </button>
           ) : null}
-          {selecionado ? (
-            <DetalheGenero g={selecionado} onFechar={() => setAberto(null)} />
-          ) : (
+          {semGenero ? (
             <p className="mt-2 text-[11px] text-cinza">
-              toque num gênero para ver os livros.
-              {semGenero ? ` ${plural(semGenero, "livro está", "livros estão")} sem gênero e não entra${semGenero === 1 ? "" : "m"} na conta.` : ""}
+              {plural(semGenero, "livro está", "livros estão")} sem gênero e não entra
+              {semGenero === 1 ? "" : "m"} na conta.
             </p>
-          )}
+          ) : null}
         </>
       )}
     </div>
+  );
+}
+
+// ───────── seu retrato literário (abertura) ─────────
+
+const nomeFormato: Record<string, string> = {
+  fisico: "livros físicos",
+  ebook: "e-books",
+  audio: "audiolivros",
+};
+
+/**
+ * O retrato: um título e um parágrafo montados só com o que os dados
+ * sustentam (países, gênero principal, autoria e formato), e quatro números.
+ */
+function Retrato({
+  n,
+  paises,
+  generos,
+}: {
+  n: Numeros;
+  paises: Record<string, Pais | null> | null;
+  generos: Record<string, GeneroAutoria | null> | null;
+}) {
+  const lidos = n.lidos;
+  const nPaises = paises
+    ? new Set(lidos.map((l) => paises[l.autor.toLowerCase()]?.nome).filter(Boolean)).size
+    : null;
+  const { lista } = generosDoAno(lidos);
+  const principal = lista[0] && (lista.length === 1 || lista[0].qtd > lista[1].qtd) ? lista[0] : null;
+  const f = formatosComParte(n);
+  const formatoTop = [...f.lista].sort((a, b) => b.qtd - a.qtd)[0];
+  const formatoPrincipal =
+    f.marcados && formatoTop.qtd && f.lista.filter((x) => x.qtd === formatoTop.qtd).length === 1
+      ? formatoTop
+      : null;
+  const autoria = generos ? diversidadeDeAutoria(lidos, (a) => generos[a.toLowerCase()]) : null;
+  const feminina = autoria?.find((x) => x.categoria === "feminina");
+  const conhecidas = autoria ? autoria.filter((x) => x.categoria !== "desconhecida").reduce((t, x) => t + x.qtd, 0) : 0;
+
+  const titulo =
+    nPaises !== null && nPaises >= 5
+      ? "Uma leitora de muitos mundos."
+      : principal && principal.parte >= 0.4
+        ? `Uma leitora de ${principal.nome}.`
+        : lista.length >= 4
+          ? "Uma leitora de muitos gêneros."
+          : `Seu ano em ${plural(n.total, "livro", "livros")}.`;
+  const partes = [
+    nPaises ? `suas leituras atravessaram ${plural(nPaises, "país", "países")}` : null,
+    principal ? `com preferência por ${principal.nome}` : null,
+    feminina && conhecidas && feminina.qtd ? `${Math.round(feminina.parte * 100)}% de autoria feminina` : null,
+    formatoPrincipal ? `predominância de ${nomeFormato[formatoPrincipal.id]}` : null,
+  ].filter((x): x is string => !!x);
+  const frase = partes.length
+    ? maiuscula(
+        partes.length > 1
+          ? `${partes.slice(0, -1).join(", ")} e ${partes.at(-1)}.`
+          : `${partes[0]}.`,
+      )
+    : null;
+
+  const indicadores = [
+    { v: feminina && conhecidas ? `${Math.round(feminina.parte * 100)}%` : "—", r: "autoria feminina" },
+    { v: nPaises === null ? "…" : nPaises ? String(nPaises) : "—", r: nPaises === 1 ? "país" : "países" },
+    { v: principal ? maiuscula(principal.nome) : "—", r: "gênero principal" },
+    { v: formatoPrincipal ? maiuscula(formatoPrincipal.curto) : "—", r: "formato principal" },
+  ];
+  return (
+    <section
+      aria-label="seu retrato literário"
+      className="rounded-[14px] bg-[color-mix(in_srgb,var(--color-oliva)_16%,var(--color-creme))] px-5 py-5 lg:rounded-[10px] lg:px-7 lg:py-6"
+    >
+      <p className="text-[10px] font-semibold tracking-[.16em] text-ameixa/70 uppercase">
+        seu retrato literário / {n.ano}
+      </p>
+      <h3 className="mt-2 font-display text-[26px] leading-tight font-semibold text-ameixa lg:font-revista lg:text-[34px] lg:font-normal">
+        {titulo}
+      </h3>
+      {frase ? <p className="mt-2 max-w-[70ch] text-[14px] leading-[1.6] text-tinta-suave">{frase}</p> : null}
+      <dl className="mt-5 grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
+        {indicadores.map((x) => (
+          <div key={x.r} className="flex min-w-0 flex-col-reverse justify-end gap-1">
+            <dt className="text-[11px] text-cinza">{x.r}</dt>
+            <dd className="truncate font-display text-[24px] leading-none font-semibold text-ameixa lg:font-revista lg:text-[28px] lg:font-normal">
+              {x.v}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </section>
   );
 }
 
@@ -1161,29 +1214,34 @@ function NomesQueVoltam({
   );
 }
 
-function JeitoDeLer({ n }: { n: Numeros }) {
+function RetratoLiterario({ n }: { n: Numeros }) {
   const { paises, generos } = useAutorias(n.lidos);
   return (
-    <Secao titulo="seu jeito de ler">
-      <p className="-mt-3 mb-5 text-[12px] text-cinza">o que suas escolhas dizem sobre você como leitora.</p>
-      <div className="space-y-8 lg:space-y-10">
-        <div className="grid gap-4 lg:grid-cols-[1fr_1.35fr] lg:items-start lg:gap-6">
-          <Formatos n={n} />
-          <Mundo lidos={n.lidos} paises={paises} />
+    <>
+      <Retrato n={n} paises={paises} generos={generos} />
+      <Secao titulo="o que suas leituras revelam">
+        <div className="space-y-8 lg:space-y-10">
+          <div className="grid gap-8 lg:grid-cols-2 lg:gap-10">
+            <OQueMaisLeu lidos={n.lidos} />
+            <QuemEscreveu lidos={n.lidos} generos={generos} />
+          </div>
+          <div className="grid gap-6 border-t border-linha pt-6 lg:grid-cols-[1.35fr_1fr] lg:items-start lg:gap-8 lg:border-fio">
+            <Mundo lidos={n.lidos} paises={paises} />
+            <div>
+              <h4 className="mb-3 font-display text-[18px] font-semibold text-ameixa lg:font-revista lg:text-[20px] lg:font-normal">
+                papel, tela ou ouvidos
+              </h4>
+              <Formatos n={n} />
+            </div>
+          </div>
+          <div className="border-t border-linha pt-6 lg:border-fio">
+            <NomesQueVoltam lidos={n.lidos} paises={paises} generos={generos} />
+          </div>
         </div>
-        <div className="grid gap-8 border-t border-linha pt-6 lg:grid-cols-2 lg:gap-10 lg:border-fio">
-          <Universo lidos={n.lidos} />
-          <QuemEscreveu lidos={n.lidos} generos={generos} />
-        </div>
-        <div className="border-t border-linha pt-6 lg:border-fio">
-          <NomesQueVoltam lidos={n.lidos} paises={paises} generos={generos} />
-        </div>
-      </div>
-    </Secao>
+      </Secao>
+    </>
   );
 }
-
-// ───────── a página ─────────
 
 export function JornadaNoPerfil() {
   const livros = usePerfil((s) => s.livros);
@@ -1194,13 +1252,14 @@ export function JornadaNoPerfil() {
   const n = useMemo(() => calcularNumeros(livros, meta, ano), [livros, meta, ano]);
   const atual = ano === anoAtual;
   const semData = livros.filter((l) => l.status === "lido" && !l.lidoEm).length;
+  const diasNoAno = useMemo(() => diasDeLeituraNoAno(livros, ano), [livros, ano]);
 
   return (
     <div className="space-y-6 pb-6 lg:space-y-8">
       <Cabecalho anos={anos} ano={ano} onAno={setAno} />
 
       <div className="space-y-3 lg:space-y-4">
-        <AnoEmNumeros n={n} atual={atual} />
+        <AnoEmNumeros n={n} atual={atual} dias={diasNoAno} />
         <MesEmRevista livros={livros} ano={ano} />
       </div>
 
@@ -1211,7 +1270,7 @@ export function JornadaNoPerfil() {
           <Ritmo n={n} />
           <Marcaram lidos={n.lidos} />
           <EntreOsMeses lidos={n.lidos} />
-          <JeitoDeLer n={n} />
+          <RetratoLiterario n={n} />
         </>
       ) : (
         <div className="border-t border-linha pt-8 text-center lg:border-fio">
