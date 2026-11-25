@@ -311,17 +311,30 @@ export function LivroNaPrateleira({
 }) {
   return (
     <li
-      className="group relative flex-none snap-start animate-subir motion-reduce:animate-none"
+      className="group relative flex-none snap-start animate-subir hover:z-30 focus-within:z-30 motion-reduce:animate-none"
       style={{ animationDelay: `${Math.min(ordem, 12) * 45}ms` }}
     >
       <Link
         href={`/livro/${livro.id}`}
         aria-label={`${livro.titulo}, de ${livro.autor} · ${NOME_STATUS[statusDe(livro)]}${livro.nota ? ` · nota ${livro.nota}` : ""}`}
         className={`block origin-bottom rounded-[2px] transition-[transform,filter] duration-300 ease-out group-hover:-translate-y-2 group-hover:drop-shadow-[0_10px_10px_rgba(59,37,27,.25)] focus-visible:-translate-y-2 motion-reduce:transition-none motion-reduce:group-hover:translate-y-0 ${
-          face === "lombadas" ? "group-hover:-rotate-[4deg]" : "group-hover:rotate-[-1.5deg]"
+          face === "lombadas" ? "" : "group-hover:rotate-[-1.5deg]"
         }`}
       >
-        {face === "lombadas" ? <Lombada livro={livro} altura={altura} /> : <CapaDoLivro livro={livro} altura={altura} />}
+        {face === "lombadas" ? (
+          <span className="relative block [perspective:900px]">
+            <Lombada livro={livro} altura={altura} />
+            {/* ao passar o mouse, o livro gira a partir da lombada e mostra a capa inteira */}
+            <span
+              aria-hidden
+              className="pointer-events-none absolute bottom-0 left-0 origin-left opacity-0 transition-[transform,opacity] duration-500 ease-[cubic-bezier(.2,.8,.2,1)] [transform:rotateY(88deg)] group-hover:opacity-100 group-hover:[transform:rotateY(0deg)] group-focus-within:opacity-100 group-focus-within:[transform:rotateY(0deg)] motion-reduce:transition-none"
+            >
+              <CapaDoLivro livro={livro} altura={altura} className="shadow-[6px_10px_22px_-8px_rgba(43,20,32,.55)]" />
+            </span>
+          </span>
+        ) : (
+          <CapaDoLivro livro={livro} altura={altura} />
+        )}
       </Link>
       <span
         role="tooltip"
