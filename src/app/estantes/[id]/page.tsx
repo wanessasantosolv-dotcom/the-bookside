@@ -3,20 +3,26 @@
 import { Voltar } from "@/components/Voltar";
 import Link from "next/link";
 import { notFound, useParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import {
+  FilaDaPrateleira,
+  GradeDeLivros,
+  ListaDeLivros,
+  SeletorDeFace,
+  SeletorDeVista,
+  useFaceSalva,
+  useVistaSalva,
+} from "@/components/estantes/Biblioteca";
+import { useAcoesDoLivro } from "@/components/estantes/AcoesDoLivro";
 import { AppShell } from "@/components/AppShell";
 import { AvisoRemovido } from "@/components/AvisoRemovido";
-import { CapaLivro } from "@/components/CapaLivro";
 import { useHidratado } from "@/components/PerfilHidratacao";
 import { BotaoLink } from "@/components/ui/Botao";
-import { corDoLivro } from "@/lib/cores";
-import { sugestoesDeLivros } from "@/lib/dados";
 import {
-  dataCurta,
-  estrelas,
   livrosDaEstante,
   mesDe,
   todasAsEstantes,
+  type EstanteInfo,
 } from "@/lib/estantes";
 import { usePerfil, type LivroSalvo } from "@/lib/perfil-store";
 
@@ -29,17 +35,17 @@ function dataDoLivro(l: LivroSalvo) {
   return l.lidoEm ?? l.iniciadoEm ?? l.adicionadoEm;
 }
 
-function meta(l: LivroSalvo) {
-  const data = dataDoLivro(l);
-  const partes = [dataCurta(data)];
-  if (l.status === "lido") partes.push(estrelas(l.nota));
-  else if (l.status === "lendo" && l.paginas && l.paginaAtual)
-    partes.push(`${Math.round((l.paginaAtual / l.paginas) * 100)}%`);
-  return partes.filter(Boolean).join(" · ");
-}
-
-function generoDe(id: string) {
-  return sugestoesDeLivros.find((l) => l.id === id)?.genero;
+/** quantos livros cabem em cada andar da estante, pela largura da tela */
+function usePorAndar(face: "capas" | "lombadas") {
+  const [largura, setLargura] = useState(1200);
+  useEffect(() => {
+    const medir = () => setLargura(window.innerWidth);
+    medir();
+    window.addEventListener("resize", medir);
+    return () => window.removeEventListener("resize", medir);
+  }, []);
+  const util = largura >= 1024 ? largura - 380 : largura - 48;
+  return Math.max(3, Math.floor(util / (face === "lombadas" ? 38 : 118)));
 }
 
 export default function EstanteAbertaPage() {
@@ -47,15 +53,32 @@ export default function EstanteAbertaPage() {
   const hidratado = useHidratado();
   const livros = usePerfil((s) => s.livros);
   const proprias = usePerfil((s) => s.estantesProprias);
-  const [vista, setVista] = useState<"lista" | "grade">("lista");
+  const idsFavoritos = usePerfil((s) => s.favoritos);
+  const [vista, setVista] = useVistaSalva();
+  const [face, setFace] = useFaceSalva();
+  const { acoesDoLivro, estantesDoLivro, janela } = useAcoesDoLivro();
+  const porAndar = usePorAndar(face);
   const [filtro, setFiltro] = useState<Filtro>("todos");
   const [busca, setBusca] = useState("");
 
   if (!hidratado) return <AppShell aba="estantes">{null}</AppShell>;
-  const estante = todasAsEstantes(proprias ?? []).find((e) => e.id === id);
+  // além das estantes, "todos os livros" e "meus favoritos" também abrem aqui
+  const etiqueta = { fundo: "#6B0D24", texto: "#F9F5EE" };
+  const estante: EstanteInfo | undefined =
+    id === "todos"
+      ? { id: "todos", nome: "todos os livros", etiqueta }
+      : id === "favoritos"
+        ? { id: "favoritos", nome: "meus favoritos", etiqueta }
+        : todasAsEstantes(proprias ?? []).find((e) => e.id === id);
   if (!estante) notFound();
+  const ehLidos = estante.status === "lido";
 
-  const todos = livrosDaEstante(estante, livros);
+  const todos =
+    estante.id === "todos"
+      ? [...livros].sort((a, b) => (b.adicionadoEm ?? "").localeCompare(a.adicionadoEm ?? ""))
+      : estante.id === "favoritos"
+        ? (idsFavoritos ?? []).map((f) => livros.find((l) => l.id === f)).filter((l): l is LivroSalvo => !!l)
+        : livrosDaEstante(estante, livros);
   // os anos que aparecem na estante, do mais recente ao mais antigo
   const anos = [
     ...new Set(
@@ -103,6 +126,11 @@ export default function EstanteAbertaPage() {
     (a, b) => Number(a.mes === "sem data") - Number(b.mes === "sem data"),
   );
   const subtitulo =
+    estante.id === "todos"
+      ? "sua biblioteca inteira"
+      : estante.id === "favoritos"
+        ? "em destaque no seu perfil"
+        :
     estante.status === "lido"
       ? "do mais recente ao mais antigo"
       : estante.status === "quero"
@@ -126,8 +154,8 @@ export default function EstanteAbertaPage() {
             className="-ml-2 flex min-h-11 items-center px-2 text-[13px] font-semibold text-bordo"
           />
           <Link
-            href={`/buscar?estante=${estante.id}`}
-            aria-label={`adicionar livro em ${estante.nome}`}
+            href={estante.id === "favoritos" ? "/perfil/favoritos" : estante.id === "todos" ? "/buscar" : `/buscar?estante=${estante.id}`}
+            aria-label={estante.id === "favoritos" ? "escolher favoritos" : `adicionar livro em ${estante.nome}`}
             className="flex size-11 items-center justify-center rounded-full bg-bordo text-lg font-semibold text-creme hover:bg-bordo-suave"
           >
             +
@@ -223,25 +251,16 @@ export default function EstanteAbertaPage() {
               </button>
             ) : null}
           </div>
-          <div
-            role="group"
-            aria-label="modo de ver"
-            className="flex flex-none overflow-hidden rounded-pill border border-bege bg-creme-quente"
-          >
-            {(["lista", "grade"] as const).map((v) => (
-              <button
-                key={v}
-                type="button"
-                aria-pressed={vista === v}
-                onClick={() => setVista(v)}
-                className={`min-h-11 rounded-pill px-3 text-[10px] font-semibold tracking-[.1em] uppercase lg:min-h-8 ${vista === v ? "bg-bordo text-creme" : "text-cinza"}`}
-              >
-                {v}
-              </button>
-            ))}
+          <div className="flex-none">
+            <SeletorDeVista vista={vista} onChange={setVista} />
           </div>
         </div>
 
+        {vista === "estante" && lista.length ? (
+          <div className="mt-4 px-6 lg:px-0">
+            <SeletorDeFace face={face} onChange={setFace} />
+          </div>
+        ) : null}
         <div className="flex-1 px-6 pt-4 pb-8 lg:px-0 lg:pt-8">
           {lista.length === 0 ? (
             <div className="pt-8 text-center">
@@ -262,76 +281,25 @@ export default function EstanteAbertaPage() {
                 </BotaoLink>
               ) : null}
             </div>
-          ) : vista === "grade" ? (
-            <ul className="grid grid-cols-3 gap-x-3 gap-y-5 lg:grid-cols-6 lg:gap-x-6 xl:grid-cols-8">
-              {lista.map((l) => (
-                <li key={l.id}>
-                  <Link href={`/livro/${l.id}`} className="block">
-                    <CapaLivro
-                      titulo={l.titulo}
-                      capa={l.capa}
-                      cor={corDoLivro(l.id)}
-                      className="w-full [&>span:last-child]:text-[10px]"
-                    />
-                    <h3 className="mt-2 font-display text-sm leading-[1.2] font-semibold italic">
-                      {l.titulo}
-                    </h3>
-                    <p className="mt-1 text-[9px] font-semibold tracking-[.08em] text-cinza uppercase">
-                      {meta(l)}
-                    </p>
-                  </Link>
-                </li>
+          ) : vista === "estante" ? (
+            <div className="space-y-10">
+              {Array.from({ length: Math.ceil(lista.length / porAndar) }, (_, k) => (
+                <FilaDaPrateleira key={k} livros={lista.slice(k * porAndar, (k + 1) * porAndar)} altura={150} face={face} />
               ))}
-            </ul>
+            </div>
+          ) : vista === "grade" ? (
+            <GradeDeLivros livros={lista} />
           ) : (
             grupos.map((g, gi) => (
-              <section key={g.mes} className={gi ? "mt-[18px]" : ""}>
-                {estante.status === "lido" ? (
-                  <h2 className="mb-0.5 font-display text-lg leading-[1.2] font-semibold italic text-bordo">
-                    {g.mes}
-                  </h2>
-                ) : null}
-                <ul className="lg:grid lg:grid-cols-2 lg:gap-x-10">
-                  {g.livros.map((l, i) => {
-                    const genero = generoDe(l.id);
-                    return (
-                      <li key={l.id}>
-                        <Link
-                          href={`/livro/${l.id}`}
-                          className={`flex items-start gap-3.5 py-3 ${i ? "border-t border-linha" : ""} lg:border-t lg:border-linha`}
-                        >
-                          <CapaLivro
-                            titulo={l.titulo}
-                            capa={l.capa}
-                            cor={corDoLivro(l.id)}
-                            className="w-[54px] [&>span:last-child]:hidden"
-                          />
-                          <span className="min-w-0">
-                            <span className="block text-[9px] font-semibold tracking-[.12em] text-cinza uppercase">
-                              {meta(l)}
-                            </span>
-                            <h3 className="mt-1.5 font-display text-base leading-[1.2] font-semibold italic">
-                              {l.titulo}
-                            </h3>
-                            <span className="mt-1 block font-accent text-xs italic text-cinza">
-                              {l.autor}
-                            </span>
-                            {genero ? (
-                              <span className="mt-[7px] inline-block rounded-pill bg-linha/70 px-2 py-1 text-[9px] font-semibold text-bordo">
-                                {genero}
-                              </span>
-                            ) : null}
-                          </span>
-                        </Link>
-                      </li>
-                    );
-                  })}
-                </ul>
+              <section key={g.mes} className={gi ? "mt-8" : ""}>
+                {ehLidos ? <h2 className="mb-2 font-revista text-[20px] leading-[1.2] text-bordo italic">{g.mes}</h2> : null}
+                <ListaDeLivros livros={g.livros} acoesDoLivro={acoesDoLivro} estantesDoLivro={estantesDoLivro} />
               </section>
             ))
           )}
         </div>
       </div>
+      {janela}
     </AppShell>
   );
 }
