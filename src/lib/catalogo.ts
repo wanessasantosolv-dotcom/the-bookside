@@ -254,6 +254,27 @@ const chave = (l: LivroBusca) =>
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
 
+/** o título parece inglês? (mais "the/and/of" que "que/de/um") */
+function tituloEmIngles(t: string) {
+  const n = ` ${chave({ titulo: t, autor: "" } as LivroBusca)} `;
+  const conta = (ps: string[]) => ps.reduce((k, p) => k + (n.split(` ${p} `).length - 1), 0);
+  return conta(["the", "and", "of", "is", "her", "his", "with", "a"]) > conta(["que", "de", "e", "um", "uma", "nao", "com", "da", "do", "o", "os", "as"]);
+}
+
+/**
+ * Preferência pela edição em português, em todo o app: primeiro as edições
+ * em português, depois as de idioma desconhecido que não parecem inglês, e
+ * por último as outras (a ordem dentro de cada grupo fica como veio).
+ */
+export function emPortuguesPrimeiro<T extends { titulo: string; idioma?: string }>(lista: T[]): T[] {
+  const peso = (l: T) =>
+    l.idioma?.startsWith("pt") ? 0 : !l.idioma && !tituloEmIngles(l.titulo) ? 1 : 2;
+  return lista
+    .map((l, i) => ({ l, i, p: peso(l) }))
+    .sort((a, b) => a.p - b.p || a.i - b.i)
+    .map((x) => x.l);
+}
+
 /**
  * Busca nas duas fontes ao mesmo tempo. O Google Books vem primeiro (edições
  * em português); da Open Library entram os livros que ainda não apareceram.
@@ -263,23 +284,30 @@ export async function buscarLivros(
   termo: string,
   signal?: AbortSignal,
 ): Promise<LivroBusca[]> {
-  const [google, openLibrary] = await Promise.allSettled([
+  const [emPt, google, openLibrary] = await Promise.allSettled([
+    // as edições brasileiras/portuguesas primeiro
+    volumesDoGoogle(termo, 20, signal, { lang: "pt" }).then((items) =>
+      items.map(doGoogle).filter((l): l is LivroBusca => !!l),
+    ),
     buscarNoGoogle(termo, signal),
     buscarNaOpenLibrary(termo, signal),
   ]);
-  if (google.status === "rejected" && openLibrary.status === "rejected")
+  if (google.status === "rejected" && openLibrary.status === "rejected" && emPt.status === "rejected")
     throw google.reason;
   const todos = [
+    ...(emPt.status === "fulfilled" ? emPt.value : []),
     ...(google.status === "fulfilled" ? google.value : []),
     ...(openLibrary.status === "fulfilled" ? openLibrary.value : []),
   ];
   const vistos = new Set<string>();
-  const livros = todos.filter((l) => {
-    const k = chave(l);
-    if (vistos.has(k)) return false;
-    vistos.add(k);
-    return true;
-  });
+  const livros = emPortuguesPrimeiro(
+    todos.filter((l) => {
+      const k = chave(l);
+      if (vistos.has(k)) return false;
+      vistos.add(k);
+      return true;
+    }),
+  );
   lembrar(livros);
   return livros;
 }
@@ -289,7 +317,10 @@ export async function buscarPorAutoria(
   autor: string,
   signal?: AbortSignal,
 ): Promise<LivroBusca[]> {
-  const [google, openLibrary] = await Promise.allSettled([
+  const [emPt, google, openLibrary] = await Promise.allSettled([
+    volumesDoGoogle(`inauthor:"${autor}"`, 20, signal, { lang: "pt" }).then((items) =>
+      items.map(doGoogle).filter((l): l is LivroBusca => !!l),
+    ),
     buscarNoGoogle(`inauthor:"${autor}"`, signal),
     fetch(
       `https://openlibrary.org/search.json?author=${encodeURIComponent(autor)}&limit=40&fields=${CAMPOS}`,
@@ -306,10 +337,11 @@ export async function buscarPorAutoria(
   ]);
   if (google.status === "rejected" && openLibrary.status === "rejected")
     throw google.reason;
-  const livros = [
+  const livros = emPortuguesPrimeiro([
+    ...(emPt.status === "fulfilled" ? emPt.value : []),
     ...(google.status === "fulfilled" ? google.value : []),
     ...(openLibrary.status === "fulfilled" ? openLibrary.value : []),
-  ];
+  ]);
   lembrar(livros);
   return livros;
 }

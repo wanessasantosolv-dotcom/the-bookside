@@ -204,10 +204,11 @@ export function formatosComParte(n: Numeros) {
     lista: n.porFormato.map((f) => ({
       ...f,
       parte: marcados ? f.qtd / marcados : 0,
-      // páginas só contam quando todos os livros do formato têm páginas
+      // todos os livros do formato têm páginas? (senão, a soma é parcial)
       paginasConhecidas: n.lidos
         .filter((l) => l.formato === f.id)
         .every((l) => !!paginasDoLivro(l)),
+      comPaginas: n.lidos.filter((l) => l.formato === f.id && !!paginasDoLivro(l)).length,
     })),
   };
 }

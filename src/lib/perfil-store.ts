@@ -75,6 +75,46 @@ export type LivroSalvo = {
   estantes?: string[];
 };
 
+/** um livro como ficou guardado numa edição do journal (só o que a revista usa) */
+export type LivroDaEdicao = {
+  id: string;
+  titulo: string;
+  autor: string;
+  capa?: string;
+  genero?: string;
+  paginas?: number;
+  nota?: number;
+  iniciadoEm?: string;
+  lidoEm?: string;
+  formato?: FormatoLivro;
+  /** terminou no mês (senão, estava em andamento) */
+  concluido: boolean;
+  /** quantas páginas já tinha lido (para os meses sem livro terminado) */
+  paginaAtual?: number;
+  /** sessões do modo foco no mês (páginas por dia, quando há) */
+  sessoes?: { em: string; minutos: number; paginas?: number }[];
+};
+
+/** uma edição fechada: o retrato do mês e os textos, como foram colecionados */
+export type EdicaoSalva = {
+  chave: string;
+  finalizadaEm: string;
+  /** muda quando os registros do mês mudam (para oferecer "atualizar edição") */
+  assinatura: string;
+  livros: LivroDaEdicao[];
+  textos?: TextosEdicao;
+};
+
+export type TextosEdicao = {
+  /** o título do mood (capítulo 09) */
+  titulo: string;
+  introducao: string;
+  ritmo?: string;
+  tendencias?: string;
+  encerramento: string;
+  fonte: "ia" | "regras";
+};
+
 export type EstantePropria = {
   id: string;
   nome: string;
@@ -113,6 +153,8 @@ export type Perfil = {
   tourVisto: boolean;
   /** última vez que abriu as novidades (para marcar o que é novo) */
   novidadesVistasEm: string | null;
+  /** as edições fechadas do The Bookside Journal ("2026-11" → edição) */
+  edicoes?: Record<string, EdicaoSalva>;
   /** aparência do app: claro, escuro ou igual ao celular/computador */
   aparencia: "claro" | "escuro" | "sistema";
   /** as cores do tema do perfil valem para o app inteiro */
@@ -163,6 +205,7 @@ export const perfilInicial: Perfil = {
   onboardingConcluido: false,
   tourVisto: false,
   novidadesVistasEm: null,
+  edicoes: {},
   passados: [],
   removidos: [],
   aparencia: "claro",

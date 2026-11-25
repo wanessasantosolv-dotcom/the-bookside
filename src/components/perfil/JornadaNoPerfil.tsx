@@ -726,10 +726,13 @@ function Formatos({ n }: { n: Numeros }) {
               {x.qtd ? (
                 <>
                   {plural(x.qtd, "livro", "livros")}
-                  {x.paginas && x.paginasConhecidas ? (
+                  {x.paginas ? (
                     <>
                       <br />
                       {numero(x.paginas)} págs.
+                      {!x.paginasConhecidas && x.comPaginas ? (
+                        <span className="text-[11px]"> (de {plural(x.comPaginas, "livro", "livros")})</span>
+                      ) : null}
                     </>
                   ) : null}
                   {x.media !== null ? (
@@ -1287,7 +1290,7 @@ function RetratoLiterario({ n }: { n: Numeros }) {
             <Mundo lidos={n.lidos} paises={paises} />
             <div>
               <h4 className="mb-3 font-display text-[18px] font-semibold text-ameixa lg:font-revista lg:text-[20px] lg:font-normal">
-                papel, tela ou ouvidos
+                do papel aos fones
               </h4>
               <Formatos n={n} />
             </div>

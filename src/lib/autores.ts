@@ -189,9 +189,12 @@ export async function livrosDaAutoria(nome: string): Promise<LivroBusca[]> {
       });
     }
   }
+  // edições em português primeiro; dentro delas, as mais avaliadas
+  const ptPrimeiro = (l: LivroBusca) => (l.idioma?.startsWith("pt") ? 0 : 1);
   return [...porTitulo.values()]
     .sort(
       (a, b) =>
+        ptPrimeiro(a) - ptPrimeiro(b) ||
         (b.avaliacao?.total ?? 0) - (a.avaliacao?.total ?? 0) ||
         Number(!!b.capa) - Number(!!a.capa),
     )
