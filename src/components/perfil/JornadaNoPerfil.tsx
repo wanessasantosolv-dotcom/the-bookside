@@ -793,14 +793,17 @@ function Mundo({
   paises: Record<string, Pais | null> | null;
 }) {
   const [todos, setTodos] = useState(false);
-  const conta = new Map<string, { pais: Pais; qtd: number }>();
+  const [aberto, setAberto] = useState<string | null>(null);
+  const conta = new Map<string, { pais: Pais; qtd: number; livros: LivroSalvo[] }>();
   for (const l of lidos) {
     const p = paises?.[l.autor.toLowerCase()];
     if (!p) continue;
-    const x = conta.get(p.nome) ?? { pais: p, qtd: 0 };
+    const x = conta.get(p.nome) ?? { pais: p, qtd: 0, livros: [] };
     x.qtd++;
+    x.livros.push(l);
     conta.set(p.nome, x);
   }
+  const alternar = (nome: string) => setAberto((a) => (a === nome ? null : nome));
   const lista = [...conta.values()].sort((a, b) => b.qtd - a.qtd);
   const total = lista.reduce((t, x) => t + x.qtd, 0);
   const principais = lista.slice(0, CORES_PAISES.length);
@@ -820,7 +823,7 @@ function Mundo({
         de onde vieram suas histórias
       </h4>
       {paises === null ? (
-        <div aria-hidden className="mt-3 aspect-[800/380] animate-pulse rounded-[8px] bg-linha/50" />
+        <div aria-hidden className="mt-3 aspect-[790/460] animate-pulse rounded-[8px] bg-linha/50" />
       ) : !lista.length ? (
         <p className="py-6 text-center font-accent text-sm italic text-cinza">
           ainda não achamos de onde são as autoras desses livros.
@@ -831,18 +834,42 @@ function Mundo({
             lista={lista}
             semMoldura
             corDoPais={(p) => corDe.get(p.nome) ?? COR_OUTROS}
+            selecionado={aberto}
+            onSelecionar={(p) => alternar(p.nome)}
           />
-          <ul className="grid min-w-[150px] gap-2 text-[13px]">
-            {legenda.map((x) => (
-              <li key={x.nome} className="flex items-center gap-2.5">
-                <span aria-hidden className="size-2.5 flex-none rounded-full" style={{ background: x.cor }} />
-                <span className="min-w-0 flex-1 truncate text-ameixa">{maiuscula(x.nome)}</span>
-                <span className="text-tinta-suave tabular-nums">{pct(x.qtd)}</span>
-              </li>
-            ))}
+          <ul className="grid min-w-[170px] gap-1 text-[13px]">
+            {legenda.map((x) => {
+              const ehOutros = x.nome === "outros";
+              const ativo = ehOutros ? todos : aberto === x.nome;
+              return (
+                <li key={x.nome}>
+                  <button
+                    type="button"
+                    aria-pressed={ativo}
+                    onClick={() => (ehOutros ? setTodos((v) => !v) : alternar(x.nome))}
+                    className={`flex w-full items-center gap-2.5 rounded-[6px] px-2 py-1 text-left hover:bg-linha/40 ${ativo ? "bg-linha/50" : ""}`}
+                  >
+                    <span aria-hidden className="size-2.5 flex-none rounded-full" style={{ background: x.cor }} />
+                    <span className="min-w-0 flex-1 truncate text-ameixa">{maiuscula(x.nome)}</span>
+                    <span className="text-tinta-suave tabular-nums">{pct(x.qtd)}</span>
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}
+      {aberto && conta.get(aberto) ? (
+        <LivrosDoPais
+          nome={aberto}
+          codigo={conta.get(aberto)!.pais.codigo}
+          livros={conta.get(aberto)!.livros}
+          onFechar={() => setAberto(null)}
+        />
+      ) : null}
+      {lista.length && !aberto ? (
+        <p className="mt-1 text-[11px] text-cinza">toque num país do mapa ou da legenda para ver os livros.</p>
+      ) : null}
       {lista.length > legenda.length - (outros.length ? 1 : 0) ? (
         <div className="mt-3 border-t border-linha pt-3 lg:border-fio">
           <button
@@ -856,13 +883,20 @@ function Mundo({
           {todos ? (
             <ol className="mt-3 grid gap-x-8 gap-y-1.5 text-[13px] sm:grid-cols-2">
               {lista.map(({ pais, qtd }, i) => (
-                <li key={pais.nome} className="flex items-baseline gap-2.5">
-                  <span className="w-5 text-[11px] text-cinza tabular-nums">{i + 1}</span>
-                  <span aria-hidden>{bandeira(pais.codigo)}</span>
-                  <span className="min-w-0 flex-1 truncate text-ameixa">{pais.nome}</span>
-                  <span className="text-cinza tabular-nums">
-                    {plural(qtd, "livro", "livros")} · {pct(qtd)}
-                  </span>
+                <li key={pais.nome}>
+                  <button
+                    type="button"
+                    aria-pressed={aberto === pais.nome}
+                    onClick={() => alternar(pais.nome)}
+                    className={`flex w-full items-baseline gap-2.5 rounded-[6px] px-1 py-0.5 text-left hover:bg-linha/40 ${aberto === pais.nome ? "bg-linha/50" : ""}`}
+                  >
+                    <span className="w-5 text-[11px] text-cinza tabular-nums">{i + 1}</span>
+                    <span aria-hidden>{bandeira(pais.codigo)}</span>
+                    <span className="min-w-0 flex-1 truncate text-ameixa">{pais.nome}</span>
+                    <span className="text-cinza tabular-nums">
+                      {plural(qtd, "livro", "livros")} · {pct(qtd)}
+                    </span>
+                  </button>
                 </li>
               ))}
             </ol>
@@ -874,6 +908,45 @@ function Mundo({
           {plural(lista.length, "país", "países")} · pela nacionalidade das autoras · fonte: Wikidata
         </p>
       ) : null}
+    </div>
+  );
+}
+
+function LivrosDoPais({
+  nome,
+  codigo,
+  livros,
+  onFechar,
+}: {
+  nome: string;
+  codigo?: string;
+  livros: LivroSalvo[];
+  onFechar: () => void;
+}) {
+  return (
+    <div className="mt-4 border-t border-linha pt-3 lg:border-fio" aria-live="polite">
+      <div className="flex items-baseline justify-between gap-3">
+        <p className="text-[14px] font-semibold text-ameixa">
+          <span aria-hidden className="mr-1.5">{bandeira(codigo)}</span>
+          {nome} <span className="font-normal text-cinza">· {plural(livros.length, "livro", "livros")}</span>
+        </p>
+        <button type="button" onClick={onFechar} className="text-[12px] font-semibold text-bordo hover:underline">
+          fechar
+        </button>
+      </div>
+      <ul className="mt-3 grid grid-cols-[repeat(auto-fill,minmax(84px,1fr))] gap-3">
+        {livros.map((l) => (
+          <li key={l.id}>
+            <Link href={`/livro/${l.id}`} className="group block">
+              {capaDe(l, "w-full")}
+              <span className="mt-1.5 line-clamp-2 text-[12px] leading-tight font-semibold text-ameixa group-hover:text-bordo">
+                {l.titulo}
+              </span>
+              <span className="block truncate text-[11px] text-cinza">{l.autor}</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

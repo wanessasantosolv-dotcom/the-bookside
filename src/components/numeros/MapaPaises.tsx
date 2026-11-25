@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import type React from "react";
 import {
   ComposableMap,
   Geographies,
@@ -26,12 +27,18 @@ export function MapaPaises({
   lista,
   corDoPais,
   semMoldura,
+  selecionado,
+  onSelecionar,
 }: {
   lista: { pais: Pais; qtd: number }[];
   /** uma cor por país (ex.: a mesma da legenda); sem isso, bordô mais escuro quanto mais livros */
   corDoPais?: (pais: Pais) => string;
   /** sem a borda/fundo em volta e sem a legenda de intensidade */
   semMoldura?: boolean;
+  /** nome do país em destaque (os outros ficam mais claros) */
+  selecionado?: string | null;
+  /** clicar num país pintado */
+  onSelecionar?: (pais: Pais) => void;
 }) {
   const { porId, max } = useMemo(() => {
     const porId = new Map<string, { pais: Pais; qtd: number }>();
@@ -48,15 +55,19 @@ export function MapaPaises({
   return (
     <div>
       <div className={semMoldura ? "" : "overflow-hidden rounded-[10px] border border-linha bg-papel"}>
+        {/* Mercator sem a Antártida: proporção de mapa-múndi de verdade, sem achatar */}
         <ComposableMap
-          projectionConfig={{ scale: 128 }}
-          width={800}
-          height={380}
+          projection="geoMercator"
+          projectionConfig={{ scale: 125, center: [0, 30] }}
+          width={790}
+          height={460}
           style={{ width: "100%", height: "auto" }}
         >
           <Geographies geography={GEO_URL}>
             {({ geographies }) =>
-              geographies.map((geo) => {
+              geographies
+                .filter((geo) => String(Number(geo.id)) !== "10")
+                .map((geo) => {
                 // o mapa guarda alguns códigos com zero na frente ("076" = Brasil)
                 const achado = porId.get(String(Number(geo.id)));
                 const opacidade = achado
@@ -70,16 +81,41 @@ export function MapaPaises({
                   <Geography
                     key={geo.rsmKey}
                     geography={geo}
-                    tabIndex={-1}
+                    tabIndex={achado && onSelecionar ? 0 : -1}
+                    role={achado && onSelecionar ? "button" : undefined}
+                    aria-label={
+                      achado && onSelecionar
+                        ? `${achado.pais.nome}: ${achado.qtd} ${achado.qtd === 1 ? "livro" : "livros"}`
+                        : undefined
+                    }
+                    onClick={achado && onSelecionar ? () => onSelecionar(achado.pais) : undefined}
+                    onKeyDown={
+                      achado && onSelecionar
+                        ? (e: React.KeyboardEvent) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              onSelecionar(achado.pais);
+                            }
+                          }
+                        : undefined
+                    }
                     fill={
                       achado
                         ? (corDoPais?.(achado.pais) ?? "var(--color-bordo)")
                         : "var(--color-bege)"
                     }
-                    fillOpacity={opacidade}
+                    fillOpacity={
+                      achado && selecionado && achado.pais.nome !== selecionado
+                        ? opacidade * 0.35
+                        : opacidade
+                    }
                     stroke="var(--color-papel)"
                     strokeWidth={0.6}
-                    style={{ outline: "none" }}
+                    style={{
+                      default: { outline: "none", cursor: achado && onSelecionar ? "pointer" : "default" },
+                      hover: { outline: "none", cursor: achado && onSelecionar ? "pointer" : "default" },
+                      pressed: { outline: "none" },
+                    }}
                   />
                 );
               })
