@@ -7,6 +7,7 @@ import { useEffect } from "react";
 import { AppShell } from "@/components/AppShell";
 import { CapaLivro } from "@/components/CapaLivro";
 import { PerfilWeb } from "@/components/perfil/PerfilWeb";
+import { EstantesDela, JornadaResumida } from "@/components/perfil/DaAmiga";
 import {
   Carregando,
   ComConta,
@@ -253,7 +254,13 @@ function PerfilDela({ usuario }: { usuario: string }) {
           />
         }
         detalhe={seguidores}
-        extra={<SecaoMatch match={match} nome={p.nome || p.usuario} />}
+        extra={
+          <>
+            <JornadaResumida p={p} nome={(p.nome || p.usuario).split(" ")[0].toLowerCase()} />
+            <EstantesDela p={p} base={base} nome={(p.nome || p.usuario).split(" ")[0].toLowerCase()} />
+            <SecaoMatch match={match} nome={p.nome || p.usuario} />
+          </>
+        }
         links={{
           numeros: `${base}/lidos`,
           favoritos: `${base}/lidos`,
@@ -369,55 +376,8 @@ function PerfilDela({ usuario }: { usuario: string }) {
             </p>
           )}
 
-          <div className="mt-6 flex items-baseline justify-between">
-            <h2 className="font-display text-[22px] font-semibold italic text-[var(--acc)]">
-              estantes
-            </h2>
-            <Link
-              href={`${base}/lidos`}
-              className="py-2 text-[10px] font-semibold tracking-[.12em] text-[var(--acc)] uppercase"
-            >
-              ver todas →
-            </Link>
-          </div>
-          <ul className="mt-2 grid grid-cols-3 gap-[9px]">
-            {[
-              {
-                nome: "lidos",
-                livros: lidos,
-                q: "",
-                fundo: "#D8C3AA",
-                cor: "#2B1420",
-              },
-              {
-                nome: "quero ler",
-                livros: quero,
-                q: "?estante=quero",
-                fundo: "#6B0D24",
-                cor: "#F9F5EE",
-              },
-              {
-                nome: "lendo",
-                livros: lendo,
-                q: "?estante=lendo",
-                fundo: "#E8B4BF",
-                cor: "#6B0D24",
-              },
-            ].map((e) => (
-              <li key={e.nome}>
-                <Link
-                  href={`${base}/lidos${e.q}`}
-                  className="block rounded-md px-2 py-2.5 text-center"
-                  style={{ background: e.fundo, color: e.cor }}
-                >
-                  <b className="block font-display text-2xl font-semibold">
-                    {e.livros.length}
-                  </b>
-                  <span className="text-[11px] font-semibold">{e.nome}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <JornadaResumida p={p} nome={(p.nome || p.usuario).split(" ")[0].toLowerCase()} />
+          <EstantesDela p={p} base={base} nome={(p.nome || p.usuario).split(" ")[0].toLowerCase()} />
 
           <SecaoMatch match={match} nome={p.nome || p.usuario} id="match" />
 
