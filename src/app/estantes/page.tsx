@@ -5,7 +5,6 @@ import { useState, type ReactNode } from "react";
 import { AppShell } from "@/components/AppShell";
 import { AvisoRemovido } from "@/components/AvisoRemovido";
 import { useHidratado } from "@/components/PerfilHidratacao";
-import { LendoJunto } from "@/components/social/LendoJunto";
 import { CapaDoLivro, ICONE_MAIS, Icone, MenuDeAcoes, PrateleiraMadeira, type AcaoDoMenu } from "@/components/estantes/Biblioteca";
 import { Janela } from "@/components/estantes/AcoesDoLivro";
 import { livrosDaEstante, todasAsEstantes, type EstanteInfo } from "@/lib/estantes";
@@ -15,43 +14,73 @@ const plural = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um :
 
 type Bloco = { id: string; nome: string; livros: LivroSalvo[]; info?: string; estante?: EstanteInfo };
 
-/** uma estante no índice: mini prateleira com as primeiras capas, nome e quantidade */
+/** uma estante no índice: no celular, uma linha compacta; em telas maiores, mini prateleira com as capas */
 function BlocoDaEstante({ b, menu }: { b: Bloco; menu?: ReactNode }) {
   const capas = b.livros.slice(0, 6);
+  const contagem = (
+    <span className="text-[12px] text-tinta-suave">
+      {plural(b.livros.length, "livro", "livros")}
+      {b.info ? ` · ${b.info}` : ""}
+    </span>
+  );
   return (
     <li className="group relative">
-      <Link href={`/estantes/${b.id}`} className="block rounded-[10px] px-1 pt-3 pb-2 outline-offset-4">
-        <div className="relative">
-          <div className="flex h-[104px] items-end gap-2 overflow-hidden px-3">
+      {/* celular */}
+      <div className="flex items-center gap-2 border-b border-linha sm:hidden">
+        <Link href={`/estantes/${b.id}`} className="flex min-h-[76px] min-w-0 flex-1 items-center gap-4 py-3">
+          <span className="relative h-[60px] w-[66px] flex-none">
             {capas.length ? (
-              capas.map((l, i) => (
-                <span
-                  key={l.id}
-                  className="flex-none transition-transform duration-300 group-hover:-translate-y-1 motion-reduce:transition-none"
-                  style={{ transitionDelay: `${i * 30}ms` }}
-                >
-                  <CapaDoLivro livro={l} altura={96} />
+              capas.slice(0, 3).map((l, i) => (
+                <span key={l.id} className="absolute bottom-0" style={{ left: i * 13, zIndex: 3 - i }}>
+                  <CapaDoLivro livro={l} altura={58} className="!min-w-0 ring-1 ring-papel" />
                 </span>
               ))
             ) : (
-              <span className="mb-3 font-accent text-[13px] text-cinza italic">ainda sem livros</span>
+              <span className="absolute inset-y-1 left-0 w-[40px] rounded-[2px] border border-dashed border-rosa-antigo" />
             )}
-          </div>
-          <PrateleiraMadeira className="-mt-[5px]" />
-        </div>
-        <div className="mt-2 flex items-baseline justify-between gap-3 px-1 pr-12">
-          <span className="min-w-0">
-            <span className="block truncate font-revista text-[22px] leading-tight text-bordo italic decoration-1 underline-offset-4 group-hover:underline">
-              {b.nome}
-            </span>
-            <span className="text-[12px] text-tinta-suave">
-              {plural(b.livros.length, "livro", "livros")}
-              {b.info ? ` · ${b.info}` : ""}
-            </span>
           </span>
-        </div>
-      </Link>
-      {menu ? <div className="absolute top-[140px] right-0">{menu}</div> : null}
+          <span className="min-w-0 flex-1">
+            <span className="block truncate font-revista text-[20px] leading-tight text-bordo italic">{b.nome}</span>
+            {contagem}
+          </span>
+          <span aria-hidden className="text-[20px] text-cinza">
+            ›
+          </span>
+        </Link>
+        {menu}
+      </div>
+      {/* tablet e computador */}
+      <div className="hidden sm:block">
+        <Link href={`/estantes/${b.id}`} className="block rounded-[10px] px-1 pt-3 pb-2 outline-offset-4">
+          <div className="relative">
+            <div className="flex h-[104px] items-end gap-2 overflow-hidden px-3">
+              {capas.length ? (
+                capas.map((l, i) => (
+                  <span
+                    key={l.id}
+                    className="flex-none transition-transform duration-300 group-hover:-translate-y-1 motion-reduce:transition-none"
+                    style={{ transitionDelay: `${i * 30}ms` }}
+                  >
+                    <CapaDoLivro livro={l} altura={96} />
+                  </span>
+                ))
+              ) : (
+                <span className="mb-3 font-accent text-[13px] text-cinza italic">ainda sem livros</span>
+              )}
+            </div>
+            <PrateleiraMadeira className="-mt-[5px]" />
+          </div>
+          <div className="mt-2 flex items-baseline justify-between gap-3 px-1 pr-12">
+            <span className="min-w-0">
+              <span className="block truncate font-revista text-[22px] leading-tight text-bordo italic decoration-1 underline-offset-4 group-hover:underline">
+                {b.nome}
+              </span>
+              {contagem}
+            </span>
+          </div>
+        </Link>
+        {menu ? <div className="absolute top-[140px] right-0">{menu}</div> : null}
+      </div>
     </li>
   );
 }
@@ -166,14 +195,16 @@ export default function EstantesPage() {
             <Link href="/estantes/importar" className="text-[13px] text-cinza underline decoration-bege underline-offset-4 hover:text-bordo">
               importar lista
             </Link>
-            <Link href="/estantes/nova" className="inline-flex h-11 items-center gap-2 rounded-full bg-bordo px-5 text-[14px] font-semibold text-creme hover:bg-bordo/90">
+            <Link
+              href="/estantes/nova"
+              aria-label="nova estante"
+              className="inline-flex size-11 items-center justify-center gap-2 rounded-full bg-bordo text-[14px] font-semibold text-creme hover:bg-bordo/90 sm:w-auto sm:px-5"
+            >
               <Icone d={ICONE_MAIS} />
-              nova estante
+              <span className="hidden sm:inline">nova estante</span>
             </Link>
           </div>
         </header>
-
-        <LendoJunto />
 
         {livros.length === 0 ? (
           <div className="border-b border-linha py-14 text-center lg:border-fio">
@@ -184,18 +215,18 @@ export default function EstantesPage() {
             </Link>
           </div>
         ) : (
-          <ul className="mt-6 grid gap-x-10 gap-y-8 sm:grid-cols-2 xl:grid-cols-3">
+          <ul className="mt-4 grid border-t border-linha sm:mt-6 sm:gap-x-10 sm:gap-y-8 sm:border-t-0 sm:grid-cols-2 xl:grid-cols-3">
             {blocos.map((b) => (
               <BlocoDaEstante key={b.id} b={b} menu={menuDe(b)} />
             ))}
             <li>
               <Link
                 href="/estantes/nova"
-                className="flex h-full min-h-[170px] flex-col items-center justify-center rounded-[12px] border border-dashed border-rosa-antigo px-6 py-7 text-center hover:bg-bordo/[.03]"
+                className="mt-4 flex h-full flex-row items-center justify-center gap-2 rounded-[12px] border border-dashed border-rosa-antigo px-6 py-4 text-center hover:bg-bordo/[.03] sm:mt-0 sm:min-h-[170px] sm:flex-col sm:gap-0 sm:py-7"
               >
                 <Icone d={ICONE_MAIS} className="size-6 text-bordo" />
-                <span className="mt-2 font-revista text-[20px] text-bordo italic">criar nova estante</span>
-                <span className="mt-1 text-[12px] text-tinta-suave">por temas, gêneros ou como preferir.</span>
+                <span className="font-revista text-[19px] text-bordo italic sm:mt-2 sm:text-[20px]">criar nova estante</span>
+                <span className="mt-1 hidden text-[12px] text-tinta-suave sm:block">por temas, gêneros ou como preferir.</span>
               </Link>
             </li>
           </ul>

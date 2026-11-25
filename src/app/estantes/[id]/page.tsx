@@ -44,8 +44,10 @@ function usePorAndar(face: "capas" | "lombadas") {
     window.addEventListener("resize", medir);
     return () => window.removeEventListener("resize", medir);
   }, []);
-  const util = largura >= 1024 ? largura - 380 : largura - 48;
-  return Math.max(3, Math.floor(util / (face === "lombadas" ? 38 : 118)));
+  const celular = largura < 640;
+  const util = largura >= 1024 ? largura - 380 : largura - 40;
+  const porLivro = face === "lombadas" ? 36 : celular ? 96 : 118;
+  return { porAndar: Math.max(3, Math.floor(util / porLivro)), alturaCapa: celular ? 118 : 150 };
 }
 
 export default function EstanteAbertaPage() {
@@ -57,7 +59,7 @@ export default function EstanteAbertaPage() {
   const [vista, setVista] = useVistaSalva();
   const [face, setFace] = useFaceSalva();
   const { acoesDoLivro, estantesDoLivro, janela } = useAcoesDoLivro();
-  const porAndar = usePorAndar(face);
+  const { porAndar, alturaCapa } = usePorAndar(face);
   const [filtro, setFiltro] = useState<Filtro>("todos");
   const [busca, setBusca] = useState("");
 
@@ -199,7 +201,7 @@ export default function EstanteAbertaPage() {
           </label>
         ) : null}
 
-        <div className="mt-5 flex items-center justify-between gap-2 px-6 lg:border-b lg:border-fio lg:px-0 lg:pb-6">
+        <div className="mt-5 flex flex-col gap-3 px-6 lg:flex-row lg:items-center lg:justify-between lg:gap-2 lg:border-b lg:border-fio lg:px-0 lg:pb-6">
           <div className="flex gap-1.5 overflow-x-auto [scrollbar-width:none]">
             <button
               type="button"
@@ -251,13 +253,15 @@ export default function EstanteAbertaPage() {
               </button>
             ) : null}
           </div>
-          <div className="flex-none">
+          <div className="flex items-center justify-between gap-3 lg:flex-none">
+            {/* no celular, capas/lombadas fica na mesma linha do modo */}
+            <span className="lg:hidden">{vista === "estante" && lista.length ? <SeletorDeFace face={face} onChange={setFace} /> : null}</span>
             <SeletorDeVista vista={vista} onChange={setVista} />
           </div>
         </div>
 
         {vista === "estante" && lista.length ? (
-          <div className="mt-4 px-6 lg:px-0">
+          <div className="mt-4 hidden lg:block">
             <SeletorDeFace face={face} onChange={setFace} />
           </div>
         ) : null}
@@ -284,7 +288,7 @@ export default function EstanteAbertaPage() {
           ) : vista === "estante" ? (
             <div className="space-y-10">
               {Array.from({ length: Math.ceil(lista.length / porAndar) }, (_, k) => (
-                <FilaDaPrateleira key={k} livros={lista.slice(k * porAndar, (k + 1) * porAndar)} altura={150} face={face} />
+                <FilaDaPrateleira key={k} livros={lista.slice(k * porAndar, (k + 1) * porAndar)} altura={alturaCapa} face={face} />
               ))}
             </div>
           ) : vista === "grade" ? (

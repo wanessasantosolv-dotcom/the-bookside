@@ -488,12 +488,12 @@ export function MenuDeAcoes({
 
 export function GradeDeLivros({ livros }: { livros: LivroSalvo[] }) {
   return (
-    <ul className="grid grid-cols-[repeat(auto-fill,minmax(104px,1fr))] gap-x-4 gap-y-7 sm:grid-cols-[repeat(auto-fill,minmax(128px,1fr))]">
+    <ul className="grid grid-cols-3 gap-x-3 gap-y-6 sm:grid-cols-[repeat(auto-fill,minmax(128px,1fr))] sm:gap-x-4 sm:gap-y-7">
       {livros.map((l) => (
         <li key={l.id}>
           <Link href={`/livro/${l.id}`} className="group block">
-            <span className="flex h-[176px] items-end justify-center sm:h-[200px]">
-              <CapaDoLivro livro={l} altura={176} className="transition-transform group-hover:-translate-y-1 motion-reduce:transition-none sm:!h-[200px]" />
+            <span className="flex h-[150px] items-end justify-center sm:h-[200px]">
+              <CapaDoLivro livro={l} altura={200} className="!h-[150px] !max-w-full !min-w-0 transition-transform group-hover:-translate-y-1 motion-reduce:transition-none sm:!h-[200px]" />
             </span>
             <span className="mt-2.5 block">
               <Detalhes l={l} />
@@ -573,14 +573,14 @@ export function SeletorDeVista({ vista, onChange }: { vista: Vista; onChange: (v
     { id: "lista", nome: "lista" },
   ];
   return (
-    <div role="group" aria-label="modo de visualização" className="flex gap-1.5">
+    <div role="group" aria-label="modo de visualização" className="flex gap-1 sm:gap-1.5">
       {opcoes.map((o) => (
         <button
           key={o.id}
           type="button"
           aria-pressed={vista === o.id}
           onClick={() => onChange(o.id)}
-          className={`flex h-[52px] w-[60px] flex-col items-center justify-center gap-0.5 rounded-[10px] border text-[11px] font-medium sm:w-[68px] ${
+          className={`flex h-10 items-center justify-center gap-1.5 rounded-[10px] border px-3 text-[12px] font-medium sm:h-[52px] sm:w-[68px] sm:flex-col sm:gap-0.5 sm:px-0 sm:text-[11px] ${
             vista === o.id ? "border-bordo bg-bordo text-creme" : "border-linha text-ameixa hover:border-bordo"
           }`}
         >
@@ -701,7 +701,7 @@ export function SeletorDeFace({ face, onChange }: { face: Face; onChange: (f: Fa
             type="button"
             aria-pressed={face === f}
             onClick={() => onChange(f)}
-            className={`rounded px-1 ${face === f ? "font-semibold text-bordo underline decoration-1 underline-offset-4" : "text-cinza hover:text-ameixa"}`}
+            className={`flex min-h-10 items-center rounded px-2 ${face === f ? "font-semibold text-bordo underline decoration-1 underline-offset-4" : "text-cinza hover:text-ameixa"}`}
           >
             {f}
           </button>
