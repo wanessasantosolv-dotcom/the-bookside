@@ -20,19 +20,12 @@ export function LendoJunto() {
   if (!juntos.length) return null;
 
   return (
-    <section className="mx-6 mt-5 rounded-xl border border-linha bg-creme-quente p-4 lg:mx-0 lg:rounded-[6px] lg:p-5">
-      <h2 className="flex items-center gap-2 text-[11px] font-semibold tracking-[.16em] text-bordo uppercase">
-        <svg
-          aria-hidden
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
+    <section
+      aria-label="lendo junto"
+      className="mx-6 mt-4 flex items-center gap-4 overflow-x-auto border-b border-linha py-3 [scrollbar-width:none] lg:mx-0 lg:border-fio"
+    >
+      <h2 className="flex flex-none items-center gap-1.5 text-[12px] font-semibold text-bordo">
+        <svg aria-hidden width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
           <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
           <circle cx="9" cy="7" r="4" />
           <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
@@ -40,39 +33,37 @@ export function LendoJunto() {
         </svg>
         lendo junto
       </h2>
-      <ul className="mt-3 flex gap-4 overflow-x-auto pb-1 [scrollbar-width:none]">
+      <ul className="flex gap-6">
         {juntos.map((l) => {
           const pessoas = mapa!.get(l.id)!;
           return (
-            <li key={l.id} className="w-[86px] flex-none">
-              <Link href={`/livro/${l.id}`} className="block">
-                <CapaLivro
-                  titulo={l.titulo}
-                  capa={l.capa}
-                  cor={corDoLivro(l.id)}
-                  className="w-full [&>span:last-child]:text-[9px]"
-                />
+            <li key={l.id} className="flex flex-none items-center gap-2.5">
+              <Link href={`/livro/${l.id}`} className="w-[26px] flex-none" aria-label={l.titulo}>
+                <CapaLivro titulo={l.titulo} capa={l.capa} cor={corDoLivro(l.id)} className="w-full [&>span:last-child]:hidden" />
               </Link>
-              <div
-                className="mt-2 flex -space-x-2"
-                title={`com ${pessoas.map(nomeDe).join(", ")}`}
-              >
-                {pessoas.slice(0, 4).map((p) => (
+              <span className="max-w-[160px] truncate text-[12px] text-ameixa">
+                <Link href={`/livro/${l.id}`} className="font-semibold hover:text-bordo">
+                  {l.titulo}
+                </Link>
+                <span className="block truncate text-[11px] text-cinza">com {pessoas.map(nomeDe).join(", ")}</span>
+              </span>
+              <span className="flex -space-x-1.5">
+                {pessoas.slice(0, 3).map((p) => (
                   <Link
                     key={p.id}
                     href={p.usuario ? `/u/${p.usuario}` : "#"}
-                    className="rounded-full ring-2 ring-creme-quente"
+                    className="rounded-full ring-2 ring-[var(--papel,#F9F5EE)]"
                     aria-label={`${nomeDe(p)} também está lendo`}
                   >
-                    <Avatar pessoa={p} tamanho={24} />
+                    <Avatar pessoa={p} tamanho={20} />
                   </Link>
                 ))}
-                {pessoas.length > 4 ? (
-                  <span className="flex size-6 items-center justify-center rounded-full bg-rosa-fundo text-[9px] font-bold text-bordo ring-2 ring-creme-quente">
-                    +{pessoas.length - 4}
+                {pessoas.length > 3 ? (
+                  <span className="flex size-5 items-center justify-center rounded-full bg-rosa-fundo text-[8px] font-bold text-bordo">
+                    +{pessoas.length - 3}
                   </span>
                 ) : null}
-              </div>
+              </span>
             </li>
           );
         })}

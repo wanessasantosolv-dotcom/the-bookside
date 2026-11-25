@@ -19,6 +19,7 @@ import {
   filtrarLivros,
   progressoDe,
   statusDe,
+  useFaceSalva,
   useVistaSalva,
   type AcaoDoMenu,
   type Escopo,
@@ -32,7 +33,6 @@ import { usePerfil, type LivroSalvo, type StatusLivro } from "@/lib/perfil-store
 const ORDEM_STATUS: StatusLivro[] = ["lendo", "lido", "quero", "pausado", "abandonado"];
 const LIMITE_FAVORITOS = 4;
 const plural = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um : varios}`;
-const maiuscula = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const agora = () => new Date().toISOString();
 
 // ───────── cabeçalho e indicadores ─────────
@@ -51,7 +51,7 @@ function Indicadores({ livros }: { livros: LivroSalvo[] }) {
     <dl className="grid grid-cols-4 border-y border-linha py-4 sm:flex sm:justify-around lg:border-fio">
       {itens.map((x, i) => (
         <div key={x.nome} className={`text-center sm:flex-1 ${i ? "sm:border-l sm:border-linha lg:border-fio" : ""} ${i > 3 ? "hidden sm:block" : ""}`}>
-          <dt className="order-2 text-[11px] text-tinta-suave sm:text-[13px]">{maiuscula(x.nome)}</dt>
+          <dt className="order-2 text-[11px] text-tinta-suave sm:text-[13px]">{x.nome}</dt>
           <dd className="font-revista text-[24px] leading-none text-bordo tabular-nums sm:text-[30px]">
             {String(x.qtd).padStart(2, "0")}
           </dd>
@@ -102,6 +102,7 @@ export default function EstantesPage() {
   const removerLivro = usePerfil((s) => s.removerLivro);
 
   const [vista, setVista] = useVistaSalva();
+  const [face, setFace] = useFaceSalva();
   const [escopo, setEscopo] = useState<Escopo>("estantes");
   const [busca, setBusca] = useState("");
   const [status, setStatus] = useState<FiltroStatus>("todos");
@@ -140,25 +141,25 @@ export default function EstantesPage() {
   const acoesDoLivro = (l: LivroSalvo): AcaoDoMenu[] => {
     const fav = (idsFavoritos ?? []).includes(l.id);
     return [
-      { tipo: "link", nome: "Abrir ficha", href: `/livro/${l.id}` },
+      { tipo: "link", nome: "abrir ficha", href: `/livro/${l.id}` },
       ...(statusDe(l) === "lendo"
-        ? [{ tipo: "link" as const, nome: "Atualizar progresso", href: `/livro/${l.id}/progresso` }]
+        ? [{ tipo: "link" as const, nome: "atualizar progresso", href: `/livro/${l.id}/progresso` }]
         : []),
-      ...(statusDe(l) === "lido" ? [{ tipo: "link" as const, nome: "Avaliar", href: `/livro/${l.id}/avaliar` }] : []),
+      ...(statusDe(l) === "lido" ? [{ tipo: "link" as const, nome: "avaliar", href: `/livro/${l.id}/avaliar` }] : []),
       ...ORDEM_STATUS.filter((s) => s !== statusDe(l)).map((s) => ({
         tipo: "botao" as const,
-        nome: `Mover para ${s === "lido" ? "lidos" : NOME_STATUS[s]}`,
+        nome: `mover para ${s === "lido" ? "lidos" : NOME_STATUS[s]}`,
         onClick: () => mudarStatus(l, s),
       })),
       ...minhas.map((e) => ({
         tipo: "botao" as const,
-        nome: `${l.estantes?.includes(e.id) ? "Tirar de" : "Pôr em"} “${e.nome}”`,
+        nome: `${l.estantes?.includes(e.id) ? "tirar de" : "pôr em"} “${e.nome}”`,
         onClick: () => alternarNaEstante(l, e.id),
       })),
       ...(fav || (idsFavoritos ?? []).length < LIMITE_FAVORITOS
-        ? [{ tipo: "botao" as const, nome: fav ? "Tirar dos favoritos" : "Favoritar", onClick: () => alternarFavorito(l) }]
+        ? [{ tipo: "botao" as const, nome: fav ? "tirar dos favoritos" : "favoritar", onClick: () => alternarFavorito(l) }]
         : []),
-      { tipo: "botao", nome: "Remover da biblioteca", perigo: true, onClick: () => setPendente({ tipo: "remover-livro", livro: l }) },
+      { tipo: "botao", nome: "remover da biblioteca", perigo: true, onClick: () => setPendente({ tipo: "remover-livro", livro: l }) },
     ];
   };
   const estantesDoLivro = (l: LivroSalvo) =>
@@ -167,22 +168,22 @@ export default function EstantesPage() {
   const menuDaEstante = (e: EstanteInfo | null, id: string, nome: string): ReactNode => {
     const acoes: AcaoDoMenu[] =
       id === "favoritos"
-        ? [{ tipo: "link", nome: "Escolher favoritos", href: "/perfil/favoritos" }]
+        ? [{ tipo: "link", nome: "escolher favoritos", href: "/perfil/favoritos" }]
         : [
-            { tipo: "link", nome: "Abrir estante", href: `/estantes/${id}` },
-            { tipo: "link", nome: "Adicionar livro", href: `/buscar?estante=${id}` },
+            { tipo: "link", nome: "abrir estante", href: `/estantes/${id}` },
+            { tipo: "link", nome: "adicionar livro", href: `/buscar?estante=${id}` },
             ...(e?.propria
               ? [
-                  { tipo: "botao" as const, nome: "Renomear", onClick: () => { setTexto(nome); setPendente({ tipo: "renomear", id, nome }); } },
+                  { tipo: "botao" as const, nome: "renomear", onClick: () => { setTexto(nome); setPendente({ tipo: "renomear", id, nome }); } },
                   {
                     tipo: "botao" as const,
-                    nome: e.propria.publica ? "Deixar privada" : "Deixar pública",
+                    nome: e.propria.publica ? "deixar privada" : "deixar pública",
                     onClick: () =>
                       atualizar({
                         estantesProprias: (proprias ?? []).map((p) => (p.id === id ? { ...p, publica: !p.publica } : p)),
                       }),
                   },
-                  { tipo: "botao" as const, nome: "Apagar estante", perigo: true, onClick: () => setPendente({ tipo: "apagar", id, nome }) },
+                  { tipo: "botao" as const, nome: "apagar estante", perigo: true, onClick: () => setPendente({ tipo: "apagar", id, nome }) },
                 ]
               : []),
           ];
@@ -222,13 +223,13 @@ export default function EstantesPage() {
   const media = comProgresso.length ? comProgresso.reduce((t, p) => t + p, 0) / comProgresso.length : null;
   linhas.push({
     id: "lendo",
-    nome: "Lendo agora",
+    nome: "lendo agora",
     livros: lendo,
     link: "/estantes/lendo",
     vazio: "nenhuma leitura em andamento.",
     lateral: lendo.length ? (
       <div>
-        <span className="block text-[11px] text-cinza">Em andamento</span>
+        <span className="block text-[11px] text-cinza">em andamento</span>
         <span className="font-revista text-[20px] text-bordo">{plural(lendo.length, "leitura", "leituras")}</span>
         {media !== null ? (
           <span className="mt-1.5 block h-[5px] max-w-[140px] rounded-full bg-linha" aria-label={`progresso médio ${Math.round(media * 100)}%`}>
@@ -247,13 +248,13 @@ export default function EstantesPage() {
 
   linhas.push({
     id: "favoritos",
-    nome: "Meus favoritos",
+    nome: "meus favoritos",
     livros: favoritos,
     link: "/perfil/favoritos",
     vazio: `escolha até ${LIMITE_FAVORITOS} livros para o destaque do seu perfil.`,
     lateral: (
       <div>
-        <span className="block text-[11px] text-cinza">Em destaque no perfil</span>
+        <span className="block text-[11px] text-cinza">em destaque no perfil</span>
         <Link href="/perfil/favoritos" className="text-[12px] font-semibold text-bordo hover:underline">
           {favoritos.length ? "trocar favoritos" : "escolher favoritos"}
         </Link>
@@ -265,13 +266,13 @@ export default function EstantesPage() {
   const lidosNoAno = lidos.filter((l) => l.lidoEm?.startsWith(String(ano))).length;
   linhas.push({
     id: "lidos",
-    nome: "Lidos",
+    nome: "lidos",
     livros: lidos,
     link: "/estantes/lidos",
     vazio: "os livros que você terminar aparecem aqui.",
     lateral: lidos.length ? (
       <div>
-        <span className="block text-[11px] text-cinza">Em {ano}</span>
+        <span className="block text-[11px] text-cinza">em {ano}</span>
         <span className="font-revista text-[20px] text-bordo">{plural(lidosNoAno, "livro lido", "livros lidos")}</span>
       </div>
     ) : null,
@@ -280,13 +281,13 @@ export default function EstantesPage() {
   const quero = daFixa("quero-ler");
   linhas.push({
     id: "quero-ler",
-    nome: "Quero ler",
+    nome: "quero ler",
     livros: quero,
     link: "/estantes/quero-ler",
     vazio: "guarde aqui o que você quer ler depois.",
     lateral: quero.length ? (
       <div>
-        <span className="block text-[11px] text-cinza">Na fila</span>
+        <span className="block text-[11px] text-cinza">na fila</span>
         <span className="font-revista text-[20px] text-bordo">{plural(quero.length, "livro", "livros")}</span>
       </div>
     ) : null,
@@ -295,7 +296,7 @@ export default function EstantesPage() {
   for (const id of ["pausados", "abandonados"]) {
     const lista = daFixa(id);
     if (!lista.length) continue;
-    linhas.push({ id, nome: maiuscula(fixa(id).nome), livros: lista, link: `/estantes/${id}` });
+    linhas.push({ id, nome: fixa(id).nome, livros: lista, link: `/estantes/${id}` });
   }
 
   for (const e of minhas) {
@@ -317,7 +318,7 @@ export default function EstantesPage() {
         <div>
           <span className="flex items-center gap-1.5 text-[11px] text-cinza">
             <span aria-hidden className="size-2 rounded-full" style={{ background: e.propria?.cor }} />
-            {e.propria?.publica ? "Pública" : "Privada"}
+            {e.propria?.publica ? "pública" : "privada"}
           </span>
           {criada ? <span className="block text-[12px]">criada em {criada}</span> : null}
         </div>
@@ -358,9 +359,9 @@ export default function EstantesPage() {
         {/* cabeçalho editorial */}
         <header className="flex flex-wrap items-end justify-between gap-4 pb-6">
           <div>
-            <p className="text-[11px] font-bold tracking-[.14em] text-bordo uppercase">The Bookside / Biblioteca pessoal</p>
-            <h1 className="mt-2 font-revista text-[38px] leading-none text-bordo italic sm:text-[52px]">Minhas estantes.</h1>
-            <p className="mt-2 text-[14px] text-tinta-suave sm:text-[15px]">Histórias vividas e tantas outras por descobrir.</p>
+            <p className="text-[11px] font-bold tracking-[.14em] text-bordo">the bookside / biblioteca pessoal</p>
+            <h1 className="mt-2 font-revista text-[38px] leading-none text-bordo italic sm:text-[52px]">minhas estantes.</h1>
+            <p className="mt-2 text-[14px] text-tinta-suave sm:text-[15px]">histórias vividas e tantas outras por descobrir.</p>
           </div>
           <div className="flex items-center gap-4">
             <Link href="/estantes/importar" className="text-[13px] text-cinza underline decoration-bege underline-offset-4 hover:text-bordo">
@@ -371,7 +372,7 @@ export default function EstantesPage() {
               className="inline-flex h-11 items-center gap-2 rounded-full bg-bordo px-5 text-[14px] font-semibold text-creme hover:bg-bordo/90"
             >
               <Icone d={ICONE_MAIS} />
-              Nova estante
+              nova estante
             </Link>
           </div>
         </header>
@@ -382,8 +383,8 @@ export default function EstantesPage() {
 
         {livros.length === 0 ? (
           <div className="border-b border-linha py-14 text-center lg:border-fio">
-            <h2 className="font-revista text-[28px] text-bordo italic">Sua biblioteca ainda está em branco.</h2>
-            <p className="mt-2 text-[14px] text-tinta-suave">Adicione o primeiro livro que você está lendo ou quer ler.</p>
+            <h2 className="font-revista text-[28px] text-bordo italic">sua biblioteca ainda está em branco.</h2>
+            <p className="mt-2 text-[14px] text-tinta-suave">adicione o primeiro livro que você está lendo ou quer ler.</p>
             <Link href="/buscar" className="mt-5 inline-flex h-11 items-center rounded-full bg-bordo px-6 text-[14px] font-semibold text-creme">
               buscar um livro
             </Link>
@@ -402,6 +403,8 @@ export default function EstantesPage() {
               onOrdem={setOrdem}
               vista={vista}
               onVista={setVista}
+              face={face}
+              onFace={setFace}
             />
 
             {escopo === "estantes" ? (
@@ -410,7 +413,7 @@ export default function EstantesPage() {
               ) : vista === "estante" ? (
                 <div className="border-t border-linha lg:border-fio">
                   {linhasFiltradas.map((l) => (
-                    <LinhaDaEstante key={l.id} linha={l} destaque={l.id === "favoritos"} />
+                    <LinhaDaEstante key={l.id} linha={l} destaque={l.id === "favoritos"} face={face} />
                   ))}
                 </div>
               ) : (
@@ -441,7 +444,7 @@ export default function EstantesPage() {
               <div className="grid gap-8 border-t border-linha pt-8 lg:border-fio">
                 <p className="text-[13px] text-tinta-suave">{plural(todosFiltrados.length, "livro", "livros")}</p>
                 {andares.map((a, i) => (
-                  <FilaDaPrateleira key={i} livros={a} altura={150} />
+                  <FilaDaPrateleira key={i} livros={a} altura={150} face={face} />
                 ))}
               </div>
             ) : vista === "grade" ? (
@@ -456,9 +459,9 @@ export default function EstantesPage() {
                 className="mt-10 flex flex-col items-center rounded-[12px] border border-dashed border-rosa-antigo px-6 py-7 text-center hover:bg-bordo/[.03]"
               >
                 <Icone d={ICONE_MAIS} className="size-6 text-bordo" />
-                <span className="mt-2 font-revista text-[22px] text-bordo italic">Criar nova estante</span>
+                <span className="mt-2 font-revista text-[22px] text-bordo italic">criar nova estante</span>
                 <span className="mt-1 text-[13px] text-tinta-suave">
-                  Organize seus livros do seu jeito, por temas, gêneros ou como preferir.
+                  organize seus livros do seu jeito, por temas, gêneros ou como preferir.
                 </span>
               </Link>
             ) : null}
@@ -470,10 +473,10 @@ export default function EstantesPage() {
         <Janela
           titulo={
             pendente.tipo === "renomear"
-              ? "Renomear estante"
+              ? "renomear estante"
               : pendente.tipo === "apagar"
-                ? `Apagar “${pendente.nome}”?`
-                : `Remover “${pendente.livro.titulo}”?`
+                ? `apagar “${pendente.nome}”?`
+                : `remover “${pendente.livro.titulo}”?`
           }
           onFechar={() => setPendente(null)}
         >
@@ -491,8 +494,8 @@ export default function EstantesPage() {
           ) : (
             <p className="text-[14px] text-tinta-suave">
               {pendente.tipo === "apagar"
-                ? "A estante some, mas os livros continuam na sua biblioteca."
-                : "O livro sai da sua biblioteca, junto com a nota e a ficha dele."}
+                ? "a estante some, mas os livros continuam na sua biblioteca."
+                : "o livro sai da sua biblioteca, junto com a nota e a ficha dele."}
             </p>
           )}
           <div className="mt-5 flex justify-end gap-2">

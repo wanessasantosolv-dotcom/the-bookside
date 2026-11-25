@@ -9,6 +9,8 @@ import type { LivroSalvo, StatusLivro } from "@/lib/perfil-store";
 // ───────── tipos e utilidades ─────────
 
 export type Vista = "estante" | "grade" | "lista";
+/** na estante: as capas de frente ou as lombadas, como numa estante de verdade */
+export type Face = "capas" | "lombadas";
 export type Escopo = "estantes" | "todos";
 export type Ordem = "personalizada" | "recentes" | "titulo" | "autoria" | "nota" | "progresso";
 export type FiltroStatus = "todos" | StatusLivro;
@@ -22,12 +24,12 @@ export const NOME_STATUS: Record<StatusLivro, string> = {
 };
 
 export const OPCOES_ORDEM: { id: Ordem; nome: string }[] = [
-  { id: "personalizada", nome: "Personalizado" },
-  { id: "recentes", nome: "Mais recentes" },
-  { id: "titulo", nome: "Título (A–Z)" },
-  { id: "autoria", nome: "Autoria (A–Z)" },
-  { id: "nota", nome: "Maior nota" },
-  { id: "progresso", nome: "Progresso" },
+  { id: "personalizada", nome: "personalizado" },
+  { id: "recentes", nome: "mais recentes" },
+  { id: "titulo", nome: "título (a–z)" },
+  { id: "autoria", nome: "autoria (a–z)" },
+  { id: "nota", nome: "maior nota" },
+  { id: "progresso", nome: "progresso" },
 ];
 
 export const statusDe = (l: LivroSalvo): StatusLivro => l.status ?? "lendo";
@@ -94,7 +96,7 @@ export function PrateleiraMadeira({ className = "" }: { className?: string }) {
   return (
     <span
       aria-hidden
-      className={`pointer-events-none block h-[27px] bg-[url('/estantes/prateleira.svg')] bg-[length:100%_100%] bg-no-repeat ${className}`}
+      className={`pointer-events-none relative z-10 block h-[27px] bg-[url('/estantes/prateleira.svg')] bg-[length:100%_100%] bg-no-repeat ${className}`}
     />
   );
 }
@@ -161,16 +163,52 @@ function Detalhes({ l }: { l: LivroSalvo }) {
   );
 }
 
-/** um livro em pé na prateleira: abre a ficha; passar o mouse ou focar mostra os detalhes */
-export function LivroNaPrateleira({ livro, altura }: { livro: LivroSalvo; altura: number }) {
+/** a lombada: altura e espessura pelo número de páginas (sem páginas, um meio-termo) */
+export function Lombada({ livro, altura }: { livro: LivroSalvo; altura: number }) {
+  const pags = livro.paginas ?? 320;
+  // a variação de altura é estável por livro (não muda a cada render)
+  const semente = [...livro.id].reduce((t, c) => t + c.charCodeAt(0), 0);
+  const h = Math.round(altura * (0.8 + ((semente % 17) / 17) * 0.2));
+  const w = Math.round(Math.max(22, Math.min(46, 16 + pags / 18)));
   return (
-    <li className="group relative flex-none snap-start">
+    <span
+      style={{ height: h, width: w, background: corDoLivro(livro.id) }}
+      className="relative flex flex-none items-center justify-center overflow-hidden rounded-[2px] text-creme shadow-[inset_-3px_0_4px_rgba(0,0,0,.18),inset_2px_0_0_rgba(255,255,255,.12),1px_2px_4px_-1px_rgba(59,37,27,.35)]"
+    >
+      <span aria-hidden className="absolute inset-x-0 top-[9%] h-[2px] bg-creme/35" />
+      <span aria-hidden className="absolute inset-x-0 bottom-[9%] h-[2px] bg-creme/35" />
+      <span className="max-h-[78%] truncate font-display text-[11px] font-semibold tracking-wide [writing-mode:vertical-rl] rotate-180">
+        {livro.titulo}
+      </span>
+    </span>
+  );
+}
+
+/** um livro em pé na prateleira: abre a ficha; passar o mouse ou focar mostra os detalhes */
+export function LivroNaPrateleira({
+  livro,
+  altura,
+  face = "capas",
+  ordem = 0,
+}: {
+  livro: LivroSalvo;
+  altura: number;
+  face?: Face;
+  ordem?: number;
+}) {
+  return (
+    <li
+      className="group relative flex-none snap-start animate-subir motion-reduce:animate-none"
+      style={{ animationDelay: `${Math.min(ordem, 12) * 45}ms` }}
+    >
       <Link
         href={`/livro/${livro.id}`}
         aria-label={`${livro.titulo}, de ${livro.autor} · ${NOME_STATUS[statusDe(livro)]}${livro.nota ? ` · nota ${livro.nota}` : ""}`}
-        className="block rounded-[2px] transition-transform duration-200 group-hover:-translate-y-1 focus-visible:-translate-y-1 motion-reduce:transition-none motion-reduce:group-hover:translate-y-0"
+        className={`block origin-bottom rounded-[2px] transition-[transform,filter] duration-300 ease-out group-hover:-translate-y-2 group-hover:drop-shadow-[0_10px_10px_rgba(59,37,27,.25)] focus-visible:-translate-y-2 motion-reduce:transition-none motion-reduce:group-hover:translate-y-0 ${
+          face === "lombadas" ? "group-hover:-rotate-[4deg]" : "group-hover:rotate-[-1.5deg]"
+        }`}
       >
-        <CapaDoLivro livro={livro} altura={altura} />
+        {face === "lombadas" ? <Lombada livro={livro} altura={altura} /> : <CapaDoLivro livro={livro} altura={altura} />}
       </Link>
       <span
         role="tooltip"
@@ -199,10 +237,20 @@ export type LinhaEstante = {
 
 const LIMITE_NA_LINHA = 24;
 
-export function FilaDaPrateleira({ livros, link, altura }: { livros: LivroSalvo[]; link?: string; altura: number }) {
+export function FilaDaPrateleira({
+  livros,
+  link,
+  altura,
+  face = "capas",
+}: {
+  livros: LivroSalvo[];
+  link?: string;
+  altura: number;
+  face?: Face;
+}) {
   const trilho = useRef<HTMLUListElement>(null);
   const [setas, setSetas] = useState({ esq: false, dir: false });
-  const visiveis = livros.slice(0, LIMITE_NA_LINHA);
+  const visiveis = livros.slice(0, face === "lombadas" ? LIMITE_NA_LINHA * 2 : LIMITE_NA_LINHA);
   const resto = livros.length - visiveis.length;
 
   useEffect(() => {
@@ -230,10 +278,10 @@ export function FilaDaPrateleira({ livros, link, altura }: { livros: LivroSalvo[
     <div className="relative min-w-0">
       <ul
         ref={trilho}
-        className="flex snap-x snap-proximity items-end gap-3 overflow-x-auto overscroll-x-contain px-3 pt-24 -mt-20 [scrollbar-width:none] sm:gap-4 [&::-webkit-scrollbar]:hidden"
+        className={`flex snap-x snap-proximity items-end overflow-x-auto ${face === "lombadas" ? "gap-[3px] sm:gap-1" : "gap-3 sm:gap-4"} overscroll-x-contain px-3 pt-24 -mt-20 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden`}
       >
-        {visiveis.map((l) => (
-          <LivroNaPrateleira key={l.id} livro={l} altura={altura} />
+        {visiveis.map((l, i) => (
+          <LivroNaPrateleira key={l.id} livro={l} altura={altura} face={face} ordem={i} />
         ))}
         {resto > 0 && link ? (
           <li className="flex-none snap-start">
@@ -248,7 +296,7 @@ export function FilaDaPrateleira({ livros, link, altura }: { livros: LivroSalvo[
           </li>
         ) : null}
       </ul>
-      <PrateleiraMadeira className="-mt-[9px]" />
+      <PrateleiraMadeira className="-mt-[5px]" />
       {setas.esq ? (
         <button type="button" onClick={() => rolar(-1)} aria-label="ver livros anteriores" className="absolute top-1/2 left-0 grid size-8 -translate-y-1/2 place-items-center rounded-full border border-linha bg-papel/95 text-bordo shadow-sm hover:bg-papel">
           <Icone d={ICONES.esq} />
@@ -263,7 +311,7 @@ export function FilaDaPrateleira({ livros, link, altura }: { livros: LivroSalvo[
   );
 }
 
-export function LinhaDaEstante({ linha, destaque }: { linha: LinhaEstante; destaque?: boolean }) {
+export function LinhaDaEstante({ linha, destaque, face = "capas" }: { linha: LinhaEstante; destaque?: boolean; face?: Face }) {
   const titulo = (
     <div className="min-w-0">
       <h2 className={`font-revista leading-[1.05] text-bordo italic ${destaque ? "text-[30px] lg:text-[36px]" : "text-[26px] lg:text-[32px]"}`}>
@@ -286,13 +334,13 @@ export function LinhaDaEstante({ linha, destaque }: { linha: LinhaEstante; desta
       </div>
       <div className="min-w-0">
         {linha.livros.length ? (
-          <FilaDaPrateleira livros={linha.livros} link={linha.link} altura={destaque ? 168 : 150} />
+          <FilaDaPrateleira livros={linha.livros} link={linha.link} altura={destaque ? 168 : 150} face={face} />
         ) : (
           <div>
             <div className="flex h-[110px] items-end px-3 pb-3 font-accent text-sm text-cinza italic">
               {linha.vazio ?? "nenhum livro aqui ainda."}
             </div>
-            <PrateleiraMadeira className="-mt-[9px] opacity-80" />
+            <PrateleiraMadeira className="-mt-[5px] opacity-80" />
           </div>
         )}
       </div>
@@ -465,9 +513,9 @@ export function ListaDeLivros({
 
 export function SeletorDeVista({ vista, onChange }: { vista: Vista; onChange: (v: Vista) => void }) {
   const opcoes: { id: Vista; nome: string }[] = [
-    { id: "estante", nome: "Estante" },
-    { id: "grade", nome: "Grade" },
-    { id: "lista", nome: "Lista" },
+    { id: "estante", nome: "estante" },
+    { id: "grade", nome: "grade" },
+    { id: "lista", nome: "lista" },
   ];
   return (
     <div role="group" aria-label="modo de visualização" className="flex gap-1.5">
@@ -503,7 +551,11 @@ export function BarraDaBiblioteca({
   onOrdem,
   vista,
   onVista,
+  face,
+  onFace,
 }: {
+  face: Face;
+  onFace: (f: Face) => void;
   escopo: Escopo;
   onEscopo: (e: Escopo) => void;
   busca: string;
@@ -522,8 +574,8 @@ export function BarraDaBiblioteca({
         <div role="group" aria-label="o que mostrar" className="flex flex-none gap-1 border-b border-linha lg:border-fio">
           {(
             [
-              { id: "estantes", nome: "Minhas estantes" },
-              { id: "todos", nome: "Todos os livros" },
+              { id: "estantes", nome: "minhas estantes" },
+              { id: "todos", nome: "todos os livros" },
             ] as { id: Escopo; nome: string }[]
           ).map((o) => (
             <button
@@ -544,7 +596,7 @@ export function BarraDaBiblioteca({
             type="search"
             value={busca}
             onChange={(e) => onBusca(e.target.value)}
-            placeholder="Buscar por título ou autoria"
+            placeholder="buscar por título ou autoria"
             className={`${campo} w-full !pl-10`}
           />
         </label>
@@ -553,19 +605,24 @@ export function BarraDaBiblioteca({
         </div>
       </div>
       <div className="flex flex-wrap items-center justify-end gap-x-5 gap-y-2 text-[13px] text-ameixa">
+        {vista === "estante" ? (
+          <div className="mr-auto">
+            <SeletorDeFace face={face} onChange={onFace} />
+          </div>
+        ) : null}
         <label className="flex items-center gap-2">
-          <span className="text-cinza">Status</span>
+          <span className="text-cinza">status</span>
           <select value={status} onChange={(e) => onStatus(e.target.value as FiltroStatus)} className={`${campo} h-9 pr-8`}>
-            <option value="todos">Todos</option>
+            <option value="todos">todos</option>
             {statusDisponiveis.map((s) => (
               <option key={s} value={s}>
-                {NOME_STATUS[s][0].toUpperCase() + NOME_STATUS[s].slice(1)}
+                {NOME_STATUS[s]}
               </option>
             ))}
           </select>
         </label>
         <label className="flex items-center gap-2">
-          <span className="text-cinza">Ordenar por</span>
+          <span className="text-cinza">ordenar por</span>
           <select value={ordem} onChange={(e) => onOrdem(e.target.value as Ordem)} className={`${campo} h-9 pr-8`}>
             {OPCOES_ORDEM.map((o) => (
               <option key={o.id} value={o.id}>
@@ -577,6 +634,46 @@ export function BarraDaBiblioteca({
       </div>
     </div>
   );
+}
+
+export function SeletorDeFace({ face, onChange }: { face: Face; onChange: (f: Face) => void }) {
+  return (
+    <div role="group" aria-label="como ver os livros na estante" className="flex items-center gap-1 text-[13px]">
+      {(["capas", "lombadas"] as const).map((f, i) => (
+        <span key={f} className="flex items-center gap-1">
+          {i ? <span aria-hidden className="text-bege">·</span> : null}
+          <button
+            type="button"
+            aria-pressed={face === f}
+            onClick={() => onChange(f)}
+            className={`rounded px-1 ${face === f ? "font-semibold text-bordo underline decoration-1 underline-offset-4" : "text-cinza hover:text-ameixa"}`}
+          >
+            {f}
+          </button>
+        </span>
+      ))}
+    </div>
+  );
+}
+
+export function useFaceSalva(): [Face, (f: Face) => void] {
+  const [face, setFace] = useState<Face>("capas");
+  useEffect(() => {
+    try {
+      if (localStorage.getItem("bookside-estantes-face") === "lombadas") setFace("lombadas");
+    } catch {
+      /* sem armazenamento */
+    }
+  }, []);
+  const mudar = (f: Face) => {
+    setFace(f);
+    try {
+      localStorage.setItem("bookside-estantes-face", f);
+    } catch {
+      /* sem armazenamento */
+    }
+  };
+  return [face, mudar];
 }
 
 /** preferência de vista guardada no aparelho (a mesma em todas as visitas) */
