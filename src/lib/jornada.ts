@@ -157,6 +157,10 @@ export type MesDoAno = {
   total: number;
   melhor: LivroSalvo | null;
   pior: LivroSalvo | null;
+  /** todos os que empataram na maior nota do mês */
+  melhores: LivroSalvo[];
+  /** todos os que empataram na menor nota (só quando é menor que a maior) */
+  piores: LivroSalvo[];
   /** livros do mês (para a capa quando ninguém tem nota) */
   livros: LivroSalvo[];
 };
@@ -170,10 +174,14 @@ export function mesesDoAno(lidos: LivroSalvo[]): MesDoAno[] {
     const comNota = doMes
       .filter((l) => l.nota)
       .sort((a, b) => (b.nota ?? 0) - (a.nota ?? 0));
+    const max = comNota[0]?.nota;
+    const min = comNota.at(-1)?.nota;
     return {
       mes,
       indice: i,
       total: doMes.length,
+      melhores: max ? comNota.filter((l) => l.nota === max) : [],
+      piores: min !== undefined && max !== undefined && min < max ? comNota.filter((l) => l.nota === min) : [],
       melhor: comNota[0] ?? null,
       pior:
         comNota.length > 1 && comNota.at(-1)!.nota! < comNota[0].nota!

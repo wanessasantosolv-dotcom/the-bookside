@@ -565,7 +565,8 @@ function LinhaMes({ rotulo, l }: { rotulo: string; l: LivroSalvo }) {
 
 function CartaoMes({ m }: { m: MesDoAno }) {
   const [aberto, setAberto] = useState(false);
-  const outros = m.livros.filter((l) => l !== m.melhor && l !== m.pior);
+  const destacados = new Set([...m.melhores, ...m.piores]);
+  const outros = m.livros.filter((l) => !destacados.has(l));
   return (
     <li className="w-[78%] flex-none snap-start rounded-[12px] border border-linha p-3.5 sm:w-[calc((100%-24px)/3)] lg:rounded-[10px] lg:border-fio">
       <p className="flex items-baseline justify-between gap-2">
@@ -573,15 +574,27 @@ function CartaoMes({ m }: { m: MesDoAno }) {
         <span className="text-[11px] text-cinza">{plural(m.total, "livro", "livros")}</span>
       </p>
       <div className="mt-3 space-y-2.5">
-        {m.melhor ? (
-          <LinhaMes rotulo={m.pior ? "mais amado" : "destaque do mês"} l={m.melhor} />
+        {m.melhores.length ? (
+          m.melhores.map((l) => (
+            <LinhaMes
+              key={l.id}
+              rotulo={m.piores.length ? (m.melhores.length > 1 ? "mais amados (empate)" : "mais amado") : "destaque do mês"}
+              l={l}
+            />
+          ))
         ) : (
           <p className="text-[11px] text-cinza">sem notas neste mês</p>
         )}
-        {aberto && m.pior ? <LinhaMes rotulo="menos amado" l={m.pior} /> : null}
-        {aberto && (outros.length || !m.melhor) ? (
-          <ul className="flex flex-wrap gap-1.5 pt-1">
-            {(m.melhor ? outros : m.livros).map((l) => (
+        {m.piores.map((l) => (
+          <LinhaMes
+            key={l.id}
+            rotulo={m.piores.length > 1 ? "menos amados (empate)" : "menos amado"}
+            l={l}
+          />
+        ))}
+        {aberto && outros.length ? (
+          <ul className="flex flex-wrap gap-1.5 border-t border-linha pt-2.5 lg:border-fio">
+            {outros.map((l) => (
               <li key={l.id} className="w-[30px]">
                 <Link href={`/livro/${l.id}`} title={l.titulo}>
                   {capaDe(l, "w-full !rounded-[3px] [&>span:last-child]:hidden")}
@@ -592,14 +605,14 @@ function CartaoMes({ m }: { m: MesDoAno }) {
           </ul>
         ) : null}
       </div>
-      {m.pior || outros.length || !m.melhor ? (
+      {outros.length ? (
         <button
           type="button"
           aria-expanded={aberto}
           onClick={() => setAberto((v) => !v)}
           className="mt-2.5 text-[11px] font-semibold text-bordo hover:underline"
         >
-          {aberto ? "mostrar menos" : "ver o mês inteiro"}
+          {aberto ? "mostrar menos" : `+ ${plural(outros.length, "outro livro", "outros livros")}`}
         </button>
       ) : null}
     </li>
