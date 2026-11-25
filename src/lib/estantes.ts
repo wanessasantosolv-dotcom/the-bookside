@@ -130,3 +130,48 @@ export function notasCompletas(
     final: n.final ?? 0,
   };
 }
+
+/** o que some ao excluir a ficha pessoal (o livro e o status ficam na estante) */
+export const fichaApagada = {
+  nota: undefined,
+  notas: undefined,
+  reacao: undefined,
+  personagem: undefined,
+  citacao: undefined,
+  resenha: undefined,
+  anotacao: undefined,
+} satisfies Partial<LivroSalvo>;
+
+/** lidos em um ano (pela data em que terminou; sem data não entra) */
+export function lidosNoAno(livros: LivroSalvo[], ano = new Date().getFullYear()) {
+  return livros.filter(
+    // mesma regra dos "seus números" (calcularNumeros)
+    (l) => l.status === "lido" && !!l.lidoEm?.startsWith(String(ano)),
+  ).length;
+}
+
+/**
+ * Os números do topo do perfil, sem misturar o total com o ano:
+ * o ano (contra a meta, quando tem), o total de lidos, lendo e quero ler.
+ */
+export function numerosDoPerfil(p: {
+  livros: LivroSalvo[];
+  meta: number | null;
+}) {
+  const ano = new Date().getFullYear();
+  const noAno = lidosNoAno(p.livros, ano);
+  const lidos = p.livros.filter((l) => l.status === "lido").length;
+  return {
+    ano,
+    noAno,
+    lidos,
+    destaque: {
+      n: p.meta ? `${noAno}/${p.meta}` : String(noAno),
+      r: p.meta ? `meta ${ano}` : `lidos em ${ano}`,
+    },
+  };
+}
+
+/** do mais recente ao mais antigo, pela data em que terminou */
+export const porDataDeLeitura = (a: LivroSalvo, b: LivroSalvo) =>
+  (b.lidoEm ?? "").localeCompare(a.lidoEm ?? "");

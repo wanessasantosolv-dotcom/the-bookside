@@ -1,5 +1,5 @@
 import { buscarLivros, buscarPorAutoria, traducoesDoTitulo, type LivroBusca } from "@/lib/catalogo";
-import type { NotasDetalhe } from "@/lib/perfil-store";
+import type { FormatoLivro, NotasDetalhe, Reacao } from "@/lib/perfil-store";
 
 /**
  * Importar livros lidos de uma vez: de uma lista colada (um livro por linha,
@@ -18,6 +18,9 @@ export type ItemImport = {
   personagem?: string;
   citacao?: string;
   resenha?: string;
+  /** o veredito: favoritado, adorei, gostei… */
+  reacao?: Reacao;
+  formato?: FormatoLivro;
   /** clube: número da leitura */
   rodada?: number;
   /** clube: as fichas de cada pessoa (da revista do clube) */
@@ -112,6 +115,9 @@ function data(v: unknown) {
   return typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : undefined;
 }
 
+const reacoesValidas: Reacao[] = ["favoritado", "adorei", "gostei", "neutro", "nao", "abandonei"];
+const formatosValidos: FormatoLivro[] = ["fisico", "ebook", "audio"];
+
 /** Arquivo .json: uma lista de livros com os campos de ItemImport. */
 export function lerArquivo(conteudo: string): ItemImport[] {
   const bruto = JSON.parse(conteudo) as unknown;
@@ -161,6 +167,12 @@ export function lerArquivo(conteudo: string): ItemImport[] {
         personagem: texto(o.personagem, 120),
         citacao: texto(o.citacao, 1000),
         resenha: texto(o.resenha),
+        reacao: reacoesValidas.includes(o.reacao as Reacao)
+          ? (o.reacao as Reacao)
+          : undefined,
+        formato: formatosValidos.includes(o.formato as FormatoLivro)
+          ? (o.formato as FormatoLivro)
+          : undefined,
         rodada: numero(o.rodada, 1, 999),
         fichas: fichas?.length ? fichas : undefined,
       };

@@ -25,7 +25,14 @@ import { supabase } from "@/lib/supabase";
 import { RESERVA } from "@/lib/reserva";
 import { arquetipos, type ArquetipoId } from "@/lib/teste";
 
-export type Indicacao = LivroBusca & { motivo: string };
+export type Indicacao = LivroBusca & {
+  motivo: string;
+  /** em alta no the bookside: a média das notas de quem leu e quantas notas */
+  notaApp?: number;
+  avaliacoesApp?: number;
+  /** um trecho de resenha de quem leu, e o nome dela */
+  resenhaApp?: { texto: string; de: string };
+};
 
 const SESSAO = "bookside-indicacoes-v2";
 const PASSADOS = "bookside-passados";
@@ -218,6 +225,11 @@ async function emAltaNoApp(): Promise<Indicacao[]> {
         autor: string;
         capa: string | null;
         pessoas: number;
+        sinopse?: string | null;
+        media?: number | string | null;
+        avaliacoes?: number | null;
+        resenha?: string | null;
+        resenha_de?: string | null;
       }[]
     )
       // só os que estão em português (ou a parte em português do título)
@@ -230,6 +242,13 @@ async function emAltaNoApp(): Promise<Indicacao[]> {
         capa: x.capa ?? undefined,
         cor: corDoLivro(x.id),
         motivo: `em alta no the bookside · ${x.pessoas} ${x.pessoas === 1 ? "leitor" : "leitores"}`,
+        sinopse: x.sinopse || undefined,
+        notaApp: x.media ? Number(x.media) || undefined : undefined,
+        avaliacoesApp: x.avaliacoes ? Number(x.avaliacoes) : undefined,
+        resenhaApp:
+          x.resenha && x.resenha_de
+            ? { texto: x.resenha, de: x.resenha_de }
+            : undefined,
       }))
   );
 }

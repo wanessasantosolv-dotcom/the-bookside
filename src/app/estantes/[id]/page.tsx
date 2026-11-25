@@ -20,10 +20,17 @@ import {
 } from "@/lib/estantes";
 import { usePerfil, type LivroSalvo } from "@/lib/perfil-store";
 
-type Filtro = "todos" | "ano" | "4mais" | "amei";
+/** "todos", um ano ("2025"), "sem-data", "4mais" ou "amei" */
+type Filtro = string;
+
+/** a data que vale para o livro nesta estante (nos lidos: só quando terminou) */
+function dataDoLivro(l: LivroSalvo) {
+  if (l.status === "lido") return l.lidoEm;
+  return l.lidoEm ?? l.iniciadoEm ?? l.adicionadoEm;
+}
 
 function meta(l: LivroSalvo) {
-  const data = l.lidoEm ?? l.iniciadoEm ?? l.adicionadoEm;
+  const data = dataDoLivro(l);
   const partes = [dataCurta(data)];
   if (l.status === "lido") partes.push(estrelas(l.nota));
   else if (l.status === "lendo" && l.paginas && l.paginaAtual)
@@ -48,8 +55,17 @@ export default function EstanteAbertaPage() {
   const estante = todasAsEstantes(proprias ?? []).find((e) => e.id === id);
   if (!estante) notFound();
 
-  const ano = new Date().getFullYear();
   const todos = livrosDaEstante(estante, livros);
+  // os anos que aparecem na estante, do mais recente ao mais antigo
+  const anos = [
+    ...new Set(
+      todos
+        .map((l) => dataDoLivro(l)?.slice(0, 4))
+        .filter((a): a is string => !!a && /^\d{4}$/.test(a)),
+    ),
+  ].sort((a, b) => b.localeCompare(a));
+  if (!anos.length) anos.push(String(new Date().getFullYear()));
+  const temSemData = todos.some((l) => !dataDoLivro(l));
   const termo = busca
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
@@ -65,23 +81,26 @@ export default function EstanteAbertaPage() {
         .includes(termo)
     )
       return false;
-    if (filtro === "ano")
-      return (l.lidoEm ?? l.iniciadoEm ?? l.adicionadoEm ?? "").startsWith(
-        String(ano),
-      );
+    if (/^\d{4}$/.test(filtro))
+      return (dataDoLivro(l) ?? "").startsWith(filtro);
+    if (filtro === "sem-data") return !dataDoLivro(l);
     if (filtro === "4mais") return (l.nota ?? 0) >= 4;
     if (filtro === "amei") return !!l.amei;
     return true;
   });
   const grupos = lista.reduce<{ mes: string; livros: LivroSalvo[] }[]>(
     (acc, l) => {
-      const mes = mesDe(l.lidoEm ?? l.iniciadoEm ?? l.adicionadoEm);
+      const mes = mesDe(dataDoLivro(l));
       const g = acc.find((x) => x.mes === mes);
       if (g) g.livros.push(l);
       else acc.push({ mes, livros: [l] });
       return acc;
     },
     [],
+  );
+  // os sem data vão para o fim
+  grupos.sort(
+    (a, b) => Number(a.mes === "sem data") - Number(b.mes === "sem data"),
   );
   const subtitulo =
     estante.status === "lido"
@@ -162,14 +181,27 @@ export default function EstanteAbertaPage() {
             >
               todos
             </button>
-            <button
-              type="button"
-              aria-pressed={filtro === "ano"}
-              onClick={() => setFiltro("ano")}
-              className={pill(filtro === "ano")}
-            >
-              {ano}
-            </button>
+            {anos.map((a) => (
+              <button
+                key={a}
+                type="button"
+                aria-pressed={filtro === a}
+                onClick={() => setFiltro(a)}
+                className={pill(filtro === a)}
+              >
+                {a}
+              </button>
+            ))}
+            {temSemData && estante.status === "lido" ? (
+              <button
+                type="button"
+                aria-pressed={filtro === "sem-data"}
+                onClick={() => setFiltro("sem-data")}
+                className={pill(filtro === "sem-data")}
+              >
+                sem data
+              </button>
+            ) : null}
             {estante.status === "lido" ? (
               <button
                 type="button"

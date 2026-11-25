@@ -12,13 +12,28 @@ import { CapaLivro } from "@/components/CapaLivro";
 import { TrocarCapa } from "@/components/TrocarCapa";
 import { lembrarRemovido } from "@/components/AvisoRemovido";
 import { AmigasComLivro } from "@/components/social/AmigasComLivro";
-import { PerguntaTermino } from "@/components/PerguntaTermino";
+import {
+  dadosDoTermino,
+  PerguntaTermino,
+  type Termino,
+} from "@/components/PerguntaTermino";
 import { OpinioesDoLivro } from "@/components/OpinioesDoLivro";
 import { useHidratado } from "@/components/PerfilHidratacao";
 import { livroLembrado, sinopseDaObra } from "@/lib/catalogo";
 import { corDoLivro } from "@/lib/cores";
-import { estrelas, infoDoLivro, todasAsEstantes } from "@/lib/estantes";
-import { usePerfil, type StatusLivro } from "@/lib/perfil-store";
+import {
+  estrelas,
+  fichaApagada,
+  infoDoLivro,
+  todasAsEstantes,
+} from "@/lib/estantes";
+import { reacaoDe } from "@/lib/reacoes";
+import { autoriaConhecida, linkDaAutoria } from "@/lib/autores";
+import {
+  usePerfil,
+  type LivroSalvo,
+  type StatusLivro,
+} from "@/lib/perfil-store";
 
 /** ícones de traço fino usados na ficha de leitura (sem emoji). */
 const iconePausar = (
@@ -114,6 +129,129 @@ function AcaoFicha({
   );
 }
 
+/**
+ * A ficha de leitura já preenchida, na página do livro: nota e veredito no
+ * topo, os quatro critérios em blocos, personagem, trecho e resenha em
+ * texto de leitura (sem itálico miúdo). Editar e excluir ficam no rodapé.
+ */
+function FichaNoLivro({
+  livro,
+  onExcluir,
+}: {
+  livro: LivroSalvo;
+  onExcluir: () => void;
+}) {
+  const reacao = reacaoDe(livro.reacao);
+  const criterios = (["personagens", "plot", "escrita", "final"] as const).filter(
+    (c) => livro.notas?.[c],
+  );
+  const texto = livro.resenha ?? livro.anotacao;
+  const quando = livro.lidoEm
+    ? new Date(livro.lidoEm).toLocaleDateString("pt-BR", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
+    : null;
+  return (
+    <section className="mx-6 mt-6 overflow-hidden rounded-[14px] border border-linha bg-creme-quente lg:mx-0 lg:mt-8 lg:rounded-[6px] lg:border-fio">
+      <header className="flex items-start justify-between gap-3 border-b border-linha px-4 pt-4 pb-3.5 lg:border-fio lg:px-5">
+        <div className="min-w-0">
+          <p className="text-[10px] font-semibold tracking-[.16em] text-cinza uppercase">
+            sua ficha
+          </p>
+          {livro.nota ? (
+            <p className="mt-1 flex items-baseline gap-2">
+              <b className="font-display text-[30px] leading-none font-semibold text-bordo lg:font-revista lg:font-normal">
+                {livro.nota.toLocaleString("pt-BR")}
+              </b>
+              <span className="text-[15px] tracking-[1px] text-bordo">
+                {estrelas(livro.nota)}
+              </span>
+            </p>
+          ) : (
+            <p className="mt-1 text-[13px] text-cinza">sem nota</p>
+          )}
+          {quando ? (
+            <p className="mt-1.5 text-[11px] text-cinza">
+              {livro.status === "abandonado" ? "parou em" : "terminou em"}{" "}
+              {quando}
+            </p>
+          ) : null}
+        </div>
+        {reacao ? (
+          <span
+            className="flex h-8 flex-none items-center gap-1.5 rounded-pill px-3 text-[12px] font-semibold text-white"
+            style={{ background: reacao.cor }}
+          >
+            <span aria-hidden>{reacao.emoji}</span>
+            {reacao.nome}
+          </span>
+        ) : null}
+      </header>
+
+      {criterios.length ? (
+        <dl className="grid grid-cols-2 gap-px bg-linha lg:grid-cols-4 lg:bg-fio">
+          {criterios.map((c) => (
+            <div key={c} className="bg-creme-quente px-4 py-3">
+              <dt className="text-[10px] font-semibold tracking-[.14em] text-cinza uppercase">
+                {c}
+              </dt>
+              <dd className="mt-1 text-[13px] tracking-[1px] text-bordo">
+                {estrelas(livro.notas![c])}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      ) : null}
+
+      <div className="space-y-4 px-4 py-4 lg:px-5">
+        {livro.personagem ? (
+          <p className="text-[13px]">
+            <span className="text-[10px] font-semibold tracking-[.14em] text-cinza uppercase">
+              personagem favorita
+            </span>
+            <span className="mt-0.5 block font-semibold text-ameixa">
+              {livro.personagem} <span className="text-bordo">♡</span>
+            </span>
+          </p>
+        ) : null}
+        {livro.citacao ? (
+          <blockquote className="rounded-[10px] bg-rosa-fundo/60 px-4 py-3 font-accent text-[16px] leading-[1.45] text-ameixa italic lg:font-revista">
+            “{livro.citacao}”
+          </blockquote>
+        ) : null}
+        {texto ? (
+          <div>
+            <p className="text-[10px] font-semibold tracking-[.14em] text-cinza uppercase">
+              {livro.resenha ? "o que eu achei" : "anotação"}
+            </p>
+            <p className="mt-1 text-[14px] leading-[1.6] break-words whitespace-pre-line text-ameixa">
+              {texto}
+            </p>
+          </div>
+        ) : null}
+      </div>
+
+      <footer className="flex items-center justify-between gap-3 border-t border-linha px-4 py-2 lg:border-fio lg:px-5">
+        <Link
+          href={`/livro/${livro.id}/avaliar`}
+          className="flex min-h-10 items-center text-[12px] font-semibold text-bordo hover:underline"
+        >
+          editar ficha ✎
+        </Link>
+        <button
+          type="button"
+          onClick={onExcluir}
+          className="flex min-h-10 items-center text-[12px] font-semibold text-cinza hover:text-bordo"
+        >
+          excluir ficha
+        </button>
+      </footer>
+    </section>
+  );
+}
+
 const acoes: { status: StatusLivro; rotulo: string; icone: ReactNode }[] = [
   {
     status: "lendo",
@@ -202,6 +340,15 @@ export default function LivroPage() {
     livro.paginas && livro.paginaAtual
       ? Math.round((livro.paginaAtual / livro.paginas) * 100)
       : null;
+  const temFicha = !!(
+    livro.nota ||
+    livro.reacao ||
+    livro.personagem ||
+    livro.citacao ||
+    livro.resenha ||
+    livro.anotacao ||
+    (livro.notas && Object.values(livro.notas).some(Boolean))
+  );
   const voltar =
     status === "lido"
       ? { href: "/estantes/lidos", r: "lidos" }
@@ -226,15 +373,17 @@ export default function LivroPage() {
     removerLivro(id);
   }
 
-  function marcar(s: StatusLivro, lidoEm?: string) {
+  function marcar(s: StatusLivro, termino?: Termino) {
     // "já li" sempre pergunta quando a pessoa terminou
-    if (s === "lido" && !lidoEm) return setPerguntarTermino(true);
+    if (s === "lido" && !termino) return setPerguntarTermino(true);
     const agora = new Date().toISOString();
     editarLivro(base, {
       status: s,
       paginas: livro!.paginas,
       ...(s === "lendo" ? { iniciadoEm: livro!.iniciadoEm ?? agora } : {}),
-      ...(s === "lido" ? { lidoEm, paginaAtual: livro!.paginas } : {}),
+      ...(s === "lido" && termino
+        ? { ...dadosDoTermino(termino), paginaAtual: livro!.paginas }
+        : {}),
     });
     // terminou agora (não era lido antes): comemora — a própria celebração
     // oferece "fazer a ficha" e "compartilhar", sem brigar com a animação
@@ -298,7 +447,16 @@ export default function LivroPage() {
             ) : null}
             <h1 className={titulo}>{livro.titulo}</h1>
             <p className="mt-[7px] font-accent text-sm italic text-cinza lg:font-texto lg:text-sm lg:not-italic">
-              {livro.autor}
+              {autoriaConhecida(livro.autor) ? (
+                <Link
+                  href={linkDaAutoria(livro.autor)}
+                  className="underline decoration-bege underline-offset-4 hover:text-bordo hover:decoration-bordo"
+                >
+                  {livro.autor}
+                </Link>
+              ) : (
+                livro.autor
+              )}
               <span className="hidden lg:inline">
                 {livro.paginas ? ` · ${livro.paginas} páginas` : ""}
               </span>
@@ -578,64 +736,19 @@ export default function LivroPage() {
               </section>
             ) : null}
 
-            {(livro.notas && Object.values(livro.notas).some(Boolean)) ||
-            livro.personagem ||
-            livro.citacao ||
-            livro.resenha ||
-            livro.anotacao ? (
-              <section className="mx-6 mt-6 rounded-[2px] border border-dashed border-linha bg-creme-quente p-4 lg:mx-0 lg:mt-8 lg:p-5">
-                <p className="font-maquina text-[9px] tracking-[.12em] text-rosa-antigo uppercase">
-                  sua leitura
-                </p>
-
-                {livro.notas && Object.values(livro.notas).some(Boolean) ? (
-                  <dl className="mt-3 grid grid-cols-2 gap-x-6 gap-y-1.5 lg:max-w-[420px]">
-                    {(
-                      ["personagens", "plot", "escrita", "final"] as const
-                    ).map((c) =>
-                      livro.notas![c] ? (
-                        <div
-                          key={c}
-                          className="flex items-baseline justify-between border-b border-linha py-1 lg:border-fio"
-                        >
-                          <dt className="font-accent text-sm italic text-cinza">
-                            {c}
-                          </dt>
-                          <dd className="text-xs text-bordo">
-                            {estrelas(livro.notas![c])}
-                          </dd>
-                        </div>
-                      ) : null,
-                    )}
-                  </dl>
-                ) : null}
-
-                {livro.personagem || livro.citacao ? (
-                  <div className="mt-3 border-t border-dashed border-linha pt-3 first:mt-0 first:border-0 first:pt-0">
-                    {livro.personagem ? (
-                      <p className="eyebrow text-bordo">
-                        personagem favorita · {livro.personagem} ♡
-                      </p>
-                    ) : null}
-                    {livro.citacao ? (
-                      <blockquote className="mt-2 border-l-2 border-rosa-claro pl-3 font-accent text-[15px] leading-[1.4] italic lg:font-revista">
-                        “{livro.citacao}”
-                      </blockquote>
-                    ) : null}
-                  </div>
-                ) : null}
-
-                {livro.resenha || livro.anotacao ? (
-                  <div className="mt-3 border-t border-dashed border-linha pt-3 first:mt-0 first:border-0 first:pt-0">
-                    <p className="eyebrow text-bordo">
-                      {livro.resenha ? "sua resenha" : "sua anotação"}
-                    </p>
-                    <p className="mt-2 font-accent text-sm leading-[1.35] italic">
-                      “{livro.resenha ?? livro.anotacao}”
-                    </p>
-                  </div>
-                ) : null}
-              </section>
+            {temFicha ? (
+              <FichaNoLivro
+                livro={livro}
+                onExcluir={() => {
+                  if (
+                    !confirm(
+                      "excluir a sua ficha? a nota, os critérios, a personagem, o trecho e a resenha somem. o livro continua na estante.",
+                    )
+                  )
+                    return;
+                  editarLivro(base, fichaApagada);
+                }}
+              />
             ) : null}
 
             {estantesProprias.length ? (
@@ -704,9 +817,11 @@ export default function LivroPage() {
           titulo={livro.titulo}
           inicial={livro.lidoEm}
           onCancelar={() => setPerguntarTermino(false)}
-          onConfirmar={(lidoEm) => {
+          notaInicial={livro.nota}
+          formatoInicial={livro.formato}
+          onConfirmar={(t) => {
             setPerguntarTermino(false);
-            marcar("lido", lidoEm);
+            marcar("lido", t);
           }}
         />
       ) : null}

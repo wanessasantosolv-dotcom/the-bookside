@@ -3,7 +3,7 @@
 import { Voltar } from "@/components/Voltar";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, type CSSProperties } from "react";
+import { useEffect } from "react";
 import { AppShell } from "@/components/AppShell";
 import { CapaLivro } from "@/components/CapaLivro";
 import { PerfilWeb } from "@/components/perfil/PerfilWeb";
@@ -17,7 +17,18 @@ import { BotaoSeguir, CartaoAtividade } from "@/components/social/Pessoas";
 import { lembrarLivros } from "@/lib/catalogo";
 import { corDoLivro } from "@/lib/cores";
 import { temas } from "@/lib/dados";
-import { perfilInicial, usePerfil, type Perfil } from "@/lib/perfil-store";
+import { estiloDoPerfil } from "@/lib/tema";
+import { calcularMatch, rotuloDoMatch, type Match } from "@/lib/match";
+import { linkDaAutoria } from "@/lib/autores";
+import { AnelMatch } from "@/components/social/AnelMatch";
+import { estrelas, numerosDoPerfil, porDataDeLeitura } from "@/lib/estantes";
+import { useModoEscuro } from "@/components/Aparencia";
+import {
+  perfilInicial,
+  usePerfil,
+  type LivroSalvo,
+  type Perfil,
+} from "@/lib/perfil-store";
 import {
   atividadesDe,
   contagemSeguidores,
@@ -28,10 +39,111 @@ import {
 } from "@/lib/social";
 import { arquetipos, type ArquetipoId } from "@/lib/teste";
 
+/** "vocês duas": o match com essa leitora, no perfil dela */
+function SecaoMatch({
+  match,
+  nome,
+  id,
+}: {
+  match: Match;
+  nome: string;
+  id?: string;
+}) {
+  const m = match;
+  const lista = (titulo: string, livros: LivroSalvo[]) =>
+    livros.length ? (
+      <div className="mt-4">
+        <p className="text-[10px] font-semibold tracking-[.14em] text-[var(--suave)] uppercase">
+          {titulo}
+        </p>
+        <ul className="mt-2 flex gap-2 overflow-x-auto [scrollbar-width:none]">
+          {livros.slice(0, 6).map((l) => (
+            <li key={l.id} className="w-[52px] flex-none">
+              <Link href={`/livro/${l.id}`}>
+                <CapaLivro
+                  titulo={l.titulo}
+                  capa={l.capa}
+                  cor={corDoLivro(l.id)}
+                  className="w-full [&>span:last-child]:hidden"
+                />
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
+    ) : null;
+  return (
+    <section
+      id={id}
+      className="mt-7 scroll-mt-6 rounded-[16px] border border-[var(--linha)] p-4"
+    >
+      <div className="flex items-center gap-3.5">
+        <AnelMatch pontos={m.pontos} tamanho={70} />
+        <div className="min-w-0">
+          <p className="text-[10px] font-semibold tracking-[.14em] text-[var(--suave)] uppercase">
+            match de leitura
+          </p>
+          <h2 className="font-display text-[21px] leading-tight font-semibold italic text-[var(--acc)]">
+            {rotuloDoMatch(m.pontos)}
+          </h2>
+          <p className="mt-0.5 text-[12px] text-[var(--suave)]">{m.resumo}</p>
+        </div>
+      </div>
+      <dl className="mt-4 grid grid-cols-3 border-y border-[var(--linha)] text-center">
+        {[
+          { n: m.emComum.length, r: "em comum" },
+          { n: m.concordam, r: "notas iguais" },
+          { n: m.autorias.length, r: "autorias" },
+        ].map((x, i) => (
+          <div
+            key={x.r}
+            className={`py-2.5 ${i ? "border-l border-[var(--linha)]" : ""}`}
+          >
+            <dt className="sr-only">{x.r}</dt>
+            <dd>
+              <b className="block font-display text-xl leading-none font-semibold text-[var(--acc)]">
+                {x.n}
+              </b>
+              <span className="mt-1 block text-[9px] font-semibold tracking-[.1em] text-[var(--suave)] uppercase">
+                {x.r}
+              </span>
+            </dd>
+          </div>
+        ))}
+      </dl>
+      {lista("as duas amaram", m.amaram)}
+      {lista(`${nome} pode te indicar`, m.paraVoce)}
+      {lista("você pode indicar pra ela", m.paraEla)}
+      {m.autorias.length || m.generos.length ? (
+        <div className="mt-4 flex flex-wrap gap-1.5 text-[11px]">
+          {m.autorias.slice(0, 4).map((a) => (
+            <Link
+              key={a}
+              href={linkDaAutoria(a)}
+              className="rounded-pill bg-rosa-fundo px-2.5 py-1 font-semibold text-bordo"
+            >
+              {a}
+            </Link>
+          ))}
+          {m.generos.slice(0, 4).map((g) => (
+            <span
+              key={g}
+              className="rounded-pill border border-[var(--linha)] px-2.5 py-1 font-semibold"
+            >
+              {g}
+            </span>
+          ))}
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
 function PerfilDela({ usuario }: { usuario: string }) {
   const router = useRouter();
   const eu = useMeuId();
   const meuUsuario = usePerfil((s) => s.usuario);
+  const modoEscuro = useModoEscuro();
 
   const consulta = useConsulta(async () => {
     const pessoa = await perfilPorUsuario(usuario);
@@ -77,8 +189,9 @@ function PerfilDela({ usuario }: { usuario: string }) {
     usuario: pessoa.usuario ?? "",
   } as Perfil;
   const tema = temas.find((t) => t.id === p.tema) ?? temas[0];
-  const escuro = "escuro" in tema;
-  const lidos = p.livros.filter((l) => l.status === "lido");
+  const lidos = p.livros
+    .filter((l) => l.status === "lido")
+    .sort(porDataDeLeitura);
   const lendo = p.livros.filter((l) => !l.status || l.status === "lendo");
   const quero = p.livros.filter((l) => l.status === "quero");
   const favoritos = (p.favoritos ?? [])
@@ -96,18 +209,15 @@ function PerfilDela({ usuario }: { usuario: string }) {
       .map((l) => l.id),
   );
   const emComum = lidos.filter((l) => meusLivros.has(l.id)).length;
+  const meuPerfil = usePerfil.getState();
+  const match = calcularMatch(
+    meuPerfil.livros,
+    meuPerfil.gostos ?? [],
+    p.livros,
+    p.gostos ?? [],
+  );
 
-  const estilo = {
-    "--papel": escuro ? tema.papel : "var(--color-creme)",
-    "--tinta": escuro ? "#F5EFE6" : "var(--color-ameixa)",
-    "--acc-base": escuro
-      ? tema.texto
-      : tema.id === "biblioteca-classica"
-        ? "#6B0D24"
-        : tema.texto,
-    "--suave": escuro ? "#CFC3B8" : "var(--color-cinza)",
-    "--linha": escuro ? "rgba(245,239,230,.18)" : "var(--color-linha)",
-  } as CSSProperties;
+  const estilo = estiloDoPerfil(tema, modoEscuro);
 
   const seguidores = (
     <span className="flex gap-3">
@@ -143,6 +253,7 @@ function PerfilDela({ usuario }: { usuario: string }) {
           />
         }
         detalhe={seguidores}
+        extra={<SecaoMatch match={match} nome={p.nome || p.usuario} />}
         links={{
           numeros: `${base}/lidos`,
           favoritos: `${base}/lidos`,
@@ -212,9 +323,12 @@ function PerfilDela({ usuario }: { usuario: string }) {
             className="mt-5 flex border-y border-[var(--linha)]"
           >
             {[
-              { n: lidos.length, r: "lidos" },
+              {
+                n: numerosDoPerfil(p).noAno,
+                r: `em ${new Date().getFullYear()}`,
+              },
+              { n: lidos.length, r: "ao todo" },
               { n: lendo.length, r: "lendo" },
-              { n: quero.length, r: "quero ler" },
               { n: emComum, r: "em comum" },
             ].map((s, i) => (
               <span
@@ -304,6 +418,59 @@ function PerfilDela({ usuario }: { usuario: string }) {
               </li>
             ))}
           </ul>
+
+          <SecaoMatch match={match} nome={p.nome || p.usuario} id="match" />
+
+          {lidos.length ? (
+            <>
+              <div className="mt-7 flex items-baseline justify-between">
+                <h2 className="font-display text-[22px] font-semibold italic text-[var(--acc)]">
+                  últimos lidos
+                </h2>
+                <Link
+                  href={`${base}/lidos`}
+                  className="py-2 text-[10px] font-semibold tracking-[.12em] text-[var(--acc)] uppercase"
+                >
+                  ver todos →
+                </Link>
+              </div>
+              <ul className="mt-1">
+                {lidos.slice(0, 5).map((l) => (
+                  <li
+                    key={l.id}
+                    className="border-t border-[var(--linha)] first:border-0"
+                  >
+                    <Link
+                      href={`/livro/${l.id}`}
+                      className="flex items-center gap-3 py-2.5"
+                    >
+                      <CapaLivro
+                        titulo={l.titulo}
+                        capa={l.capa}
+                        cor={corDoLivro(l.id)}
+                        className="w-[38px] flex-none [&>span:last-child]:hidden"
+                      />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate font-display text-[15px] font-semibold italic">
+                          {l.titulo}
+                        </span>
+                        <span className="mt-0.5 block text-[11px] text-[var(--suave)]">
+                          {l.lidoEm
+                            ? `lido em ${new Date(l.lidoEm).toLocaleDateString("pt-BR", { day: "numeric", month: "short", year: "numeric" })}`
+                            : "sem data"}
+                          {l.nota ? (
+                            <span className="ml-2 text-[var(--acc)]">
+                              {estrelas(l.nota)}
+                            </span>
+                          ) : null}
+                        </span>
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : null}
 
           {atividades.length ? (
             <>

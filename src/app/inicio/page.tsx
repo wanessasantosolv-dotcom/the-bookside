@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { AlternarAparencia } from "@/components/Aparencia";
+import { SeloNovidades } from "@/components/social/AvisoNovidades";
 import { ConviteTeste } from "@/components/ConviteTeste";
 import { LendoAgora } from "@/components/feed/LendoAgora";
 import { ProntoPraVoce } from "@/components/feed/ProntoPraVoce";
@@ -98,7 +99,8 @@ function Topo({ nome }: { nome: string }) {
           </svg>
           <span className="hidden lg:inline">encontrar pessoas</span>
         </Link>
-        <Link href="/novidades" aria-label="novidades" data-tour="novidades" className={iconeLink}>
+        <Link href="/novidades" aria-label="novidades" data-tour="novidades" className={`relative ${iconeLink}`}>
+          <SeloNovidades className="top-1 left-6" />
           <svg
             width="19"
             height="19"

@@ -679,6 +679,29 @@ export async function salvarFicha(
   }
 }
 
+/** Apaga a minha ficha de um livro do clube (e o aviso dela no feed do clube). */
+export async function apagarFicha(l: LivroDoClube) {
+  const eu = meuId();
+  if (!eu) return;
+  const { error } = await db()
+    .from("fichas")
+    .delete()
+    .eq("clube_livro_id", l.id)
+    .eq("autor", eu);
+  if (error) throw error;
+  await db()
+    .from("atividades")
+    .delete()
+    .eq("autor", eu)
+    .eq("tipo", "ficha")
+    .eq("clube_id", l.clube_id)
+    .eq("livro->>id", l.livro.id)
+    .then(
+      () => {},
+      () => {},
+    );
+}
+
 export function media(nums: (number | null | undefined)[]) {
   const v = nums.filter((n): n is number => typeof n === "number" && n > 0);
   return v.length ? v.reduce((a, b) => a + Number(b), 0) / v.length : null;

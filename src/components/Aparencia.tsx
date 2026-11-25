@@ -44,7 +44,8 @@ export function Aparencia() {
   useEffect(() => {
     const raiz = document.documentElement;
     const t = temas.find((x) => x.id === tema);
-    if (temaNoApp && t && "escuro" in t) raiz.dataset.temaEscuro = "1";
+    if (temaNoApp && t && "escuro" in t && modoEscuro)
+      raiz.dataset.temaEscuro = "1";
     else delete raiz.dataset.temaEscuro;
     const cores = (temaNoApp ? coresDoTema(tema, modoEscuro) : undefined) ?? {};
     const nomes = Object.keys(cores);

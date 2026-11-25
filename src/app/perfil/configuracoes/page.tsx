@@ -228,7 +228,7 @@ export default function ConfiguracoesPage() {
                 ligado={temaNoApp}
                 onChange={(v) => atualizar({ temaSoNoPerfil: !v })}
                 titulo="usar o tema do perfil no app todo"
-                texto={`as cores de “${temaAtual.nome}” nos botões, títulos e menus de todas as telas.${"escuro" in temaAtual ? " como é um tema escuro, o app todo escurece." : ""}`}
+                texto={`as cores de “${temaAtual.nome}” nos botões, títulos e menus de todas as telas.${"escuro" in temaAtual ? " no modo escuro, o app usa o papel escuro do tema." : ""}`}
               />
             </section>
 

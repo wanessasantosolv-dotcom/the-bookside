@@ -76,6 +76,22 @@ export default function PessoasPage() {
             </span>
           </nav>
           <MeuArroba />
+          <Link
+            href="/match"
+            className="mx-6 mt-4 flex items-center justify-between gap-3 rounded-[14px] border border-bordo/40 bg-rosa-fundo/60 px-4 py-3.5 hover:border-bordo lg:mx-0 lg:rounded-[6px]"
+          >
+            <span>
+              <b className="block font-display text-[18px] font-semibold italic text-bordo">
+                fazer match ✦
+              </b>
+              <span className="text-[12px] text-tinta-suave">
+                ache leitoras que leem parecido com você
+              </span>
+            </span>
+            <span aria-hidden className="text-lg text-bordo">
+              →
+            </span>
+          </Link>
           <div className="mt-4 px-6 lg:px-0">
             <label className="flex h-[52px] items-center gap-3 rounded-pill border border-linha bg-creme-quente px-5 focus-within:border-bordo">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7A6A6E" strokeWidth="1.9" strokeLinecap="round" aria-hidden>

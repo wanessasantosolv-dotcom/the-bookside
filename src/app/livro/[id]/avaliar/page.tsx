@@ -18,7 +18,7 @@ import {
 } from "@/components/FichaLeitura";
 import { useHidratado } from "@/components/PerfilHidratacao";
 import { livroLembrado } from "@/lib/catalogo";
-import { infoDoLivro, notasCompletas } from "@/lib/estantes";
+import { fichaApagada, infoDoLivro, notasCompletas } from "@/lib/estantes";
 import { dataDoDia, diaDaData, diaLocal } from "@/lib/datas";
 import { usePerfil, type LivroSalvo, type Reacao } from "@/lib/perfil-store";
 
@@ -74,6 +74,25 @@ function Formulario({ livro }: { livro: LivroSalvo & { paginas?: number } }) {
     router.push(`/livro/${livro.id}`);
   }
 
+  const temFicha = !!(
+    livro.nota ||
+    livro.reacao ||
+    livro.personagem ||
+    livro.citacao ||
+    livro.resenha ||
+    (livro.notas && Object.values(livro.notas).some(Boolean))
+  );
+  function excluir() {
+    if (
+      !confirm(
+        "excluir a sua ficha? a nota, os critérios, a personagem, o trecho e a resenha somem. o livro continua na estante.",
+      )
+    )
+      return;
+    editarLivro(livro, fichaApagada);
+    router.push(`/livro/${livro.id}`);
+  }
+
   return (
     <TelaApp aba="estantes">
       <form onSubmit={salvar} className="flex flex-1 flex-col">
@@ -107,6 +126,15 @@ function Formulario({ livro }: { livro: LivroSalvo & { paginas?: number } }) {
           <p className="mt-3 font-accent text-[13px] italic text-cinza">
             essa ficha fica no seu perfil, fora de qualquer clube.
           </p>
+          {temFicha ? (
+            <button
+              type="button"
+              onClick={excluir}
+              className="mt-2 min-h-11 text-xs font-semibold text-cinza underline underline-offset-4 hover:text-bordo"
+            >
+              excluir ficha
+            </button>
+          ) : null}
         </div>
         {erro ? (
           <p role="alert" className="mt-4 px-6 text-[13px] text-bordo lg:px-0">

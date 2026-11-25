@@ -8,7 +8,9 @@ export function SeletorFormato({
   valor,
   onChange,
   className = "",
+  rotulo = "como você lê esse livro?",
 }: {
+  rotulo?: string;
   valor?: FormatoLivro;
   onChange: (f: FormatoLivro | undefined) => void;
   className?: string;
@@ -16,7 +18,7 @@ export function SeletorFormato({
   return (
     <fieldset className={className}>
       <legend className="text-[10px] font-semibold tracking-[.16em] text-bordo uppercase lg:text-grafite">
-        como você lê esse livro?
+        {rotulo}
       </legend>
       <div className="mt-2 flex overflow-hidden rounded-pill border-[1.5px] border-bordo">
         {formatos.map((f, i) => {

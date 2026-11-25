@@ -6,6 +6,7 @@ import { AppShell } from "@/components/AppShell";
 import { Carregando, ComConta, ErroOuFalta, Vazio } from "@/components/social/Estados";
 import { Avatar, Topo } from "@/components/social/Pessoas";
 import { usePerfil } from "@/lib/perfil-store";
+import { zerarNovidades } from "@/components/social/AvisoNovidades";
 import { nomeDe, novidades, quandoFoi, useConsulta, type Novidade } from "@/lib/social";
 
 function grupo(iso: string) {
@@ -25,7 +26,9 @@ function Lista() {
   const lista = useConsulta(() => novidades(), []);
 
   useEffect(() => {
-    if (lista.dados) atualizar({ novidadesVistasEm: new Date().toISOString() });
+    if (!lista.dados) return;
+    atualizar({ novidadesVistasEm: new Date().toISOString() });
+    zerarNovidades();
   }, [lista.dados, atualizar]);
 
   if (lista.carregando && !lista.dados) return <Carregando texto="procurando novidades…" />;

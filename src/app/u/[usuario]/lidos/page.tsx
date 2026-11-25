@@ -19,11 +19,36 @@ const estantes = [
   { id: "lendo", rotulo: "lendo" },
 ] as const;
 
+/** a data de cada livro na estante dela: quando terminou, começou ou guardou */
+function dataNaEstante(l: LivroSalvo, estante: "lido" | "quero" | "lendo") {
+  return estante === "lido"
+    ? l.lidoEm
+    : estante === "lendo"
+      ? (l.iniciadoEm ?? l.adicionadoEm)
+      : l.adicionadoEm;
+}
+
+function quandoNaEstante(l: LivroSalvo, estante: "lido" | "quero" | "lendo") {
+  const iso = dataNaEstante(l, estante);
+  if (!iso) return estante === "lido" ? "sem data" : "";
+  const d = new Date(iso).toLocaleDateString("pt-BR", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+  return estante === "lido"
+    ? `lido em ${d}`
+    : estante === "lendo"
+      ? `começou em ${d}`
+      : `guardou em ${d}`;
+}
+
 function Estante({ usuario }: { usuario: string }) {
   const params = useSearchParams();
   const estante = (params.get("estante") ?? "lido") as "lido" | "quero" | "lendo";
   const [soResenha, setSoResenha] = useState(false);
   const [grade, setGrade] = useState(false);
+  const [ano, setAno] = useState<string | null>(null);
   const meus = usePerfil((s) => s.livros);
 
   const consulta = useConsulta(async () => {
@@ -40,9 +65,19 @@ function Estante({ usuario }: { usuario: string }) {
   const { pessoa, seguindo } = consulta.dados;
   const todos: LivroSalvo[] = pessoa.dados.livros ?? [];
   const daEstante = todos.filter((l) => (estante === "lendo" ? !l.status || l.status === "lendo" : l.status === estante));
+  const anos = [
+    ...new Set(
+      daEstante
+        .map((l) => dataNaEstante(l, estante)?.slice(0, 4))
+        .filter((a): a is string => !!a),
+    ),
+  ].sort((a, b) => b.localeCompare(a));
   const livros = daEstante
     .filter((l) => !soResenha || l.resenha || l.anotacao)
-    .sort((a, b) => (b.lidoEm ?? b.adicionadoEm ?? "").localeCompare(a.lidoEm ?? a.adicionadoEm ?? ""));
+    .filter((l) => !ano || (dataNaEstante(l, estante) ?? "").startsWith(ano))
+    .sort((a, b) =>
+      (dataNaEstante(b, estante) ?? "").localeCompare(dataNaEstante(a, estante) ?? ""),
+    );
   const meusLidos = new Set(meus.filter((l) => l.status === "lido").map((l) => l.id));
   const emComum = todos.filter((l) => l.status === "lido" && meusLidos.has(l.id)).length;
   const nome = pessoa.nome || pessoa.usuario;
@@ -79,9 +114,24 @@ function Estante({ usuario }: { usuario: string }) {
         ))}
       </nav>
       <div className="mt-3 flex items-center justify-between px-6 lg:px-0">
-        <button type="button" aria-pressed={soResenha} onClick={() => setSoResenha((v) => !v)} className={pilula(soResenha)}>
-          com resenha
-        </button>
+        <div className="flex min-w-0 gap-1.5 overflow-x-auto [scrollbar-width:none]">
+          <button type="button" aria-pressed={soResenha} onClick={() => setSoResenha((v) => !v)} className={pilula(soResenha)}>
+            com resenha
+          </button>
+          {anos.length > 1
+            ? anos.map((a) => (
+                <button
+                  key={a}
+                  type="button"
+                  aria-pressed={ano === a}
+                  onClick={() => setAno(ano === a ? null : a)}
+                  className={pilula(ano === a)}
+                >
+                  {a}
+                </button>
+              ))
+            : null}
+        </div>
         <div role="group" aria-label="modo de ver" className="flex overflow-hidden rounded-pill border border-bege">
           {[
             { v: false, r: "lista" },
@@ -111,6 +161,9 @@ function Estante({ usuario }: { usuario: string }) {
                   <CapaLivro titulo={l.titulo} capa={l.capa} cor={corDoLivro(l.id)} className="w-full" />
                   <p className="mt-2 line-clamp-2 font-display text-sm leading-tight font-semibold italic lg:font-revista lg:font-normal">{l.titulo}</p>
                   {l.nota ? <p className="mt-1 text-[10px] text-bordo">{estrelas(l.nota)}</p> : null}
+                  <p className="mt-0.5 text-[9px] font-semibold tracking-[.06em] text-cinza uppercase">
+                    {quandoNaEstante(l, estante)}
+                  </p>
                 </Link>
               </li>
             ))}
@@ -127,9 +180,14 @@ function Estante({ usuario }: { usuario: string }) {
                       {meusLidos.has(l.id) ? " · você também leu" : ""}
                     </span>
                     <span className="mt-1 block font-display text-base leading-tight font-semibold italic lg:font-revista lg:font-normal">{l.titulo}</span>
-                    {l.nota ? <span className="mt-1 block text-xs text-bordo">{estrelas(l.nota)}</span> : null}
+                    <span className="mt-1 flex flex-wrap items-center gap-x-2 text-xs">
+                      {l.nota ? <span className="text-bordo">{estrelas(l.nota)}</span> : null}
+                      {quandoNaEstante(l, estante) ? (
+                        <span className="text-[11px] text-cinza">{quandoNaEstante(l, estante)}</span>
+                      ) : null}
+                    </span>
                     {l.resenha || l.anotacao ? (
-                      <span className="mt-1.5 line-clamp-2 block font-accent text-[13px] italic text-cinza">“{l.resenha ?? l.anotacao}”</span>
+                      <span className="mt-1.5 line-clamp-3 block text-[13px] leading-[1.5] text-tinta-suave">{l.resenha ?? l.anotacao}</span>
                     ) : null}
                   </span>
                 </Link>

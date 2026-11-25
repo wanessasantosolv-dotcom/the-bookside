@@ -9,7 +9,11 @@ import { useState } from "react";
 import { CapaLivro } from "@/components/CapaLivro";
 import { useHidratado } from "@/components/PerfilHidratacao";
 import { Botao } from "@/components/ui/Botao";
-import { PerguntaTermino } from "@/components/PerguntaTermino";
+import {
+  dadosDoTermino,
+  PerguntaTermino,
+  type Termino,
+} from "@/components/PerguntaTermino";
 import { livroLembrado } from "@/lib/catalogo";
 import { corDoLivro } from "@/lib/cores";
 import { infoDoLivro } from "@/lib/estantes";
@@ -41,15 +45,15 @@ function Progresso({ livro }: { livro: LivroSalvo }) {
   const mudar = (n: number) =>
     setAtual(Math.max(0, paginas ? Math.min(paginas, n) : n));
 
-  function salvar(terminou = false, lidoEm?: string) {
+  function salvar(terminou = false, termino?: Termino) {
     // terminou: pergunta primeiro quando foi
-    if (terminou && !lidoEm) return setPerguntarTermino(true);
+    if (terminou && !termino) return setPerguntarTermino(true);
     editarLivro(base, {
       status: terminou ? "lido" : "lendo",
       iniciadoEm,
       paginas: paginas || undefined,
       paginaAtual: terminou ? paginas || atual : atual,
-      ...(terminou ? { lidoEm } : {}),
+      ...(terminou && termino ? dadosDoTermino(termino) : {}),
     });
     // terminando, a celebração mesmo oferece "fazer a ficha"; sem terminar,
     // volta pra página do livro normalmente
@@ -192,7 +196,9 @@ function Progresso({ livro }: { livro: LivroSalvo }) {
           titulo={livro.titulo}
           inicial={livro.lidoEm}
           onCancelar={() => setPerguntarTermino(false)}
-          onConfirmar={(lidoEm) => salvar(true, lidoEm)}
+          notaInicial={livro.nota}
+          formatoInicial={livro.formato}
+          onConfirmar={(t) => salvar(true, t)}
         />
       ) : null}
     </TelaApp>

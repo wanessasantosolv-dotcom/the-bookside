@@ -7,6 +7,8 @@ import { CapaLivro } from "@/components/CapaLivro";
 import { AbasPerfil, type AbaPerfil } from "@/components/perfil/AbasPerfil";
 import { corDoLivro } from "@/lib/cores";
 import type { Tema } from "@/lib/dados";
+import { destaqueWebDoTema } from "@/lib/tema";
+import { dataCurta, numerosDoPerfil } from "@/lib/estantes";
 import type { LivroSalvo, Perfil } from "@/lib/perfil-store";
 import type { Arquetipo } from "@/lib/teste";
 
@@ -19,7 +21,10 @@ function Coluna({
   livros,
   vazio,
   rotuloAcao = "ver todos →",
+  comData,
 }: {
+  /** mostra quando terminou, embaixo de cada capa */
+  comData?: boolean;
   titulo: string;
   href?: string;
   livros: LivroSalvo[];
@@ -52,6 +57,11 @@ function Coluna({
                   cor={corDoLivro(l.id)}
                   className="w-full"
                 />
+                {comData ? (
+                  <span className="mt-1 block text-center text-[9px] font-semibold tracking-[.06em] text-grafite uppercase">
+                    {l.lidoEm ? dataCurta(l.lidoEm) : "sem data"}
+                  </span>
+                ) : null}
               </Link>
             </li>
           ))}
@@ -81,7 +91,10 @@ export function PerfilWeb({
   aba = "geral",
   onAba,
   conteudoAba,
+  extra,
 }: {
+  /** um bloco a mais no fim (ex.: o match, no perfil de outra leitora) */
+  extra?: ReactNode;
   perfil: Perfil;
   tema: Tema;
   arquetipo: Arquetipo | null;
@@ -114,12 +127,8 @@ export function PerfilWeb({
   };
   const outra = !!acoes;
   const [copiado, setCopiado] = useState(false);
-  const base = tema.id === "biblioteca-classica" ? "#692536" : tema.destaque;
   // temas escuros: o destaque é claro, então escurece um pouco para ler sobre o papel claro da web
-  const acc =
-    "escuro" in tema
-      ? `color-mix(in srgb, ${tema.destaque} 60%, #2B1420)`
-      : base;
+  const acc = destaqueWebDoTema(tema);
 
   async function compartilhar() {
     const url = `${window.location.origin}/perfil`;
@@ -257,10 +266,10 @@ export function PerfilWeb({
               className="mb-10 grid grid-cols-4 border-y border-fio"
             >
               {[
-                { n: lidos.length, r: "lidos" },
+                numerosDoPerfil(p).destaque,
+                { n: lidos.length, r: "lidos ao todo" },
                 { n: lendo.length, r: "lendo" },
                 { n: quero.length, r: "quero ler" },
-                { n: p.meta ?? "—", r: `meta ${new Date().getFullYear()}` },
               ].map((s, i) => (
                 <span
                   key={s.r}
@@ -289,6 +298,7 @@ export function PerfilWeb({
               <Coluna
                 titulo={`lidos · ${lidos.length}`}
                 href={href.lidos}
+                comData
                 livros={lidos}
                 vazio="nenhum livro lido por aqui ainda."
               />
@@ -374,6 +384,7 @@ export function PerfilWeb({
                 </p>
               )}
             </section>
+            {extra ? <div className="mt-9 max-w-[720px]">{extra}</div> : null}
           </>
         )}
       </div>

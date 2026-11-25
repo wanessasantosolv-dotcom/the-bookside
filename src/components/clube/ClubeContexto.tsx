@@ -25,6 +25,7 @@ import {
 } from "@/lib/clubes";
 import { temas } from "@/lib/dados";
 import { coresDoTema } from "@/lib/tema";
+import { useModoEscuro } from "@/components/Aparencia";
 import { useConsulta, useMeuId } from "@/lib/social";
 
 type Ctx = {
@@ -306,6 +307,7 @@ export function ClubeProvedor({
   children: ReactNode;
 }) {
   const eu = useMeuId();
+  const modoEscuro = useModoEscuro();
   const pathname = usePathname();
   // o que o clube está lendo vai para a estante pessoal (no máximo 1 vez por minuto)
   useEffect(() => {
@@ -356,7 +358,7 @@ export function ClubeProvedor({
     >
       {/* o tema do clube vale para todas as telas dele, como o tema do perfil */}
       <div
-        style={coresDoTema(c.tema)}
+        style={coresDoTema(c.tema, modoEscuro)}
         className="flex flex-1 flex-col bg-creme pb-8 lg:bg-jornal"
       >
         {comAbas ? <Cabecalho c={c} papel={papel} rodada={null} /> : null}
