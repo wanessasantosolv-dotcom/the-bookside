@@ -318,7 +318,7 @@ export async function buscarPorAutoria(
   signal?: AbortSignal,
 ): Promise<LivroBusca[]> {
   const [emPt, google, openLibrary] = await Promise.allSettled([
-    volumesDoGoogle(`inauthor:"${autor}"`, 20, signal, { lang: "pt" }).then((items) =>
+    volumesDoGoogle(`inauthor:"${autor}"`, 40, signal, { lang: "pt" }).then((items) =>
       items.map(doGoogle).filter((l): l is LivroBusca => !!l),
     ),
     buscarNoGoogle(`inauthor:"${autor}"`, signal),
