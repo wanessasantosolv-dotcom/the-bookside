@@ -13,6 +13,9 @@ import {
   organiza,
 } from "@/lib/clubes";
 import { nomeDe, useConsulta, useMeuId } from "@/lib/social";
+import { modoDe, quemTrouxe, vezDe } from "@/lib/clubes";
+import { Avatar } from "@/components/social/Pessoas";
+import { CapaAuto } from "@/components/CapaAuto";
 
 type Evento = {
   id: string;
@@ -209,6 +212,57 @@ export default function AgendaPage() {
           ))}
         </div>
       </div>
+      {/* quem escolhe a próxima e a fila (os mesmos dados da estante) */}
+      {(() => {
+        const modo = modoDe(clube);
+        const vez = modo === "rodizio" ? vezDe(livros, membros) : null;
+        const fila = livros.filter((l) => l.estado === "sugerido").slice(0, 4);
+        if (!vez && !fila.length) return null;
+        return (
+          <section aria-label="próximas escolhas" className="mt-6 grid gap-6 border-y border-linha py-5 sm:grid-cols-2 lg:border-fio">
+            {vez ? (
+              <div>
+                <p className="text-[12px] text-cinza">próxima escolha</p>
+                <p className="mt-2 flex items-center gap-3">
+                  <Avatar pessoa={vez.pessoa} tamanho={36} />
+                  <span className="font-revista text-[20px] text-bordo italic">
+                    {vez.usuario_id === eu ? "a vez é sua" : `a vez é de ${nomeDe(vez.pessoa)}`}
+                  </span>
+                </p>
+                {vez.usuario_id === eu ? (
+                  <Link href={`/clubes/${clube.id}/escolher`} className="mt-2 inline-flex min-h-10 items-center text-[13px] font-semibold text-bordo hover:underline">
+                    escolher o próximo livro →
+                  </Link>
+                ) : null}
+              </div>
+            ) : null}
+            {fila.length ? (
+              <div>
+                <p className="text-[12px] text-cinza">{modo === "votacao" ? "em votação" : "na fila"}</p>
+                <ol className="mt-2 space-y-2">
+                  {fila.map((l, i) => (
+                    <li key={l.id}>
+                      <Link href={`/clubes/${clube.id}/livro/${l.id}`} className="flex items-center gap-3">
+                        <span className="w-4 text-right font-revista text-[16px] text-bordo tabular-nums">{i + 1}</span>
+                        <span className="w-[30px] flex-none">
+                          <CapaAuto livro={l.livro} className="w-full [&>span:last-child]:hidden" />
+                        </span>
+                        <span className="min-w-0">
+                          <span className="block truncate text-[14px] text-ameixa">{l.livro.titulo}</span>
+                          <span className="block truncate text-[11px] text-cinza">{quemTrouxe(l, membros, eu) ?? ""}</span>
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ol>
+                <Link href={`/clubes/${clube.id}/sugestoes`} className="mt-2 inline-flex min-h-10 items-center text-[13px] font-semibold text-bordo hover:underline">
+                  {modo === "votacao" ? "votar →" : "ver a fila completa →"}
+                </Link>
+              </div>
+            ) : null}
+          </section>
+        );
+      })()}
       <div className="mt-4">
         <NovoEncontro aoMarcar={consulta.recarregar} />
       </div>

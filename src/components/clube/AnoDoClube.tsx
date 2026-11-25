@@ -1,24 +1,40 @@
 import Link from "next/link";
+import { CapaAuto } from "@/components/CapaAuto";
 
-/** "o ano do clube": a retrospectiva, sempre à vista */
-export function CartaoAnoDoClube({ clubeId }: { clubeId: string }) {
+/** "o ano do clube": a retrospectiva coletiva como destaque editorial, na cor do clube */
+export function CartaoAnoDoClube({
+  clubeId,
+  livros = [],
+}: {
+  clubeId: string;
+  /** livros concluídos pelo clube neste ano (para as capas) */
+  livros?: { id: string; titulo: string; autor: string; capa?: string }[];
+}) {
   const ano = new Date().getFullYear();
   return (
-    <div className="flex flex-wrap items-center gap-3 rounded-xl border border-linha bg-creme-quente px-4 py-3.5 lg:rounded-[4px] lg:border-fio lg:bg-transparent">
-      <span className="min-w-0 basis-full sm:basis-0 sm:flex-1">
-        <span className="block text-[10px] font-semibold tracking-[.16em] text-bordo uppercase">
-          o ano do clube ✦
+    <Link
+      href={`/clubes/${clubeId}/retrospectiva`}
+      className="inverso group flex flex-wrap items-center gap-6 rounded-[12px] bg-bordo px-6 py-6 text-creme lg:flex-nowrap lg:px-8"
+    >
+      <span className="min-w-0 flex-1">
+        <span className="block text-[12px] tracking-[.12em] opacity-80">o ano do clube</span>
+        <span className="mt-1 block font-revista text-[28px] leading-tight italic lg:text-[34px]">{ano} em retrospectiva</span>
+        <span className="mt-2 block text-[13px] opacity-85">
+          {livros.length
+            ? `${livros.length} ${livros.length === 1 ? "livro concluído" : "livros concluídos"} juntos este ano`
+            : "os livros, as notas e os destaques do clube no ano"}
         </span>
-        <span className="mt-0.5 block font-accent text-sm italic text-cinza">
-          a retrospectiva de {ano}
-        </span>
+        <span className="mt-3 inline-block text-[13px] font-semibold underline-offset-4 group-hover:underline">abrir a retrospectiva →</span>
       </span>
-      <Link
-        href={`/clubes/${clubeId}/retrospectiva`}
-        className="flex min-h-10 items-center rounded-pill bg-bordo px-4 text-xs font-semibold text-creme"
-      >
-        retrospectiva
-      </Link>
-    </div>
+      {livros.length ? (
+        <span aria-hidden className="flex items-end">
+          {livros.slice(0, 5).map((l, i) => (
+            <span key={l.id} className="-ml-4 w-[64px] first:ml-0 lg:w-[76px]" style={{ transform: `rotate(${(i - 2) * 3}deg)`, zIndex: 5 - Math.abs(i - 2) }}>
+              <CapaAuto livro={l} className="w-full shadow-[0_14px_24px_-12px_rgba(0,0,0,.55)] [&>span:last-child]:hidden" />
+            </span>
+          ))}
+        </span>
+      ) : null}
+    </Link>
   );
 }

@@ -177,6 +177,9 @@ export default function BibliotecaPage() {
               + livro já lido
             </Link>
           ) : null}
+          <Link href={`${base}/sugestoes`} className={acao}>
+            {votacao ? "sugestões e votação" : "fila"}
+          </Link>
           <Link
             href={`${base}/sugerir`}
             className={`${acao} border-bordo bg-bordo text-creme hover:bg-bordo`}
@@ -216,7 +219,6 @@ export default function BibliotecaPage() {
         <SeletorVisualizacao
           vis={vis}
           onChange={setVis}
-          className="hidden lg:inline"
         />
       </div>
 
@@ -290,12 +292,13 @@ export default function BibliotecaPage() {
       )}
 
       <div className="mt-12">
-        <CartaoAnoDoClube clubeId={clube.id} />
+        <CartaoAnoDoClube
+          clubeId={clube.id}
+          livros={lidos.filter((l) => (l.encerrado_em ?? "").startsWith(String(new Date().getFullYear()))).map((l) => l.livro)}
+        />
       </div>
 
-      <p className="pt-8 text-center lg:hidden">
-        <SeletorVisualizacao vis={vis} onChange={setVis} className="!text-sm" />
-      </p>
+
     </div>
   );
 }

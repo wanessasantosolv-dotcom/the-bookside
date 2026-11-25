@@ -503,6 +503,65 @@ export default function LeituraPage() {
             </Link>
           ) : null}
         </div>
+        {/* avaliações do clube nesta leitura (quem não avaliou não conta como zero) */}
+        {(() => {
+          const notas = fichas.map((f) => f.nota).filter((n): n is number => typeof n === "number" && n > 0);
+          const pendentes = membros.filter((m) => !fichas.some((f) => f.autor === m.usuario_id));
+          if (!notas.length && !pendentes.length) return null;
+          const mediaClube = notas.length ? notas.reduce((t, n) => t + n, 0) / notas.length : null;
+          const faixas = [5, 4, 3, 2, 1].map((n) => ({ n, q: notas.filter((x) => Math.round(x) === n).length }));
+          const maior = Math.max(1, ...faixas.map((f) => f.q));
+          return (
+            <section aria-labelledby="t-avaliacoes" className="mt-8 border-t border-linha pt-6 lg:border-fio">
+              <h3 id="t-avaliacoes" className="font-revista text-[22px] leading-none text-bordo italic">
+                avaliações do clube
+              </h3>
+              {mediaClube !== null ? (
+                <>
+                  <p className="mt-4 flex items-baseline gap-2">
+                    <span className="font-revista text-[40px] leading-none text-bordo tabular-nums">
+                      {mediaClube.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
+                    </span>
+                    <span className="text-[13px] text-tinta-suave">
+                      média do clube · {notas.length} {notas.length === 1 ? "avaliação" : "avaliações"}
+                    </span>
+                  </p>
+                  <ul className="mt-3 space-y-1">
+                    {faixas.map((f) => (
+                      <li key={f.n} className="flex items-center gap-2 text-[12px] text-cinza">
+                        <span className="w-6 tabular-nums">{f.n}★</span>
+                        <span className="h-[6px] flex-1 rounded-full bg-linha">
+                          <span className="block h-full rounded-full bg-bordo" style={{ width: `${(f.q / maior) * 100}%` }} />
+                        </span>
+                        <span className="w-4 text-right tabular-nums">{f.q}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              ) : (
+                <p className="mt-3 text-[13px] text-cinza">ninguém avaliou ainda.</p>
+              )}
+              {pendentes.length ? (
+                <p className="mt-4 text-[13px] text-tinta-suave">
+                  ainda sem ficha:{" "}
+                  {pendentes.map((m) => (m.usuario_id === eu ? "você" : nomeDe(m.pessoa))).join(", ")}
+                </p>
+              ) : null}
+              <div className="mt-3 flex flex-wrap gap-x-4">
+                {!fichas.some((f) => f.autor === eu) ? (
+                  <Link href={`/clubes/${clube.id}/ficha/${lendo.id}`} className="inline-flex min-h-10 items-center text-[13px] font-semibold text-bordo hover:underline">
+                    escrever minha ficha →
+                  </Link>
+                ) : null}
+                {fichas.length ? (
+                  <Link href={`/clubes/${clube.id}/livro/${lendo.id}`} className="inline-flex min-h-10 items-center text-[13px] font-semibold text-bordo hover:underline">
+                    ler as fichas →
+                  </Link>
+                ) : null}
+              </div>
+            </section>
+          );
+        })()}
       </aside>
     </div>
   );

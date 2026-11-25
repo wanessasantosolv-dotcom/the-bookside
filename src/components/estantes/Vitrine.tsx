@@ -4,6 +4,7 @@
  * As formas de ver uma estante — as MESMAS na estante pessoal e na biblioteca do
  * clube: prateleiras, leque de capas e estante de pé (lombadas).
  */
+import { PrateleiraMadeira } from "@/components/estantes/Biblioteca";
 import Link from "next/link";
 import { useRef, useState, type ReactNode } from "react";
 import { CapaAuto } from "@/components/CapaAuto";
@@ -99,7 +100,7 @@ export function PrateleiraCapas({
 
   return (
     <div className="relative">
-      <ul className="flex items-end gap-3 overflow-x-auto px-0.5 pb-[3px] [scrollbar-width:none] lg:gap-4">
+      <ul className="flex items-end gap-3 overflow-x-auto px-3 pt-2 [scrollbar-width:none] lg:gap-4">
         {livros.map((l) => (
           <li key={l.id} className="relative w-[74px] flex-none lg:w-[104px]">
             <Link
@@ -139,12 +140,10 @@ export function PrateleiraCapas({
           </li>
         ) : null}
       </ul>
-      <span
-        aria-hidden
-        className="block h-[9px] w-full rounded-[3px] bg-gradient-to-b from-linha to-bege shadow-[0_2px_0_#c4ac93]"
-      />
+      {/* a mesma prateleira de madeira das estantes pessoais */}
+      <PrateleiraMadeira className="-mt-[5px]" />
       {livros.some((l) => l.legenda) ? (
-        <ul className="mt-1.5 flex gap-3 overflow-hidden px-0.5 lg:gap-4">
+        <ul className="mt-1.5 flex gap-3 overflow-hidden px-3 lg:gap-4">
           {livros.map((l) => (
             <li
               key={l.id}
