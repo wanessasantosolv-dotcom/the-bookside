@@ -34,6 +34,9 @@ import {
 } from "@/lib/nacionalidade";
 import { calcularNumeros, generoDoLivro, mesDoReview, type Numeros } from "@/lib/numeros";
 import { useGenerosRefinados } from "@/lib/generos";
+import { CapaJournal, linhaDaCapa } from "@/components/journal/Revista";
+import { useEdicao } from "@/components/journal/useEdicao";
+import { edicaoEmDestaque, paletaDoMes } from "@/lib/journal";
 import { usePerfil, type LivroSalvo } from "@/lib/perfil-store";
 
 /*
@@ -244,83 +247,62 @@ function AnoEmNumeros({ n, atual, dias }: { n: Numeros; atual: boolean; dias: nu
 
 // ───────── mês em revista ─────────
 
-function MesEmRevista({ livros, ano }: { livros: LivroSalvo[]; ano: number }) {
-  // aparece do penúltimo dia do mês até o dia 5 do seguinte (ver mesDoReview)
-  const aberto = mesDoReview();
-  if (!aberto || aberto.ano !== ano) return null;
-  const chave = `${aberto.ano}-${String(aberto.mes + 1).padStart(2, "0")}`;
-  const doMes = livros
-    .filter((l) => l.status === "lido" && l.lidoEm?.startsWith(chave))
-    .sort(
-      (a, b) =>
-        (b.nota ?? 0) - (a.nota ?? 0) ||
-        (b.lidoEm ?? "").localeCompare(a.lidoEm ?? ""),
-    );
-  const paginas = doMes.reduce((t, l) => t + (l.paginas ?? 0), 0);
-  const nome = MESES[aberto.mes];
-  // as capas empilhadas: o favorito na frente
-  const capas = doMes.slice(0, 3).reverse();
+function JournalDoMes({ chave }: { chave: string }) {
+  const { edicao, textos, estado } = useEdicao(chave);
+  const paleta = paletaDoMes(edicao.mes);
   return (
-    <article className="inverso relative overflow-hidden rounded-[14px] bg-bordo text-creme lg:rounded-[10px]">
-      <div className="flex items-center gap-5 px-5 py-5 lg:px-7 lg:py-6">
+    <article
+      className="inverso relative overflow-hidden rounded-[14px] lg:rounded-[10px]"
+      style={{ background: paleta.fundo, color: paleta.texto }}
+    >
+      <div className="flex items-center gap-5 px-5 py-5 lg:gap-8 lg:px-7 lg:py-6">
+        <Link href={`/journal/${chave}`} className="w-[96px] flex-none transition-transform hover:-rotate-1 lg:w-[132px]" aria-label={`abrir a edição de ${edicao.nome}`}>
+          <div className="shadow-[0_18px_30px_-16px_rgba(0,0,0,.6)]">
+            <CapaJournal ed={edicao} textos={textos} paleta={paleta} tamanho="mini" previa={estado === "previa"} />
+          </div>
+        </Link>
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] font-semibold tracking-[.18em] text-creme uppercase">
-            the bookside journal
+          <p className="text-[10px] font-semibold tracking-[.18em] uppercase">the bookside journal</p>
+          <p className="mt-0.5 font-maquina text-[10px] tracking-[.1em] uppercase" style={{ color: paleta.destaque }}>
+            vol. {String(edicao.vol).padStart(2, "0")} / {edicao.ano}
+            {estado === "previa" ? " · prévia" : ""}
           </p>
-          <p className="mt-0.5 font-maquina text-[10px] tracking-[.1em] text-rosa-claro uppercase">
-            vol. {aberto.mes + 1} / {aberto.ano}
-          </p>
-          <h3 className="mt-3 font-display text-[30px] leading-[1.02] font-semibold lg:font-revista lg:text-[40px] lg:font-normal">
-            {maiuscula(nome)}
-            <br />
-            em revista.
+          <h3 className="mt-2 font-display text-[26px] leading-[1.02] font-semibold lg:font-revista lg:text-[36px] lg:font-normal">
+            {maiuscula(edicao.nome)} em revista.
           </h3>
-          <p className="mt-2 text-[13px] leading-snug text-rosa-claro">
-            {doMes.length ? (
-              <>
-                {plural(doMes.length, "história", "histórias")}
-                {paginas ? `. ${numero(paginas)} páginas.` : "."}
-                <br />
-                um mês inteiro de descobertas.
-              </>
-            ) : (
-              `nenhum livro terminado em ${nome} ainda — termine um e ele vira capa.`
-            )}
-          </p>
-          {doMes.length ? (
+          <p className="mt-1.5 text-[13px] leading-snug opacity-90">{linhaDaCapa(edicao)}</p>
+          <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1">
             <Link
-              href={`/story?tipo=mes&mes=${chave}`}
-              className="mt-4 inline-flex min-h-10 items-center text-[11px] font-bold tracking-[.14em] text-creme uppercase hover:underline"
+              href={`/journal/${chave}`}
+              className="inline-flex min-h-10 items-center text-[11px] font-bold tracking-[.14em] uppercase hover:underline"
             >
               abrir edição →
             </Link>
-          ) : null}
-        </div>
-        {capas.length ? (
-          <div aria-hidden className="relative h-[132px] w-[110px] flex-none lg:h-[168px] lg:w-[150px]">
-            {capas.map((l, i) => {
-              const frente = i === capas.length - 1;
-              return (
-                <div
-                  key={l.id}
-                  className="absolute bottom-0"
-                  style={{
-                    left: `${(capas.length - 1 - i) * -14 + 26}%`,
-                    transform: `rotate(${frente ? 3 : -6 + i * 4}deg)`,
-                    zIndex: i,
-                  }}
-                >
-                  {capaDe(
-                    l,
-                    `${frente ? "w-[78px] lg:w-[104px]" : "w-[66px] lg:w-[88px]"} shadow-[0_14px_24px_-12px_rgba(0,0,0,.55)] [&>span:last-child]:hidden`,
-                  )}
-                </div>
-              );
-            })}
+            <Link href="/journal" className="text-[12px] opacity-80 hover:underline" style={{ color: paleta.destaque }}>
+              suas edições
+            </Link>
           </div>
-        ) : null}
+        </div>
       </div>
     </article>
+  );
+}
+
+function MesEmRevista({ ano }: { livros?: LivroSalvo[]; ano: number }) {
+  // aparece do penúltimo dia do mês até o dia 5 do seguinte (ver edicaoEmDestaque)
+  const chave = edicaoEmDestaque();
+  if (chave && Number(chave.slice(0, 4)) === ano) return <JournalDoMes chave={chave} />;
+  return (
+    <Link
+      href="/journal"
+      className="flex items-center justify-between gap-3 rounded-[14px] border border-linha px-5 py-3.5 hover:border-bordo lg:rounded-[10px] lg:border-fio"
+    >
+      <span className="min-w-0">
+        <span className="block text-[10px] font-semibold tracking-[.18em] text-cinza uppercase">the bookside journal</span>
+        <span className="mt-0.5 block font-display text-[18px] text-ameixa lg:font-revista">suas edições mensais</span>
+      </span>
+      <span aria-hidden className="text-[18px] text-cinza">›</span>
+    </Link>
   );
 }
 
