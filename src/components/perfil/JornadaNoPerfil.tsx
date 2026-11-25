@@ -482,14 +482,14 @@ function ItemDestaque({ d }: { d: Destaque }) {
           l,
           "w-full !rounded-[8px] shadow-[0_14px_26px_-16px_rgba(43,20,32,.5)] transition-transform group-hover:-translate-y-1 [&>span:last-child]:text-[11px]",
         )}
-        <p className="mt-3 text-[15px] font-semibold text-ameixa tabular-nums">{d.valor}</p>
-        <p className="mt-0.5 line-clamp-2 text-[13px] leading-snug text-tinta-suave group-hover:text-bordo">
+        <p className="mt-3 line-clamp-2 font-display text-[18px] leading-[1.15] font-semibold text-ameixa group-hover:text-bordo lg:font-revista lg:text-[21px] lg:font-normal">
           {l.titulo}
         </p>
       </Link>
-      <Link href={linkDaAutoria(l.autor)} className="truncate text-[11px] text-cinza hover:text-bordo">
+      <Link href={linkDaAutoria(l.autor)} className="mt-0.5 truncate text-[12px] text-cinza hover:text-bordo">
         {l.autor}
       </Link>
+      <p className="mt-1.5 text-[13px] font-semibold text-bordo tabular-nums">{d.valor}</p>
       {empates.length ? (
         <>
           <button
@@ -523,7 +523,7 @@ function Marcaram({ lidos }: { lidos: LivroSalvo[] }) {
   return (
     <Secao titulo="histórias que deixaram marcas">
       {destaques.length ? (
-        <ul className="grid grid-cols-2 gap-x-4 gap-y-7 sm:grid-cols-[1.35fr_1fr_1fr_1fr] sm:items-end lg:gap-x-6">
+        <ul className="grid grid-cols-2 gap-x-4 gap-y-7 sm:grid-cols-4 lg:gap-x-6">
           {destaques.map((d) => (
             <ItemDestaque key={d.id} d={d} />
           ))}
