@@ -17,7 +17,7 @@ import {
   type Destaque,
   type MesDoAno,
 } from "@/lib/jornada";
-import { bandeira, paisesDasAutoras, type Pais } from "@/lib/nacionalidade";
+import { paisesDasAutoras, type Pais } from "@/lib/nacionalidade";
 import { calcularNumeros, mesDoReview, type Numeros } from "@/lib/numeros";
 import { usePerfil, type LivroSalvo } from "@/lib/perfil-store";
 
@@ -607,68 +607,107 @@ function EntreOsMeses({ lidos }: { lidos: LivroSalvo[] }) {
 
 // ───────── seu jeito de ler ─────────
 
-const corDoFormato: Record<string, string> = {
-  fisico: "var(--color-ameixa)",
-  ebook: "var(--color-rosa-antigo)",
-  audio: "var(--color-oliva)",
+/** fundo suave de cada formato (como fichas coloridas) */
+const fundoDoFormato: Record<string, string> = {
+  fisico: "color-mix(in srgb, var(--color-rosa-antigo) 16%, var(--color-creme))",
+  ebook: "color-mix(in srgb, var(--color-oliva) 15%, var(--color-creme))",
+  audio: "color-mix(in srgb, var(--color-rosa-antigo) 12%, var(--color-creme))",
 };
+
+function Icone({ d, className = "" }: { d: string; className?: string }) {
+  return (
+    <svg
+      aria-hidden
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      {d.split(" M").map((p, i) => (
+        <path key={i} d={i ? `M${p}` : p} />
+      ))}
+    </svg>
+  );
+}
+
+const ICONE_GLOBO =
+  "M12 3a9 9 0 1 0 0 18 9 9 0 1 0 0-18z M3 12h18 M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9 M12 3c-2.5 2.6-3.8 5.6-3.8 9s1.3 6.4 3.8 9";
+const ICONE_RELOGIO = "M12 4a8 8 0 1 0 0 16 8 8 0 1 0 0-16z M12 8v4l2.5 2";
 
 function Formatos({ n }: { n: Numeros }) {
   const f = formatosComParte(n);
-  const maior = Math.max(1, ...f.lista.map((x) => x.qtd));
+  if (!f.marcados)
+    return (
+      <p className="font-accent text-sm italic text-cinza">
+        marque na página de cada livro se foi físico, e-book ou audiolivro — e
+        descubra de que time você é.
+      </p>
+    );
   return (
     <div>
-      <h4 className="mb-3 text-[13px] text-tinta-suave">papel, tela ou ouvidos</h4>
-      {!f.marcados ? (
-        <p className="font-accent text-sm italic text-cinza">
-          marque na página de cada livro se foi físico, e-book ou audiolivro — e
-          descubra de que time você é.
-        </p>
-      ) : (
-        <>
-          <ul className="space-y-3.5">
-            {f.lista.map((x) => (
-              <li key={x.id}>
-                <div className="flex items-baseline justify-between gap-3 text-[13px]">
-                  <span className="text-ameixa">{maiuscula(x.nome)}</span>
-                  <span className="text-cinza tabular-nums">
-                    {x.qtd ? plural(x.qtd, "livro", "livros") : "nenhum"}
-                    {x.qtd ? ` · ${Math.round(x.parte * 100)}%` : ""}
-                  </span>
-                </div>
-                <div className="mt-1.5 h-[6px] overflow-hidden rounded-full bg-linha/60">
-                  <span
-                    className="block h-full rounded-full"
-                    style={{ width: `${(x.qtd / maior) * 100}%`, background: corDoFormato[x.id] }}
-                  />
-                </div>
-                {x.qtd ? (
-                  <p className="mt-1 text-[11px] text-cinza">
-                    {[
-                      x.paginas && x.paginasConhecidas ? `${numero(x.paginas)} págs.` : null,
-                      x.media !== null ? `${nota1(x.media)} ★` : null,
-                      x.id === "audio" && x.paginas
-                        ? `≈ ${plural(horasEstimadas(x.paginas), "hora", "horas")} de audição (estimativa)`
-                        : null,
-                    ]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  </p>
+      <ul className="space-y-2.5">
+        {f.lista.map((x) => (
+          <li
+            key={x.id}
+            className="flex items-center gap-3 rounded-[14px] px-4 py-3.5 lg:rounded-[12px]"
+            style={{ background: fundoDoFormato[x.id] }}
+          >
+            <Icone d={x.icone} className="flex-none text-ameixa" />
+            <span className="w-[68px] flex-none font-display text-[17px] font-semibold text-ameixa lg:font-revista lg:font-normal">
+              {maiuscula(x.curto)}
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-tinta-suave">
+                <span>{x.qtd ? plural(x.qtd, "livro", "livros") : "nenhum"}</span>
+                {x.qtd && x.paginas && x.paginasConhecidas ? (
+                  <>
+                    <span aria-hidden className="h-4 w-px bg-ameixa/20" />
+                    <span>{numero(x.paginas)} pág.</span>
+                  </>
                 ) : null}
-              </li>
-            ))}
-          </ul>
-          {f.semFormato ? (
-            <p className="mt-4 text-[11px] text-cinza">
-              {plural(f.semFormato, "livro ficou", "livros ficaram")} sem formato
-              marcado e não entra{f.semFormato === 1 ? "" : "m"} nessa conta.
-            </p>
-          ) : null}
-        </>
-      )}
+              </span>
+              {x.id === "audio" && x.qtd && x.paginas ? (
+                <span className="mt-1 flex items-center gap-1 text-[11px] text-cinza">
+                  <Icone d={ICONE_RELOGIO} className="!size-3.5" />≈{" "}
+                  {numero(horasEstimadas(x.paginas))} h de audição
+                  <span className="sr-only"> (estimativa pelas páginas)</span>
+                </span>
+              ) : null}
+            </span>
+            {x.media !== null ? (
+              <span className="flex-none text-[14px] font-semibold text-ameixa tabular-nums">
+                <span aria-hidden className="mr-1 text-rosa-antigo">☆</span>
+                {nota1(x.media)}
+              </span>
+            ) : null}
+          </li>
+        ))}
+      </ul>
+      <p className="mt-3 text-[11px] text-cinza">
+        {f.lista.some((x) => x.id === "audio" && x.qtd)
+          ? "as horas de áudio são uma estimativa pelas páginas. "
+          : ""}
+        {f.semFormato
+          ? `${plural(f.semFormato, "livro ficou", "livros ficaram")} sem formato marcado.`
+          : ""}
+      </p>
     </div>
   );
 }
+
+/** cores dos países mais lidos (as mesmas no mapa e na legenda); o resto vai em "outros" */
+const CORES_PAISES = [
+  "var(--color-ameixa)",
+  "color-mix(in srgb, var(--color-bordo) 60%, #c8796a)",
+  "color-mix(in srgb, var(--color-oliva) 55%, var(--color-creme))",
+  "var(--color-oliva)",
+];
+const COR_OUTROS = "color-mix(in srgb, var(--color-rosa-antigo) 35%, var(--color-creme))";
 
 function Mundo({ lidos }: { lidos: LivroSalvo[] }) {
   const chave = [...new Set(lidos.map((l) => l.autor))].sort().join("|");
@@ -693,35 +732,51 @@ function Mundo({ lidos }: { lidos: LivroSalvo[] }) {
   }
   const lista = [...conta.values()].sort((a, b) => b.qtd - a.qtd);
   const total = lista.reduce((t, x) => t + x.qtd, 0);
+  const principais = lista.slice(0, CORES_PAISES.length);
+  const outros = lista.slice(CORES_PAISES.length);
+  const corDe = new Map(principais.map((x, i) => [x.pais.nome, CORES_PAISES[i]]));
+  const pct = (q: number) => `${Math.round((q / total) * 100)}%`;
+  const legenda = [
+    ...principais.map((x) => ({ nome: x.pais.nome, qtd: x.qtd, cor: corDe.get(x.pais.nome)! })),
+    ...(outros.length
+      ? [{ nome: "outros", qtd: outros.reduce((t, x) => t + x.qtd, 0), cor: COR_OUTROS }]
+      : []),
+  ];
   return (
-    <div>
-      <h4 className="mb-3 text-[13px] text-tinta-suave">um mundo entre páginas</h4>
-      <div className="rounded-[12px] border border-linha p-3 lg:rounded-[10px] lg:border-fio lg:p-4">
-        {paises === null ? (
-          <div aria-hidden className="aspect-[800/380] animate-pulse rounded-[8px] bg-linha/50" />
-        ) : !lista.length ? (
-          <p className="py-6 text-center font-accent text-sm italic text-cinza">
-            ainda não achamos de onde são as autoras desses livros.
-          </p>
-        ) : (
-          <>
-            <MapaPaises lista={lista} />
-            <ol className="mt-3 grid grid-cols-2 gap-x-5 gap-y-1">
-              {lista.slice(0, 6).map(({ pais, qtd }) => (
-                <li key={pais.nome} className="flex items-baseline justify-between gap-2 py-0.5 text-[12px]">
-                  <span className="truncate text-ameixa">
-                    <span aria-hidden>{bandeira(pais.codigo)}</span> {pais.nome}
-                  </span>
-                  <span className="text-cinza tabular-nums">{Math.round((qtd / total) * 100)}%</span>
-                </li>
-              ))}
-            </ol>
-            <p className="mt-2 text-[10px] text-cinza">
-              {plural(lista.length, "país", "países")} · pela nacionalidade das autoras · fonte: Wikidata
-            </p>
-          </>
-        )}
-      </div>
+    <div className="rounded-[16px] border border-linha px-4 py-4 lg:rounded-[12px] lg:border-fio lg:px-5">
+      <h4 className="flex items-center gap-2 font-display text-[17px] font-semibold text-ameixa lg:font-revista lg:font-normal">
+        <Icone d={ICONE_GLOBO} className="text-ameixa" />
+        de onde vêm suas leituras
+      </h4>
+      {paises === null ? (
+        <div aria-hidden className="mt-3 aspect-[800/380] animate-pulse rounded-[8px] bg-linha/50" />
+      ) : !lista.length ? (
+        <p className="py-6 text-center font-accent text-sm italic text-cinza">
+          ainda não achamos de onde são as autoras desses livros.
+        </p>
+      ) : (
+        <div className="mt-2 grid items-center gap-4 sm:grid-cols-[1fr_auto]">
+          <MapaPaises
+            lista={lista}
+            semMoldura
+            corDoPais={(p) => corDe.get(p.nome) ?? COR_OUTROS}
+          />
+          <ul className="grid min-w-[150px] gap-2 text-[13px]">
+            {legenda.map((x) => (
+              <li key={x.nome} className="flex items-center gap-2.5">
+                <span aria-hidden className="size-2.5 flex-none rounded-full" style={{ background: x.cor }} />
+                <span className="min-w-0 flex-1 truncate text-ameixa">{maiuscula(x.nome)}</span>
+                <span className="text-tinta-suave tabular-nums">{pct(x.qtd)}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {lista.length ? (
+        <p className="mt-2 text-[10px] text-cinza">
+          {plural(lista.length, "país", "países")} · pela nacionalidade das autoras · fonte: Wikidata
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -801,7 +856,7 @@ export function JornadaNoPerfil() {
           <Marcaram lidos={n.lidos} />
           <EntreOsMeses lidos={n.lidos} />
           <Secao titulo="seu jeito de ler">
-            <div className="grid gap-8 lg:grid-cols-2 lg:gap-8">
+            <div className="grid gap-4 lg:grid-cols-[1fr_1.35fr] lg:items-start lg:gap-6">
               <Formatos n={n} />
               <Mundo lidos={n.lidos} />
             </div>

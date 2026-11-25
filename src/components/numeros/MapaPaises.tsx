@@ -24,8 +24,14 @@ function numerico(alpha2?: string): string | null {
 /** o mapa-múndi com os países das autoras lidas pintados, mais escuro quanto mais livros */
 export function MapaPaises({
   lista,
+  corDoPais,
+  semMoldura,
 }: {
   lista: { pais: Pais; qtd: number }[];
+  /** uma cor por país (ex.: a mesma da legenda); sem isso, bordô mais escuro quanto mais livros */
+  corDoPais?: (pais: Pais) => string;
+  /** sem a borda/fundo em volta e sem a legenda de intensidade */
+  semMoldura?: boolean;
 }) {
   const { porId, max } = useMemo(() => {
     const porId = new Map<string, { pais: Pais; qtd: number }>();
@@ -41,7 +47,7 @@ export function MapaPaises({
 
   return (
     <div>
-      <div className="overflow-hidden rounded-[10px] border border-linha bg-papel">
+      <div className={semMoldura ? "" : "overflow-hidden rounded-[10px] border border-linha bg-papel"}>
         <ComposableMap
           projectionConfig={{ scale: 128 }}
           width={800}
@@ -53,14 +59,22 @@ export function MapaPaises({
               geographies.map((geo) => {
                 const achado = porId.get(String(geo.id));
                 const opacidade = achado
-                  ? 0.38 + 0.62 * (achado.qtd / Math.max(1, max))
-                  : 0.3;
+                  ? corDoPais
+                    ? 1
+                    : 0.38 + 0.62 * (achado.qtd / Math.max(1, max))
+                  : semMoldura
+                    ? 0.35
+                    : 0.3;
                 return (
                   <Geography
                     key={geo.rsmKey}
                     geography={geo}
                     tabIndex={-1}
-                    fill={achado ? "var(--color-bordo)" : "var(--color-bege)"}
+                    fill={
+                      achado
+                        ? (corDoPais?.(achado.pais) ?? "var(--color-bordo)")
+                        : "var(--color-bege)"
+                    }
                     fillOpacity={opacidade}
                     stroke="var(--color-papel)"
                     strokeWidth={0.6}
@@ -73,7 +87,7 @@ export function MapaPaises({
         </ComposableMap>
       </div>
       {/* legenda */}
-      <div className="mt-3 flex items-center gap-3 text-[11px] text-cinza">
+      <div className={`mt-3 flex items-center gap-3 text-[11px] text-cinza ${semMoldura || corDoPais ? "hidden" : ""}`}>
         <span className="flex items-center gap-1.5">
           <span
             className="size-3 rounded-[3px] border border-linha"
