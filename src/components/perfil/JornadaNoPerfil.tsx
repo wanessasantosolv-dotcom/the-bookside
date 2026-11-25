@@ -23,8 +23,9 @@ import { usePerfil, type LivroSalvo } from "@/lib/perfil-store";
 
 /*
  * A Jornada: uma retrospectiva literária numa página só, em estilo de
- * revista. Dois blocos com fundo (a meta e o mês em revista); o resto fica
- * direto sobre o papel do app, separado por fios finos, números e capas.
+ * revista. Dois blocos coloridos (a meta e o mês em revista); o resto fica
+ * direto sobre o papel do app, separado por fios finos, números grandes e
+ * as capas dos livros.
  */
 
 const numero = (n: number) => n.toLocaleString("pt-BR");
@@ -32,23 +33,36 @@ const nota1 = (n: number) =>
   n.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 const plural = (n: number, um: string, varios: string) =>
   `${numero(n)} ${n === 1 ? um : varios}`;
-const maiuscula = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
 
-/** uma seção sobre o papel: fio em cima, título e (às vezes) uma ação à direita */
+/** títulos de seção: número em máquina de escrever + título editorial */
 function Secao({
+  n,
   titulo,
   acao,
   children,
+  className = "",
 }: {
+  n: string;
   titulo: string;
   acao?: ReactNode;
   children: ReactNode;
+  className?: string;
 }) {
   return (
-    <section className="border-t border-linha pt-5 lg:border-fio lg:pt-6">
-      <header className="mb-4 flex items-baseline justify-between gap-3">
-        <h3 className="font-display text-[20px] leading-tight font-semibold italic text-ameixa lg:font-revista lg:text-[24px] lg:font-normal">
-          {titulo}
+    <section
+      data-secao={n}
+      className={`border-t border-linha pt-5 [counter-increment:secao] lg:border-fio lg:pt-7 ${className}`}
+    >
+      <header className="mb-4 flex items-baseline justify-between gap-3 lg:mb-6">
+        <h3 className="flex items-baseline gap-2.5">
+          {/* numeração automática (01, 02…), na ordem em que as seções aparecem */}
+          <span
+            aria-hidden
+            className="font-maquina text-[10px] text-rosa-antigo before:content-[counter(secao,decimal-leading-zero)]"
+          />
+          <span className="font-display text-[22px] leading-tight font-semibold italic text-ameixa lg:font-revista lg:text-[28px] lg:font-normal">
+            {titulo}
+          </span>
         </h3>
         {acao}
       </header>
@@ -58,9 +72,7 @@ function Secao({
 }
 
 const linkAcao =
-  "flex-none text-[12px] font-semibold text-cinza hover:text-bordo";
-const rotulo =
-  "text-[10px] font-semibold tracking-[.14em] text-cinza uppercase";
+  "flex-none text-[11px] font-semibold tracking-[.08em] text-bordo uppercase hover:underline";
 
 const capaDe = (l: LivroSalvo, className: string) => (
   <CapaLivro titulo={l.titulo} capa={l.capa} cor={corDoLivro(l.id)} className={className} />
@@ -78,43 +90,46 @@ function Cabecalho({
   onAno: (a: number) => void;
 }) {
   return (
-    <header className="flex items-start justify-between gap-4">
+    <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
       <div>
-        <h2 className="font-display text-[30px] leading-[1.05] font-semibold italic text-bordo lg:font-revista lg:text-[40px] lg:font-normal lg:text-tinta">
+        <h2 className="font-display text-[34px] leading-[1.02] font-semibold italic text-bordo lg:font-revista lg:text-[52px] lg:font-normal lg:text-tinta">
           sua jornada
         </h2>
-        <p className="mt-1 font-accent text-[14px] italic text-cinza">
+        <p className="mt-1 font-accent text-[15px] italic text-cinza lg:text-base">
           uma vida entre páginas.
         </p>
       </div>
-      <label className="relative flex-none">
-        <span className="sr-only">ano da jornada</span>
-        <select
-          value={ano}
-          onChange={(e) => onAno(Number(e.target.value))}
-          disabled={anos.length < 2}
-          className="h-11 appearance-none rounded-[10px] border border-linha bg-creme-quente pr-9 pl-3.5 font-maquina text-[13px] text-ameixa outline-none focus:border-bordo disabled:opacity-100 lg:border-fio"
+      {anos.length > 1 ? (
+        <div
+          role="radiogroup"
+          aria-label="ano da jornada"
+          className="flex max-w-full gap-1 overflow-x-auto [scrollbar-width:none]"
         >
           {anos.map((a) => (
-            <option key={a} value={a}>
+            <button
+              key={a}
+              type="button"
+              role="radio"
+              aria-checked={a === ano}
+              onClick={() => onAno(a)}
+              className={`h-9 flex-none rounded-pill px-3.5 font-maquina text-[12px] ${
+                a === ano
+                  ? "bg-ameixa text-creme"
+                  : "text-cinza hover:text-bordo"
+              }`}
+            >
               {a}
-            </option>
+            </button>
           ))}
-        </select>
-        {anos.length > 1 ? (
-          <span
-            aria-hidden
-            className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-[10px] text-cinza"
-          >
-            ▾
-          </span>
-        ) : null}
-      </label>
+        </div>
+      ) : (
+        <span className="font-maquina text-[13px] text-cinza">{ano}</span>
+      )}
     </header>
   );
 }
 
-// ───────── seu ano em números ─────────
+// ───────── 01 · seu ano em números ─────────
 
 function AnoEmNumeros({ n, atual }: { n: Numeros; atual: boolean }) {
   // a meta é do ano corrente; nos anos passados, só o total
@@ -127,7 +142,9 @@ function AnoEmNumeros({ n, atual }: { n: Numeros; atual: boolean }) {
       nota:
         n.paginasConhecidas && n.paginasConhecidas < n.total
           ? `de ${plural(n.paginasConhecidas, "livro", "livros")} com páginas`
-          : undefined,
+          : !n.paginasConhecidas && n.total
+            ? "nenhum livro com páginas"
+            : undefined,
     },
     {
       valor: n.media !== null ? nota1(n.media) : "—",
@@ -140,11 +157,11 @@ function AnoEmNumeros({ n, atual }: { n: Numeros; atual: boolean }) {
     },
   ];
   return (
-    <div className="grid gap-3 lg:grid-cols-[1.45fr_1fr] lg:gap-4">
-      {/* a meta: o bloco de maior peso da página */}
-      <div className="inverso flex flex-col justify-between rounded-[14px] bg-bordo px-5 py-5 text-creme lg:rounded-[10px] lg:px-6">
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-[10px] font-semibold tracking-[.18em] text-rosa-claro uppercase">
+    <div className="grid gap-5 lg:grid-cols-[1.55fr_1fr] lg:gap-10">
+      {/* a meta: o bloco colorido de maior peso da página */}
+      <div className="inverso relative overflow-hidden rounded-[20px] bg-bordo px-6 pt-5 pb-6 text-creme lg:rounded-[6px] lg:px-9 lg:pt-8 lg:pb-9">
+        <div className="flex items-center justify-between">
+          <p className="text-[10px] font-semibold tracking-[.2em] text-rosa-claro uppercase">
             {meta ? "meta de leitura" : `lidos em ${n.ano}`}
           </p>
           {atual ? (
@@ -156,62 +173,71 @@ function AnoEmNumeros({ n, atual }: { n: Numeros; atual: boolean }) {
             </Link>
           ) : null}
         </div>
-        <div className="mt-3 flex items-baseline justify-between gap-3">
-          <p className="flex items-baseline gap-1.5">
-            <b className="font-display text-[44px] leading-none font-semibold tabular-nums lg:font-revista lg:text-[52px] lg:font-normal">
-              {n.total}
-            </b>
-            <span className="text-[14px] text-rosa-claro">
-              {meta ? `/ ${meta} livros` : n.total === 1 ? "livro" : "livros"}
-            </span>
-          </p>
-          {meta ? (
-            <span className="font-display text-[22px] font-semibold tabular-nums lg:font-revista lg:font-normal">
-              {pct.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%
-            </span>
-          ) : null}
-        </div>
+        <p className="mt-3 flex items-baseline gap-2">
+          <b className="font-display text-[76px] leading-[.85] font-semibold italic tabular-nums lg:font-revista lg:text-[112px] lg:font-normal">
+            {n.total}
+          </b>
+          <span className="font-display text-[22px] italic text-rosa-claro lg:font-revista lg:text-[30px]">
+            {meta ? `/ ${meta} livros` : n.total === 1 ? "livro" : "livros"}
+          </span>
+        </p>
         {meta ? (
           <>
             <div
-              className="mt-3 h-[5px] overflow-hidden rounded-full bg-creme/25"
+              className="mt-6 h-[6px] overflow-hidden rounded-full bg-creme/20"
               role="progressbar"
               aria-valuemin={0}
               aria-valuemax={meta}
               aria-valuenow={n.total}
               aria-label="progresso da meta"
             >
-              <span className="block h-full rounded-full bg-rosa-claro" style={{ width: `${pct}%` }} />
+              <span
+                className="block h-full rounded-full bg-creme"
+                style={{ width: `${pct}%` }}
+              />
             </div>
-            <p className="mt-3 text-[12px] text-rosa-claro">
-              {n.faltam
-                ? `mais ${plural(n.faltam, "livro", "livros")} para a sua meta · cerca de ${n.porSemana.toLocaleString("pt-BR")} por semana.`
-                : "meta batida! tudo agora é bônus."}
-            </p>
+            <div className="mt-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+              <span className="font-maquina text-[13px]">
+                {pct.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%
+              </span>
+              <span className="text-[13px] text-rosa-claro">
+                {n.faltam
+                  ? `mais ${plural(n.faltam, "livro", "livros")} para a meta · cerca de ${n.porSemana.toLocaleString("pt-BR")} por semana`
+                  : "meta batida! tudo agora é bônus."}
+              </span>
+            </div>
           </>
+        ) : atual ? (
+          <p className="mt-5 max-w-[360px] text-[13px] text-rosa-claro">
+            sem meta este ano. defina um número e acompanhe o ritmo por aqui.
+          </p>
         ) : (
-          <p className="mt-3 text-[12px] text-rosa-claro">
-            {atual
-              ? "sem meta este ano. defina um número e acompanhe o ritmo por aqui."
-              : `terminados entre janeiro e dezembro de ${n.ano}.`}
+          <p className="mt-5 text-[13px] text-rosa-claro">
+            terminados entre janeiro e dezembro de {n.ano}.
           </p>
         )}
       </div>
 
-      {/* os indicadores: uma lista fina, número à esquerda e nome à direita */}
-      <dl className="rounded-[14px] border border-linha px-4 lg:rounded-[10px] lg:border-fio">
+      {/* os indicadores: direto no papel, só fios e números */}
+      <dl className="grid grid-cols-3 lg:grid-cols-1 lg:content-center">
         {indicadores.map((x, i) => (
           <div
             key={x.rotulo}
-            className={`flex items-center justify-between gap-3 py-3.5 ${i ? "border-t border-linha lg:border-fio" : ""}`}
+            className={`flex flex-col-reverse justify-end gap-1.5 py-1 lg:py-4 ${i ? "border-l border-linha pl-4 lg:border-t lg:border-l-0 lg:pl-0" : ""} lg:border-fio`}
           >
-            <dd className="font-display text-[22px] leading-none font-semibold text-ameixa tabular-nums lg:font-revista lg:text-[24px] lg:font-normal">
-              {x.valor}
-            </dd>
-            <dt className="text-right text-[12px] text-cinza">
+            <dt className="text-[10px] font-semibold tracking-[.12em] text-cinza uppercase">
               {x.rotulo}
-              {x.nota ? <span className="block text-[10px]">{x.nota}</span> : null}
             </dt>
+            <dd>
+              <span className="block font-display text-[30px] leading-none font-semibold italic text-ameixa tabular-nums lg:font-revista lg:text-[44px] lg:font-normal">
+                {x.valor}
+              </span>
+              {x.nota ? (
+                <span className="mt-1 block text-[10px] leading-tight text-cinza">
+                  {x.nota}
+                </span>
+              ) : null}
+            </dd>
           </div>
         ))}
       </dl>
@@ -219,7 +245,7 @@ function AnoEmNumeros({ n, atual }: { n: Numeros; atual: boolean }) {
   );
 }
 
-// ───────── mês em revista ─────────
+// ───────── 02 · mês em revista ─────────
 
 function MesEmRevista({ livros, ano }: { livros: LivroSalvo[]; ano: number }) {
   // aparece do penúltimo dia do mês até o dia 5 do seguinte (ver mesDoReview)
@@ -229,7 +255,8 @@ function MesEmRevista({ livros, ano }: { livros: LivroSalvo[]; ano: number }) {
   const doMes = livros.filter(
     (l) => l.status === "lido" && l.lidoEm?.startsWith(chave),
   );
-  const paginas = doMes.reduce((t, l) => t + (l.paginas ?? 0), 0);
+  const comPaginas = doMes.filter((l) => l.paginas);
+  const paginas = comPaginas.reduce((t, l) => t + (l.paginas ?? 0), 0);
   const notas = doMes.map((l) => l.nota).filter((x): x is number => !!x);
   const media = notas.length ? notas.reduce((t, x) => t + x, 0) / notas.length : null;
   const favorito = [...doMes].sort(
@@ -238,53 +265,64 @@ function MesEmRevista({ livros, ano }: { livros: LivroSalvo[]; ano: number }) {
       (b.lidoEm ?? "").localeCompare(a.lidoEm ?? ""),
   )[0];
   const nome = MESES[aberto.mes];
-  const conteudo = (
-    <>
-      <div className="min-w-0 flex-1">
-        <p className="font-maquina text-[10px] tracking-[.12em] text-cinza uppercase">
-          the bookside · edição {aberto.mes + 1}
-        </p>
-        <h3 className="mt-1.5 font-display text-[24px] leading-tight font-semibold italic text-ameixa lg:font-revista lg:text-[30px] lg:font-normal">
-          {maiuscula(nome)} em revista
-        </h3>
-        <p className="mt-1 text-[12px] text-tinta-suave">
+  return (
+    <article className="inverso relative overflow-hidden rounded-[20px] bg-ameixa text-creme lg:rounded-[6px]">
+      <div className="grid gap-6 px-6 pt-5 pb-6 sm:grid-cols-[1fr_auto] lg:px-10 lg:pt-7 lg:pb-9">
+        <div className="min-w-0">
+          {/* o "cabeço" da revista */}
+          <p className="flex items-center justify-between gap-3 border-b border-creme/20 pb-2.5 font-maquina text-[10px] tracking-[.14em] text-rosa-claro uppercase">
+            <span>the bookside · edição {aberto.mes + 1}</span>
+            <span>{aberto.ano}</span>
+          </p>
+          <h3 className="mt-4 font-display text-[44px] leading-[.95] font-semibold italic lg:font-revista lg:text-[72px] lg:font-normal">
+            {nome}
+            <span className="block text-[22px] text-rosa-claro lg:text-[30px]">
+              em revista
+            </span>
+          </h3>
           {doMes.length ? (
-            <>
+            <p className="mt-4 font-maquina text-[12px] tracking-[.04em] text-creme/90">
               {plural(doMes.length, "livro", "livros")}
               {paginas ? ` · ${numero(paginas)} páginas` : ""}
               {media !== null ? ` · ${nota1(media)} estrelas` : ""}
-            </>
+            </p>
           ) : (
-            `nenhum livro terminado em ${nome} ainda — termine um e ele vira capa.`
+            <p className="mt-4 text-[13px] text-rosa-claro">
+              nenhum livro terminado em {nome} ainda. termine um e ele vira capa.
+            </p>
           )}
-        </p>
-        {doMes.length ? (
-          <span className="mt-3 inline-block text-[12px] font-semibold text-bordo group-hover:underline">
-            sua retrospectiva mensal ↗
-          </span>
+          {doMes.length ? (
+            <Link
+              href={`/story?tipo=mes&mes=${chave}`}
+              className="mt-6 inline-flex h-11 items-center rounded-pill bg-creme px-5 text-[13px] font-semibold text-ameixa hover:bg-rosa-claro"
+            >
+              ver e compartilhar no story →
+            </Link>
+          ) : null}
+        </div>
+        {favorito ? (
+          <Link
+            href={`/livro/${favorito.id}`}
+            className="group flex flex-col items-center self-center sm:w-[150px] lg:w-[190px]"
+          >
+            {capaDe(
+              favorito,
+              "w-[130px] rotate-[3deg] shadow-[0_22px_40px_-18px_rgba(0,0,0,.6)] transition-transform group-hover:rotate-0 lg:w-[170px]",
+            )}
+            <span className="mt-3 font-maquina text-[9px] tracking-[.14em] text-rosa-claro uppercase">
+              favorito do mês
+            </span>
+            <span className="mt-0.5 line-clamp-2 text-center font-display text-[15px] leading-tight italic lg:font-revista">
+              {favorito.titulo}
+            </span>
+          </Link>
         ) : null}
       </div>
-      {favorito ? (
-        <span className="flex flex-none flex-col items-center">
-          {capaDe(favorito, "w-[58px] shadow-[0_10px_18px_-10px_rgba(43,20,32,.5)] lg:w-[70px] [&>span:last-child]:hidden")}
-          <span className="sr-only">favorito do mês: {favorito.titulo}</span>
-        </span>
-      ) : null}
-    </>
-  );
-  const caixa =
-    "group flex items-center gap-4 rounded-[14px] bg-[color-mix(in_srgb,var(--color-bege)_45%,var(--color-creme))] px-5 py-4 lg:rounded-[10px] lg:px-6";
-  // o story 9:16 (para compartilhar) já sai da tela de story
-  return doMes.length ? (
-    <Link href={`/story?tipo=mes&mes=${chave}`} className={caixa}>
-      {conteudo}
-    </Link>
-  ) : (
-    <div className={caixa}>{conteudo}</div>
+    </article>
   );
 }
 
-// ───────── dias entre páginas ─────────
+// ───────── 03 · dias entre páginas ─────────
 
 function DiasEntrePaginas({ livros }: { livros: LivroSalvo[] }) {
   const hoje = new Date();
@@ -299,16 +337,22 @@ function DiasEntrePaginas({ livros }: { livros: LivroSalvo[] }) {
   const mes = MESES[hoje.getMonth()];
   return (
     <Secao
+      n="03"
       titulo="dias entre páginas"
       acao={
         <Link href="/numeros/calendario" className={linkAcao}>
-          ver calendário ›
+          ver calendário completo ›
         </Link>
       }
     >
+      <p className="-mt-2 mb-4 text-[13px] text-cinza lg:-mt-3">
+        {comLeitura
+          ? `${plural(comLeitura, "dia", "dias")} com livro aberto em ${mes}`
+          : `nenhum dia de leitura marcado em ${mes} ainda`}
+      </p>
       <ul
         ref={faixa}
-        className="-mx-4 flex snap-x gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] lg:mx-0 lg:gap-3 lg:px-0"
+        className="-mx-4 flex snap-x gap-2 overflow-x-auto px-4 pb-2 [scrollbar-width:thin] lg:mx-0 lg:px-0"
         aria-label={`dias de leitura em ${mes}`}
       >
         {dias.map((d) => {
@@ -316,16 +360,16 @@ function DiasEntrePaginas({ livros }: { livros: LivroSalvo[] }) {
           const mais = d.livros.length - 1;
           const eHoje = d.data.getDate() === hoje.getDate();
           return (
-            <li key={d.chave} className="w-[64px] flex-none snap-end lg:w-[104px]">
+            <li key={d.chave} className="w-[46px] flex-none snap-end lg:w-[54px]">
               {l ? (
                 <Link
                   href={`/livro/${l.id}`}
                   className="relative block"
                   aria-label={`dia ${d.data.getDate()}: ${d.livros.map((x) => x.titulo).join(", ")}`}
                 >
-                  {capaDe(l, "w-full !rounded-[8px] [&>span:last-child]:hidden")}
+                  {capaDe(l, "w-full [&>span:last-child]:hidden")}
                   {mais > 0 ? (
-                    <span className="absolute top-1.5 right-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-ameixa/85 px-1 text-[9px] font-bold text-creme">
+                    <span className="absolute -top-1.5 -right-1.5 flex h-[17px] min-w-[17px] items-center justify-center rounded-full bg-ameixa px-1 text-[9px] font-bold text-creme ring-2 ring-creme">
                       +{mais}
                     </span>
                   ) : null}
@@ -333,28 +377,24 @@ function DiasEntrePaginas({ livros }: { livros: LivroSalvo[] }) {
               ) : (
                 <span
                   aria-label={`dia ${d.data.getDate()}: sem leitura`}
-                  className="block aspect-[2/3] rounded-[8px] bg-linha/45"
+                  className="block aspect-[2/3] rounded-[2px_4px_4px_2px] border border-dashed border-linha"
                 />
               )}
               <span
-                className={`mt-1.5 block text-center text-[11px] tabular-nums ${eHoje ? "font-semibold text-bordo" : "text-cinza"}`}
+                className={`mt-1.5 block text-center font-maquina text-[10px] ${eHoje ? "text-bordo" : "text-cinza"}`}
               >
                 {d.data.getDate()}
+                {d.terminou ? <span className="text-bordo"> ✓</span> : null}
               </span>
             </li>
           );
         })}
       </ul>
-      <p className="mt-2 text-[12px] text-cinza">
-        {comLeitura
-          ? `${plural(comLeitura, "dia", "dias")} com livro aberto em ${mes}.`
-          : `nenhum dia de leitura marcado em ${mes} ainda.`}
-      </p>
     </Secao>
   );
 }
 
-// ───────── o ritmo ─────────
+// ───────── 04 · o ritmo ─────────
 
 function Ritmo({ n }: { n: Numeros }) {
   // o ano todo no gráfico (os meses que ainda não chegaram ficam vazios)
@@ -365,45 +405,61 @@ function Ritmo({ n }: { n: Numeros }) {
   }));
   const max = Math.max(1, ...meses.map((m) => m.livros));
   const forte = n.maisForte;
-  const alto = 150;
+  const alto = 132;
   return (
-    <Secao titulo="o ritmo das suas leituras">
-      <div className="grid gap-6 sm:grid-cols-[1fr_180px] sm:items-end lg:grid-cols-[1fr_220px] lg:gap-10">
+    <Secao n="04" titulo="o ritmo das suas leituras">
+      <div className="grid gap-6 lg:grid-cols-[2.2fr_1fr] lg:items-end lg:gap-12">
         <figure>
           <div
-            className="flex items-end gap-[5px] lg:gap-3"
-            style={{ height: alto }}
+            className="relative flex items-end gap-[6px] border-b border-ameixa/40 lg:gap-2"
+            style={{ height: alto + 18 }}
             role="img"
             aria-label={`livros por mês: ${meses
               .filter((m) => !m.futuro)
               .map((m) => `${m.mes} ${m.livros}`)
               .join(", ")}`}
           >
+            {/* uma linha de grade só, na metade */}
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-x-0 border-t border-dashed border-linha"
+              style={{ bottom: alto / 2 }}
+            />
             {meses.map((m) => {
               const destaque = forte && m.mes === forte.mes;
               return (
-                <span
-                  key={m.mes}
-                  className="block flex-1 rounded-t-[3px]"
-                  title={m.futuro ? undefined : `${m.mes}: ${m.livros}`}
-                  style={{
-                    height: m.futuro ? 0 : m.livros ? Math.max(8, (m.livros / max) * alto) : 3,
-                    background: !m.livros
-                      ? "var(--color-linha)"
-                      : destaque
-                        ? "var(--color-ameixa)"
-                        : "color-mix(in srgb, var(--color-rosa-antigo) 50%, var(--color-creme))",
-                  }}
-                />
+                <span key={m.mes} className="relative flex h-full flex-1 flex-col items-center justify-end">
+                  <span
+                    aria-hidden
+                    className={`mb-1 font-maquina text-[10px] leading-none tabular-nums ${
+                      m.livros ? (destaque ? "text-bordo" : "text-cinza") : "text-transparent"
+                    }`}
+                  >
+                    {m.livros}
+                  </span>
+                  <i
+                    className="block w-full max-w-[34px] rounded-t-[2px]"
+                    style={{
+                      height: m.livros ? Math.max(6, (m.livros / max) * alto) : 2,
+                      background: m.futuro
+                        ? "transparent"
+                        : !m.livros
+                          ? "var(--color-linha)"
+                          : destaque
+                            ? "var(--color-bordo)"
+                            : "color-mix(in srgb, var(--color-rosa-antigo) 55%, transparent)",
+                    }}
+                  />
+                </span>
               );
             })}
           </div>
-          <div aria-hidden className="mt-2 flex gap-[5px] lg:gap-3">
+          <div aria-hidden className="mt-2 flex gap-[6px] lg:gap-2">
             {meses.map((m) => (
               <span
                 key={m.mes}
-                className={`flex-1 text-center text-[9px] uppercase lg:text-[10px] ${
-                  forte && m.mes === forte.mes ? "font-semibold text-ameixa" : "text-cinza"
+                className={`flex-1 text-center text-[9px] font-semibold uppercase lg:text-[10px] ${
+                  forte && m.mes === forte.mes ? "text-bordo" : "text-cinza"
                 }`}
               >
                 <span className="lg:hidden">{m.mes[0]}</span>
@@ -413,15 +469,17 @@ function Ritmo({ n }: { n: Numeros }) {
           </div>
         </figure>
         {forte ? (
-          <div className="sm:pb-8">
-            <p className={rotulo}>seu mês mais forte</p>
-            <p className="mt-1.5 font-display text-[30px] leading-none font-semibold italic text-ameixa lg:font-revista lg:text-[36px] lg:font-normal">
-              {maiuscula(forte.mes)}
+          <div className="border-l-2 border-bordo pl-5 lg:pb-6">
+            <p className="text-[10px] font-semibold tracking-[.16em] text-cinza uppercase">
+              seu mês mais forte
             </p>
-            <p className="mt-1.5 text-[13px] text-tinta-suave">
+            <p className="mt-1 font-display text-[40px] leading-none font-semibold italic text-bordo lg:font-revista lg:text-[54px] lg:font-normal">
+              {forte.mes}
+            </p>
+            <p className="mt-2 font-maquina text-[12px] text-ameixa">
               {plural(forte.livros, "livro lido", "livros lidos")}
             </p>
-            <p className="mt-1 font-accent text-[13px] italic text-cinza">
+            <p className="mt-2 font-accent text-[14px] italic text-cinza">
               seu mês mais literário do ano.
             </p>
           </div>
@@ -431,25 +489,34 @@ function Ritmo({ n }: { n: Numeros }) {
   );
 }
 
-// ───────── leituras que marcaram ─────────
+// ───────── 05 · leituras que marcaram ─────────
 
-function ItemDestaque({ d }: { d: Destaque }) {
+function ItemDestaque({ d, grande }: { d: Destaque; grande?: boolean }) {
   const [abertos, setAbertos] = useState(false);
   const [l, ...empates] = d.livros;
   return (
-    <li className="flex min-w-0 flex-col">
-      <p className="mb-2 text-[12px] text-cinza">{maiuscula(d.rotulo.replace(/^a /, ""))}</p>
+    <li className={`flex flex-col ${grande ? "col-span-2 sm:col-span-1" : ""}`}>
+      <p className="mb-2.5 text-[10px] font-semibold tracking-[.16em] text-cinza uppercase">
+        {d.rotulo}
+      </p>
       <Link href={`/livro/${l.id}`} className="group block">
-        {capaDe(
-          l,
-          "w-full !rounded-[8px] shadow-[0_14px_26px_-16px_rgba(43,20,32,.5)] transition-transform group-hover:-translate-y-1 [&>span:last-child]:text-[11px]",
-        )}
-        <p className="mt-3 text-[15px] font-semibold text-ameixa tabular-nums">{d.valor}</p>
-        <p className="mt-0.5 line-clamp-2 text-[13px] leading-snug text-tinta-suave group-hover:text-bordo">
+        <div className="relative w-fit">
+          {capaDe(
+            l,
+            `${grande ? "w-[150px] lg:w-[178px]" : "w-[118px] lg:w-[150px]"} shadow-[0_18px_30px_-18px_rgba(43,20,32,.55)] transition-transform group-hover:-translate-y-1 [&>span:last-child]:text-[11px]`,
+          )}
+        </div>
+        <p className="mt-3 font-display text-[22px] leading-none font-semibold text-bordo italic lg:font-revista lg:text-[26px] lg:font-normal">
+          {d.valor}
+        </p>
+        <p className="mt-1.5 line-clamp-2 font-display text-[15px] leading-tight font-semibold italic text-ameixa lg:font-revista lg:text-[17px] lg:font-normal">
           {l.titulo}
         </p>
       </Link>
-      <Link href={linkDaAutoria(l.autor)} className="truncate text-[11px] text-cinza hover:text-bordo">
+      <Link
+        href={linkDaAutoria(l.autor)}
+        className="mt-0.5 truncate text-[12px] text-cinza hover:text-bordo"
+      >
         {l.autor}
       </Link>
       {empates.length ? (
@@ -460,14 +527,16 @@ function ItemDestaque({ d }: { d: Destaque }) {
             onClick={() => setAbertos((v) => !v)}
             className="mt-2 w-fit text-[11px] font-semibold text-bordo underline-offset-4 hover:underline"
           >
-            {abertos ? "esconder empates" : `empatado com mais ${empates.length}`}
+            {abertos
+              ? "esconder empates"
+              : `empatado com mais ${empates.length}`}
           </button>
           {abertos ? (
-            <ul className="mt-2 flex flex-wrap gap-1.5">
+            <ul className="mt-2 flex flex-wrap gap-2">
               {empates.map((e) => (
-                <li key={e.id} className="w-[38px]">
+                <li key={e.id} className="w-[40px]">
                   <Link href={`/livro/${e.id}`} title={e.titulo}>
-                    {capaDe(e, "w-full !rounded-[4px] [&>span:last-child]:hidden")}
+                    {capaDe(e, "w-full [&>span:last-child]:hidden")}
                     <span className="sr-only">{e.titulo}</span>
                   </Link>
                 </li>
@@ -483,9 +552,9 @@ function ItemDestaque({ d }: { d: Destaque }) {
 function Marcaram({ lidos }: { lidos: LivroSalvo[] }) {
   const destaques = destaquesDoAno(lidos);
   return (
-    <Secao titulo="leituras que marcaram seu ano">
+    <Secao n="05" titulo="leituras que marcaram seu ano">
       {destaques.length ? (
-        <ul className="grid grid-cols-2 gap-x-4 gap-y-7 sm:grid-cols-4 lg:gap-x-6">
+        <ul className="grid grid-cols-2 gap-x-5 gap-y-8 sm:grid-cols-4 lg:gap-x-10">
           {destaques.map((d) => (
             <ItemDestaque key={d.id} d={d} />
           ))}
@@ -498,7 +567,7 @@ function Marcaram({ lidos }: { lidos: LivroSalvo[] }) {
       )}
       {destaques.length && !destaques.some((d) => d.id === "rapida") ? (
         <p className="mt-5 text-[12px] text-cinza">
-          a mais rápida e a mais demorada aparecem quando os livros têm data de
+          a mais rápida e a mais longa aparecem quando os livros têm data de
           início e de fim.
         </p>
       ) : null}
@@ -506,42 +575,48 @@ function Marcaram({ lidos }: { lidos: LivroSalvo[] }) {
   );
 }
 
-// ───────── entre os meses ─────────
+// ───────── 06 · entre os meses ─────────
 
 function LinhaMes({ rotulo, l }: { rotulo: string; l: LivroSalvo }) {
   return (
-    <Link href={`/livro/${l.id}`} className="group flex items-center gap-2.5">
-      {capaDe(l, "w-[30px] !rounded-[3px] [&>span:last-child]:hidden")}
+    <Link href={`/livro/${l.id}`} className="group flex items-center gap-3">
+      {capaDe(l, "w-[40px] [&>span:last-child]:hidden")}
       <span className="min-w-0">
-        <span className="block text-[11px] text-cinza">{rotulo}</span>
-        <span className="block truncate text-[13px] font-semibold text-ameixa group-hover:text-bordo">
+        <span className="block text-[9px] font-semibold tracking-[.14em] text-cinza uppercase">
+          {rotulo}
+        </span>
+        <span className="mt-0.5 line-clamp-2 font-display text-[14px] leading-tight font-semibold italic text-ameixa group-hover:text-bordo lg:font-revista lg:font-normal">
           {l.titulo}
         </span>
+        {l.nota ? (
+          <span className="font-maquina text-[10px] text-bordo">{nota1(l.nota)} ★</span>
+        ) : null}
       </span>
-      {l.nota ? (
-        <span className="ml-auto flex-none text-[11px] text-bordo tabular-nums">{nota1(l.nota)} ★</span>
-      ) : null}
     </Link>
   );
 }
 
 function CartaoMes({ m }: { m: MesDoAno }) {
   return (
-    <li className="w-[78%] flex-none snap-start rounded-[12px] border border-linha p-3.5 sm:w-[calc((100%-24px)/3)] lg:rounded-[10px] lg:border-fio">
+    <li className="w-[220px] flex-none snap-start border-l border-linha pr-2 pl-5 first:border-l-0 first:pl-0 lg:w-[250px] lg:border-fio">
       <p className="flex items-baseline justify-between gap-2">
-        <span className="text-[15px] font-semibold text-ameixa">{maiuscula(m.mes)}</span>
-        <span className="text-[11px] text-cinza">{plural(m.total, "livro", "livros")}</span>
+        <span className="font-display text-[24px] leading-none font-semibold italic text-bordo lg:font-revista lg:text-[28px] lg:font-normal">
+          {m.mes}
+        </span>
+        <span className="font-maquina text-[10px] text-cinza">
+          {plural(m.total, "livro", "livros")}
+        </span>
       </p>
-      <div className="mt-3 space-y-2.5">
+      <div className="mt-4 space-y-3.5">
         {m.melhor ? (
-          <LinhaMes rotulo={m.pior ? "mais amado" : "destaque do mês"} l={m.melhor} />
+          <LinhaMes rotulo={m.pior ? "mais amado" : "o destaque"} l={m.melhor} />
         ) : (
           <>
             <ul className="flex gap-1.5">
-              {m.livros.slice(0, 5).map((l) => (
-                <li key={l.id} className="w-[30px]">
+              {m.livros.slice(0, 4).map((l) => (
+                <li key={l.id} className="w-[36px]">
                   <Link href={`/livro/${l.id}`}>
-                    {capaDe(l, "w-full !rounded-[3px] [&>span:last-child]:hidden")}
+                    {capaDe(l, "w-full [&>span:last-child]:hidden")}
                     <span className="sr-only">{l.titulo}</span>
                   </Link>
                 </li>
@@ -563,18 +638,16 @@ function EntreOsMeses({ lidos }: { lidos: LivroSalvo[] }) {
     const el = faixa.current;
     if (el) el.scrollLeft = el.scrollWidth;
   }, [meses.length]);
-  const andar = (dir: number) => {
-    const el = faixa.current;
-    if (el) el.scrollBy({ left: dir * el.clientWidth * 0.8, behavior: "smooth" });
-  };
+  const andar = (dir: number) =>
+    faixa.current?.scrollBy({ left: dir * 260, behavior: "smooth" });
   if (!meses.length) return null;
   return (
     <Secao
+      n="06"
       titulo="entre os meses"
       acao={
-        meses.length > 3 ? (
-          <span className="flex items-center gap-1">
-            <span className="mr-1 hidden text-[12px] text-cinza sm:inline">explorar meses</span>
+        meses.length > 1 ? (
+          <span className="flex gap-1">
             {[
               { d: -1, r: "meses anteriores", s: "‹" },
               { d: 1, r: "próximos meses", s: "›" },
@@ -584,7 +657,7 @@ function EntreOsMeses({ lidos }: { lidos: LivroSalvo[] }) {
                 type="button"
                 aria-label={b.r}
                 onClick={() => andar(b.d)}
-                className="flex size-8 items-center justify-center rounded-full text-[15px] text-cinza hover:bg-rosa-fundo hover:text-bordo"
+                className="flex size-9 items-center justify-center rounded-full border border-bege text-bordo hover:border-bordo"
               >
                 {b.s}
               </button>
@@ -595,7 +668,7 @@ function EntreOsMeses({ lidos }: { lidos: LivroSalvo[] }) {
     >
       <ul
         ref={faixa}
-        className="-mx-4 flex snap-x gap-3 overflow-x-auto scroll-smooth px-4 [scrollbar-width:none] lg:mx-0 lg:px-0"
+        className="-mx-4 flex snap-x gap-0 overflow-x-auto scroll-smooth px-4 pb-2 [scrollbar-width:none] lg:mx-0 lg:px-0"
       >
         {meses.map((m) => (
           <CartaoMes key={m.mes} m={m} />
@@ -605,20 +678,15 @@ function EntreOsMeses({ lidos }: { lidos: LivroSalvo[] }) {
   );
 }
 
-// ───────── seu jeito de ler ─────────
-
-const corDoFormato: Record<string, string> = {
-  fisico: "var(--color-ameixa)",
-  ebook: "var(--color-rosa-antigo)",
-  audio: "var(--color-oliva)",
-};
+// ───────── 07 · seu jeito de ler ─────────
 
 function Formatos({ n }: { n: Numeros }) {
   const f = formatosComParte(n);
-  const maior = Math.max(1, ...f.lista.map((x) => x.qtd));
   return (
     <div>
-      <h4 className="mb-3 text-[13px] text-tinta-suave">papel, tela ou ouvidos</h4>
+      <h4 className="mb-4 text-[10px] font-semibold tracking-[.16em] text-cinza uppercase">
+        papel, tela ou ouvidos
+      </h4>
       {!f.marcados ? (
         <p className="font-accent text-sm italic text-cinza">
           marque na página de cada livro se foi físico, e-book ou audiolivro — e
@@ -626,42 +694,46 @@ function Formatos({ n }: { n: Numeros }) {
         </p>
       ) : (
         <>
-          <ul className="space-y-3.5">
+          <ul className="space-y-4">
             {f.lista.map((x) => (
               <li key={x.id}>
-                <div className="flex items-baseline justify-between gap-3 text-[13px]">
-                  <span className="text-ameixa">{maiuscula(x.nome)}</span>
-                  <span className="text-cinza tabular-nums">
-                    {x.qtd ? plural(x.qtd, "livro", "livros") : "nenhum"}
-                    {x.qtd ? ` · ${Math.round(x.parte * 100)}%` : ""}
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="font-display text-[19px] font-semibold italic text-ameixa lg:font-revista lg:text-[21px] lg:font-normal">
+                    {x.nome}
+                  </span>
+                  <span className="font-maquina text-[12px] text-bordo tabular-nums">
+                    {Math.round(x.parte * 100)}%
                   </span>
                 </div>
-                <div className="mt-1.5 h-[6px] overflow-hidden rounded-full bg-linha/60">
+                <div className="mt-1.5 h-[5px] overflow-hidden rounded-full bg-linha/70">
                   <span
-                    className="block h-full rounded-full"
-                    style={{ width: `${(x.qtd / maior) * 100}%`, background: corDoFormato[x.id] }}
+                    className="block h-full rounded-full bg-bordo"
+                    style={{ width: `${x.parte * 100}%`, opacity: x.qtd ? 1 : 0 }}
                   />
                 </div>
-                {x.qtd ? (
-                  <p className="mt-1 text-[11px] text-cinza">
-                    {[
-                      x.paginas && x.paginasConhecidas ? `${numero(x.paginas)} págs.` : null,
-                      x.media !== null ? `${nota1(x.media)} ★` : null,
-                      x.id === "audio" && x.paginas
-                        ? `≈ ${plural(horasEstimadas(x.paginas), "hora", "horas")} de audição (estimativa)`
-                        : null,
-                    ]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  </p>
-                ) : null}
+                <p className="mt-1.5 text-[12px] text-cinza">
+                  {x.qtd ? (
+                    <>
+                      {plural(x.qtd, "livro", "livros")}
+                      {x.paginas && x.paginasConhecidas
+                        ? ` · ${numero(x.paginas)} págs.`
+                        : ""}
+                      {x.media !== null ? ` · ${nota1(x.media)} ★` : ""}
+                      {x.id === "audio" && x.paginas
+                        ? ` · cerca de ${plural(horasEstimadas(x.paginas), "hora", "horas")} de audição (estimativa)`
+                        : ""}
+                    </>
+                  ) : (
+                    "nenhum este ano"
+                  )}
+                </p>
               </li>
             ))}
           </ul>
           {f.semFormato ? (
             <p className="mt-4 text-[11px] text-cinza">
               {plural(f.semFormato, "livro ficou", "livros ficaram")} sem formato
-              marcado e não entra{f.semFormato === 1 ? "" : "m"} nessa conta.
+              marcado e não entram nessa conta.
             </p>
           ) : null}
         </>
@@ -695,80 +767,119 @@ function Mundo({ lidos }: { lidos: LivroSalvo[] }) {
   const total = lista.reduce((t, x) => t + x.qtd, 0);
   return (
     <div>
-      <h4 className="mb-3 text-[13px] text-tinta-suave">um mundo entre páginas</h4>
-      <div className="rounded-[12px] border border-linha p-3 lg:rounded-[10px] lg:border-fio lg:p-4">
-        {paises === null ? (
-          <div aria-hidden className="aspect-[800/380] animate-pulse rounded-[8px] bg-linha/50" />
-        ) : !lista.length ? (
-          <p className="py-6 text-center font-accent text-sm italic text-cinza">
-            ainda não achamos de onde são as autoras desses livros.
+      <h4 className="mb-4 text-[10px] font-semibold tracking-[.16em] text-cinza uppercase">
+        um mundo entre páginas
+      </h4>
+      {paises === null ? (
+        <div aria-hidden className="aspect-[800/380] animate-pulse rounded-[10px] bg-linha/50" />
+      ) : !lista.length ? (
+        <p className="font-accent text-sm italic text-cinza">
+          ainda não achamos de onde são as autoras desses livros.
+        </p>
+      ) : (
+        <>
+          <MapaPaises lista={lista} />
+          <ol className="mt-4 grid grid-cols-2 gap-x-6 gap-y-1.5">
+            {lista.slice(0, 6).map(({ pais, qtd }) => (
+              <li
+                key={pais.nome}
+                className="flex items-baseline justify-between gap-2 border-b border-linha py-1 text-[13px] lg:border-fio"
+              >
+                <span className="truncate">
+                  <span aria-hidden>{bandeira(pais.codigo)}</span> {pais.nome}
+                </span>
+                <span className="font-maquina text-[11px] text-cinza tabular-nums">
+                  {Math.round((qtd / total) * 100)}%
+                </span>
+              </li>
+            ))}
+          </ol>
+          <p className="mt-2 text-[10px] text-cinza">
+            {plural(lista.length, "país", "países")} · pela nacionalidade das
+            autoras · fonte: Wikidata
           </p>
-        ) : (
-          <>
-            <MapaPaises lista={lista} />
-            <ol className="mt-3 grid grid-cols-2 gap-x-5 gap-y-1">
-              {lista.slice(0, 6).map(({ pais, qtd }) => (
-                <li key={pais.nome} className="flex items-baseline justify-between gap-2 py-0.5 text-[12px]">
-                  <span className="truncate text-ameixa">
-                    <span aria-hidden>{bandeira(pais.codigo)}</span> {pais.nome}
-                  </span>
-                  <span className="text-cinza tabular-nums">{Math.round((qtd / total) * 100)}%</span>
-                </li>
-              ))}
-            </ol>
-            <p className="mt-2 text-[10px] text-cinza">
-              {plural(lista.length, "país", "países")} · pela nacionalidade das autoras · fonte: Wikidata
-            </p>
-          </>
-        )}
-      </div>
+        </>
+      )}
     </div>
   );
 }
 
-// ───────── identidade ─────────
-
-function Atalho({
-  href,
-  titulo,
-  texto,
-}: {
-  href: string;
-  titulo: string;
-  texto: string;
-}) {
-  return (
-    <Link
-      href={href}
-      className="group block rounded-[12px] border border-linha px-4 py-3.5 hover:border-bordo lg:rounded-[10px] lg:border-fio"
-    >
-      <span className="block text-[14px] font-semibold text-ameixa group-hover:text-bordo">
-        {titulo} <span aria-hidden className="text-[11px]">↗</span>
-      </span>
-      <span className="mt-0.5 block truncate text-[12px] text-cinza">{texto}</span>
-    </Link>
-  );
-}
+// ───────── 08 · identidade ─────────
 
 function Identidade({ n }: { n: Numeros }) {
-  const generos = n.generos
-    .filter((g) => g.nome !== "sem gênero")
-    .slice(0, 3)
-    .map((g) => maiuscula(g.nome));
-  const autoras = n.autores.slice(0, 3).map((a) => a.nome);
+  const generos = n.generos.filter((g) => g.nome !== "sem gênero").slice(0, 3);
+  const maxG = Math.max(1, ...generos.map((g) => g.qtd));
   return (
-    <section className="grid gap-3 border-t border-linha pt-5 sm:grid-cols-2 lg:border-fio lg:pt-6">
-      <Atalho
-        href="/numeros/generos"
-        titulo="seus gêneros"
-        texto={generos.length ? generos.join(" · ") : "descubra o que você mais lê"}
-      />
-      <Atalho
-        href="/numeros/generos"
-        titulo="suas autoras"
-        texto={autoras.length ? autoras.join(" · ") : "descubra quem você mais leu"}
-      />
-    </section>
+    <Secao n="08" titulo="sua identidade literária">
+      <div className="grid gap-8 sm:grid-cols-2 lg:gap-12">
+        <div>
+          <h4 className="mb-3 text-[10px] font-semibold tracking-[.16em] text-cinza uppercase">
+            os gêneros que mais leu
+          </h4>
+          {generos.length ? (
+            <ol className="space-y-2.5">
+              {generos.map((g, i) => (
+                <li key={g.nome} className="flex items-center gap-3">
+                  <span className="w-5 font-maquina text-[11px] text-rosa-antigo">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-baseline justify-between gap-2">
+                      <span className="truncate font-display text-[18px] font-semibold italic text-ameixa lg:font-revista lg:font-normal">
+                        {g.nome}
+                      </span>
+                      <span className="font-maquina text-[11px] text-cinza">{g.qtd}</span>
+                    </span>
+                    <span className="mt-1 block h-[3px] rounded-full bg-linha/70">
+                      <span
+                        className="block h-full rounded-full bg-rosa-antigo"
+                        style={{ width: `${(g.qtd / maxG) * 100}%` }}
+                      />
+                    </span>
+                  </span>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p className="font-accent text-sm italic text-cinza">
+              os gêneros aparecem quando os livros têm gênero no catálogo.
+            </p>
+          )}
+          <Link href="/numeros/generos" className={`${linkAcao} mt-4 inline-block`}>
+            ver todos os gêneros ›
+          </Link>
+        </div>
+        <div>
+          <h4 className="mb-3 text-[10px] font-semibold tracking-[.16em] text-cinza uppercase">
+            as autoras que mais leu
+          </h4>
+          {n.autores.length ? (
+            <ol className="space-y-2.5">
+              {n.autores.map((a, i) => (
+                <li key={a.nome} className="flex items-baseline gap-3 border-b border-linha pb-2 lg:border-fio">
+                  <span className="w-5 font-maquina text-[11px] text-rosa-antigo">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <Link
+                    href={linkDaAutoria(a.nome)}
+                    className="min-w-0 flex-1 truncate font-display text-[18px] font-semibold italic text-ameixa hover:text-bordo lg:font-revista lg:font-normal"
+                  >
+                    {a.nome}
+                  </Link>
+                  <span className="flex-none font-maquina text-[11px] text-cinza">
+                    {plural(a.qtd, "livro", "livros")}
+                    {a.media !== null ? ` · ${nota1(a.media)} ★` : ""}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          ) : null}
+          <Link href="/numeros/generos" className={`${linkAcao} mt-4 inline-block`}>
+            ver a análise completa ›
+          </Link>
+        </div>
+      </div>
+    </Secao>
   );
 }
 
@@ -785,13 +896,14 @@ export function JornadaNoPerfil() {
   const semData = livros.filter((l) => l.status === "lido" && !l.lidoEm).length;
 
   return (
-    <div className="space-y-6 pb-6 lg:space-y-8">
+    <div className="space-y-9 pb-6 [counter-reset:secao] lg:space-y-14">
       <Cabecalho anos={anos} ano={ano} onAno={setAno} />
 
-      <div className="space-y-3 lg:space-y-4">
+      <section aria-label="seu ano em números" className="space-y-5">
         <AnoEmNumeros n={n} atual={atual} />
-        <MesEmRevista livros={livros} ano={ano} />
-      </div>
+      </section>
+
+      <MesEmRevista livros={livros} ano={ano} />
 
       {atual ? <DiasEntrePaginas livros={livros} /> : null}
 
@@ -800,8 +912,8 @@ export function JornadaNoPerfil() {
           <Ritmo n={n} />
           <Marcaram lidos={n.lidos} />
           <EntreOsMeses lidos={n.lidos} />
-          <Secao titulo="seu jeito de ler">
-            <div className="grid gap-8 lg:grid-cols-2 lg:gap-8">
+          <Secao n="07" titulo="seu jeito de ler">
+            <div className="grid gap-10 lg:grid-cols-[1fr_1.3fr] lg:gap-14">
               <Formatos n={n} />
               <Mundo lidos={n.lidos} />
             </div>
@@ -810,7 +922,7 @@ export function JornadaNoPerfil() {
         </>
       ) : (
         <div className="border-t border-linha pt-8 text-center lg:border-fio">
-          <p className="font-display text-[22px] font-semibold italic text-ameixa lg:font-revista lg:font-normal">
+          <p className="font-display text-[24px] font-semibold italic text-ameixa lg:font-revista lg:font-normal">
             {atual ? "a jornada deste ano começa no primeiro livro" : `nenhum livro terminado em ${ano}`}
           </p>
           <p className="mx-auto mt-2 max-w-[420px] text-[13px] text-cinza">
