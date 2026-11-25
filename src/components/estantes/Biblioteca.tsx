@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { corDoLivro } from "@/lib/cores";
+import { tintaSobre, tom, useCorDaCapa } from "@/lib/corDaCapa";
+import { traduzirGenero } from "@/lib/generos";
 import { estrelas } from "@/lib/estantes";
 import type { LivroSalvo, StatusLivro } from "@/lib/perfil-store";
 
@@ -163,23 +165,91 @@ function Detalhes({ l }: { l: LivroSalvo }) {
   );
 }
 
-/** a lombada: altura e espessura pelo número de páginas (sem páginas, um meio-termo) */
+/** a "voz" da lombada pelo gênero: fonte, caixa e peso (a fonte da capa não dá para ler da imagem) */
+function estiloDoTitulo(genero: string | undefined, semente: number) {
+  const g = semAcento(genero ?? "");
+  if (/romance|amor|romant|chick/.test(g)) return "font-accent italic text-[13px]";
+  if (/suspense|thriller|terror|horror|crime|policial|misterio|mystery/.test(g)) return "font-maquina uppercase tracking-[.08em] text-[11px]";
+  if (/fantasia|fantasy|ficcao cientifica|science|distop|aventura/.test(g)) return "font-display uppercase tracking-[.14em] text-[10px] font-semibold";
+  if (/classic|poesia|poetry|drama|historia|historic/.test(g)) return "font-revista italic text-[13px]";
+  if (/nao ficcao|biografia|memoria|ensaio|autoajuda|negocios|nonfiction|biography/.test(g)) return "font-texto uppercase tracking-[.12em] text-[10px] font-semibold";
+  return [
+    "font-display text-[12px] font-semibold",
+    "font-revista italic text-[13px]",
+    "font-texto uppercase tracking-[.12em] text-[10px] font-semibold",
+    "font-accent text-[13px]",
+    "font-mono uppercase tracking-[.06em] text-[10px]",
+  ][semente % 5];
+}
+
+/** a lombada: cor principal da capa, um de cinco desenhos e o título na "voz" do gênero */
 export function Lombada({ livro, altura }: { livro: LivroSalvo; altura: number }) {
   const pags = livro.paginas ?? 320;
-  // a variação de altura é estável por livro (não muda a cada render)
+  // a variação de altura e o desenho são estáveis por livro (não mudam a cada render)
   const semente = [...livro.id].reduce((t, c) => t + c.charCodeAt(0), 0);
   const h = Math.round(altura * (0.8 + ((semente % 17) / 17) * 0.2));
-  const w = Math.round(Math.max(22, Math.min(46, 16 + pags / 18)));
+  const w = Math.round(Math.max(24, Math.min(48, 16 + pags / 18)));
+  const daCapa = useCorDaCapa(livro.capa);
+  const fundo = daCapa ?? corDoLivro(livro.id);
+  const tinta = tintaSobre(fundo);
+  const escuro = tom(fundo, -0.35);
+  const desenho = (semente >> 2) % 5;
+  const sobrenome = livro.autor.split(/\s+/).filter(Boolean).pop() ?? "";
+  const titulo = (
+    <span className={`block max-h-full truncate leading-none [writing-mode:vertical-rl] rotate-180 ${estiloDoTitulo(traduzirGenero(livro.genero), semente)}`}>
+      {livro.titulo}
+    </span>
+  );
+  const autor = (
+    <span className="block truncate font-texto text-[8px] tracking-[.12em] uppercase opacity-80 [writing-mode:vertical-rl] rotate-180">
+      {sobrenome}
+    </span>
+  );
   return (
     <span
-      style={{ height: h, width: w, background: corDoLivro(livro.id) }}
-      className="relative flex flex-none items-center justify-center overflow-hidden rounded-[2px] text-creme shadow-[inset_-3px_0_4px_rgba(0,0,0,.18),inset_2px_0_0_rgba(255,255,255,.12),1px_2px_4px_-1px_rgba(59,37,27,.35)]"
+      style={{ height: h, width: w, background: fundo, color: tinta }}
+      className="relative flex flex-none flex-col items-center overflow-hidden rounded-[2px] shadow-[inset_-3px_0_5px_rgba(0,0,0,.2),inset_2px_0_0_rgba(255,255,255,.14),1px_2px_4px_-1px_rgba(59,37,27,.35)] transition-colors duration-500"
     >
-      <span aria-hidden className="absolute inset-x-0 top-[9%] h-[2px] bg-creme/35" />
-      <span aria-hidden className="absolute inset-x-0 bottom-[9%] h-[2px] bg-creme/35" />
-      <span className="max-h-[78%] truncate font-display text-[11px] font-semibold tracking-wide [writing-mode:vertical-rl] rotate-180">
-        {livro.titulo}
-      </span>
+      {desenho === 0 ? (
+        // faixas finas em cima e embaixo
+        <>
+          <span aria-hidden className="absolute inset-x-0 top-[8%] h-[2px] opacity-40" style={{ background: tinta }} />
+          <span aria-hidden className="absolute inset-x-0 bottom-[8%] h-[2px] opacity-40" style={{ background: tinta }} />
+          <span className="flex min-h-0 flex-1 items-center py-[14%]">{titulo}</span>
+        </>
+      ) : desenho === 1 ? (
+        // rótulo claro no meio, como etiqueta de editora
+        <>
+          <span className="mt-[18%] flex min-h-0 flex-1 items-center rounded-[1px] px-[3px] py-2" style={{ background: tom(fundo, 0.82), color: escuro }}>
+            {titulo}
+          </span>
+          <span className="py-2">{autor}</span>
+        </>
+      ) : desenho === 2 ? (
+        // blocos escuros nas pontas
+        <>
+          <span aria-hidden className="h-[14%] w-full flex-none" style={{ background: escuro }} />
+          <span className="flex min-h-0 flex-1 items-center py-2">{titulo}</span>
+          <span aria-hidden className="h-[10%] w-full flex-none" style={{ background: escuro }} />
+        </>
+      ) : desenho === 3 ? (
+        // filetes dourados duplos
+        <>
+          {["top-[6%]", "top-[8%]", "bottom-[6%]", "bottom-[8%]"].map((p) => (
+            <span key={p} aria-hidden className={`absolute inset-x-[3px] h-px bg-ouro ${p}`} />
+          ))}
+          <span className="flex min-h-0 flex-1 items-center py-[16%] text-ouro" style={{ color: tinta === "#2B1420" ? "#7A5A1E" : "#D9B66E" }}>
+            {titulo}
+          </span>
+        </>
+      ) : (
+        // título em cima, sobrenome embaixo, separados por um traço
+        <>
+          <span className="flex min-h-0 flex-1 items-start pt-3">{titulo}</span>
+          <span aria-hidden className="my-1.5 h-px w-[60%] opacity-50" style={{ background: tinta }} />
+          <span className="pb-2.5">{autor}</span>
+        </>
+      )}
     </span>
   );
 }
