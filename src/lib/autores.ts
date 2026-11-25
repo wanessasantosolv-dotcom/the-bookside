@@ -189,14 +189,25 @@ export async function livrosDaAutoria(nome: string): Promise<LivroBusca[]> {
       });
     }
   }
-  // edições em português primeiro; dentro delas, as mais avaliadas
-  const ptPrimeiro = (l: LivroBusca) => (l.idioma?.startsWith("pt") ? 0 : 1);
+  // só edições em português: com o idioma da edição, ou (sem idioma) com
+  // título que tem palavras em português e nenhuma em inglês/outra língua
   return [...porTitulo.values()]
+    .filter(edicaoEmPortugues)
     .sort(
       (a, b) =>
-        ptPrimeiro(a) - ptPrimeiro(b) ||
         (b.avaliacao?.total ?? 0) - (a.avaliacao?.total ?? 0) ||
         Number(!!b.capa) - Number(!!a.capa),
     )
     .slice(0, 18);
+}
+
+const PALAVRAS_PT = ["o", "a", "os", "as", "de", "do", "da", "dos", "das", "e", "um", "uma", "que", "no", "na", "em", "para", "com", "sete", "maridos", "amor", "vida"];
+const PALAVRAS_OUTRAS = ["the", "of", "and", "in", "der", "die", "und", "los", "las", "el", "la", "le", "les", "des", "il", "is", "my", "your"];
+
+/** a edição é em português? (idioma da edição; sem idioma, pelas palavras do título) */
+export function edicaoEmPortugues(l: { titulo: string; idioma?: string }) {
+  if (l.idioma) return l.idioma.startsWith("pt");
+  const ps = ` ${chaveTitulo(l.titulo)} `;
+  const tem = (lista: string[]) => lista.some((p) => ps.includes(` ${p} `));
+  return tem(PALAVRAS_PT) && !tem(PALAVRAS_OUTRAS) && !/[äöüßñ]/i.test(l.titulo);
 }

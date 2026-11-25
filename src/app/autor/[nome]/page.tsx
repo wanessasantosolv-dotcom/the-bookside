@@ -242,7 +242,7 @@ function Conteudo({ nome }: { nome: string }) {
           </ul>
         ) : (
           <p className="mt-2 font-accent text-sm italic text-cinza">
-            não achamos outros livros dessa autoria no catálogo.
+            não achamos edições em português de outros livros dessa autoria.
           </p>
         )}
       </section>
