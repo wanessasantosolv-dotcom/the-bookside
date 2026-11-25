@@ -129,7 +129,7 @@ function Rodape({ l }: { l: LivroSalvo }) {
   const g = generoDe(l);
   const r = reacaoDe(l.reacao);
   return (
-    <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-cinza">
+    <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[12px] text-cinza [&>span[aria-hidden]]:select-none">
       {l.lidoEm ? <span>lido em {dataLonga(l.lidoEm)}</span> : <span>sem data de leitura</span>}
       {g ? (
         <>
@@ -181,8 +181,8 @@ function Resenha({ l, modo, acoes }: { l: LivroSalvo; modo: Modo; acoes: AcaoDoM
     <li className="border-b border-linha py-8 lg:border-fio">
       {/* celular: capa + identidade lado a lado, texto embaixo */}
       <div className="grid grid-cols-[72px_minmax(0,1fr)_auto] gap-x-4 lg:grid-cols-[minmax(90px,12%)_minmax(0,23%)_minmax(0,1fr)_auto] lg:gap-x-8">
-        <Capa l={l} largura="w-[72px] lg:w-[100px]" />
-        <div className="min-w-0">
+        <Capa l={l} largura="w-[72px] lg:col-start-1 lg:w-[100px]" />
+        <div className="min-w-0 lg:col-start-2">
           <Link href={`/livro/${l.id}`} className="block font-revista text-[21px] leading-[1.15] text-bordo hover:underline lg:text-[24px]">
             {l.titulo}
           </Link>
@@ -192,7 +192,7 @@ function Resenha({ l, modo, acoes }: { l: LivroSalvo; modo: Modo; acoes: AcaoDoM
             <Nota nota={l.nota} />
           </div>
         </div>
-        <div className="col-span-3 row-start-2 mt-4 min-w-0 lg:col-span-1 lg:row-start-1 lg:mt-0">
+        <div className="col-span-3 row-start-2 mt-4 min-w-0 lg:col-span-1 lg:col-start-3 lg:row-start-1 lg:mt-0">
           <div className="hidden lg:block">
             <Nota nota={l.nota} grande />
           </div>
@@ -201,14 +201,14 @@ function Resenha({ l, modo, acoes }: { l: LivroSalvo; modo: Modo; acoes: AcaoDoM
           </div>
           {l.citacao ? (
             <blockquote className="mt-4 border-l-2 border-bordo/40 pl-3 font-accent text-[15px] text-bordo italic">
-              “{l.citacao}”
+              “{l.citacao.trim().replace(/^["“”'«]+|["“”'»]+$/g, "")}”
             </blockquote>
           ) : null}
           <div className="mt-4">
             <Rodape l={l} />
           </div>
         </div>
-        <div className="col-start-3 row-start-1 lg:col-start-4">
+        <div className="col-start-3 row-start-1 justify-self-end lg:col-start-4">
           <MenuDeAcoes semTexto rotulo={`ações da resenha de ${l.titulo}`} acoes={acoes} />
         </div>
       </div>

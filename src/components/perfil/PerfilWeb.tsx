@@ -47,9 +47,9 @@ function Coluna({
         ) : null}
       </div>
       {livros.length ? (
-        <ul className="flex gap-2.5">
-          {livros.slice(0, 3).map((l) => (
-            <li key={l.id} className="w-[84px]">
+        <ul className="grid max-w-[400px] grid-cols-4 gap-2.5">
+          {livros.slice(0, 4).map((l) => (
+            <li key={l.id} className="min-w-0">
               <Link href={`/livro/${l.id}`} className="block">
                 <CapaLivro
                   titulo={l.titulo}
