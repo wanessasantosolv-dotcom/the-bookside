@@ -194,6 +194,17 @@ export function Lombada({ livro, altura }: { livro: LivroSalvo; altura: number }
   const tinta = tintaSobre(fundo);
   const escuro = tom(fundo, -0.35);
   const desenho = (semente >> 2) % 5;
+  // pedaços da capa de verdade (posição estável por livro)
+  const posX = (semente * 37) % 100;
+  const posY = (semente * 53) % 100;
+  const arte = livro.capa
+    ? (tamanho: string, posicao: string) => ({
+        backgroundImage: `url("${livro.capa}")`,
+        backgroundSize: tamanho,
+        backgroundPosition: posicao,
+        backgroundRepeat: "no-repeat",
+      })
+    : null;
   const sobrenome = livro.autor.split(/\s+/).filter(Boolean).pop() ?? "";
   const titulo = (
     <span className={`block max-h-full truncate leading-none [writing-mode:vertical-rl] rotate-180 ${estiloDoTitulo(traduzirGenero(livro.genero), semente)}`}>
@@ -210,7 +221,30 @@ export function Lombada({ livro, altura }: { livro: LivroSalvo; altura: number }
       style={{ height: h, width: w, background: fundo, color: tinta }}
       className="relative flex flex-none flex-col items-center overflow-hidden rounded-[2px] shadow-[inset_-3px_0_5px_rgba(0,0,0,.2),inset_2px_0_0_rgba(255,255,255,.14),1px_2px_4px_-1px_rgba(59,37,27,.35)] transition-colors duration-500"
     >
-      {desenho === 0 ? (
+      {arte && desenho === 0 ? (
+        // uma tira da capa ocupa a lombada; o título numa faixa da cor principal
+        <>
+          <span aria-hidden className="absolute inset-0" style={arte(`auto 100%`, `${posX}% center`)} />
+          <span aria-hidden className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/25" />
+          <span className="relative my-auto flex max-h-[72%] items-center rounded-[1px] px-[3px] py-2 shadow-[0_1px_3px_rgba(0,0,0,.25)]" style={{ background: fundo }}>
+            {titulo}
+          </span>
+        </>
+      ) : arte && desenho === 2 ? (
+        // a ilustração no alto, o resto na cor da capa
+        <>
+          <span aria-hidden className="relative h-[34%] w-full flex-none border-b" style={{ ...arte("auto 300%", `${posX}% ${posY}%`), borderColor: escuro }} />
+          <span className="flex min-h-0 flex-1 items-center py-2">{titulo}</span>
+          <span className="pb-2">{autor}</span>
+        </>
+      ) : arte && desenho === 4 ? (
+        // um detalhe ampliado da capa de ponta a ponta, título sobre um véu
+        <>
+          <span aria-hidden className="absolute inset-0 scale-110" style={arte("auto 420%", `${posX}% ${posY}%`)} />
+          <span aria-hidden className="absolute inset-0" style={{ background: `linear-gradient(to bottom, ${fundo}00 0%, ${fundo}cc 30%, ${fundo}cc 70%, ${fundo}00 100%)` }} />
+          <span className="relative flex min-h-0 flex-1 items-center py-[18%]">{titulo}</span>
+        </>
+      ) : desenho === 0 ? (
         // faixas finas em cima e embaixo
         <>
           <span aria-hidden className="absolute inset-x-0 top-[8%] h-[2px] opacity-40" style={{ background: tinta }} />
