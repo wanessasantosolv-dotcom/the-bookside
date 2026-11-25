@@ -111,11 +111,7 @@ export function MapaPaises({
                     }
                     stroke="var(--color-papel)"
                     strokeWidth={0.6}
-                    style={{
-                      default: { outline: "none", cursor: achado && onSelecionar ? "pointer" : "default" },
-                      hover: { outline: "none", cursor: achado && onSelecionar ? "pointer" : "default" },
-                      pressed: { outline: "none" },
-                    }}
+                    style={{ outline: "none", cursor: achado && onSelecionar ? "pointer" : "default" }}
                   />
                 );
               })
