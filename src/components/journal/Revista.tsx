@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import type { CSSProperties, ReactNode } from "react";
+import { createContext, useContext, type CSSProperties, type ReactNode } from "react";
 import { CapaLivro } from "@/components/CapaLivro";
 import { capaSegura } from "@/components/story/Stories";
 import { linkDaAutoria } from "@/lib/autores";
@@ -21,6 +21,9 @@ const diasDe = (l: LivroDaEdicao) => {
   return d >= 1 ? d : null;
 };
 
+/** dentro de uma exportação (PDF/imagem): as capas passam pela rota do app */
+export const ImagemSegura = createContext(false);
+
 /** a capa de um livro na revista (seguro = pela rota do app, para virar imagem) */
 export function Capa({
   l,
@@ -31,10 +34,11 @@ export function Capa({
   className: string;
   seguro?: boolean;
 }) {
+  const exportando = useContext(ImagemSegura);
   return (
     <CapaLivro
       titulo={l.titulo}
-      capa={seguro ? capaSegura(l.capa) : l.capa}
+      capa={seguro || exportando ? capaSegura(l.capa) : l.capa}
       cor={corDoLivro(l.id)}
       className={className}
     />

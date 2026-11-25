@@ -288,6 +288,86 @@ function JournalDoMes({ chave }: { chave: string }) {
   );
 }
 
+function WrappedClassico({ livros, ano }: { livros: LivroSalvo[]; ano: number }) {
+  // aparece do penúltimo dia do mês até o dia 5 do seguinte (ver mesDoReview)
+  const aberto = mesDoReview();
+  if (!aberto || aberto.ano !== ano) return null;
+  const chave = `${aberto.ano}-${String(aberto.mes + 1).padStart(2, "0")}`;
+  const doMes = livros
+    .filter((l) => l.status === "lido" && l.lidoEm?.startsWith(chave))
+    .sort(
+      (a, b) =>
+        (b.nota ?? 0) - (a.nota ?? 0) ||
+        (b.lidoEm ?? "").localeCompare(a.lidoEm ?? ""),
+    );
+  const paginas = doMes.reduce((t, l) => t + (l.paginas ?? 0), 0);
+  const nome = MESES[aberto.mes];
+  // as capas empilhadas: o favorito na frente
+  const capas = doMes.slice(0, 3).reverse();
+  return (
+    <article className="inverso relative overflow-hidden rounded-[14px] bg-bordo text-creme lg:rounded-[10px]">
+      <div className="flex items-center gap-5 px-5 py-5 lg:px-7 lg:py-6">
+        <div className="min-w-0 flex-1">
+          <p className="text-[10px] font-semibold tracking-[.18em] text-creme uppercase">
+            wrapped clássico do mês
+          </p>
+          <p className="mt-0.5 font-maquina text-[10px] tracking-[.1em] text-rosa-claro uppercase">
+            vol. {aberto.mes + 1} / {aberto.ano}
+          </p>
+          <h3 className="mt-3 font-display text-[30px] leading-[1.02] font-semibold lg:font-revista lg:text-[40px] lg:font-normal">
+            {maiuscula(nome)}
+            <br />
+            em revista.
+          </h3>
+          <p className="mt-2 text-[13px] leading-snug text-rosa-claro">
+            {doMes.length ? (
+              <>
+                {plural(doMes.length, "história", "histórias")}
+                {paginas ? `. ${numero(paginas)} páginas.` : "."}
+                <br />
+                um mês inteiro de descobertas.
+              </>
+            ) : (
+              `nenhum livro terminado em ${nome} ainda — termine um e ele vira capa.`
+            )}
+          </p>
+          {doMes.length ? (
+            <Link
+              href={`/story?tipo=mes&mes=${chave}`}
+              className="mt-4 inline-flex min-h-10 items-center text-[11px] font-bold tracking-[.14em] text-creme uppercase hover:underline"
+            >
+              ver o wrapped →
+            </Link>
+          ) : null}
+        </div>
+        {capas.length ? (
+          <div aria-hidden className="relative h-[132px] w-[110px] flex-none lg:h-[168px] lg:w-[150px]">
+            {capas.map((l, i) => {
+              const frente = i === capas.length - 1;
+              return (
+                <div
+                  key={l.id}
+                  className="absolute bottom-0"
+                  style={{
+                    left: `${(capas.length - 1 - i) * -14 + 26}%`,
+                    transform: `rotate(${frente ? 3 : -6 + i * 4}deg)`,
+                    zIndex: i,
+                  }}
+                >
+                  {capaDe(
+                    l,
+                    `${frente ? "w-[78px] lg:w-[104px]" : "w-[66px] lg:w-[88px]"} shadow-[0_14px_24px_-12px_rgba(0,0,0,.55)] [&>span:last-child]:hidden`,
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        ) : null}
+      </div>
+    </article>
+  );
+}
+
 function MesEmRevista({ ano }: { livros?: LivroSalvo[]; ano: number }) {
   // aparece do penúltimo dia do mês até o dia 5 do seguinte (ver edicaoEmDestaque)
   const chave = edicaoEmDestaque();
@@ -1377,6 +1457,7 @@ export function JornadaNoPerfil() {
       <div className="space-y-3 lg:space-y-4">
         <AnoEmNumeros n={n} atual={atual} dias={diasNoAno} />
         <MesEmRevista livros={livros} ano={ano} />
+        <WrappedClassico livros={livros} ano={ano} />
       </div>
 
       {atual ? <DiasEntrePaginas livros={livros} /> : null}

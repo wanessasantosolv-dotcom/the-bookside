@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { useHidratado } from "@/components/PerfilHidratacao";
 import { Voltar } from "@/components/Voltar";
@@ -20,6 +20,7 @@ import {
   SeuRitmo,
 } from "@/components/journal/Revista";
 import { Compartilhar } from "@/components/journal/Compartilhar";
+import { ExportarPdf, Folhear, type Folha } from "@/components/journal/Folhear";
 import { useEdicao } from "@/components/journal/useEdicao";
 import {
   chaveDoMes,
@@ -34,6 +35,24 @@ function Leitura({ chave }: { chave: string }) {
   const livros = usePerfil((s) => s.livros);
   const { edicao, estado, textos, desatualizada, gerando, vazia, finalizadaEm, atualizar } = useEdicao(chave);
   const [compartilhando, setCompartilhando] = useState(false);
+  const [modo, setModo] = useState<"rolar" | "folhear">("rolar");
+  const [pdf, setPdf] = useState<"parado" | "gerando">("parado");
+  const [avisoPdf, setAvisoPdf] = useState<string | null>(null);
+  useEffect(() => {
+    try {
+      if (localStorage.getItem("bookside-journal-modo") === "folhear") setModo("folhear");
+    } catch {
+      /* sem armazenamento */
+    }
+  }, []);
+  const mudarModo = (m: "rolar" | "folhear") => {
+    setModo(m);
+    try {
+      localStorage.setItem("bookside-journal-modo", m);
+    } catch {
+      /* sem armazenamento */
+    }
+  };
   const paleta = paletaDoMes(edicao.mes);
   const cor = paleta.fundo;
   const margens = useMemo(() => margensDoMes(livros, edicao), [livros, edicao]);
@@ -57,6 +76,32 @@ function Leitura({ chave }: { chave: string }) {
         </Link>
       </div>
     );
+
+  const rotulo = `${edicao.nome} ${edicao.ano}`;
+  const folhas: Folha[] = [
+    {
+      id: "capa",
+      sangrada: true,
+      el: <CapaJournal ed={edicao} textos={textos} paleta={paleta} previa={estado === "previa"} />,
+    },
+    {
+      id: "abertura",
+      el: (
+        <div className="space-y-8">
+          <Editorial textos={textos} cor={cor} />
+          <MesEmNumeros ed={edicao} cor={cor} />
+        </div>
+      ),
+    },
+    { id: "historias", el: <AsHistorias ed={edicao} cor={cor} /> },
+    { id: "historia-do-mes", el: <HistoriaDoMes ed={edicao} cor={cor} todos={livros} /> },
+    { id: "extremos", el: <EntreExtremos ed={edicao} cor={cor} /> },
+    { id: "ritmo", el: <SeuRitmo ed={edicao} textos={textos} cor={cor} /> },
+    { id: "leu", el: <OQueVoceLeu ed={edicao} textos={textos} cor={cor} /> },
+    { id: "autorias", el: <QuemEscreveu ed={edicao} cor={cor} /> },
+    ...(margens.length ? [{ id: "margens", el: <NasMargens margens={margens} cor={cor} /> }] : []),
+    { id: "mood", sangrada: true, el: <Mood textos={textos} paleta={paleta} style={{ height: "100%", borderRadius: 0, display: "flex", flexDirection: "column", justifyContent: "center" }} /> },
+  ];
 
   return (
     <article>
@@ -102,7 +147,61 @@ function Leitura({ chave }: { chave: string }) {
         </div>
       ) : null}
 
-      {vazia ? (
+      {!vazia ? (
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-[12px]">
+          <div role="group" aria-label="como ler a edição" className="flex rounded-full border border-linha p-0.5 lg:border-fio">
+            {(["rolar", "folhear"] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                aria-pressed={modo === m}
+                onClick={() => mudarModo(m)}
+                className={`h-8 rounded-full px-4 font-semibold ${modo === m ? "bg-ameixa text-creme" : "text-ameixa hover:text-bordo"}`}
+              >
+                {m === "rolar" ? "ler rolando" : "folhear"}
+              </button>
+            ))}
+          </div>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <Link href={`/story?tipo=mes&mes=${chave}`} className="font-semibold text-cinza hover:text-bordo">
+              wrapped clássico do mês
+            </Link>
+            <button
+              type="button"
+              disabled={pdf === "gerando"}
+              onClick={() => {
+                setAvisoPdf(null);
+                setPdf("gerando");
+              }}
+              className="font-semibold text-bordo hover:underline disabled:opacity-60"
+            >
+              {pdf === "gerando" ? "gerando pdf…" : "exportar pdf"}
+            </button>
+            <button type="button" onClick={() => setCompartilhando(true)} className="font-semibold text-bordo hover:underline">
+              compartilhar
+            </button>
+          </div>
+        </div>
+      ) : null}
+      {avisoPdf ? <p role="status" className="mt-2 text-[12px] text-cinza">{avisoPdf}</p> : null}
+      {pdf === "gerando" ? (
+        <ExportarPdf
+          folhas={folhas}
+          paleta={paleta}
+          nomeArquivo={`the-bookside-journal-${chave}.pdf`}
+          onFim={(erro) => {
+            setPdf("parado");
+            setAvisoPdf(erro ?? "pdf baixado ✓");
+          }}
+        />
+      ) : null}
+
+      {!vazia && modo === "folhear" ? (
+        <div className="mt-8">
+          <Folhear folhas={folhas} rotulo={rotulo} paleta={paleta} />
+          <p className="mt-3 text-center text-[11px] text-cinza">use as setas do teclado ou deslize para virar as páginas.</p>
+        </div>
+      ) : vazia ? (
         <div className="py-16 text-center">
           <p className="font-display text-[26px] font-semibold text-ameixa lg:font-revista lg:font-normal">
             {edicao.nome} não teve leituras registradas.

@@ -257,13 +257,16 @@ export function MeuCapitulo({
               atualizar progresso
             </Link>
             <p className="flex flex-wrap justify-center gap-x-4 gap-y-1">
-              <button type="button" onClick={onPausar} className={linkPequeno}>
+              <button type="button" onClick={onPausar} className={`${linkPequeno} inline-flex items-center gap-1.5`}>
+                <svg aria-hidden width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 5v14M15 5v14" /></svg>
                 pausar
               </button>
-              <button type="button" onClick={onAbandonar} className={linkPequeno}>
+              <button type="button" onClick={onAbandonar} className={`${linkPequeno} inline-flex items-center gap-1.5`}>
+                <svg aria-hidden width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
                 abandonei
               </button>
-              <button type="button" onClick={() => onMarcar("lido")} className={linkPequeno}>
+              <button type="button" onClick={() => onMarcar("lido")} className={`${linkPequeno} inline-flex items-center gap-1.5`}>
+                <svg aria-hidden width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
                 terminei
               </button>
             </p>
@@ -274,7 +277,8 @@ export function MeuCapitulo({
               {livro.resenha || livro.nota ? "ver e editar minha ficha" : "escrever minha ficha"}
             </Link>
             <p className="flex flex-wrap justify-center gap-x-4 gap-y-1">
-              <button type="button" onClick={onReler} className={linkPequeno}>
+              <button type="button" onClick={onReler} className={`${linkPequeno} inline-flex items-center gap-1.5`}>
+                <svg aria-hidden width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5" /></svg>
                 começar uma releitura
               </button>
               {releituras.length ? (

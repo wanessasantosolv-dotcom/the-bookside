@@ -37,43 +37,69 @@ function Fundo({ paleta, w, h, children }: { paleta: Paleta; w: number; h: numbe
 }
 
 function Story({ ed, textos, paleta }: Props) {
-  const fav = ed.favoritos[0];
-  const outros = ed.concluidos.filter((l) => l !== fav).slice(0, 4);
+  const fav = ed.favoritos[0] ?? ed.concluidos[0];
+  const atras = ed.concluidos.filter((l) => l !== fav).slice(0, 2);
+  const linha = `${paleta.fundo}33`;
   return (
-    <Fundo paleta={paleta} w={1080} h={1920}>
-      <Marca ed={ed} paleta={paleta} />
-      <h1 className="mt-16 font-revista text-[150px] leading-[.92]">
-        {maiuscula(ed.nome)}
-        <br />
-        <i>em revista.</i>
-      </h1>
-      <p className="mt-10 font-revista text-[58px] leading-[1.1]">{textos.titulo}</p>
-      <div className="mt-12 grid grid-cols-3 border-y py-8" style={{ borderColor: `${paleta.texto}40` }}>
+    <div
+      className="relative flex flex-col overflow-hidden font-texto"
+      style={{ width: 1080, height: 1920, background: paleta.papel, color: paleta.fundo }}
+    >
+      {/* cabeçalho da revista */}
+      <div className="px-[84px] pt-[96px]">
+        <div className="flex items-center justify-between font-maquina text-[24px] tracking-[.16em]" style={{ color: `${paleta.fundo}b3` }}>
+          <span>vol. {String(ed.vol).padStart(2, "0")}</span>
+          <span>{ed.nome} · {ed.ano}</span>
+        </div>
+        <p className="mt-6 text-center font-revista text-[176px] leading-[.86] italic">the bookside</p>
+        <div className="mt-5 flex items-center gap-6">
+          <span className="h-px flex-1" style={{ background: linha }} />
+          <span className="text-[26px] font-semibold tracking-[.42em]">journal</span>
+          <span className="h-px flex-1" style={{ background: linha }} />
+        </div>
+      </div>
+
+      {/* as capas em leque, o favorito na frente */}
+      <div className="relative mx-auto mt-[92px] h-[720px] w-[880px]">
+        {atras.map((l, i) => (
+          <div
+            key={`${l.id}-${i}`}
+            className="absolute top-[70px]"
+            style={{ left: i === 0 ? 40 : 520, transform: `rotate(${i === 0 ? -9 : 8}deg)` }}
+          >
+            <Capa l={l} seguro className="w-[320px] shadow-[0_30px_50px_-28px_rgba(0,0,0,.55)] [&>span:last-child]:hidden" />
+          </div>
+        ))}
+        {fav ? (
+          <div className="absolute top-0 left-1/2 -translate-x-1/2" style={{ transform: "translateX(-50%) rotate(-2deg)" }}>
+            <Capa l={fav} seguro className="w-[440px] shadow-[0_50px_70px_-34px_rgba(0,0,0,.65)] [&>span:last-child]:text-[30px]" />
+          </div>
+        ) : null}
+      </div>
+
+      {/* manchete */}
+      <div className="mt-[64px] px-[96px] text-center">
+        <p className="font-maquina text-[24px] tracking-[.18em]" style={{ color: `${paleta.fundo}b3` }}>
+          {fav && ed.favoritos[0] ? `favorito do mês: ${fav.titulo.toLowerCase()}` : "o mês em leituras"}
+        </p>
+        <p className="mx-auto mt-6 max-w-[880px] font-revista text-[76px] leading-[1.02] italic">{textos.titulo}</p>
+      </div>
+
+      {/* números com divisórias finas */}
+      <div className="mt-auto grid grid-cols-3 border-t px-[60px] pt-10 pb-[84px]" style={{ borderColor: linha }}>
         {[
-          { v: num(ed.numeros.livros), r: ed.numeros.livros === 1 ? "livro" : "livros" },
+          { v: num(ed.numeros.livros), r: ed.numeros.livros === 1 ? "livro lido" : "livros lidos" },
           { v: ed.numeros.paginasConhecidas ? num(ed.numeros.paginas) : "—", r: "páginas" },
           { v: ed.numeros.media !== null ? nota1(ed.numeros.media) : "—", r: "nota média" },
-        ].map((x) => (
-          <div key={x.r}>
-            <p className="font-revista text-[96px] leading-none">{x.v}</p>
-            <p className="mt-3 text-[28px]" style={{ color: paleta.destaque }}>{x.r}</p>
+        ].map((x, i) => (
+          <div key={x.r} className="text-center" style={{ borderLeft: i ? `1px solid ${linha}` : undefined }}>
+            <p className="font-revista text-[88px] leading-none">{x.v}</p>
+            <p className="mt-3 text-[26px]" style={{ color: `${paleta.fundo}b3` }}>{x.r}</p>
           </div>
         ))}
       </div>
-      <div className="mt-auto flex items-end gap-10">
-        {fav ? (
-          <div className="flex-none">
-            <p className="mb-4 text-[26px] tracking-[.14em] uppercase" style={{ color: paleta.destaque }}>favorito do mês</p>
-            <Capa l={fav} seguro className="w-[330px] shadow-[0_40px_60px_-30px_rgba(0,0,0,.7)] [&>span:last-child]:text-[28px]" />
-          </div>
-        ) : null}
-        <div className="flex min-w-0 flex-1 flex-wrap items-end gap-5">
-          {outros.map((l, i) => (
-            <Capa key={`${l.id}-${i}`} l={l} seguro className="w-[150px] shadow-[0_20px_30px_-18px_rgba(0,0,0,.6)] [&>span:last-child]:hidden" />
-          ))}
-        </div>
-      </div>
-    </Fundo>
+      <span aria-hidden className="absolute inset-x-0 bottom-0 h-[22px]" style={{ background: paleta.fundo }} />
+    </div>
   );
 }
 
