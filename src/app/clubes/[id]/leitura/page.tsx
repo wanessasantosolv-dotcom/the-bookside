@@ -5,6 +5,7 @@ import { Animacao } from "@/components/Animacao";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
+import { usePerfil } from "@/lib/perfil-store";
 import { useClube } from "@/components/clube/ClubeContexto";
 import { botaoContorno } from "@/components/clube/Pecas";
 import { ErroOuFalta, Vazio } from "@/components/social/Estados";
@@ -303,7 +304,15 @@ export default function LeituraPage() {
                   <p className="text-[13px] text-cinza">
                     {meuProgresso?.numero != null
                       ? `você está n${meuProgresso.unidade === "capitulo" ? "o capítulo" : "a página"} ${meuProgresso.numero}`
-                      : "ainda não marcou em que página ou capítulo está"}
+                      : (() => {
+                          // sem marca no clube: usa o progresso da sua estante
+                          const pessoal = usePerfil
+                            .getState()
+                            .livros.find((l) => l.id === lendo.livro.id || l.titulo.toLowerCase() === lendo.livro.titulo.toLowerCase());
+                          return pessoal?.paginaAtual
+                            ? `você está na página ${pessoal.paginaAtual}${pessoal.paginas ? ` de ${pessoal.paginas}` : ""}`
+                            : "ainda não marcou em que página ou capítulo está";
+                        })()}
                   </p>
                   <button
                     type="button"

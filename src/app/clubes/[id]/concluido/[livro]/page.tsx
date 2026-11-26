@@ -1,6 +1,6 @@
 "use client";
 
-import { toPng } from "html-to-image";
+import { fotografarPng } from "@/lib/fotografar";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useRef, useState } from "react";
@@ -103,9 +103,8 @@ export default function ConcluidoPage() {
     setGerando(true);
     setAviso(null);
     try {
-      const png = await toPng(quadro.current, {
+      const png = await fotografarPng(quadro.current, {
         pixelRatio: 3,
-        cacheBust: true,
         includeQueryParams: true,
       });
       const blob = await (await fetch(png)).blob();

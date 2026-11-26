@@ -636,6 +636,25 @@ export async function marcarMarca(livroId: string, unidade: UnidadeMarca, numero
   if (error) throw error;
 }
 
+/**
+ * O progresso é um só: quando a pessoa atualiza a página (ou termina) um livro
+ * na estante dela, a leitura do mesmo livro nos clubes acompanha.
+ */
+export async function sincronizarProgressoNosClubes(livro: { id: string; titulo: string }, pagina: number, terminou: boolean) {
+  try {
+    const clubes = await meusClubes();
+    const chave = chaveLivro(livro.titulo);
+    await Promise.all(
+      clubes
+        .map((c) => c.lendo)
+        .filter((l): l is LivroDoClube => !!l && (l.livro.id === livro.id || chaveLivro(l.livro.titulo) === chave))
+        .map((l) => (terminou ? marcarProgresso(l.id, "terminei") : pagina > 0 ? marcarMarca(l.id, "pagina", pagina) : null)),
+    );
+  } catch {
+    /* sem conta ou sem rede: fica só na estante pessoal */
+  }
+}
+
 export async function fichasDoClube(livroIds: string[]): Promise<Ficha[]> {
   if (!livroIds.length) return [];
   const { data, error } = await db()

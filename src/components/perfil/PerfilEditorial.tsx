@@ -288,8 +288,11 @@ function LendoAgora({ lendo, proprio }: { lendo: LivroSalvo[]; proprio: boolean 
                   <span className="block h-full rounded-full bg-[var(--acc)]" style={{ width: `${pct ?? 2}%` }} />
                 </span>
                 {proprio ? (
-                  <Link href={`/livro/${l.id}/progresso`} className="mt-2 inline-flex min-h-9 items-center text-[12px] font-semibold text-[var(--acc)] hover:underline">
-                    registrar leitura
+                  <Link
+                    href={`/livro/${l.id}/progresso`}
+                    className="relative z-10 mt-3 inline-flex min-h-10 items-center gap-1.5 rounded-full border border-[var(--acc)] px-3.5 text-[12px] font-semibold text-[var(--acc)] hover:opacity-80"
+                  >
+                    + registrar leitura
                   </Link>
                 ) : null}
               </span>
@@ -685,7 +688,7 @@ export function PerfilEditorial({
               </div>
               <div className="mt-3">
                 <div className="min-w-0">
-                  <h1 className="font-revista text-[30px] leading-[1.05] text-[var(--acc)] lg:text-[42px]">{nome}</h1>
+                  <h1 className="font-display text-[32px] leading-[1.05] font-semibold text-[var(--acc)] italic lg:text-[42px]">{nome}</h1>
                   <p className="mt-1 text-[13px] text-[var(--suave)]">
                     @{p.usuario}
                     {arquetipo ? (
@@ -711,7 +714,7 @@ export function PerfilEditorial({
           <header className="flex items-center gap-3 px-5 pt-4 pb-2 lg:px-2 lg:pt-8">
             <Foto p={p} tamanho={44} />
             <span className="min-w-0 flex-1">
-              <span className="block truncate font-revista text-[22px] leading-tight text-[var(--acc)]">{nome}</span>
+              <span className="block truncate font-display text-[22px] leading-tight font-semibold text-[var(--acc)] italic">{nome}</span>
               <span className="block text-[12px] text-[var(--suave)]">@{p.usuario}</span>
             </span>
             {proprio ? null : acoesDela}

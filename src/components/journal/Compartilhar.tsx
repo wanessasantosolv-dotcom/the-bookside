@@ -1,6 +1,6 @@
 "use client";
 
-import { toPng } from "html-to-image";
+import { fotografarPng } from "@/lib/fotografar";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Capa, CapaJournal, linhaDaCapa, nota1, num, plural } from "@/components/journal/Revista";
 import { maiuscula, type Edicao, type Paleta } from "@/lib/journal";
@@ -261,7 +261,7 @@ const PECAS = [
 ] as const;
 
 async function paraArquivo(no: HTMLElement, w: number, h: number, nome: string) {
-  const png = await toPng(no, { width: w, height: h, pixelRatio: 1, cacheBust: true, includeQueryParams: true });
+  const png = await fotografarPng(no, { width: w, height: h, pixelRatio: 1, includeQueryParams: true });
   const blob = await (await fetch(png)).blob();
   return { png, arquivo: new File([blob], nome, { type: "image/png" }) };
 }

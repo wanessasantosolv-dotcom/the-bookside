@@ -1,6 +1,6 @@
 "use client";
 
-import { toPng } from "html-to-image";
+import { fotografarPng } from "@/lib/fotografar";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useRef, useState } from "react";
 import { AppShell } from "@/components/AppShell";
@@ -143,9 +143,8 @@ function Conteudo() {
     setGerando(true);
     setAviso(null);
     try {
-      const png = await toPng(quadro.current, {
+      const png = await fotografarPng(quadro.current, {
         pixelRatio: 3,
-        cacheBust: true,
         // cada capa tem o seu endereço (sem isto, todas viravam a primeira)
         includeQueryParams: true,
       });
@@ -222,8 +221,8 @@ function Conteudo() {
     );
 
   const pilula = (on: boolean) =>
-    `flex h-10 items-center rounded-pill px-4 text-xs font-semibold whitespace-nowrap transition-colors ${
-      on ? "bg-bordo text-creme shadow-sm" : "text-cinza hover:text-ameixa"
+    `flex min-h-10 items-center rounded-pill border px-3.5 text-[13px] font-semibold whitespace-nowrap transition-colors ${
+      on ? "border-bordo bg-bordo text-creme" : "border-linha text-cinza hover:text-ameixa"
     }`;
   const campo =
     "h-12 w-full border-0 border-b-[1.5px] border-ameixa bg-transparent px-0 font-display text-[17px] italic text-ameixa outline-none focus:border-bordo";
@@ -236,20 +235,20 @@ function Conteudo() {
         padrao="/numeros"
         className="-ml-2 flex min-h-11 w-fit items-center px-2 text-[13px] font-semibold text-bordo"
       />
-      <h1 className="mt-1 font-display text-[30px] leading-[1.1] font-semibold italic text-bordo lg:font-revista lg:text-[40px] lg:font-normal lg:text-tinta">
+      <h1 className="mt-1 font-display text-[26px] leading-[1.1] font-semibold italic text-bordo lg:font-revista lg:text-[40px] lg:font-normal lg:text-tinta">
         compartilhar no story
       </h1>
-      <p className="mt-1.5 font-accent text-sm italic text-cinza">
+      <p className="mt-1.5 hidden font-accent text-sm italic text-cinza sm:block">
         escolha o que mostrar e passe pelos estilos. a imagem sai no tamanho do
         story ✦
       </p>
 
-      <div className="mt-6 lg:grid lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start lg:gap-12">
-        <div className="space-y-6 rounded-[20px] bg-creme-quente p-5 shadow-[0_20px_40px_-26px_rgba(43,20,32,.22)] lg:p-7">
+      <div className="mt-4 lg:mt-6 lg:grid lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start lg:gap-12">
+        <div className="space-y-6 lg:rounded-[20px] lg:bg-creme-quente lg:p-7 lg:shadow-[0_20px_40px_-26px_rgba(43,20,32,.22)]">
           <div
             role="radiogroup"
             aria-label="o que compartilhar"
-            className="inline-flex flex-wrap gap-1 rounded-pill bg-linha/60 p-1"
+            className="-mx-6 flex gap-6 overflow-x-auto border-b border-linha px-6 [scrollbar-width:none] lg:mx-0 lg:px-0 [&::-webkit-scrollbar]:hidden"
           >
             {(
               [
@@ -264,7 +263,9 @@ function Conteudo() {
                 role="radio"
                 aria-checked={tipo === id}
                 onClick={() => setTipo(id)}
-                className={pilula(tipo === id)}
+                className={`flex min-h-11 flex-none items-center border-b-2 text-[14px] whitespace-nowrap ${
+                  tipo === id ? "border-bordo font-semibold text-bordo" : "border-transparent text-cinza"
+                }`}
               >
                 {r}
               </button>
@@ -413,7 +414,7 @@ function Conteudo() {
               </div>
             </div>
           )}
-          <div className="mt-5 w-full max-w-[360px] lg:hidden">
+          <div className="sticky bottom-[calc(84px+env(safe-area-inset-bottom))] z-10 mt-5 w-full max-w-[360px] lg:hidden">
             <BotaoCompartilhar
               onClick={compartilhar}
               gerando={gerando}

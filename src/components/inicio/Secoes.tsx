@@ -255,15 +255,35 @@ export function MetaDeLeitura({ faixa }: { faixa?: boolean }) {
   const p = Math.round((lidos / meta) * 100);
   const faltam = Math.max(0, meta - lidos);
   if (faixa) {
+    // um anel pequeno, e não uma barra: assim não se confunde com o progresso do livro
+    const r = 15;
+    const volta = 2 * Math.PI * r;
     return (
-      <Link href="/perfil?aba=jornada" className="block border-y border-linha py-3" aria-label={`meta de leitura: ${lidos} de ${meta}. ver jornada`}>
-        <span className="flex items-baseline justify-between text-[13px]">
-          <span className="text-tinta-suave">
-            meta de leitura <b className="font-semibold text-ameixa tabular-nums">{lidos}/{meta}</b>
+      <Link
+        href="/perfil?aba=jornada"
+        className="flex min-h-[60px] items-center gap-3.5 border-y border-linha py-3"
+        aria-label={`meta de ${ano}: ${lidos} de ${meta} livros. ver jornada`}
+      >
+        <svg aria-hidden width="38" height="38" viewBox="0 0 38 38" className="flex-none -rotate-90">
+          <circle cx="19" cy="19" r={r} fill="none" stroke="var(--color-linha)" strokeWidth="3.5" />
+          <circle
+            cx="19"
+            cy="19"
+            r={r}
+            fill="none"
+            stroke="var(--color-bordo)"
+            strokeWidth="3.5"
+            strokeLinecap="round"
+            strokeDasharray={`${(Math.min(100, p) / 100) * volta} ${volta}`}
+          />
+        </svg>
+        <span className="min-w-0 flex-1">
+          <span className="block text-[14px] text-ameixa">
+            <b className="font-semibold tabular-nums">{lidos} de {meta}</b> livros na meta de {ano}
           </span>
-          <span className="text-[12px] font-semibold text-bordo">jornada →</span>
+          <span className="block text-[12px] text-cinza">{faltam ? `faltam ${faltam}` : "meta atingida ✦"}</span>
         </span>
-        <Barra valor={p} className="mt-2" />
+        <span className="flex-none text-[12px] font-semibold text-bordo">jornada →</span>
       </Link>
     );
   }

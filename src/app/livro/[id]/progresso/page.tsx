@@ -18,6 +18,7 @@ import { livroLembrado } from "@/lib/catalogo";
 import { corDoLivro } from "@/lib/cores";
 import { infoDoLivro } from "@/lib/estantes";
 import { usePerfil, type LivroSalvo } from "@/lib/perfil-store";
+import { sincronizarProgressoNosClubes } from "@/lib/clubes";
 
 const passo =
   "flex size-11 items-center justify-center rounded-full border border-bege bg-creme-quente text-lg font-semibold text-bordo disabled:text-bege";
@@ -55,6 +56,8 @@ function Progresso({ livro }: { livro: LivroSalvo }) {
       paginaAtual: terminou ? paginas || atual : atual,
       ...(terminou && termino ? dadosDoTermino(termino) : {}),
     });
+    // o clube que lê o mesmo livro acompanha (sem segundo registro)
+    void sincronizarProgressoNosClubes(livro, terminou ? paginas || atual : atual, terminou);
     // terminando, a celebração mesmo oferece "fazer a ficha"; sem terminar,
     // volta pra página do livro normalmente
     if (terminou) celebrarTermino(livro, usePerfil.getState());
@@ -159,12 +162,12 @@ function Progresso({ livro }: { livro: LivroSalvo }) {
             <label className="flex flex-1 flex-col items-center">
               <span className="eyebrow mb-1 text-bordo">página atual</span>
               <input
-                type="number"
+                type="text"
                 inputMode="numeric"
-                min={0}
-                max={paginas || undefined}
-                value={atual}
-                onChange={(e) => mudar(Number(e.target.value))}
+                pattern="[0-9]*"
+                placeholder="0"
+                value={atual ? String(atual) : ""}
+                onChange={(e) => mudar(Number(e.target.value.replace(/\D/g, "")) || 0)}
                 className={campo}
               />
             </label>

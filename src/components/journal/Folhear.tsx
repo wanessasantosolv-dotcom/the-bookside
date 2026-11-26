@@ -1,6 +1,6 @@
 "use client";
 
-import { toJpeg } from "html-to-image";
+import { fotografarJpeg } from "@/lib/fotografar";
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode, type TouchEvent } from "react";
 import { ImagemSegura } from "@/components/journal/Revista";
 import type { Paleta } from "@/lib/journal";
@@ -252,13 +252,12 @@ export function ExportarPdf({
         for (const no of nos.current) {
           if (!no || cancelado) continue;
           const altura = Math.max(ALTURA_MIN_PDF, no.offsetHeight);
-          const dataUrl = await toJpeg(no, {
+          const dataUrl = await fotografarJpeg(no, {
             width: LARGURA_PDF,
             height: altura,
             pixelRatio: 2,
             quality: 0.9,
             backgroundColor: paleta.papel,
-            cacheBust: true,
             includeQueryParams: true,
             imagePlaceholder:
               "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
