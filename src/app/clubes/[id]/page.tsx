@@ -144,21 +144,24 @@ function Turma({ membros, turma, eu, clubeId }: { membros: Membro[]; turma: Map<
           {terminaram} de {membros.length} concluíram
         </span>
       </div>
-      <ul className="grid gap-x-8 sm:grid-cols-2">
+      {/* discreto: avatar pequeno, nome e um fio fino de progresso, sem bordas entre as pessoas */}
+      <ul className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3 lg:grid-cols-4">
         {visiveis.map((m) => {
           const a = turma.get(m.usuario_id);
           return (
-            <li key={m.usuario_id} className="flex items-center gap-3 border-b border-linha py-2.5 lg:border-fio">
+            <li key={m.usuario_id} className="flex min-w-0 items-center gap-2">
               <Link href={m.pessoa.usuario ? `/clubes/${clubeId}/membro/${m.pessoa.usuario}` : "#"} className="flex-none">
-                <Avatar pessoa={m.pessoa} tamanho={32} />
+                <Avatar pessoa={m.pessoa} tamanho={22} />
               </Link>
               <span className="min-w-0 flex-1">
-                <span className="flex items-baseline justify-between gap-2 text-[13px]">
-                  <span className="truncate text-ameixa">{m.usuario_id === eu ? "você" : nomeDe(m.pessoa)}</span>
-                  <span className={`flex-none text-[12px] ${a?.estado === "terminou" ? "font-semibold text-bordo" : "text-cinza"}`}>{rotuloAndamento(a)}</span>
+                <span className="flex items-baseline justify-between gap-1.5 text-[12px] leading-tight">
+                  <span className="truncate text-tinta-suave">{m.usuario_id === eu ? "você" : nomeDe(m.pessoa)}</span>
+                  <span className={`flex-none text-[11px] ${a?.estado === "terminou" ? "text-bordo" : "text-cinza"}`}>
+                    {!a || a.estado === "nao" ? "—" : rotuloAndamento(a)}
+                  </span>
                 </span>
-                <span className="mt-1 block">
-                  <Barra valor={pctDe(a)} suave={a?.estado !== "terminou"} />
+                <span className="mt-1 block h-px bg-linha" aria-hidden>
+                  <span className="block h-full bg-rosa-antigo" style={{ width: `${pctDe(a)}%` }} />
                 </span>
               </span>
             </li>
