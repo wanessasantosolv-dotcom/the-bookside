@@ -269,7 +269,8 @@ export default function ClubStudioPage() {
 
   function escolherTema(id: TemaClubeId) {
     if (id === ident.tema && ident.modo === "tema") return;
-    const personalizadas = ident.modo === "avancado" ? Object.keys(ident.cores ?? {}).length : ident.modo === "simples" ? 2 : 0;
+    // só pergunta quando há cores mexidas à mão (o modo simples inicial vem da cor antiga do clube)
+    const personalizadas = ident.modo === "avancado" ? Object.keys(ident.cores ?? {}).length : 0;
     if (personalizadas && !confirm(`trocar para ${temaDoId(id).nome}? as cores personalizadas serão substituídas pelas do tema. emblema, patterns, layout e títulos continuam.`)) return;
     // troca só a paleta: emblema, patterns, estantes, layout e títulos continuam
     setIdent({ ...ident, tema: id, modo: "tema", simples: undefined, cores: undefined });
@@ -951,7 +952,7 @@ export default function ClubStudioPage() {
       </div>
 
       {/* ações sempre à mão */}
-      <div className="fixed inset-x-0 bottom-[var(--altura-menu,0px)] z-30 border-t border-[#E6D5CE] bg-[#F9F5EE]/95 px-5 py-3 backdrop-blur lg:sticky lg:bottom-0 lg:mt-10 lg:px-0">
+      <div className="fixed inset-x-0 bottom-[var(--altura-menu,0px)] z-30 mx-auto w-full max-w-[430px] border-t border-[#E6D5CE] bg-[#F9F5EE]/95 px-5 py-3 backdrop-blur lg:sticky lg:bottom-0 lg:mx-0 lg:mt-10 lg:max-w-none lg:px-0">
         {msg ? <p role="status" className={`mb-2 text-[13px] ${msg.tipo === "ok" ? "text-[#4E6B3F]" : "text-[#6B0D24]"}`}>{msg.texto}</p> : null}
         <div className="flex flex-wrap items-center gap-2">
           <button type="button" onClick={salvar} disabled={salvando || !mudou || graves.length > 0} className="inline-flex h-11 items-center rounded-pill bg-[#692536] px-6 text-[13px] font-semibold text-[#F9F5EE] disabled:opacity-45">
