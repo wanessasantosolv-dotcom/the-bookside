@@ -25,8 +25,9 @@ import {
 } from "@/lib/clubes";
 import { temas } from "@/lib/dados";
 import { coresDoTema } from "@/lib/tema";
-import { TIPOGRAFIAS, estiloDaIdentidade, guardarIdentidadeEmCache, identidadeEmCache, lerIdentidade, temaDoId, type Identidade } from "@/lib/identidade";
+import { TIPOGRAFIAS, cabecalhoDe, decoracaoDe, emblemaDe, estiloDaIdentidade, padraoDe, paletaDe, guardarIdentidadeEmCache, identidadeEmCache, lerIdentidade, temaDoId, type Identidade } from "@/lib/identidade";
 import { useModoEscuro } from "@/components/Aparencia";
+import { Emblema } from "@/components/clube/Emblema";
 import { useConsulta, useMeuId } from "@/lib/social";
 
 type Ctx = {
@@ -34,8 +35,11 @@ type Ctx = {
   membros: Membro[];
   papel: Papel | null;
   recarregar: () => void;
+  /** a identidade publicada no club studio (null = visual antigo) */
+  identidade: Identidade | null;
 };
-const Contexto = createContext<Ctx | null>(null);
+export const ContextoClube = createContext<Ctx | null>(null);
+const Contexto = ContextoClube;
 
 export function useClube() {
   const c = useContext(Contexto);
@@ -160,8 +164,11 @@ function Abas({ base }: { base: string }) {
   );
 }
 
-function SeloDoClube({ c, tamanho }: { c: Clube; tamanho: "pequeno" | "grande" }) {
+function SeloDoClube({ c, tamanho, ident }: { c: Clube; tamanho: "pequeno" | "grande"; ident: Identidade | null }) {
   const cls = tamanho === "grande" ? "size-20 lg:size-24 border-4 border-creme lg:border-jornal" : "size-10";
+  // emblema do club studio: no lugar da foto (se pedido) ou quando não há foto
+  if (ident && (ident.emblema?.noAvatar || !c.foto))
+    return <Emblema e={emblemaDe(ident, c.nome)} paleta={paletaDe(ident)} tamanho={tamanho === "grande" ? 96 : 42} className="block flex-none drop-shadow-[0_6px_10px_rgba(0,0,0,.12)]" />;
   return c.foto ? (
     // eslint-disable-next-line @next/next/no-img-element
     <img src={c.foto} alt="" className={`block flex-none rounded-full object-cover ${cls}`} />
@@ -177,7 +184,9 @@ function SeloDoClube({ c, tamanho }: { c: Clube; tamanho: "pequeno" | "grande" }
  * membros e ações. Nas outras abas: barra compacta (selo, nome, voltar).
  * As abas ficam presas no topo enquanto rola.
  */
-function Cabecalho({ c, papel, membros }: { c: Clube; papel: Papel | null; membros: number }) {
+function Cabecalho({ c, papel, membros, ident }: { c: Clube; papel: Papel | null; membros: number; ident: Identidade | null }) {
+  const layout = ident ? cabecalhoDe(ident) : "editorial";
+  const faixa = ident && ident.padrao && padraoDe(ident).onde.includes("faixa") && decoracaoDe(ident) !== "minimal";
   const pathname = usePathname();
   const base = `/clubes/${c.id}`;
   const inicio = pathname === base || pathname === `${base}/feed`;
@@ -186,7 +195,58 @@ function Cabecalho({ c, papel, membros }: { c: Clube; papel: Papel | null; membr
     "flex min-h-10 items-center rounded-full border border-bordo/40 px-4 text-[13px] font-semibold text-bordo hover:border-bordo hover:bg-rosa-fundo";
   return (
     <>
-      {inicio ? (
+      {inicio && layout === "compact" ? (
+        <div className={`flex flex-wrap items-center gap-4 px-5 pt-3 pb-1 ${largura}`}>
+          <Voltar padrao="/clubes" rotulo="clubes" className="-ml-2 flex min-h-11 flex-none items-center px-2 text-[13px] font-semibold text-bordo" />
+          <SeloDoClube c={c} tamanho="pequeno" ident={ident} />
+          <div className="min-w-0 flex-1">
+            <h1 className="truncate font-revista text-[26px] leading-tight text-bordo italic lg:text-[32px]">{c.nome}</h1>
+            <p className="truncate text-[12px] text-tinta-suave">
+              {membros} {membros === 1 ? "membro" : "membros"}
+              {c.descricao ? ` · ${c.descricao}` : ""}
+            </p>
+          </div>
+          <Link href={`${base}/convidar`} className={`${acao} hidden sm:flex`}>
+            convidar membros
+          </Link>
+          <Menu c={c} papel={papel} />
+        </div>
+      ) : inicio && layout === "centered" ? (
+        <div>
+          <div className="relative">
+            <div
+              className="aspect-[4/1] w-full bg-cover bg-center lg:aspect-[7/1]"
+              style={c.capa ? { backgroundImage: `url("${c.capa}")` } : { background: "var(--club-banner)" }}
+            />
+            <div className={`absolute inset-x-0 top-0 flex items-center justify-between px-4 pt-2 lg:pt-4 ${largura}`}>
+              <Voltar padrao="/clubes" rotulo="clubes" className="flex min-h-10 items-center rounded-full bg-creme/90 px-4 text-[13px] font-semibold text-bordo" />
+              <span className="rounded-full bg-creme/85">
+                <Menu c={c} papel={papel} />
+              </span>
+            </div>
+          </div>
+          <div className={`flex flex-col items-center px-5 text-center ${largura}`}>
+            <span className="-mt-12">
+              <SeloDoClube c={c} tamanho="grande" ident={ident} />
+            </span>
+            <h1 className="mt-3 font-revista text-[32px] leading-[1.05] text-bordo italic lg:text-[44px]">{c.nome}</h1>
+            <p className="mt-1 text-[13px] text-tinta-suave">
+              clube de leitura · {membros} {membros === 1 ? "membro" : "membros"}
+            </p>
+            {c.descricao ? <p className="mt-2 max-w-[56ch] text-[14px] leading-relaxed text-tinta-suave">{c.descricao}</p> : null}
+            <div className="mt-4 flex gap-2">
+              <Link href={`${base}/convidar`} className={acao}>
+                convidar membros
+              </Link>
+              {papel === "moderadora" ? (
+                <Link href={`${base}/editar`} className={acao}>
+                  editar clube
+                </Link>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      ) : inicio ? (
         <div>
           <div className="relative">
             <div
@@ -211,7 +271,7 @@ function Cabecalho({ c, papel, membros }: { c: Clube; papel: Papel | null; membr
           <div className={`relative px-5 ${largura}`}>
             <div className="flex flex-wrap items-end gap-x-5 gap-y-3">
               <span className="-mt-10 lg:-mt-12">
-                <SeloDoClube c={c} tamanho="grande" />
+                <SeloDoClube c={c} tamanho="grande" ident={ident} />
               </span>
               <div className="min-w-0 flex-1 pt-3">
                 <h1 className="font-revista text-[30px] leading-[1.05] text-bordo italic lg:text-[40px]">{c.nome}</h1>
@@ -237,12 +297,13 @@ function Cabecalho({ c, papel, membros }: { c: Clube; papel: Papel | null; membr
         <div className={`flex items-center gap-3 px-5 pt-3 pb-1 ${largura}`}>
           <Voltar padrao="/clubes" rotulo="clubes" className="-ml-2 flex min-h-11 flex-none items-center px-2 text-[13px] font-semibold text-bordo" />
           <Link href={base} className="flex min-w-0 flex-1 items-center gap-3 border-l border-linha pl-3 lg:border-fio">
-            <SeloDoClube c={c} tamanho="pequeno" />
+            <SeloDoClube c={c} tamanho="pequeno" ident={ident} />
             <span className="truncate font-revista text-[19px] leading-tight text-bordo italic lg:text-[22px]">{c.nome}</span>
           </Link>
           <Menu c={c} papel={papel} />
         </div>
       )}
+      {faixa ? <div aria-hidden className={`faixa-clube mt-4 h-3 ${largura}`} /> : null}
       {/* abas: presas no topo enquanto rola, sem cobrir o conteúdo */}
       <div className="sticky top-0 z-20 mt-3 border-b border-linha bg-creme/95 backdrop-blur-md lg:border-fio lg:bg-jornal/95">
         <div className={`px-5 ${largura}`}>
@@ -318,15 +379,17 @@ export function ClubeProvedor({
 
   return (
     <Contexto.Provider
-      value={{ clube: c, membros, papel, recarregar: consulta.recarregar }}
+      value={{ clube: c, membros, papel, recarregar: consulta.recarregar, identidade: publicada ?? null }}
     >
       {/* o tema do clube vale para todas as telas dele, como o tema do perfil */}
       <div
         style={publicada ? estiloDaIdentidade(publicada) : coresDoTema(c.tema, modoEscuro)}
+        data-estante={publicada?.estante?.estilo}
+        data-decoracao={publicada ? decoracaoDe(publicada) : undefined}
         data-titulo={publicada && !TIPOGRAFIAS.find((t) => t.id === (publicada.tipografia ?? temaDoId(publicada.tema).tipografia))?.italico ? "reto" : undefined}
         className={`clube-tokens flex flex-1 flex-col bg-creme pb-8 lg:bg-jornal ${publicada ? "clube-identidade" : ""}`}
       >
-        {comAbas ? <Cabecalho c={c} papel={papel} membros={membros.length} /> : null}
+        {comAbas ? <Cabecalho c={c} papel={papel} membros={membros.length} ident={publicada ?? null} /> : null}
         <div className={comAbas ? largura : `${largura} lg:py-8`}>
           {children}
         </div>

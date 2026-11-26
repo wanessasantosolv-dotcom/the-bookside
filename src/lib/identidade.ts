@@ -123,6 +123,65 @@ export const TEMAS_CLUBE: TemaClube[] = [
   },
 ];
 
+/* ───────── fase 3: emblema, padrões, elementos, estantes, layout e títulos ───────── */
+export const FORMATOS_EMBLEMA = ["circulo", "oval", "postal", "escudo", "exlibris", "arco", "organico"] as const;
+export type FormatoEmblema = (typeof FORMATOS_EMBLEMA)[number];
+export const NOME_FORMATO: Record<FormatoEmblema, string> = { circulo: "circular", oval: "oval", postal: "selo postal", escudo: "escudo", exlibris: "ex-libris", arco: "arco", organico: "orgânico" };
+export const SIMBOLOS = ["nenhum", "livro-aberto", "livro", "lua", "sol", "estrela", "flor", "chave", "olho", "aspas", "marcador"] as const;
+export type Simbolo = (typeof SIMBOLOS)[number];
+export const NOME_SIMBOLO: Record<Simbolo, string> = { nenhum: "sem símbolo", "livro-aberto": "livro aberto", livro: "livro fechado", lua: "lua", sol: "sol", estrela: "estrela", flor: "flor", chave: "chave", olho: "olho", aspas: "aspas", marcador: "marcador" };
+export const PAPEIS_COR = ["primaria", "complementar", "destaque", "superficie", "fundo", "texto"] as const;
+export type PapelCor = (typeof PAPEIS_COR)[number];
+export type Emblema = {
+  formato: FormatoEmblema;
+  texto: string;
+  simbolo: Simbolo;
+  ano?: number;
+  fundo: PapelCor;
+  tinta: PapelCor;
+  /** usar o emblema no lugar da foto do clube */
+  noAvatar: boolean;
+};
+
+export const PADROES = ["nenhum", "xadrez", "listras", "floral", "estrelas", "pontilhado", "geometrico", "ondas", "papel", "organico"] as const;
+export type Padrao = (typeof PADROES)[number];
+export const NOME_PADRAO: Record<Padrao, string> = { nenhum: "sem pattern", xadrez: "xadrez", listras: "listras", floral: "floral", estrelas: "estrelas", pontilhado: "pontilhado", geometrico: "geométrico", ondas: "ondas", papel: "papel editorial", organico: "formas orgânicas" };
+export const LUGARES_PADRAO = ["banner", "faixa", "vazios", "cartoes"] as const;
+export type LugarPadrao = (typeof LUGARES_PADRAO)[number];
+export const NOME_LUGAR: Record<LugarPadrao, string> = { banner: "banner", faixa: "faixa sob o cabeçalho", vazios: "estados vazios", cartoes: "cards comemorativos" };
+export type ConfigPadrao = { tipo: Padrao; cor: PapelCor; escala: 1 | 2 | 3; intensidade: number; onde: LugarPadrao[] };
+
+export const FAMILIAS = ["botanical", "celestial", "vintage", "paper", "retro", "minimal"] as const;
+export type Familia = (typeof FAMILIAS)[number];
+export const NOME_FAMILIA: Record<Familia, string> = { botanical: "botanical", celestial: "celestial", vintage: "vintage library", paper: "paper goods", retro: "retro graphic", minimal: "minimal editorial" };
+export type Decoracao = "minimal" | "balanced" | "expressive";
+
+export const ESTANTES = ["tema", "natural", "clara", "escura", "bordo", "cereja", "oliva", "azul", "minimalista", "personalizada"] as const;
+export type EstiloEstante = (typeof ESTANTES)[number];
+export const NOME_ESTANTE: Record<EstiloEstante, string> = { tema: "do tema", natural: "madeira natural", clara: "madeira clara", escura: "madeira escura", bordo: "bordô", cereja: "vermelho cereja", oliva: "verde oliva", azul: "azul", minimalista: "minimalista", personalizada: "cor personalizada" };
+const COR_ESTANTE: Partial<Record<EstiloEstante, string>> = { natural: "#9A7650", clara: "#D2B48C", escura: "#3B2418", bordo: "#692536", cereja: "#C7354F", oliva: "#59634F", azul: "#344B89" };
+export type ConfigEstante = { estilo: EstiloEstante; cor?: string; espessura: "fina" | "padrao" | "grossa" };
+
+export type Cabecalho = "editorial" | "centered" | "compact";
+export type EstiloCartao = "editorial" | "paper" | "minimal" | "vintage";
+
+/** módulos da página inicial que existem de verdade (a leitura atual fica sempre no topo) */
+export const MODULOS = ["progresso", "favoritos", "encontro", "atividade", "proximas", "membros"] as const;
+export type Modulo = (typeof MODULOS)[number];
+export const NOME_MODULO: Record<Modulo, string> = { progresso: "progresso dos leitores", favoritos: "favoritos do clube", encontro: "próximo encontro", atividade: "atividade recente", proximas: "próximas leituras", membros: "membros do clube" };
+export type ConfigModulos = { ordem: Modulo[]; ocultos: Modulo[] };
+
+/** títulos editoriais que o clube pode trocar (menus, botões e avisos continuam os do app) */
+export const TITULOS = {
+  progresso: ["progresso dos leitores", "cada um no seu capítulo", "entre capítulos"],
+  favoritos: ["favoritos do clube", "the club favorites.", "nossos favoritos", "five-star reads."],
+  atividade: ["atividade recente", "entre capítulos", "o que rolou"],
+  proximas: ["próximas leituras", "next on our list.", "na fila"],
+  estante: ["nossa estante", "the club shelf.", "estante do clube"],
+  encontro: ["próximo encontro", "book date.", "next book date."],
+} as const;
+export type ChaveTitulo = keyof typeof TITULOS;
+
 export type Identidade = {
   v: 1;
   tema: TemaClubeId;
@@ -131,6 +190,25 @@ export type Identidade = {
   simples?: { principal: string; complementar: string; escuro: boolean };
   cores?: Partial<Paleta>;
   tipografia?: TipografiaId;
+  emblema?: Emblema;
+  padrao?: ConfigPadrao;
+  familia?: Familia;
+  decoracao?: Decoracao;
+  estante?: ConfigEstante;
+  cabecalho?: Cabecalho;
+  cartoes?: EstiloCartao;
+  modulos?: ConfigModulos;
+  titulos?: Partial<Record<ChaveTitulo, string>>;
+};
+
+/** o que cada tema sugere quando o clube ainda não escolheu */
+export const PADRAO_DO_TEMA: Record<TemaClubeId, { familia: Familia; padrao: Padrao; cartoes: EstiloCartao; formato: FormatoEmblema; simbolo: Simbolo }> = {
+  botanical: { familia: "botanical", padrao: "floral", cartoes: "editorial", formato: "oval", simbolo: "flor" },
+  "dark-academia": { familia: "vintage", padrao: "papel", cartoes: "vintage", formato: "exlibris", simbolo: "chave" },
+  "cherry-club": { familia: "retro", padrao: "xadrez", cartoes: "paper", formato: "postal", simbolo: "estrela" },
+  paperback: { familia: "paper", padrao: "geometrico", cartoes: "minimal", formato: "circulo", simbolo: "livro" },
+  "after-hours": { familia: "retro", padrao: "ondas", cartoes: "vintage", formato: "arco", simbolo: "sol" },
+  "the-editor": { familia: "minimal", padrao: "nenhum", cartoes: "minimal", formato: "circulo", simbolo: "aspas" },
 };
 
 /* ───────── cor ───────── */
@@ -189,7 +267,124 @@ export function lerIdentidade(x: unknown): Identidade | null {
     if (ehHex(c[id])) cores[id] = c[id] as string;
   });
   const tipografia = TIPOGRAFIAS.find((t) => t.id === o.tipografia)?.id;
-  return { v: 1, tema, modo, simples, cores, tipografia };
+  const um = <T extends string>(lista: readonly T[], v: unknown): T | undefined => (lista.includes(v as T) ? (v as T) : undefined);
+  const limpar = (v: unknown, max: number) => (typeof v === "string" ? v.replace(/[<>{}]/g, "").slice(0, max).trim() : "");
+
+  const e = o.emblema as Record<string, unknown> | undefined;
+  const emblema: Emblema | undefined =
+    e && um(FORMATOS_EMBLEMA, e.formato)
+      ? {
+          formato: um(FORMATOS_EMBLEMA, e.formato)!,
+          texto: limpar(e.texto, 4),
+          simbolo: um(SIMBOLOS, e.simbolo) ?? "nenhum",
+          ano: typeof e.ano === "number" && e.ano > 1900 && e.ano < 2200 ? Math.round(e.ano) : undefined,
+          fundo: um(PAPEIS_COR, e.fundo) ?? "primaria",
+          tinta: um(PAPEIS_COR, e.tinta) ?? "fundo",
+          noAvatar: !!e.noAvatar,
+        }
+      : undefined;
+  const pd = o.padrao as Record<string, unknown> | undefined;
+  const padrao: ConfigPadrao | undefined =
+    pd && um(PADROES, pd.tipo)
+      ? {
+          tipo: um(PADROES, pd.tipo)!,
+          cor: um(PAPEIS_COR, pd.cor) ?? "complementar",
+          escala: pd.escala === 1 || pd.escala === 3 ? pd.escala : 2,
+          intensidade: typeof pd.intensidade === "number" ? Math.max(0.04, Math.min(0.6, pd.intensidade)) : 0.25,
+          onde: Array.isArray(pd.onde) ? (pd.onde.filter((x) => LUGARES_PADRAO.includes(x as LugarPadrao)) as LugarPadrao[]) : ["banner"],
+        }
+      : undefined;
+  const es = o.estante as Record<string, unknown> | undefined;
+  const estante: ConfigEstante | undefined =
+    es && um(ESTANTES, es.estilo)
+      ? { estilo: um(ESTANTES, es.estilo)!, cor: ehHex(es.cor) ? es.cor : undefined, espessura: es.espessura === "fina" || es.espessura === "grossa" ? es.espessura : "padrao" }
+      : undefined;
+  const md = o.modulos as Record<string, unknown> | undefined;
+  const modulos: ConfigModulos | undefined = md
+    ? {
+        ordem: [...new Set([...(Array.isArray(md.ordem) ? md.ordem.filter((x) => MODULOS.includes(x as Modulo)) : []), ...MODULOS])] as Modulo[],
+        ocultos: Array.isArray(md.ocultos) ? (md.ocultos.filter((x) => MODULOS.includes(x as Modulo)) as Modulo[]) : [],
+      }
+    : undefined;
+  const tt = (o.titulos ?? {}) as Record<string, unknown>;
+  const titulos: Partial<Record<ChaveTitulo, string>> = {};
+  (Object.keys(TITULOS) as ChaveTitulo[]).forEach((k) => {
+    const v = limpar(tt[k], 40);
+    if (v) titulos[k] = v;
+  });
+  return {
+    v: 1,
+    tema,
+    modo,
+    simples,
+    cores,
+    tipografia,
+    emblema,
+    padrao,
+    familia: um(FAMILIAS, o.familia),
+    decoracao: um(["minimal", "balanced", "expressive"] as const, o.decoracao),
+    estante,
+    cabecalho: um(["editorial", "centered", "compact"] as const, o.cabecalho),
+    cartoes: um(["editorial", "paper", "minimal", "vintage"] as const, o.cartoes),
+    modulos,
+    titulos,
+  };
+}
+
+/* ───────── resolvidos (com os padrões do tema) ───────── */
+export const corDoPapel = (p: Paleta, papel: PapelCor) => p[papel];
+export function familiaDe(id: Identidade): Familia {
+  return id.familia ?? PADRAO_DO_TEMA[id.tema].familia;
+}
+export const decoracaoDe = (id: Identidade): Decoracao => id.decoracao ?? "balanced";
+export const cabecalhoDe = (id: Identidade): Cabecalho => id.cabecalho ?? "editorial";
+export const cartoesDe = (id: Identidade): EstiloCartao => id.cartoes ?? PADRAO_DO_TEMA[id.tema].cartoes;
+export function padraoDe(id: Identidade): ConfigPadrao {
+  return id.padrao ?? { tipo: PADRAO_DO_TEMA[id.tema].padrao, cor: "complementar", escala: 2, intensidade: 0.25, onde: ["banner"] };
+}
+export function emblemaDe(id: Identidade, nome: string): Emblema {
+  const iniciais = nome
+    .split(/\s+/)
+    .filter((x) => x.length > 2 || /^[A-ZÀ-Ú]/.test(x))
+    .map((x) => x[0])
+    .join("")
+    .slice(0, 3)
+    .toUpperCase();
+  return id.emblema ?? { formato: PADRAO_DO_TEMA[id.tema].formato, texto: iniciais || nome.slice(0, 2).toUpperCase(), simbolo: PADRAO_DO_TEMA[id.tema].simbolo, fundo: "primaria", tinta: "fundo", noAvatar: false };
+}
+export function modulosDe(id: Identidade | null): ConfigModulos {
+  return id?.modulos ?? { ordem: [...MODULOS], ocultos: [] };
+}
+export function tituloDe(id: Identidade | null, k: ChaveTitulo) {
+  return id?.titulos?.[k] || TITULOS[k][0];
+}
+
+/** pattern em CSS puro (gradientes), nunca imagem enviada ou CSS do usuário */
+export function padraoCss(tipo: Padrao, cor: string, escala: 1 | 2 | 3, intensidade: number): string | undefined {
+  if (tipo === "nenhum") return undefined;
+  const a = Math.round(Math.max(0.04, Math.min(0.6, intensidade)) * 255).toString(16).padStart(2, "0");
+  const c = `${cor}${a}`;
+  const s = [14, 22, 34][escala - 1];
+  switch (tipo) {
+    case "xadrez":
+      return `repeating-conic-gradient(${c} 0 25%, transparent 0 50%) 0 0 / ${s * 2}px ${s * 2}px`;
+    case "listras":
+      return `repeating-linear-gradient(90deg, ${c} 0 ${s / 2}px, transparent ${s / 2}px ${s}px)`;
+    case "floral":
+      return `radial-gradient(circle at 50% 30%, ${c} 0 ${s / 7}px, transparent ${s / 7 + 0.5}px), radial-gradient(circle at 30% 50%, ${c} 0 ${s / 7}px, transparent ${s / 7 + 0.5}px), radial-gradient(circle at 70% 50%, ${c} 0 ${s / 7}px, transparent ${s / 7 + 0.5}px), radial-gradient(circle at 50% 70%, ${c} 0 ${s / 7}px, transparent ${s / 7 + 0.5}px) 0 0 / ${s * 1.6}px ${s * 1.6}px`;
+    case "estrelas":
+      return `radial-gradient(circle, ${c} 0 1.4px, transparent 2px) 0 0 / ${s}px ${s}px, radial-gradient(circle, ${c} 0 0.9px, transparent 1.4px) ${s / 2}px ${s / 3}px / ${s * 1.3}px ${s * 1.3}px`;
+    case "pontilhado":
+      return `radial-gradient(circle, ${c} 0 ${s / 10 + 0.8}px, transparent ${s / 10 + 1.3}px) 0 0 / ${s / 1.5}px ${s / 1.5}px`;
+    case "geometrico":
+      return `linear-gradient(45deg, ${c} 25%, transparent 25% 75%, ${c} 75%) 0 0 / ${s}px ${s}px, linear-gradient(45deg, ${c} 25%, transparent 25% 75%, ${c} 75%) ${s / 2}px ${s / 2}px / ${s}px ${s}px`;
+    case "ondas":
+      return `repeating-radial-gradient(circle at 50% 120%, transparent 0 ${s / 3}px, ${c} ${s / 3}px ${s / 3 + 2}px) 0 0 / ${s * 2}px ${s}px`;
+    case "papel":
+      return `repeating-linear-gradient(0deg, ${c} 0 1px, transparent 1px ${s}px)`;
+    case "organico":
+      return `radial-gradient(ellipse 40% 30% at 20% 30%, ${c} 0 60%, transparent 62%) 0 0 / ${s * 4}px ${s * 3}px, radial-gradient(ellipse 30% 40% at 75% 70%, ${c} 0 55%, transparent 57%) 0 0 / ${s * 4}px ${s * 3}px`;
+  }
 }
 
 /** a paleta a partir de principal + complementar + atmosfera (modo simples) */
@@ -278,13 +473,16 @@ export function estiloDaIdentidade(id: Identidade): CSSProperties {
     "--club-chart-1": p.primaria,
     "--club-chart-2": ajustarContraste(p.complementar, p.fundo, 2),
     "--club-chart-3": ajustarContraste(p.destaque, p.fundo, 2),
-    "--club-shelf-color": p.estante,
+    "--club-shelf-color": corDaEstante(id, p),
     "--club-decoration-color": misturar(p.primaria, p.fundo, 0.35),
     "--club-heading-font": tipo.familia,
     "--club-heading-weight": String(tipo.peso),
     "--club-heading-style": tipo.italico ? "italic" : "normal",
     "--club-card-radius": `${t.raio}px`,
-    "--club-banner": t.banner,
+    "--club-banner": bannerDe(id, p),
+    "--club-pattern": padraoCss(padraoDe(id).tipo, corDoPapel(p, padraoDe(id).cor), padraoDe(id).escala, padraoDe(id).intensidade) ?? "none",
+    "--club-shelf-height": id.estante?.espessura === "fina" ? "18px" : id.estante?.espessura === "grossa" ? "34px" : "27px",
+    ...estiloDosCartoes(cartoesDe(id), p),
     // os tokens do app, redefinidos dentro do clube (as telas existentes já usam esses)
     "--color-creme": p.fundo,
     "--color-jornal": p.fundo,
@@ -312,6 +510,30 @@ export function estiloDaIdentidade(id: Identidade): CSSProperties {
     colorScheme: escura ? "dark" : "light",
     color: p.texto,
   } as CSSProperties;
+}
+
+export function corDaEstante(id: Identidade, p: Paleta) {
+  const e = id.estante;
+  if (!e || e.estilo === "tema" || e.estilo === "minimalista") return p.estante;
+  if (e.estilo === "personalizada") return e.cor ?? p.estante;
+  return COR_ESTANTE[e.estilo] ?? p.estante;
+}
+
+/** o banner sem foto: o do tema, com o pattern por cima quando escolhido para o banner */
+function bannerDe(id: Identidade, p: Paleta) {
+  const t = temaDoId(id.tema);
+  const pd = padraoDe(id);
+  if (!id.padrao || !pd.onde.includes("banner")) return t.banner;
+  const camada = padraoCss(pd.tipo, corDoPapel(p, pd.cor), pd.escala, Math.min(0.6, pd.intensidade + 0.15));
+  return camada ? `${camada}, ${misturar(p.complementar, p.fundo, 0.35)}` : misturar(p.complementar, p.fundo, 0.35);
+}
+
+function estiloDosCartoes(e: EstiloCartao, p: Paleta): Record<string, string> {
+  const r = (v: string) => ({ "--club-card-border-style": v });
+  if (e === "paper") return { ...r("dashed"), "--club-card-shadow": `3px 3px 0 ${misturar(p.complementar, p.fundo, 0.55)}`, "--club-card-bg": p.superficie };
+  if (e === "minimal") return { ...r("solid"), "--club-card-shadow": "none", "--club-card-bg": "transparent", "--club-card-border-color": "transparent" };
+  if (e === "vintage") return { ...r("double"), "--club-card-shadow": "none", "--club-card-bg": p.superficie, "--club-card-border-width": "3px" };
+  return { ...r("solid"), "--club-card-shadow": "none", "--club-card-bg": p.superficie };
 }
 
 /** identidade inicial para quem abre o studio pela primeira vez (parte da cor atual do clube) */

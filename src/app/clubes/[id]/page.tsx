@@ -5,7 +5,9 @@ import { CapaAuto } from "@/components/CapaAuto";
 import { PrateleiraMadeira } from "@/components/estantes/Biblioteca";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { Fragment, useState, type ReactNode } from "react";
+import { Ornamento } from "@/components/clube/Ornamento";
+import { modulosDe, tituloDe, type ChaveTitulo, type Modulo } from "@/lib/identidade";
 import { useClube } from "@/components/clube/ClubeContexto";
 import { Carregando, ErroOuFalta } from "@/components/social/Estados";
 import { Avatar } from "@/components/social/Pessoas";
@@ -138,8 +140,9 @@ function Turma({ membros, turma, eu, clubeId }: { membros: Membro[]; turma: Map<
     <section aria-labelledby="t-turma">
       <div className={secao}>
         <h2 id="t-turma" className={titulo}>
-          progresso dos leitores
+          <TituloEditavel k="progresso" />
         </h2>
+        <Ornamento className="mr-auto" />
         <span className="text-[12px] text-cinza">
           {terminaram} de {membros.length} {terminaram === 1 ? "concluiu" : "concluíram"}
         </span>
@@ -184,8 +187,9 @@ function ProximoEncontro({ encontro, clubeId }: { encontro: Encontro; clubeId: s
     <section aria-labelledby="t-encontro">
       <div className={secao}>
         <h2 id="t-encontro" className={titulo}>
-          próximo encontro
+          <TituloEditavel k="encontro" />
         </h2>
+        <Ornamento className="mr-auto" />
         <Link href={`/clubes/${clubeId}/agenda`} className={linkSecao}>
           calendário do clube
         </Link>
@@ -216,7 +220,7 @@ function ProximoEncontro({ encontro, clubeId }: { encontro: Encontro; clubeId: s
 }
 
 export default function ClubeInicioPage() {
-  const { clube, membros, papel } = useClube();
+  const { clube, membros, papel, identidade } = useClube();
   const eu = useMeuId();
   const [qual, setQual] = useState(0);
   const consulta = useConsulta(async () => {
@@ -297,6 +301,7 @@ export default function ClubeInicioPage() {
         <h2 id="t-quem" className={titulo}>
           membros do clube
         </h2>
+        <Ornamento className="mr-auto" />
         <Link href={`/clubes/${clube.id}/membros`} className={linkSecao}>
           ver todos
         </Link>
@@ -337,8 +342,9 @@ export default function ClubeInicioPage() {
     <section aria-labelledby="t-amou">
       <div className={secao}>
         <h2 id="t-amou" className={titulo}>
-          favoritos do clube
+          <TituloEditavel k="favoritos" />
         </h2>
+        <Ornamento className="mr-auto" />
         <Link href={organiza(papel) ? `/clubes/${clube.id}/favoritos` : `/clubes/${clube.id}/biblioteca`} className={linkSecao}>
           {organiza(papel) ? "editar destaques" : "nossa estante"}
         </Link>
@@ -368,38 +374,58 @@ export default function ClubeInicioPage() {
     </section>
   );
 
+  // a ordem e a visibilidade dos módulos vêm do club studio (a leitura atual fica sempre no topo)
+  const config = modulosDe(identidade);
+  const visivel = (m: Modulo) => !config.ocultos.includes(m);
+  const blocos: Record<Modulo, ReactNode> = {
+    progresso: lendo ? <Turma membros={membros} turma={turma} eu={eu} clubeId={clube.id} /> : null,
+    favoritos: amamos,
+    atividade: (
+      <section id="novidades" aria-labelledby="t-rolando" className="scroll-mt-24">
+        <div className={secao}>
+          <h2 id="t-rolando" className={titulo}>
+            <TituloEditavel k="atividade" />
+          </h2>
+          <Ornamento className="mr-auto" />
+        </div>
+        <FeedDoClube limite={5} />
+      </section>
+    ),
+    encontro: proximo ? <ProximoEncontro encontro={proximo} clubeId={clube.id} /> : null,
+    membros: quemEsta,
+    proximas: <SugerirRapido clubeId={clube.id} votacao={modoDe(clube) === "votacao"} fila={sugestoes} membros={membros} eu={eu} />,
+  };
+  const principais: Modulo[] = ["progresso", "favoritos", "atividade"];
+  const ordemPrincipal = config.ordem.filter((m) => principais.includes(m) && visivel(m));
+  const ordemLateral = config.ordem.filter((m) => !principais.includes(m) && visivel(m));
+
   return (
     <div className="grid gap-10 px-5 pt-6 lg:grid-cols-[minmax(0,1.85fr)_minmax(300px,1fr)] lg:gap-14 lg:px-0 lg:pt-8">
       <div className="min-w-0 space-y-10">
         {leitura}
-        {lendo ? <Turma membros={membros} turma={turma} eu={eu} clubeId={clube.id} /> : null}
-        {amamos}
-        {/* no celular, o encontro vem logo depois da turma */}
-        {proximo ? (
-          <div className="lg:hidden">
-            <ProximoEncontro encontro={proximo} clubeId={clube.id} />
-          </div>
-        ) : null}
-        <section id="novidades" aria-labelledby="t-rolando" className="scroll-mt-24">
-          <div className={secao}>
-            <h2 id="t-rolando" className={titulo}>
-              atividade recente
-            </h2>
-          </div>
-          <FeedDoClube limite={5} />
-        </section>
+        {ordemPrincipal.map((m, k) => (
+          <Fragment key={m}>
+            {blocos[m]}
+            {/* no celular, o encontro vem logo depois do primeiro módulo */}
+            {k === 0 && visivel("encontro") && proximo ? <div className="lg:hidden">{blocos.encontro}</div> : null}
+          </Fragment>
+        ))}
       </div>
       <aside className="min-w-0 space-y-10">
-        {proximo ? (
-          <div className="hidden lg:block">
-            <ProximoEncontro encontro={proximo} clubeId={clube.id} />
+        {ordemLateral.map((m) => (
+          <div key={m} className={m === "encontro" ? "hidden lg:block" : ""}>
+            {blocos[m]}
           </div>
-        ) : null}
-        {quemEsta}
-        <SugerirRapido clubeId={clube.id} votacao={modoDe(clube) === "votacao"} fila={sugestoes} membros={membros} eu={eu} />
+        ))}
       </aside>
     </div>
   );
+}
+
+/** título editorial que o clube pode trocar no club studio */
+function TituloEditavel({ k }: { k: ChaveTitulo }) {
+  const { identidade } = useClube();
+  return <>{tituloDe(identidade, k)}</>;
 }
 
 /** Sugerir sem caçar botão: um campo direto no início do clube + a fila. */
@@ -426,7 +452,7 @@ function SugerirRapido({
     <section>
       <div className="flex items-baseline justify-between">
         <p className="text-[10px] font-semibold tracking-[.16em] text-bordo uppercase">
-          {votacao ? "livros sugeridos" : "próximas leituras"}
+          {votacao ? "livros sugeridos" : <TituloEditavel k="proximas" />}
         </p>
         {fila.length ? (
           <Link href={`/clubes/${clubeId}/sugestoes`} className={linkSecao}>

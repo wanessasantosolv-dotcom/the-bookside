@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { Animacao } from "@/components/Animacao";
 import { CartaoAnoDoClube } from "@/components/clube/AnoDoClube";
+import { tituloDe } from "@/lib/identidade";
 import { useClube } from "@/components/clube/ClubeContexto";
 import {
   EstanteDeVerdadeFila,
@@ -35,7 +36,7 @@ type Linha = {
 
 /** A estante do clube: o mesmo formato das estantes pessoais (prateleiras, leque, estante de pé). */
 export default function BibliotecaPage() {
-  const { clube, membros, papel } = useClube();
+  const { clube, membros, papel, identidade } = useClube();
   const eu = useMeuId();
   const [filtro, setFiltro] = useState("todas");
   const [vis, setVis] = useState<Visualizacao>("prateleira");
@@ -144,7 +145,7 @@ export default function BibliotecaPage() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h2 className="font-display text-[28px] leading-[1.1] font-semibold italic text-bordo lg:font-revista lg:text-[36px] lg:font-normal">
-            nossa estante
+            {tituloDe(identidade, "estante")}
           </h2>
           <p className="mt-1.5 text-[13px] text-cinza">
             {lidos.length} {lidos.length === 1 ? "livro lido" : "livros lidos"}

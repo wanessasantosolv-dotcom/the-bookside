@@ -440,3 +440,19 @@ main {
   --club-chart-3: var(--color-ouro);
   --club-card-radius: 6px;
 }
+/* estante: espessura e versão minimalista */
+.clube-identidade .prateleira-madeira { height: var(--club-shelf-height, 27px); }
+.clube-identidade[data-estante="minimalista"] .prateleira-madeira { background: none; height: 10px; }
+.clube-identidade[data-estante="minimalista"] .prateleira-madeira::after {
+  -webkit-mask: none; mask: none; mix-blend-mode: normal; opacity: 1;
+  top: auto; bottom: 3px; height: 2px; background: var(--club-shelf-color);
+}
+/* cards do clube (editorial, paper goods, minimal, vintage) */
+.cartao-clube {
+  background: var(--club-card-bg, var(--color-papel));
+  border: var(--club-card-border-width, 1px) var(--club-card-border-style, solid) var(--club-card-border-color, var(--color-linha));
+  border-radius: var(--club-card-radius, 6px);
+  box-shadow: var(--club-card-shadow, none);
+}
+/* faixa com o pattern do clube */
+.faixa-clube { background: var(--club-pattern, none); }

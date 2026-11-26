@@ -9,6 +9,7 @@ import { usePerfil } from "@/lib/perfil-store";
 import { useClube } from "@/components/clube/ClubeContexto";
 import { ErroOuFalta, Vazio } from "@/components/social/Estados";
 import { Avatar } from "@/components/social/Pessoas";
+import { Ornamento } from "@/components/clube/Ornamento";
 import {
   andamento,
   andamentoDasMembros,
@@ -52,7 +53,7 @@ const CORES_LEITORES = [
 
 const tituloEditorial = "font-revista text-[22px] leading-none text-bordo italic lg:text-[24px]";
 const linhaTitulo = "mb-4 flex items-baseline justify-between gap-3 border-b border-linha pb-2 lg:border-fio";
-const cartao = "border border-linha bg-papel p-5 lg:border-fio";
+const cartao = "cartao-clube p-5";
 const raio = { borderRadius: "var(--club-card-radius)" };
 const botaoPrincipal = "inline-flex min-h-11 items-center rounded-pill bg-bordo px-5 text-[13px] font-semibold text-creme hover:bg-bordo-suave";
 const botaoSecundario = "inline-flex min-h-11 items-center rounded-pill border border-bordo/40 px-4 text-[13px] font-semibold text-bordo hover:border-bordo";
@@ -365,6 +366,7 @@ function MinhaLeitura({
         <h2 id="t-minha" className={tituloEditorial}>
           minha leitura
         </h2>
+        <Ornamento className="mr-auto" />
         <span className="text-[12px] tabular-nums text-tinta-suave">
           {pct === 100 ? "concluída" : total && pagina ? `pág. ${pagina} de ${total} · ${pct}%` : progresso?.numero != null ? `${progresso.unidade === "capitulo" ? "capítulo" : "pág."} ${progresso.numero}` : "ainda não começou"}
         </span>
@@ -460,6 +462,7 @@ function CadaUm({
         <h2 id="t-cada" className={tituloEditorial}>
           cada um no seu capítulo
         </h2>
+        <Ornamento className="mr-auto" />
       </div>
       <p className="mb-4 text-[13px] text-tinta-suave">
         <b className="font-semibold text-ameixa">
@@ -535,6 +538,7 @@ function ReadingNotes({
         <h2 id="t-notas" className={tituloEditorial}>
           the reading notes.
         </h2>
+        <Ornamento className="mr-auto" />
         {fichas.length ? (
           <Link href={`/clubes/${clubeId}/livro/${lendo.id}`} className="text-[12px] font-semibold text-bordo hover:underline">
             ver todas
@@ -641,6 +645,7 @@ function Pendentes({
         <h2 id="t-pend" className={tituloEditorial}>
           fichas de leitura
         </h2>
+        <Ornamento className="mr-auto" />
       </div>
       <p className="text-[13px] text-tinta-suave">
         <b className="font-semibold text-ameixa">
@@ -678,6 +683,7 @@ function FinalVerdict({ fichas }: { fichas: Ficha[] }) {
           <h2 id="t-veredito" className={tituloEditorial}>
             the final verdict.
           </h2>
+        <Ornamento className="mr-auto" />
         </div>
         <p className="font-revista text-[19px] text-ameixa italic">the verdict is still out.</p>
         <p className="mt-1 text-[13px] text-tinta-suave">as avaliações aparecem aqui conforme forem publicadas.</p>
@@ -692,6 +698,7 @@ function FinalVerdict({ fichas }: { fichas: Ficha[] }) {
         <h2 id="t-veredito" className={tituloEditorial}>
           the final verdict.
         </h2>
+        <Ornamento className="mr-auto" />
         <span className="text-[11px] text-cinza">média desta leitura do clube</span>
       </div>
       <div className="grid gap-6 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-center sm:gap-10">
@@ -752,6 +759,7 @@ function DifferentOpinions({ fichas, membros, eu, corDe }: { fichas: Ficha[]; me
         <h2 id="t-opinioes" className={tituloEditorial}>
           same book, different opinions.
         </h2>
+        <Ornamento className="mr-auto" />
       </div>
       <ul className="mb-4 flex flex-wrap gap-x-4 gap-y-1.5 text-[12px] text-tinta-suave" aria-label="legenda">
         {autores.map((a) => (

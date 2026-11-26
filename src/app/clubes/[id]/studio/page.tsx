@@ -8,7 +8,37 @@ import { useClube } from "@/components/clube/ClubeContexto";
 import { PrateleiraMadeira } from "@/components/estantes/Biblioteca";
 import { Vazio } from "@/components/social/Estados";
 import { editarClube, livrosDoClube, organiza } from "@/lib/clubes";
+import { Emblema, IconeSimbolo } from "@/components/clube/Emblema";
+import { Ornamento } from "@/components/clube/Ornamento";
 import {
+  ESTANTES,
+  FAMILIAS,
+  FORMATOS_EMBLEMA,
+  LUGARES_PADRAO,
+  NOME_ESTANTE,
+  NOME_FAMILIA,
+  NOME_FORMATO,
+  NOME_LUGAR,
+  NOME_MODULO,
+  NOME_PADRAO,
+  NOME_SIMBOLO,
+  PADROES,
+  PAPEIS_COR,
+  SIMBOLOS,
+  TITULOS,
+  cabecalhoDe,
+  cartoesDe,
+  corDaEstante,
+  decoracaoDe,
+  emblemaDe,
+  familiaDe,
+  modulosDe,
+  padraoCss,
+  padraoDe,
+  tituloDe,
+  type ChaveTitulo,
+  type ConfigPadrao,
+  type Emblema as TipoEmblema,
   CAMPOS_PALETA,
   TEMAS_CLUBE,
   TIPOGRAFIAS,
@@ -27,7 +57,7 @@ import {
 import { temas } from "@/lib/dados";
 import { useConsulta } from "@/lib/social";
 
-type Categoria = "tema" | "cores" | "tipografia";
+type Categoria = "tema" | "cores" | "tipografia" | "banner" | "emblema" | "patterns" | "elementos" | "estantes" | "layout" | "titulos";
 type Contexto = "inicio" | "leitura" | "estante";
 
 const fixo = {
@@ -60,32 +90,42 @@ function Previa({
   const t = temaDoId(ident.tema);
   const tipo = TIPOGRAFIAS.find((x) => x.id === (ident.tipografia ?? t.tipografia))!;
   const mobile = dispositivo === "mobile";
+  const layout = cabecalhoDe(ident);
+  const paleta = paletaDe(ident);
+  const comEmblema = ident.emblema?.noAvatar || !foto;
+  const pd = padraoDe(ident);
+  const faixa = !!ident.padrao && pd.onde.includes("faixa") && decoracaoDe(ident) !== "minimal";
+  const grande = contexto === "inicio" && layout !== "compact";
   return (
     <div
       style={estiloDaIdentidade(ident)}
       data-titulo={tipo.italico ? undefined : "reto"}
-      className={`clube-identidade mx-auto overflow-hidden border border-black/10 bg-creme text-ameixa shadow-[0_20px_40px_-30px_rgba(0,0,0,.5)] transition-[max-width] duration-300 motion-reduce:transition-none ${mobile ? "max-w-[360px] rounded-[22px]" : "max-w-full rounded-[6px]"}`}
+      data-estante={ident.estante?.estilo}
+      className={`clube-tokens clube-identidade mx-auto overflow-hidden border border-black/10 bg-creme text-ameixa shadow-[0_20px_40px_-30px_rgba(0,0,0,.5)] transition-[max-width] duration-300 motion-reduce:transition-none ${mobile ? "max-w-[360px] rounded-[22px]" : "max-w-full rounded-[6px]"}`}
     >
-      {contexto === "inicio" ? (
+      {grande ? (
         <div
           className={`${mobile ? "h-[96px]" : "h-[120px]"} bg-cover bg-center`}
           style={capa ? { backgroundImage: `url("${capa}")` } : { background: "var(--club-banner)" }}
         />
       ) : null}
-      <div className={`flex items-center gap-3 px-5 ${contexto === "inicio" ? "-mt-7" : "pt-5"}`}>
-        {foto ? (
+      <div className={`flex gap-3 px-5 ${grande ? "-mt-7" : "pt-5"} ${grande && layout === "centered" ? "flex-col items-center text-center" : "items-center"}`}>
+        {comEmblema ? (
+          <Emblema e={emblemaDe(ident, nome)} paleta={paleta} tamanho={grande ? 68 : 40} className="flex-none" />
+        ) : foto ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={foto} alt="" className={`${contexto === "inicio" ? "size-16 border-4 border-creme" : "size-10"} flex-none rounded-full object-cover`} />
+          <img src={foto} alt="" className={`${grande ? "size-16 border-4 border-creme" : "size-10"} flex-none rounded-full object-cover`} />
         ) : (
-          <span className={`${contexto === "inicio" ? "size-16 border-4 border-creme text-[28px]" : "size-10 text-[18px]"} flex flex-none items-center justify-center rounded-full bg-rosa-fundo font-revista text-bordo italic`}>
+          <span className={`${grande ? "size-16 border-4 border-creme text-[28px]" : "size-10 text-[18px]"} flex flex-none items-center justify-center rounded-full bg-rosa-fundo font-revista text-bordo italic`}>
             {nome.charAt(0).toLowerCase()}
           </span>
         )}
-        <div className={`min-w-0 ${contexto === "inicio" ? "pt-7" : ""}`}>
+        <div className={`min-w-0 ${grande && layout !== "centered" ? "pt-7" : ""}`}>
           <p className={`truncate font-revista leading-tight text-bordo italic ${mobile ? "text-[22px]" : "text-[28px]"}`}>{nome}</p>
           {contexto === "inicio" && descricao ? <p className="truncate text-[12px] text-tinta-suave">{descricao}</p> : null}
         </div>
       </div>
+      {faixa ? <div aria-hidden className="faixa-clube mx-5 mt-3 h-2.5" /> : null}
       <div className="mt-4 flex gap-5 border-b border-linha px-5 text-[12px]">
         {["início", "leitura atual", "estante", "agenda", "membros"].slice(0, mobile ? 4 : 5).map((a, i) => {
           const on = (contexto === "inicio" && i === 0) || (contexto === "leitura" && i === 1) || (contexto === "estante" && i === 2);
@@ -100,7 +140,9 @@ function Previa({
       <div className={`px-5 py-5 ${mobile ? "" : "grid grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] gap-6"}`}>
         {contexto === "estante" ? (
           <div className={mobile ? "" : "col-span-2"}>
-            <p className="font-revista text-[22px] text-bordo italic">nossa estante</p>
+            <p className="flex items-center gap-2 font-revista text-[22px] text-bordo italic">
+              {tituloDe(ident, "estante")} <Ornamento ident={ident} />
+            </p>
             <p className="text-[12px] text-cinza">{lidos.length} {lidos.length === 1 ? "livro lido" : "livros lidos"}</p>
             <div className="mt-4 flex items-end gap-2 overflow-hidden px-3">
               {(lidos.length ? lidos : livro ? [livro] : []).slice(0, mobile ? 4 : 8).map((l) => (
@@ -135,7 +177,7 @@ function Previa({
             </div>
             <div className={mobile ? "mt-6" : ""}>
               {contexto === "leitura" ? (
-                <div className="border p-4" style={{ background: "var(--club-surface)", borderColor: "var(--club-border)", borderRadius: "var(--club-card-radius)" }}>
+                <div className="cartao-clube p-4">
                   <p className="font-revista text-[17px] text-bordo italic">the final verdict.</p>
                   <p className="mt-1 font-revista text-[34px] leading-none text-bordo">4,2</p>
                   {[["chart-1", 70], ["chart-2", 45], ["chart-3", 25]].map(([c, w]) => (
@@ -147,14 +189,16 @@ function Previa({
                 </div>
               ) : (
                 <div>
-                  <p className="border-b border-linha pb-1.5 font-revista text-[17px] text-bordo italic">the club favorites.</p>
+                  <p className="flex items-center gap-2 border-b border-linha pb-1.5 font-revista text-[17px] text-bordo italic">
+                    {tituloDe(ident, "favoritos")} <Ornamento ident={ident} />
+                  </p>
                   <div className="mt-3 flex items-end gap-2 px-2">
                     {(lidos.length ? lidos : livro ? [livro] : []).slice(0, 3).map((l) => (
                       <CapaAuto key={l.id} livro={l} className="w-[46px] flex-none [&>span:last-child]:hidden" />
                     ))}
                   </div>
                   <PrateleiraMadeira className="-mt-[5px]" />
-                  <p className="mt-3 rounded-[4px] bg-rosa-fundo px-3 py-2 text-[11px] text-ameixa">next book date. · sáb, 14h</p>
+                  <p className="cartao-clube mt-3 px-3 py-2 text-[11px] text-ameixa">{tituloDe(ident, "encontro")} · exemplo</p>
                 </div>
               )}
             </div>
@@ -202,11 +246,33 @@ export default function ClubStudioPage() {
   const tema = temaDoId(ident.tema);
   const mudou = JSON.stringify(ident) !== JSON.stringify(publicada ?? identidadeInicial(corAntiga)) || !publicada;
 
+  const padrao = padraoDe(ident);
+  const emblema = emblemaDe(ident, clube.nome);
+  const modulos = modulosDe(ident);
+  function mudarPadrao(x: Partial<ConfigPadrao>) {
+    setIdent({ ...ident, padrao: { ...padrao, ...x } });
+  }
+  function mudarEmblema(x: Partial<TipoEmblema>) {
+    setIdent({ ...ident, emblema: { ...emblema, ...x } });
+  }
+  function mudarTitulo(k: ChaveTitulo, v: string) {
+    const titulos = { ...(ident.titulos ?? {}) };
+    if (!v.trim() || v === TITULOS[k][0]) delete titulos[k];
+    else titulos[k] = v;
+    setIdent({ ...ident, titulos });
+  }
+  function mover(i: number, d: -1 | 1) {
+    const ordem = [...modulos.ordem];
+    [ordem[i], ordem[i + d]] = [ordem[i + d], ordem[i]];
+    setIdent({ ...ident, modulos: { ...modulos, ordem } });
+  }
+
   function escolherTema(id: TemaClubeId) {
     if (id === ident.tema && ident.modo === "tema") return;
     const personalizadas = ident.modo === "avancado" ? Object.keys(ident.cores ?? {}).length : ident.modo === "simples" ? 2 : 0;
-    if (personalizadas && !confirm(`trocar para ${temaDoId(id).nome}? as cores personalizadas serão substituídas pelas do tema. a tipografia que você escolheu continua.`)) return;
-    setIdent({ v: 1, tema: id, modo: "tema", tipografia: ident.tipografia });
+    if (personalizadas && !confirm(`trocar para ${temaDoId(id).nome}? as cores personalizadas serão substituídas pelas do tema. emblema, patterns, layout e títulos continuam.`)) return;
+    // troca só a paleta: emblema, patterns, estantes, layout e títulos continuam
+    setIdent({ ...ident, tema: id, modo: "tema", simples: undefined, cores: undefined });
   }
   function mudarCor(campo: keyof Paleta, valor: string) {
     const base = paletaDe(ident);
@@ -268,6 +334,13 @@ export default function ClubStudioPage() {
             ["tema", "tema"],
             ["cores", "cores"],
             ["tipografia", "tipografia"],
+            ["banner", "banner"],
+            ["emblema", "avatar e emblema"],
+            ["patterns", "patterns"],
+            ["elementos", "elementos gráficos"],
+            ["estantes", "estantes"],
+            ["layout", "layout"],
+            ["titulos", "identidade verbal"],
           ] as const
         ).map(([id, n]) => (
           <button key={id} type="button" aria-pressed={categoria === id} onClick={() => setCategoria(id)} className={chip(categoria === id)}>
@@ -469,6 +542,353 @@ export default function ClubStudioPage() {
           </ul>
         </section>
       ) : null}
+
+      {categoria === "banner" ? (
+        <section aria-labelledby="t-banner" className="space-y-4">
+          <h2 id="t-banner" className={titulo}>
+            banner
+          </h2>
+          <p className="text-[13px] text-[#5A4A50]">
+            {clube.capa
+              ? "o clube tem uma foto de capa: ela continua sendo o banner, e a troca de tema não mexe nela. o banner gráfico aparece só quando não há foto."
+              : "sem foto de capa, o banner usa a composição gráfica do tema. dá para colocar um pattern por cima."}{" "}
+            <Link href={`/clubes/${clube.id}/editar`} className="font-semibold text-[#692536] hover:underline">
+              {clube.capa ? "trocar ou ajustar a foto" : "enviar uma foto"}
+            </Link>
+          </p>
+          <label className="flex items-center gap-3 text-[14px]">
+            <input
+              type="checkbox"
+              checked={padrao.onde.includes("banner") && !!ident.padrao}
+              onChange={(e) => mudarPadrao({ onde: e.target.checked ? [...new Set([...padrao.onde, "banner" as const])] : padrao.onde.filter((x) => x !== "banner") })}
+              className="size-4 accent-[#692536]"
+            />
+            usar o pattern do clube no banner gráfico
+          </label>
+          <div className="h-[90px] rounded-[6px] border border-black/10" style={{ background: estiloDaIdentidade(ident)["--club-banner" as keyof React.CSSProperties] as string }} />
+        </section>
+      ) : null}
+
+      {categoria === "emblema" ? (
+        <section aria-labelledby="t-emblema" className="space-y-5">
+          <div className="flex items-start gap-4">
+            <Emblema e={emblema} paleta={paleta} tamanho={96} />
+            <div>
+              <h2 id="t-emblema" className={titulo}>
+                avatar e emblema
+              </h2>
+              <label className="mt-2 flex items-center gap-2.5 text-[14px]">
+                <input type="checkbox" checked={emblema.noAvatar} onChange={(e) => mudarEmblema({ noAvatar: e.target.checked })} className="size-4 accent-[#692536]" />
+                usar o emblema no lugar da foto do clube
+              </label>
+              <p className="mt-1 text-[12px] text-[#7A6A6E]">{clube.foto ? "desmarcado, a foto continua." : "sem foto, o emblema aparece sozinho."}</p>
+            </div>
+          </div>
+          <fieldset>
+            <legend className="mb-2 text-[12px] font-semibold text-[#5A4A50]">formato</legend>
+            <div className="flex flex-wrap gap-2">
+              {FORMATOS_EMBLEMA.map((f) => (
+                <button key={f} type="button" aria-pressed={emblema.formato === f} onClick={() => mudarEmblema({ formato: f })} className={`flex flex-col items-center gap-1 rounded-[6px] border p-2 text-[11px] ${emblema.formato === f ? "border-[#692536] bg-white" : "border-[#E6D5CE]"}`}>
+                  <Emblema e={{ ...emblema, formato: f, ano: undefined }} paleta={paleta} tamanho={44} />
+                  {NOME_FORMATO[f]}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+          <div className="flex flex-wrap gap-4">
+            <label className="block">
+              <span className="mb-1 block text-[12px] font-semibold text-[#5A4A50]">iniciais ou monograma</span>
+              <input value={emblema.texto} maxLength={4} onChange={(e) => mudarEmblema({ texto: e.target.value.replace(/[<>{}]/g, "") })} className="h-11 w-[120px] rounded-[4px] border border-[#E6D5CE] bg-white px-3 text-[15px]" />
+            </label>
+            <label className="block">
+              <span className="mb-1 block text-[12px] font-semibold text-[#5A4A50]">ano de criação (opcional)</span>
+              <input
+                inputMode="numeric"
+                value={emblema.ano ?? ""}
+                onChange={(e) => {
+                  const n = Number(e.target.value.replace(/\D/g, "").slice(0, 4));
+                  mudarEmblema({ ano: n > 1900 && n < 2200 ? n : undefined });
+                }}
+                placeholder={String(new Date(clube.criado_em).getFullYear())}
+                className="h-11 w-[120px] rounded-[4px] border border-[#E6D5CE] bg-white px-3 text-[15px]"
+              />
+            </label>
+          </div>
+          <fieldset>
+            <legend className="mb-2 text-[12px] font-semibold text-[#5A4A50]">símbolo</legend>
+            <div className="flex flex-wrap gap-2">
+              {SIMBOLOS.map((sb) => (
+                <button key={sb} type="button" aria-pressed={emblema.simbolo === sb} title={NOME_SIMBOLO[sb]} onClick={() => mudarEmblema({ simbolo: sb })} className={`grid size-12 place-items-center rounded-[6px] border ${emblema.simbolo === sb ? "border-[#692536] bg-white" : "border-[#E6D5CE]"}`}>
+                  {sb === "nenhum" ? (
+                    <span className="text-[11px] text-[#7A6A6E]">—</span>
+                  ) : (
+                    <svg viewBox="0 0 100 100" width="34" height="34" aria-hidden>
+                      <IconeSimbolo s={sb} cor="#2B1420" tamanho={60} />
+                    </svg>
+                  )}
+                  <span className="sr-only">{NOME_SIMBOLO[sb]}</span>
+                </button>
+              ))}
+            </div>
+          </fieldset>
+          <div className="flex flex-wrap gap-6">
+            {(
+              [
+                ["fundo", "cor de fundo"],
+                ["tinta", "cor do texto e do símbolo"],
+              ] as const
+            ).map(([k, n]) => (
+              <fieldset key={k}>
+                <legend className="mb-2 text-[12px] font-semibold text-[#5A4A50]">{n}</legend>
+                <div className="flex gap-1.5">
+                  {PAPEIS_COR.map((pc) => (
+                    <button key={pc} type="button" aria-pressed={emblema[k] === pc} aria-label={pc} onClick={() => mudarEmblema({ [k]: pc })} className={`rounded-full p-0.5 ${emblema[k] === pc ? "ring-2 ring-[#692536]" : ""}`}>
+                      <Amostra cor={paleta[pc]} tamanho={24} />
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {categoria === "patterns" ? (
+        <section aria-labelledby="t-padroes" className="space-y-5">
+          <h2 id="t-padroes" className={titulo}>
+            patterns
+          </h2>
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+            {PADROES.map((pt) => (
+              <button key={pt} type="button" aria-pressed={padrao.tipo === pt} onClick={() => mudarPadrao({ tipo: pt })} className={`overflow-hidden rounded-[6px] border text-left text-[11px] ${padrao.tipo === pt ? "border-[#692536]" : "border-[#E6D5CE]"}`}>
+                <span className="block h-12" style={{ background: `${padraoCss(pt, paleta[padrao.cor], padrao.escala, Math.max(0.3, padrao.intensidade)) ?? "none"}, ${paleta.fundo}` }} />
+                <span className="block bg-white px-2 py-1">{NOME_PADRAO[pt]}</span>
+              </button>
+            ))}
+          </div>
+          <fieldset>
+            <legend className="mb-2 text-[12px] font-semibold text-[#5A4A50]">cor</legend>
+            <div className="flex gap-1.5">
+              {PAPEIS_COR.map((pc) => (
+                <button key={pc} type="button" aria-pressed={padrao.cor === pc} aria-label={pc} onClick={() => mudarPadrao({ cor: pc })} className={`rounded-full p-0.5 ${padrao.cor === pc ? "ring-2 ring-[#692536]" : ""}`}>
+                  <Amostra cor={paleta[pc]} tamanho={24} />
+                </button>
+              ))}
+            </div>
+          </fieldset>
+          <div className="flex flex-wrap items-center gap-6">
+            <fieldset>
+              <legend className="mb-2 text-[12px] font-semibold text-[#5A4A50]">escala</legend>
+              <div className="flex gap-1.5">
+                {([1, 2, 3] as const).map((e) => (
+                  <button key={e} type="button" aria-pressed={padrao.escala === e} onClick={() => mudarPadrao({ escala: e })} className={chip(padrao.escala === e)}>
+                    {e === 1 ? "pequena" : e === 2 ? "média" : "grande"}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+            <label className="block min-w-[200px] flex-1">
+              <span className="mb-2 block text-[12px] font-semibold text-[#5A4A50]">intensidade</span>
+              <input type="range" min={4} max={60} value={Math.round(padrao.intensidade * 100)} onChange={(e) => mudarPadrao({ intensidade: Number(e.target.value) / 100 })} className="w-full accent-[#692536]" />
+            </label>
+          </div>
+          <fieldset>
+            <legend className="mb-2 text-[12px] font-semibold text-[#5A4A50]">onde aplicar</legend>
+            <div className="flex flex-wrap gap-x-5 gap-y-2">
+              {LUGARES_PADRAO.map((l) => (
+                <label key={l} className="flex items-center gap-2 text-[14px]">
+                  <input type="checkbox" checked={padrao.onde.includes(l)} onChange={(e) => mudarPadrao({ onde: e.target.checked ? [...padrao.onde, l] : padrao.onde.filter((x) => x !== l) })} className="size-4 accent-[#692536]" />
+                  {NOME_LUGAR[l]}
+                </label>
+              ))}
+            </div>
+            <p className="mt-2 text-[12px] text-[#7A6A6E]">o pattern nunca vai atrás de textos longos. estados vazios e cards comemorativos ganham o pattern nas próximas telas que usarem esses espaços.</p>
+          </fieldset>
+        </section>
+      ) : null}
+
+      {categoria === "elementos" ? (
+        <section aria-labelledby="t-elementos" className="space-y-5">
+          <h2 id="t-elementos" className={titulo}>
+            elementos gráficos
+          </h2>
+          <fieldset>
+            <legend className="mb-2 text-[12px] font-semibold text-[#5A4A50]">família visual</legend>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {FAMILIAS.map((f) => (
+                <button key={f} type="button" aria-pressed={familiaDe(ident) === f} onClick={() => setIdent({ ...ident, familia: f })} className={`flex flex-col items-start gap-2 rounded-[6px] border px-3 py-3 text-left text-[13px] ${familiaDe(ident) === f ? "border-[#692536] bg-white" : "border-[#E6D5CE]"}`}>
+                  <span style={{ ["--club-decoration-color" as string]: paleta.primaria } as React.CSSProperties}>
+                    <Ornamento ident={{ ...ident, familia: f, decoracao: "expressive" }} />
+                  </span>
+                  {NOME_FAMILIA[f]}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend className="mb-2 text-[12px] font-semibold text-[#5A4A50]">nível de decoração</legend>
+            <div className="flex flex-wrap gap-2">
+              {(
+                [
+                  ["minimal", "minimal", "poucos elementos"],
+                  ["balanced", "balanced", "equilibrado"],
+                  ["expressive", "expressive", "mais presença"],
+                ] as const
+              ).map(([v, n, d]) => (
+                <button key={v} type="button" aria-pressed={decoracaoDe(ident) === v} onClick={() => setIdent({ ...ident, decoracao: v })} className={`rounded-[6px] border px-4 py-2 text-left ${decoracaoDe(ident) === v ? "border-[#692536] bg-white" : "border-[#E6D5CE]"}`}>
+                  <span className="block text-[14px] font-semibold">{n}</span>
+                  <span className="block text-[11px] text-[#7A6A6E]">{d}</span>
+                </button>
+              ))}
+            </div>
+          </fieldset>
+        </section>
+      ) : null}
+
+      {categoria === "estantes" ? (
+        <section aria-labelledby="t-estantes" className="space-y-5">
+          <h2 id="t-estantes" className={titulo}>
+            estantes
+          </h2>
+          <p className="text-[13px] text-[#5A4A50]">muda só a aparência: capas, ordem dos livros e coleções continuam iguais.</p>
+          <div className="flex flex-wrap gap-2">
+            {ESTANTES.map((e) => {
+              const on = (ident.estante?.estilo ?? "tema") === e;
+              return (
+                <button key={e} type="button" aria-pressed={on} onClick={() => setIdent({ ...ident, estante: { estilo: e, cor: ident.estante?.cor, espessura: ident.estante?.espessura ?? "padrao" } })} className={`${chip(on)} gap-2`}>
+                  <Amostra cor={corDaEstante({ ...ident, estante: { estilo: e, cor: ident.estante?.cor, espessura: "padrao" } }, paleta)} tamanho={14} />
+                  {NOME_ESTANTE[e]}
+                </button>
+              );
+            })}
+          </div>
+          {ident.estante?.estilo === "personalizada" ? (
+            <label className="flex items-center gap-3 text-[14px]">
+              <input type="color" value={ident.estante.cor ?? paleta.estante} onChange={(e) => setIdent({ ...ident, estante: { ...ident.estante!, cor: e.target.value.toUpperCase() } })} className="size-11 rounded-[4px] border border-[#E6D5CE]" />
+              cor da estante
+            </label>
+          ) : null}
+          <fieldset>
+            <legend className="mb-2 text-[12px] font-semibold text-[#5A4A50]">espessura</legend>
+            <div className="flex gap-2">
+              {(["fina", "padrao", "grossa"] as const).map((e) => (
+                <button key={e} type="button" aria-pressed={(ident.estante?.espessura ?? "padrao") === e} onClick={() => setIdent({ ...ident, estante: { estilo: ident.estante?.estilo ?? "tema", cor: ident.estante?.cor, espessura: e } })} className={chip((ident.estante?.espessura ?? "padrao") === e)}>
+                  {e === "padrao" ? "padrão" : e}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+        </section>
+      ) : null}
+
+      {categoria === "layout" ? (
+        <section aria-labelledby="t-layout" className="space-y-6">
+          <h2 id="t-layout" className={titulo}>
+            layout
+          </h2>
+          <fieldset>
+            <legend className="mb-2 text-[12px] font-semibold text-[#5A4A50]">cabeçalho da página inicial</legend>
+            <div className="grid grid-cols-3 gap-2">
+              {(
+                [
+                  ["editorial", "editorial", "banner, avatar à esquerda"],
+                  ["centered", "centered", "tudo centralizado"],
+                  ["compact", "compact", "sem banner, foco no conteúdo"],
+                ] as const
+              ).map(([v, n, d]) => (
+                <button key={v} type="button" aria-pressed={cabecalhoDe(ident) === v} onClick={() => setIdent({ ...ident, cabecalho: v })} className={`rounded-[6px] border px-3 py-2.5 text-left ${cabecalhoDe(ident) === v ? "border-[#692536] bg-white" : "border-[#E6D5CE]"}`}>
+                  <span className="block text-[14px] font-semibold">{n}</span>
+                  <span className="block text-[11px] text-[#7A6A6E]">{d}</span>
+                </button>
+              ))}
+            </div>
+            <p className="mt-2 text-[12px] text-[#7A6A6E]">nas outras abas, o cabeçalho fica sempre compacto.</p>
+          </fieldset>
+          <fieldset>
+            <legend className="mb-2 text-[12px] font-semibold text-[#5A4A50]">estilo dos cards</legend>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {(
+                [
+                  ["editorial", "editorial"],
+                  ["paper", "paper goods"],
+                  ["minimal", "minimal"],
+                  ["vintage", "vintage"],
+                ] as const
+              ).map(([v, n]) => (
+                <button key={v} type="button" aria-pressed={cartoesDe(ident) === v} onClick={() => setIdent({ ...ident, cartoes: v })} className={`rounded-[6px] border p-2 text-left text-[12px] ${cartoesDe(ident) === v ? "border-[#692536] bg-white" : "border-[#E6D5CE]"}`}>
+                  <span className="cartao-clube block h-10" style={estiloDaIdentidade({ ...ident, cartoes: v })} />
+                  <span className="mt-1.5 block font-semibold">{n}</span>
+                </button>
+              ))}
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend className="mb-1 text-[12px] font-semibold text-[#5A4A50]">módulos da página inicial</legend>
+            <p className="mb-3 text-[12px] text-[#7A6A6E]">a leitura atual fica sempre no topo. ocultar um módulo não apaga nada.</p>
+            <ol className="space-y-1.5">
+              {modulos.ordem.map((m, i) => {
+                const oculto = modulos.ocultos.includes(m);
+                return (
+                  <li key={m} className={`flex items-center gap-2 rounded-[4px] border border-[#E6D5CE] bg-white px-3 py-1.5 ${oculto ? "opacity-55" : ""}`}>
+                    <span className="min-w-0 flex-1 text-[14px]">{NOME_MODULO[m]}</span>
+                    <button type="button" disabled={i === 0} onClick={() => mover(i, -1)} aria-label={`subir ${NOME_MODULO[m]}`} className="grid size-9 place-items-center rounded-full disabled:opacity-25">
+                      ↑
+                    </button>
+                    <button type="button" disabled={i === modulos.ordem.length - 1} onClick={() => mover(i, 1)} aria-label={`descer ${NOME_MODULO[m]}`} className="grid size-9 place-items-center rounded-full disabled:opacity-25">
+                      ↓
+                    </button>
+                    <button
+                      type="button"
+                      aria-pressed={!oculto}
+                      onClick={() => setIdent({ ...ident, modulos: { ...modulos, ocultos: oculto ? modulos.ocultos.filter((x) => x !== m) : [...modulos.ocultos, m] } })}
+                      className="min-h-9 px-2 text-[12px] font-semibold text-[#692536]"
+                    >
+                      {oculto ? "mostrar" : "ocultar"}
+                    </button>
+                  </li>
+                );
+              })}
+            </ol>
+            <button type="button" onClick={() => setIdent({ ...ident, modulos: undefined })} className="mt-2 min-h-10 text-[12px] font-semibold text-[#5A4A50] hover:text-[#692536]">
+              restaurar organização padrão
+            </button>
+            <p className="mt-1 text-[12px] text-[#7A6A6E]">no computador, os módulos de encontro, membros e próximas leituras ficam na coluna lateral.</p>
+          </fieldset>
+        </section>
+      ) : null}
+
+      {categoria === "titulos" ? (
+        <section aria-labelledby="t-titulos" className="space-y-5">
+          <h2 id="t-titulos" className={titulo}>
+            identidade verbal
+          </h2>
+          <p className="text-[13px] text-[#5A4A50]">troque os títulos das seções editoriais. menus, botões e avisos continuam com os nomes do app.</p>
+          {(Object.keys(TITULOS) as ChaveTitulo[]).map((k) => {
+            const atual = ident.titulos?.[k] ?? TITULOS[k][0];
+            const proprio = !(TITULOS[k] as readonly string[]).includes(atual);
+            return (
+              <fieldset key={k}>
+                <legend className="mb-2 text-[12px] font-semibold text-[#5A4A50]">{TITULOS[k][0]}</legend>
+                <div className="flex flex-wrap gap-2">
+                  {TITULOS[k].map((t) => (
+                    <button key={t} type="button" aria-pressed={atual === t} onClick={() => mudarTitulo(k, t)} className={chip(atual === t)}>
+                      {t}
+                    </button>
+                  ))}
+                  <input
+                    value={proprio ? atual : ""}
+                    maxLength={40}
+                    onChange={(e) => mudarTitulo(k, e.target.value.replace(/[<>{}]/g, ""))}
+                    placeholder="título próprio"
+                    aria-label={`título próprio para ${TITULOS[k][0]}`}
+                    className={`h-10 w-[180px] rounded-pill border bg-white px-4 text-[13px] ${proprio ? "border-[#692536]" : "border-[#E6D5CE]"}`}
+                  />
+                </div>
+              </fieldset>
+            );
+          })}
+        </section>
+      ) : null}
     </div>
   );
 
@@ -540,7 +960,11 @@ export default function ClubStudioPage() {
           <button type="button" onClick={() => setIdent(publicada ?? identidadeInicial(corAntiga))} disabled={!mudou} className="inline-flex h-11 items-center rounded-pill border border-[#E6D5CE] px-4 text-[13px] font-semibold text-[#2B1420] disabled:opacity-45">
             cancelar
           </button>
-          <button type="button" onClick={() => setIdent({ v: 1, tema: ident.tema, modo: "tema" })} className="inline-flex h-11 items-center px-2 text-[13px] font-semibold text-[#5A4A50] hover:text-[#692536]">
+          <button
+            type="button"
+            onClick={() => confirm("restaurar tudo para o padrão do tema? cores, tipografia, emblema, patterns, estantes, layout e títulos voltam ao original.") && setIdent({ v: 1, tema: ident.tema, modo: "tema" })}
+            className="inline-flex h-11 items-center px-2 text-[13px] font-semibold text-[#5A4A50] hover:text-[#692536]"
+          >
             restaurar padrão do tema
           </button>
           {publicada ? (
