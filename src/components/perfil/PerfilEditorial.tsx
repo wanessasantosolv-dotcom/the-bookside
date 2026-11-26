@@ -6,7 +6,7 @@ import { CapaAuto } from "@/components/CapaAuto";
 import { CapaDoLivro, PrateleiraMadeira } from "@/components/estantes/Biblioteca";
 import { lembrarLivros } from "@/lib/catalogo";
 import { meusClubes } from "@/lib/clubes";
-import { estrelas, porDataDeLeitura } from "@/lib/estantes";
+import { estrelas, numerosDoPerfil, porDataDeLeitura } from "@/lib/estantes";
 import { generoGenerico, traduzirGenero } from "@/lib/generos";
 import type { Match } from "@/lib/match";
 import { usePerfil, type LivroSalvo, type Perfil } from "@/lib/perfil-store";
@@ -139,35 +139,49 @@ function Foto({ p, tamanho }: { p: Perfil; tamanho: number }) {
   );
 }
 
-function Numeros({ p, numeros, base }: { p: Perfil; numeros: { seguidores: number; seguindo: number } | null; base: string }) {
-  const lidos = p.livros.filter((l) => l.status === "lido").length;
-  const resenhas = p.livros.filter((l) => l.resenha?.trim()).length;
-  const item = (n: number | string, r: string, href?: string) => {
-    const conteudo = (
-      <>
-        <b className="block font-revista text-[22px] leading-none font-normal text-[var(--tinta)] tabular-nums">{n}</b>
-        <span className="mt-1 block text-[11px] text-[var(--suave)]">{r}</span>
-      </>
-    );
-    return href ? (
-      <Link href={href} className="block min-h-11 hover:opacity-80">
-        {conteudo}
-      </Link>
-    ) : (
-      <span className="block min-h-11">{conteudo}</span>
-    );
-  };
+/** a linha discreta embaixo do @usuário, como era antes: "12 seguidores · 8 seguindo" */
+function Seguidores({ numeros, base }: { numeros: { seguidores: number; seguindo: number } | null; base: string }) {
+  if (!numeros) return null;
   return (
-    <dl className="flex gap-6 sm:gap-8">
-      <div>{item(lidos, lidos === 1 ? "livro lido" : "livros lidos")}</div>
-      <div>{item(resenhas, resenhas === 1 ? "resenha" : "resenhas")}</div>
-      {numeros ? (
-        <>
-          <div>{item(numeros.seguidores, numeros.seguidores === 1 ? "seguidor" : "seguidores", `${base}/seguidores`)}</div>
-          <div>{item(numeros.seguindo, "seguindo", `${base}/seguidores?aba=seguindo`)}</div>
-        </>
-      ) : null}
-    </dl>
+    <p className="mt-1 text-[12px] text-[var(--suave)]">
+      <Link href={`${base}/seguidores`} className="hover:underline">
+        <b className="font-semibold text-[var(--tinta)]">{numeros.seguidores}</b> {numeros.seguidores === 1 ? "seguidor" : "seguidores"}
+      </Link>
+      {" · "}
+      <Link href={`${base}/seguidores?aba=seguindo`} className="hover:underline">
+        <b className="font-semibold text-[var(--tinta)]">{numeros.seguindo}</b> seguindo
+      </Link>
+    </p>
+  );
+}
+
+/** a faixa de estatísticas do perfil, como era antes: meta (ou lidos no ano), lidos ao todo, lendo, quero ler */
+function Estatisticas({ p, proprio, base, onJornada }: { p: Perfil; proprio: boolean; base: string; onJornada: () => void }) {
+  const de = (s: string) => p.livros.filter((l) => (l.status ?? "lendo") === s).length;
+  const itens = [
+    numerosDoPerfil(p).destaque,
+    { n: de("lido"), r: "lidos ao todo" },
+    { n: de("lendo"), r: "lendo" },
+    { n: de("quero"), r: "quero ler" },
+  ];
+  return (
+    <Link
+      href={proprio ? "/perfil?aba=jornada" : `${base}/estantes/lidos`}
+      onClick={(e) => {
+        if (!proprio) return;
+        e.preventDefault();
+        onJornada();
+      }}
+      aria-label={proprio ? "ver sua jornada" : "ver os lidos"}
+      className="grid grid-cols-4 border-y border-[var(--linha)] hover:opacity-90"
+    >
+      {itens.map((x, i) => (
+        <span key={x.r} className={`py-3.5 text-center lg:py-4 ${i ? "border-l border-[var(--linha)]" : ""}`}>
+          <b className="block font-revista text-[23px] leading-none font-normal text-[var(--acc)] tabular-nums lg:text-[28px]">{x.n}</b>
+          <span className="mt-1.5 block text-[10px] tracking-[.08em] text-[var(--suave)] uppercase lg:text-[11px] lg:tracking-[.12em]">{x.r}</span>
+        </span>
+      ))}
+    </Link>
   );
 }
 
@@ -669,7 +683,7 @@ export function PerfilEditorial({
                 </div>
                 <div className="order-last w-full sm:order-none sm:w-auto">{acoes}</div>
               </div>
-              <div className="mt-3 lg:grid lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end lg:gap-10">
+              <div className="mt-3">
                 <div className="min-w-0">
                   <h1 className="font-revista text-[30px] leading-[1.05] text-[var(--acc)] lg:text-[42px]">{nome}</h1>
                   <p className="mt-1 text-[13px] text-[var(--suave)]">
@@ -683,14 +697,12 @@ export function PerfilEditorial({
                       </>
                     ) : null}
                   </p>
+                  <Seguidores numeros={numeros} base={base} />
                   {p.frase ? (
                     <p className="mt-2 max-w-[56ch] text-[15px] leading-relaxed text-[var(--tinta)]">{p.frase}</p>
                   ) : proprio ? (
                     <Convite href="/perfil/editar" texto="escreva um pouco sobre você" />
                   ) : null}
-                </div>
-                <div className="mt-4 lg:mt-0">
-                  <Numeros p={p} numeros={numeros} base={base} />
                 </div>
               </div>
             </div>
@@ -726,6 +738,11 @@ export function PerfilEditorial({
           </nav>
         </div>
 
+        {geral ? (
+          <div className="px-5 pt-6 lg:px-2 lg:pt-8">
+            <Estatisticas p={p} proprio={proprio} base={base} onJornada={() => onAba("jornada")} />
+          </div>
+        ) : null}
         {geral ? (
           <div className="grid gap-9 px-5 pt-7 lg:grid-cols-[minmax(0,1.85fr)_minmax(280px,1fr)] lg:gap-14 lg:px-2 lg:pt-9">
             <div className="min-w-0 space-y-9 lg:space-y-11">
