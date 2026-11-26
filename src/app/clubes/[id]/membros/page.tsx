@@ -49,7 +49,7 @@ export default function MembrosPage() {
     return { livros, reais };
   }, [clube.id, membros.length]);
 
-  if (consulta.carregando && !consulta.dados) return <Carregando texto="reunindo a turma…" linhas={2} />;
+  if (consulta.carregando && !consulta.dados) return <Carregando texto="carregando os membros…" linhas={2} />;
   if (consulta.erro) return <ErroOuFalta erro={consulta.erro} onTentar={consulta.recarregar} />;
   const { livros, reais } = consulta.dados!;
   const lidos = livros.filter((l) => l.estado === "lido");
@@ -100,10 +100,10 @@ export default function MembrosPage() {
         <section aria-labelledby="t-participantes">
           <div className={secao}>
             <h2 id="t-participantes" className={titulo}>
-              participantes
+              membros do clube
             </h2>
             <span className="text-[12px] text-cinza">
-              {membros.length} {membros.length === 1 ? "pessoa" : "pessoas"}
+              {membros.length} {membros.length === 1 ? "membro" : "membros"}
             </span>
           </div>
           <ul>
@@ -131,7 +131,7 @@ export default function MembrosPage() {
                     </p>
                     <dl className="mt-2.5 flex flex-wrap gap-x-5 gap-y-1 text-[12px] text-tinta-suave">
                       <div>
-                        <dt className="inline">livros do clube: </dt>
+                        <dt className="inline">livros lidos: </dt>
                         <dd className="inline font-semibold text-ameixa">{x.livros}</dd>
                       </div>
                       <div>
@@ -143,17 +143,17 @@ export default function MembrosPage() {
                         <dd className="inline font-semibold text-ameixa">{x.media !== null ? `${virgula(x.media)}★` : "—"}</dd>
                       </div>
                       <div>
-                        <dt className="inline">fichas: </dt>
+                        <dt className="inline">fichas publicadas: </dt>
                         <dd className="inline font-semibold text-ameixa">{x.fichas}</dd>
                       </div>
                       {x.pendentes ? (
                         <div>
-                          <dt className="inline">pendentes: </dt>
+                          <dt className="inline">fichas pendentes: </dt>
                           <dd className="inline font-semibold text-bordo">{x.pendentes}</dd>
                         </div>
                       ) : null}
                       <div>
-                        <dt className="inline">escolhas: </dt>
+                        <dt className="inline">sugestões lidas: </dt>
                         <dd className="inline font-semibold text-ameixa">{x.sugeridos}</dd>
                       </div>
                     </dl>
@@ -170,7 +170,7 @@ export default function MembrosPage() {
         <section aria-labelledby="t-ranking">
           <div className={secao}>
             <h2 id="t-ranking" className={titulo}>
-              ranking
+              ranking de leitura
             </h2>
             <div role="group" aria-label="critério do ranking" className="flex gap-3 text-[13px]">
               {(["livros", "paginas"] as const).map((c) => (
@@ -186,7 +186,7 @@ export default function MembrosPage() {
               ))}
             </div>
           </div>
-          <p className="mb-3 text-[12px] text-cinza">conta só os livros do clube em que a pessoa escreveu a ficha.</p>
+          <p className="mb-3 text-[12px] text-cinza">considera apenas os livros do clube com ficha de leitura publicada.</p>
           <ol>
             {ranking.map((x, i) => (
               <li key={x.m.usuario_id} className="flex items-center gap-3 border-b border-linha py-2.5 last:border-b-0 lg:border-fio">
@@ -206,14 +206,14 @@ export default function MembrosPage() {
           <section aria-labelledby="t-fichas">
             <div className={secao}>
               <h2 id="t-fichas" className={titulo}>
-                fichas em dia
+                participação nas fichas
               </h2>
             </div>
             <p className="text-[14px] text-tinta-suave">
               <b className="font-semibold text-ameixa">
                 {emDia} de {membros.length}
               </b>{" "}
-              estão com as fichas em dia
+              {emDia === 1 ? "membro está" : "membros estão"} com as fichas em dia
               {totalPendentes ? (
                 <>
                   {" "}
@@ -223,7 +223,7 @@ export default function MembrosPage() {
               .
             </p>
             <Link href={`/clubes/${clube.id}/biblioteca`} className="mt-2 inline-flex min-h-9 items-center text-[13px] font-semibold text-bordo hover:underline">
-              ver as fichas na estante →
+              ver fichas de leitura →
             </Link>
           </section>
         ) : null}
@@ -232,16 +232,16 @@ export default function MembrosPage() {
         <section aria-labelledby="t-gerenciar">
           <div className={secao}>
             <h2 id="t-gerenciar" className={titulo}>
-              convites
+              convites e membros
             </h2>
           </div>
           <div className="flex flex-col items-start gap-1 text-[14px]">
             <Link href={`/clubes/${clube.id}/convidar`} className="flex min-h-10 items-center font-semibold text-bordo hover:underline">
-              convidar pessoas e compartilhar o link →
+              convidar membros →
             </Link>
             {papel === "moderadora" ? (
               <Link href={`/clubes/${clube.id}/convidar`} className="flex min-h-10 items-center text-ameixa hover:text-bordo">
-                gerenciar cargos e participantes
+                gerenciar membros
               </Link>
             ) : null}
             <button type="button" onClick={sair} className="flex min-h-10 items-center text-cinza hover:text-bordo">

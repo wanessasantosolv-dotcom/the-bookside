@@ -107,7 +107,7 @@ export default function ImportarNoClubePage() {
     return (
       <div className="px-6 pt-6 lg:px-0">
         <Vazio
-          titulo="só quem modera importa livros no clube"
+          titulo="só quem organiza pode importar leituras anteriores"
           acao={{
             href: `/clubes/${clube.id}/biblioteca`,
             rotulo: "voltar à estante",
@@ -119,7 +119,7 @@ export default function ImportarNoClubePage() {
   async function procurar(itens: ItemImport[]) {
     if (!itens.length)
       return setErro(
-        "não achei nenhum livro. escreva um por linha, como “três - 27/05”.",
+        "nenhum livro encontrado. escreva um por linha, como “três - 27/05”.",
       );
     setErro(null);
     setProgresso({ feito: 0, total: itens.length });
@@ -165,7 +165,7 @@ export default function ImportarNoClubePage() {
       const json = f.name.endsWith(".json") || /^\s*[[{]/.test(conteudo);
       await procurar(json ? lerArquivo(conteudo) : lerLista(conteudo));
     } catch {
-      setErro("não consegui ler esse arquivo.");
+      setErro("não foi possível ler esse arquivo.");
     }
   }
 
@@ -335,9 +335,9 @@ export default function ImportarNoClubePage() {
     <div className="flex min-h-[70dvh] flex-col">
       <TopoForm
         voltar={{ href: `/clubes/${clube.id}/biblioteca`, r: "estante" }}
-        rotulo="histórico do clube"
-        titulo="importar livros já lidos"
-        frase="cole a lista do clube e o app acha cada livro ✦"
+        rotulo="nossa estante"
+        titulo="importar leituras anteriores"
+        frase="cole a lista do clube e o app encontra cada livro."
       />
       {!linhas ? (
         <div className="mt-6 space-y-4 px-6 lg:max-w-[640px] lg:px-0">
@@ -568,8 +568,7 @@ export default function ImportarNoClubePage() {
               disabled={!linhas.some((l) => l.incluir)}
               className={`${botaoPrincipal} lg:max-w-[560px]`}
             >
-              colocar {linhas.filter((l) => l.incluir).length} no histórico do
-              clube
+              adicionar {linhas.filter((l) => l.incluir).length} {linhas.filter((l) => l.incluir).length === 1 ? "livro" : "livros"} à nossa estante
             </button>
           </Rodape>
         </>

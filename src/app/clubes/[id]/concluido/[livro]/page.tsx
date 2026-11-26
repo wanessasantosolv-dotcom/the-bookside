@@ -51,7 +51,7 @@ export default function ConcluidoPage() {
       <Animacao
         tipo="carimbo"
         titulo="preparando o selo do clube"
-        sub="juntando as fichas de todo mundo"
+        sub="reunindo as fichas de leitura"
       />
     );
   if (consulta.erro)
@@ -60,7 +60,7 @@ export default function ConcluidoPage() {
   if (!l)
     return (
       <div className="px-6 pt-6 lg:max-w-[640px] lg:px-0">
-        <Vazio titulo="não achei essa leitura" texto="ela pode ter sido removida." />
+        <Vazio titulo="leitura não encontrada" texto="ela pode ter sido removida." />
       </div>
     );
 
@@ -117,11 +117,11 @@ export default function ConcluidoPage() {
         a.href = png;
         a.download = nome;
         a.click();
-        setAviso("imagem baixada ✓ é só postar no story.");
+        setAviso("imagem baixada. agora é só publicar no story.");
       }
     } catch (x) {
       if ((x as Error).name !== "AbortError")
-        setAviso("não deu para gerar a imagem agora. tente de novo.");
+        setAviso("não foi possível gerar a imagem agora. tente de novo.");
     } finally {
       setGerando(false);
     }
@@ -136,14 +136,14 @@ export default function ConcluidoPage() {
     <div className="flex min-h-[70dvh] flex-col px-6 pt-2 pb-10 lg:px-0 lg:pt-6">
       <TopoForm
         voltar={{ href: `/clubes/${clube.id}`, r: clube.nome }}
-        rotulo="vocês terminaram!"
+        rotulo="mais uma história compartilhada."
         titulo=""
       />
       <h1 className="mt-1 font-display text-[28px] leading-[1.1] font-semibold italic text-bordo lg:font-revista lg:text-[38px] lg:font-normal lg:text-tinta">
-        {l.livro.titulo}, terminado ✦
+        {l.livro.titulo}, concluído
       </h1>
       <p className="mt-1.5 font-accent text-sm italic text-cinza">
-        escolha um jeito de compartilhar que o clube terminou essa leitura
+        escolha como compartilhar a conclusão desta leitura.
       </p>
 
       <div className="mt-6 lg:grid lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start lg:gap-12">
@@ -205,7 +205,7 @@ function BotaoCompartilhar({
 }) {
   return (
     <button type="button" onClick={onClick} disabled={gerando} className={botaoPrincipal}>
-      {gerando ? "gerando a imagem…" : "compartilhar no story ✦"}
+      {gerando ? "gerando a imagem…" : "compartilhar no story"}
     </button>
   );
 }

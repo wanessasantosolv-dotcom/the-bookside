@@ -70,11 +70,11 @@ function Escolher() {
     return (
       <div className="px-6 pt-6 lg:px-0">
         <Vazio
-          titulo="quem modera escolhe o livro da vez"
-          texto="você pode sugerir um livro e votar nas sugestões do clube."
+          titulo="quem organiza define a próxima leitura"
+          texto="você pode sugerir livros e votar nos sugeridos."
           acao={{
             href: `/clubes/${clube.id}/sugerir`,
-            rotulo: "sugerir um livro",
+            rotulo: "sugerir livro",
           }}
         />
       </div>
@@ -83,8 +83,8 @@ function Escolher() {
     return (
       <Animacao
         tipo="pilha"
-        titulo="procurando na estante"
-        sub="trazendo as sugestões do clube"
+        titulo="carregando os livros sugeridos"
+        sub="para definir a próxima leitura"
       />
     );
   if (consulta.erro)
@@ -115,10 +115,10 @@ function Escolher() {
     id ? (membros.find((m) => m.usuario_id === id)?.pessoa ?? null) : null;
 
   async function comecar(e: Escolha | null = escolha) {
-    if (!e) return setErro("escolha um livro primeiro.");
+    if (!e) return setErro("selecione um livro primeiro.");
     if (
       atual &&
-      !confirm(`isso encerra a leitura de ${atual.livro.titulo}. continuar?`)
+      !confirm(`a leitura de ${atual.livro.titulo} será encerrada. definir a nova leitura mesmo assim?`)
     )
       return;
     setOcupado(true);
@@ -141,7 +141,7 @@ function Escolher() {
         );
       router.push(`/clubes/${clube.id}/leitura`);
     } catch {
-      setErro("não deu para começar agora. tente de novo.");
+      setErro("não foi possível iniciar a leitura agora. tente de novo.");
       setOcupado(false);
     }
   }
@@ -174,11 +174,11 @@ function Escolher() {
       <TopoForm
         voltar={{ href: `/clubes/${clube.id}/leitura`, r: "leitura" }}
         rotulo={clube.nome}
-        titulo={depoisDeEncerrar ? "e a próxima?" : "o livro da vez"}
+        titulo={depoisDeEncerrar ? "qual será a próxima leitura?" : "definir próxima leitura"}
         frase={
           depoisDeEncerrar
-            ? "leitura encerrada ✓ escolha o próximo livro do clube."
-            : "escolha uma sugestão do clube ou qualquer outro livro ✦"
+            ? "leitura encerrada. escolha o próximo livro do clube."
+            : "escolha entre os livros sugeridos ou busque outro livro."
         }
       />
       <div className="mt-6 space-y-6 px-6 lg:max-w-[720px] lg:px-0">
@@ -217,14 +217,14 @@ function Escolher() {
             <div>
               <p className="mb-2.5 rounded-md bg-rosa-fundo px-3 py-2 text-[13px] text-bordo">
                 {modo === "fila"
-                  ? "fila de sugestões: a próxima é a que foi sugerida há mais tempo."
+                  ? "fila: o livro sugerido há mais tempo vem primeiro."
                   : modo === "votacao"
-                    ? "votação: a mais votada está em primeiro."
+                    ? "votação: o mais votado vem primeiro."
                     : modo === "rodizio"
-                      ? `rodízio: é a vez de ${vez ? nomeDe(vez.pessoa) : "alguém"} escolher.`
+                      ? `rodízio: ${vez ? nomeDe(vez.pessoa) : "um membro"} escolhe a próxima leitura.`
                       : modo === "sorteio"
-                        ? "sorteio: toque em sortear para o app escolher."
-                        : "quem modera escolhe: as sugestões são só ideias."}
+                        ? "sorteio: toque em sortear para o app escolher um livro."
+                        : "quem organiza escolhe: os livros sugeridos servem de referência."}
               </p>
               <ul className="space-y-2">
                 {sugestoes.map((s) => {
@@ -251,7 +251,7 @@ function Escolher() {
                             {votacao
                               ? ` · ${s.votos.length} ${s.votos.length === 1 ? "voto" : "votos"}`
                               : ""}
-                            {s.id === daVez?.id ? " · a da vez ✦" : ""}
+                            {s.id === daVez?.id ? " · próxima da fila" : ""}
                             {s.sugerido_por
                               ? ` · sugerido por ${nomeDe(pessoa(s.sugerido_por))}`
                               : ""}
@@ -268,8 +268,8 @@ function Escolher() {
                 onClick={sortear}
                 className="mt-3 min-h-9 text-xs font-semibold text-bordo underline underline-offset-4"
               >
-                ✦ sortear entre as sugestões
-                {votacao ? " (cada voto conta)" : ""}
+                sortear entre os sugeridos
+                {votacao ? " (com peso pelos votos)" : ""}
               </button>
             </div>
           ) : (
@@ -358,7 +358,7 @@ function Escolher() {
                 onClick={() => setCadastrar(true)}
                 className="mt-2 min-h-9 text-xs font-semibold text-bordo underline underline-offset-4"
               >
-                não achou? cadastrar o livro manualmente
+                não encontrou? cadastre o livro manualmente
               </button>
             )}
           </div>
@@ -374,7 +374,7 @@ function Escolher() {
             />
             <span className="min-w-0">
               <span className="block text-[10px] font-semibold tracking-[.14em] text-bordo uppercase">
-                livro da vez
+                próxima leitura
               </span>
               <span className="block truncate font-display text-lg font-semibold italic lg:font-revista lg:font-normal">
                 {escolhido.titulo}
@@ -442,7 +442,7 @@ function Escolher() {
           disabled={ocupado || !escolha}
           className={`${botaoPrincipal} lg:max-w-[460px]`}
         >
-          {ocupado ? "começando…" : "começar leitura"}
+          {ocupado ? "iniciando…" : "definir próxima leitura"}
         </button>
         {depoisDeEncerrar ? (
           <button

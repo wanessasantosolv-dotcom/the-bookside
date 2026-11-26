@@ -45,8 +45,8 @@ export default function BibliotecaPage() {
     return (
       <Animacao
         tipo="pilha"
-        titulo="abrindo a estante"
-        sub="isso pode levar um instante"
+        titulo="carregando nossa estante"
+        sub="os livros lidos e as próximas leituras"
       />
     );
   if (consulta.erro)
@@ -59,7 +59,7 @@ export default function BibliotecaPage() {
   async function excluir(l: LivroDoClube) {
     if (
       !confirm(
-        `tirar "${l.livro.titulo}" da estante do clube? isso apaga também as fichas desse livro.`,
+        `remover "${l.livro.titulo}" da nossa estante? as fichas de leitura desse livro também serão apagadas.`,
       )
     )
       return;
@@ -101,7 +101,7 @@ export default function BibliotecaPage() {
     },
     {
       id: "proximas",
-      nome: votacao ? "sugestões" : "próximas leituras",
+      nome: votacao ? "livros sugeridos" : "próximas leituras",
       livros: proximas,
       link: `${base}/sugestoes`,
       mais: `${base}/sugerir`,
@@ -144,7 +144,7 @@ export default function BibliotecaPage() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h2 className="font-display text-[28px] leading-[1.1] font-semibold italic text-bordo lg:font-revista lg:text-[36px] lg:font-normal">
-            estante do clube
+            nossa estante
           </h2>
           <p className="mt-1.5 text-[13px] text-cinza">
             {lidos.length} {lidos.length === 1 ? "livro lido" : "livros lidos"}
@@ -153,7 +153,7 @@ export default function BibliotecaPage() {
               : ""}
             {paginas ? ` · ${paginas.toLocaleString("pt-BR")} páginas` : ""}
             {and && and.faltam
-              ? ` · a leitura atual termina em ${and.faltam} ${and.faltam === 1 ? "dia" : "dias"}`
+              ? ` · leitura atual: ${and.faltam} ${and.faltam === 1 ? "dia restante" : "dias restantes"}`
               : ""}
           </p>
         </div>
@@ -174,17 +174,17 @@ export default function BibliotecaPage() {
           ) : null}
           {moderadora ? (
             <Link href={`${base}/adicionar-lido`} className={acao}>
-              + livro já lido
+              + adicionar leitura anterior
             </Link>
           ) : null}
           <Link href={`${base}/sugestoes`} className={acao}>
-            {votacao ? "sugestões e votação" : "fila"}
+            {votacao ? "votar nos sugeridos" : "próximas leituras"}
           </Link>
           <Link
             href={`${base}/sugerir`}
             className={`${acao} border-bordo bg-bordo text-creme hover:bg-bordo`}
           >
-            + sugerir
+            + sugerir livro
           </Link>
         </span>
       </div>
@@ -225,9 +225,9 @@ export default function BibliotecaPage() {
       {!livros.length ? (
         <Vazio
           className="mt-6"
-          titulo="a estante do clube está em branco"
-          texto="sugira o primeiro livro, ou importe os livros que o clube já leu."
-          acao={{ href: `${base}/sugerir`, rotulo: "sugerir um livro" }}
+          titulo="nossa estante ainda está vazia"
+          texto="sugira o primeiro livro ou adicione as leituras anteriores do clube."
+          acao={{ href: `${base}/sugerir`, rotulo: "sugerir livro" }}
         />
       ) : (
         <div
@@ -245,30 +245,30 @@ export default function BibliotecaPage() {
                     className="text-[10px] font-bold tracking-[.12em] text-bordo uppercase"
                   >
                     {linha.id === "lendo"
-                      ? "ver a leitura →"
+                      ? "ver leitura →"
                       : votacao
                         ? "votar →"
-                        : "ver a fila →"}
+                        : "organizar fila →"}
                   </Link>
                 ) : null}
               </div>
               {!linha.livros.length ? (
                 <p className="font-accent text-sm italic text-cinza">
                   {linha.id === "lendo"
-                    ? "nenhuma leitura rolando."
+                    ? "nenhuma leitura atual."
                     : linha.id === "lidos"
-                      ? "o clube ainda não terminou nenhum livro."
-                      : "ninguém sugeriu nada ainda."}{" "}
+                      ? "nenhum livro lido ainda."
+                      : "nenhum livro sugerido ainda."}{" "}
                   {linha.mais ? (
                     <Link
                       href={linha.mais}
                       className="text-bordo underline underline-offset-4"
                     >
                       {linha.id === "lendo"
-                        ? "escolher o livro da vez →"
+                        ? "definir próxima leitura →"
                         : linha.id === "lidos"
-                          ? "incluir um já lido →"
-                          : "sugerir →"}
+                          ? "adicionar leitura anterior →"
+                          : "sugerir livro →"}
                     </Link>
                   ) : null}
                 </p>

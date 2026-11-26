@@ -21,6 +21,7 @@ import {
   type StatusLeitura,
   type UnidadeMarca,
   organiza,
+  quemTrouxe,
 } from "@/lib/clubes";
 import { nomeDe, useConsulta, useMeuId } from "@/lib/social";
 
@@ -44,8 +45,8 @@ export default function LeituraPage() {
     return (
       <Animacao
         tipo="marcador"
-        titulo="separando sua página"
-        sub="onde vocês pararam no livro"
+        titulo="carregando a leitura atual"
+        sub="o progresso de cada leitor"
       />
     );
   if (consulta.erro)
@@ -60,30 +61,30 @@ export default function LeituraPage() {
     return (
       <div className="px-6 pt-6 lg:max-w-[640px] lg:px-0">
         <h2 className="font-display text-[26px] font-semibold italic text-bordo lg:font-revista lg:font-normal lg:text-tinta">
-          nenhuma leitura rolando
+          qual será a próxima leitura?
         </h2>
         {moderadora ? (
           <Vazio
             className="mt-5"
-            titulo="escolha o livro da vez"
+            titulo="defina a próxima leitura"
             texto={
               sugestoes.length
-                ? `pegue uma das ${sugestoes.length} sugestões do clube, sorteie, ou busque qualquer livro.`
-                : "busque qualquer livro e marque o prazo. ninguém precisa sugerir antes."
+                ? `escolha um dos ${sugestoes.length} livros sugeridos, faça um sorteio ou busque qualquer livro.`
+                : "busque qualquer livro e defina o prazo. não é preciso ter sugestões antes."
             }
             acao={{
               href: `/clubes/${clube.id}/escolher`,
-              rotulo: "escolher o livro",
+              rotulo: "definir próxima leitura",
             }}
           />
         ) : (
           <Vazio
             className="mt-5"
-            titulo="a próxima leitura sai das sugestões"
-            texto="vote nas sugestões do clube. quem modera escolhe a mais votada (ou sorteia)."
+            titulo="o que vamos ler depois?"
+            texto="vote nos livros sugeridos. quem organiza define a próxima leitura entre os mais votados ou por sorteio."
             acao={{
               href: `/clubes/${clube.id}/sugestoes`,
-              rotulo: "ver e votar",
+              rotulo: "votar nos sugeridos",
             }}
           />
         )}
@@ -203,7 +204,7 @@ export default function LeituraPage() {
             </p>
             {quem ? (
               <p className="mt-2 font-accent text-sm italic text-cinza">
-                sugerido {quem.id === eu ? "por você" : `pela ${nomeDe(quem)}`}
+                {quemTrouxe(lendo, membros, eu)}
               </p>
             ) : null}
           </div>
@@ -252,21 +253,20 @@ export default function LeituraPage() {
               {and.fim.toLocaleDateString("pt-BR", {
                 day: "numeric",
                 month: "long",
-              })}{" "}
-              ✦
+              })}
             </p>
           </section>
         ) : null}
 
         <section className="mt-9 rounded-[10px] border border-linha p-[26px]">
           <p className="text-[10px] font-semibold tracking-[.16em] text-cinza uppercase">
-            sua leitura
+            minha leitura
           </p>
           <h3 className="mt-2 font-revista text-[21px] leading-[1.3] text-ameixa italic lg:font-display lg:font-semibold lg:not-italic lg:text-bordo">
-            em que pé você está?
+            como está a sua leitura?
           </h3>
           <fieldset className="mt-5 flex gap-7">
-            <legend className="sr-only">em que pé você está na leitura</legend>
+            <legend className="sr-only">como está a sua leitura</legend>
             {PILLS.map((p) => {
               const on = meuStatus === p.v;
               return (
@@ -379,7 +379,7 @@ export default function LeituraPage() {
               className="mt-6 flex h-[54px] items-center justify-between rounded-md bg-bordo px-[22px] text-[13px] font-semibold text-creme"
             >
               <span>
-                {minha ? "editar minha ficha ✎" : "escrever minha ficha ✎"}
+                {minha ? "editar minha ficha" : "preencher minha ficha"}
               </span>
               <span aria-hidden>→</span>
             </Link>
@@ -387,7 +387,7 @@ export default function LeituraPage() {
             <p className="mt-6 font-accent text-sm leading-[1.5] text-cinza italic">
               quando marcar{" "}
               <b className="font-semibold not-italic text-ameixa">terminei</b>,
-              sua ficha desbloqueia aqui ✦
+              você poderá preencher sua ficha de leitura.
             </p>
           )}
         </section>
@@ -398,7 +398,7 @@ export default function LeituraPage() {
               href={`/clubes/${clube.id}/escolher`}
               className={botaoContorno}
             >
-              trocar livro
+              trocar a leitura atual
             </Link>
           </div>
         ) : null}
@@ -408,7 +408,7 @@ export default function LeituraPage() {
             onClick={async () => {
               if (
                 !confirm(
-                  `encerrar a leitura de ${lendo.livro.titulo}? ela vai para os lidos do clube.`,
+                  `encerrar a leitura de ${lendo.livro.titulo}? o livro vai para os livros lidos do clube.`,
                 )
               )
                 return;
@@ -417,7 +417,7 @@ export default function LeituraPage() {
             }}
             className="mt-3 min-h-11 text-xs font-semibold text-cinza underline underline-offset-4 hover:text-bordo"
           >
-            encerrar esta leitura
+            encerrar leitura
           </button>
         ) : null}
       </div>
@@ -426,7 +426,7 @@ export default function LeituraPage() {
         <div className="rounded-xl border border-linha p-4 lg:rounded-[10px] lg:p-[22px]">
           <div className="flex items-baseline justify-between">
             <p className="font-revista text-[19px] text-ameixa italic lg:font-display lg:font-semibold lg:not-italic lg:text-tinta">
-              progresso do grupo
+              progresso dos leitores
             </p>
             <span className="font-maquina text-[11px] font-bold text-cinza">
               {grupos.terminei.length} de {membros.length}
@@ -441,17 +441,16 @@ export default function LeituraPage() {
               <b className="text-ameixa">
                 {grupos.terminei.length} de {membros.length}
               </b>{" "}
-              já {grupos.terminei.length === 1 ? "terminou" : "terminaram"} a
-              leitura
+              {grupos.terminei.length === 1 ? "concluiu" : "concluíram"} a leitura
               {grupos.lendo.length || grupos.nao_comecei.length
-                ? ` — falta ${[...grupos.lendo, ...grupos.nao_comecei].map((m) => (m.usuario_id === eu ? "você" : nomeDe(m.pessoa))).join(", ")} ✦`
-                : " ✦"}
+                ? `. ainda lendo: ${[...grupos.lendo, ...grupos.nao_comecei].map((m) => (m.usuario_id === eu ? "você" : nomeDe(m.pessoa))).join(", ")}`
+                : "."}
             </p>
           </div>
 
           {(
             [
-              ["terminei", "terminaram", "#6B7A5E"],
+              ["terminei", "concluíram", "#6B7A5E"],
               ["lendo", "lendo", "#B75A6B"],
               ["nao_comecei", "ainda não começaram", "#D8C3AA"],
             ] as const
@@ -492,7 +491,7 @@ export default function LeituraPage() {
                         </span>
                         <span className="font-revista text-xs text-cinza italic">
                           {f
-                            ? "escreveu a ficha"
+                            ? "ficha publicada"
                             : (marca ?? (chave === "lendo" ? "lendo…" : ""))}
                         </span>
                       </li>
@@ -508,7 +507,7 @@ export default function LeituraPage() {
               href={`/clubes/${clube.id}/livro/${lendo.id}`}
               className="mt-4 inline-flex min-h-9 items-center text-xs font-semibold text-bordo underline underline-offset-4"
             >
-              ler as fichas →
+              ver fichas de leitura →
             </Link>
           ) : null}
         </div>
@@ -523,7 +522,7 @@ export default function LeituraPage() {
           return (
             <section aria-labelledby="t-avaliacoes" className="mt-8 border-t border-linha pt-6 lg:border-fio">
               <h3 id="t-avaliacoes" className="font-revista text-[22px] leading-none text-bordo italic">
-                avaliações do clube
+                notas do clube
               </h3>
               {mediaClube !== null ? (
                 <>
@@ -532,7 +531,7 @@ export default function LeituraPage() {
                       {mediaClube.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
                     </span>
                     <span className="text-[13px] text-tinta-suave">
-                      média do clube · {notas.length} {notas.length === 1 ? "avaliação" : "avaliações"}
+                      média desta leitura · {notas.length} {notas.length === 1 ? "avaliação" : "avaliações"}
                     </span>
                   </p>
                   <ul className="mt-3 space-y-1">
@@ -548,23 +547,23 @@ export default function LeituraPage() {
                   </ul>
                 </>
               ) : (
-                <p className="mt-3 text-[13px] text-cinza">ninguém avaliou ainda.</p>
+                <p className="mt-3 text-[13px] text-cinza">nenhuma avaliação ainda.</p>
               )}
               {pendentes.length ? (
                 <p className="mt-4 text-[13px] text-tinta-suave">
-                  ainda sem ficha:{" "}
+                  {pendentes.length === 1 ? "1 ficha pendente" : `${pendentes.length} fichas pendentes`}:{" "}
                   {pendentes.map((m) => (m.usuario_id === eu ? "você" : nomeDe(m.pessoa))).join(", ")}
                 </p>
               ) : null}
               <div className="mt-3 flex flex-wrap gap-x-4">
                 {!fichas.some((f) => f.autor === eu) ? (
                   <Link href={`/clubes/${clube.id}/ficha/${lendo.id}`} className="inline-flex min-h-10 items-center text-[13px] font-semibold text-bordo hover:underline">
-                    escrever minha ficha →
+                    preencher minha ficha →
                   </Link>
                 ) : null}
                 {fichas.length ? (
                   <Link href={`/clubes/${clube.id}/livro/${lendo.id}`} className="inline-flex min-h-10 items-center text-[13px] font-semibold text-bordo hover:underline">
-                    ler as fichas →
+                    ver fichas de leitura →
                   </Link>
                 ) : null}
               </div>
@@ -587,7 +586,7 @@ function AnelProgresso({ pct }: { pct: number }) {
       viewBox="0 0 64 64"
       className="flex-none"
       role="img"
-      aria-label={`${Math.round(pct * 100)}% do clube terminou`}
+      aria-label={`${Math.round(pct * 100)}% do clube concluiu a leitura`}
     >
       <circle
         cx="32"

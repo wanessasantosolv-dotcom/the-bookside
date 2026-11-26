@@ -50,8 +50,8 @@ export default function FavoritosDoClubePage() {
     return (
       <div className="px-6 pt-6 lg:px-0">
         <Vazio
-          titulo="só quem organiza escolhe os favoritos"
-          texto="por enquanto, aparecem os livros com as notas mais altas do clube."
+          titulo="só quem organiza pode editar os destaques"
+          texto="enquanto isso, aparecem os livros com as notas mais altas do clube."
           acao={{ href: base, rotulo: "voltar ao clube" }}
         />
       </div>
@@ -74,7 +74,7 @@ export default function FavoritosDoClubePage() {
       setErro(
         e?.code === "PGRST202"
           ? "o banco do app precisa ser atualizado: rode de novo o arquivo supabase/social.sql no SQL Editor do Supabase."
-          : "não deu para salvar agora. tente de novo.",
+          : "não foi possível salvar agora. tente de novo.",
       );
       setSalvando(false);
     }
@@ -84,9 +84,9 @@ export default function FavoritosDoClubePage() {
     <div className="pb-8">
       <TopoForm
         voltar={{ href: base, r: "início" }}
-        rotulo="o que a gente amou"
-        titulo="os favoritos do clube"
-        frase="escolha até 4 — ou deixe o app mostrar os de nota mais alta ✦"
+        rotulo="editar destaques"
+        titulo="favoritos do clube"
+        frase="escolha até 4 livros ou deixe o app mostrar os de nota mais alta."
       />
       <div className="mt-6 px-6 lg:px-0">
         {!lidos.length ? (
@@ -98,7 +98,7 @@ export default function FavoritosDoClubePage() {
             <p className="text-xs font-semibold text-bordo" aria-live="polite">
               {escolhidos.length
                 ? `${escolhidos.length} de ${MAXIMO} escolhidos`
-                : "automático: os de nota mais alta"}
+                : "automático: notas mais altas"}
             </p>
             <ul className="mt-4 grid grid-cols-3 gap-x-3 gap-y-5 sm:grid-cols-4 lg:grid-cols-6">
               {lidos.map(({ l, m }) => {

@@ -34,7 +34,7 @@ export default function RetrospectivaDoClube() {
     return (
       <Animacao
         tipo="estrelas"
-        titulo="juntando o ano do clube"
+        titulo="preparando o ano em livros"
         sub="fichas, notas, encontros e personagens"
       />
     );
@@ -60,7 +60,7 @@ export default function RetrospectivaDoClube() {
       if (navigator.share) await navigator.share({ text: texto });
       else {
         await navigator.clipboard.writeText(texto);
-        setAviso("copiado! é só colar no grupo do clube ✦");
+        setAviso("copiado. agora é só colar no grupo do clube.");
       }
     } catch {
       /* cancelou */
@@ -77,7 +77,7 @@ export default function RetrospectivaDoClube() {
       <div className="papel-noite mx-6 mt-3 flex flex-col rounded-[20px] px-5 pt-6 pb-6 text-creme lg:mx-0 lg:px-10 lg:pt-10">
         <div className="flex items-start justify-between gap-4">
           <div className="animate-subir">
-            <p className={etiqueta}>retrospectiva do clube</p>
+            <p className={etiqueta}>o ano em livros</p>
             <h1 className="mt-3 font-display text-4xl leading-[1.05] font-bold italic lg:text-5xl">
               {clube.nome}
               <br />
@@ -257,7 +257,7 @@ export default function RetrospectivaDoClube() {
               </ul>
               {w.fora ? (
                 <p className={detalhe}>
-                  fora do clube, vocês leram mais {w.fora} livros ✦
+                  fora do clube, vocês leram mais {w.fora} {w.fora === 1 ? "livro" : "livros"}
                 </p>
               ) : null}
             </div>

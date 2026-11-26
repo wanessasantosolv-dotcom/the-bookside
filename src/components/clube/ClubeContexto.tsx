@@ -104,17 +104,17 @@ function Menu({ c, papel }: { c: Clube; papel: Papel | null }) {
         <div className="absolute top-12 right-0 z-30 w-56 overflow-hidden rounded-xl border border-linha bg-creme-quente py-1 shadow-[0_14px_30px_-16px_rgba(43,20,32,.45)]">
           {papel === "moderadora" ? (
             <Link href={`/clubes/${c.id}/editar`} className={item}>
-              informações do clube
+              editar clube
             </Link>
           ) : null}
           <Link href={`/clubes/${c.id}/convidar`} className={item}>
-            convidar e membros
+            convidar membros
           </Link>
           <Link href={`/clubes/${c.id}/sugestoes`} className={item}>
-            {modoDe(c) === "votacao" ? "sugestões e votação" : "próximas leituras"}
+            {modoDe(c) === "votacao" ? "livros sugeridos e votação" : "próximas leituras"}
           </Link>
           <Link href={`/clubes/${c.id}/retrospectiva`} className={item}>
-            retrospectiva do ano ✦
+            ver retrospectiva
           </Link>
           <button type="button" onClick={sair} className={`${item} text-bordo`}>
             sair do clube
@@ -208,16 +208,16 @@ function Cabecalho({ c, papel, membros }: { c: Clube; papel: Papel | null; membr
               <div className="min-w-0 flex-1 pt-3">
                 <h1 className="font-revista text-[30px] leading-[1.05] text-bordo italic lg:text-[40px]">{c.nome}</h1>
                 <p className="mt-1 text-[13px] text-tinta-suave">
-                  clube de leitura · {membros} {membros === 1 ? "pessoa" : "pessoas"}
+                  clube de leitura · {membros} {membros === 1 ? "membro" : "membros"}
                 </p>
               </div>
               <div className="flex gap-2">
                 <Link href={`${base}/convidar`} className={acao}>
-                  convidar
+                  convidar membros
                 </Link>
                 {papel === "moderadora" ? (
                   <Link href={`${base}/editar`} className={acao}>
-                    editar
+                    editar clube
                   </Link>
                 ) : null}
               </div>
@@ -270,7 +270,7 @@ export function ClubeProvedor({
       <Animacao
         tipo="livro"
         titulo="abrindo o clube"
-        sub="arrumando as estantes e as fichas do mês"
+        sub="organizando a estante e as fichas de leitura"
       />
     );
   if (consulta.erro)
@@ -280,8 +280,8 @@ export function ClubeProvedor({
       <div className="px-6 pt-10 lg:px-12">
         <Vazio
           titulo="esse clube não está disponível"
-          texto="ele pode ter sido apagado, ou você ainda não é membro. peça o código de convite."
-          acao={{ href: "/clubes/entrar", rotulo: "entrar com código" }}
+          texto="ele pode ter sido apagado, ou você ainda não é membro. peça o código de convite a quem organiza."
+          acao={{ href: "/clubes/entrar", rotulo: "entrar por convite" }}
         />
       </div>
     );

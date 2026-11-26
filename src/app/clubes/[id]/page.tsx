@@ -76,7 +76,7 @@ function LeituraAtual({
       <div className="min-w-0 flex-1">
         <p className="text-[12px] text-cinza">
           leitura atual{lendo.rodada ? ` · nº ${lendo.rodada}` : ""}
-          {quem ? ` · ${quem.id === eu ? "sua escolha" : `escolha de ${nomeDe(quem)}`}` : ""}
+          {quemTrouxe(lendo, membros, eu) ? ` · ${quemTrouxe(lendo, membros, eu)}` : ""}
         </p>
         <Link href={`/clubes/${clubeId}/leitura`} className="mt-1 block font-revista text-[24px] leading-[1.1] text-ameixa hover:text-bordo lg:text-[32px]">
           {lendo.livro.titulo}
@@ -85,13 +85,13 @@ function LeituraAtual({
         {and ? (
           <p className="mt-2 text-[12px] text-cinza">
             {dataLonga(lendo.iniciado_em!)} a {dataLonga(lendo.prazo!)} ·{" "}
-            <b className="font-semibold text-bordo">{and.faltam ? `faltam ${and.faltam} ${and.faltam === 1 ? "dia" : "dias"}` : "último dia"}</b>
+            <b className="font-semibold text-bordo">{and.faltam ? `${and.faltam} ${and.faltam === 1 ? "dia restante" : "dias restantes"}` : "prazo de leitura hoje"}</b>
           </p>
         ) : null}
         <div className="mt-4 grid gap-3 sm:grid-cols-2 sm:gap-6">
           <div>
             <p className="flex items-baseline justify-between text-[12px]">
-              <span className="font-semibold text-ameixa">meu progresso</span>
+              <span className="font-semibold text-ameixa">minha leitura</span>
               <span className="text-bordo tabular-nums">{meuPct !== null ? `${meuPct}%` : "—"}</span>
             </p>
             <div className="mt-1.5">
@@ -101,7 +101,7 @@ function LeituraAtual({
           {coletivo !== null ? (
             <div>
               <p className="flex items-baseline justify-between text-[12px]">
-                <span className="text-tinta-suave">média da turma</span>
+                <span className="text-tinta-suave">média dos leitores</span>
                 <span className="text-tinta-suave tabular-nums">{coletivo}%</span>
               </p>
               <div className="mt-1.5">
@@ -115,10 +115,10 @@ function LeituraAtual({
             href={`/livro/${meu?.id ?? lendo.livro.id}/progresso`}
             className="inline-flex min-h-11 items-center rounded-full bg-bordo px-5 text-[13px] font-semibold text-creme hover:bg-bordo-suave"
           >
-            registrar minha leitura
+            registrar leitura
           </Link>
           <Link href={`/clubes/${clubeId}/leitura`} className={linkSecao}>
-            detalhes da leitura →
+            ver leitura →
           </Link>
         </div>
       </div>
@@ -138,10 +138,10 @@ function Turma({ membros, turma, eu, clubeId }: { membros: Membro[]; turma: Map<
     <section aria-labelledby="t-turma">
       <div className={secao}>
         <h2 id="t-turma" className={titulo}>
-          como está a turma
+          progresso dos leitores
         </h2>
         <span className="text-[12px] text-cinza">
-          {terminaram} de {membros.length} concluíram
+          {terminaram} de {membros.length} {terminaram === 1 ? "concluiu" : "concluíram"}
         </span>
       </div>
       {/* discreto: avatar pequeno, nome e um fio fino de progresso, sem bordas entre as pessoas */}
@@ -170,7 +170,7 @@ function Turma({ membros, turma, eu, clubeId }: { membros: Membro[]; turma: Map<
       </ul>
       {lista.length > 8 && !todos ? (
         <button type="button" onClick={() => setTodos(true)} className={`${linkSecao} mt-2`}>
-          ver as outras {lista.length - 8} pessoas
+          ver mais {lista.length - 8} {lista.length - 8 === 1 ? "membro" : "membros"}
         </button>
       ) : null}
     </section>
@@ -187,7 +187,7 @@ function ProximoEncontro({ encontro, clubeId }: { encontro: Encontro; clubeId: s
           próximo encontro
         </h2>
         <Link href={`/clubes/${clubeId}/agenda`} className={linkSecao}>
-          agenda
+          calendário do clube
         </Link>
       </div>
       <div className="flex gap-4">
@@ -274,19 +274,19 @@ export default function ClubeInicioPage() {
     </section>
   ) : (
     <section aria-label="leitura atual" className="rounded-[10px] bg-rosa-fundo px-5 py-6">
-      <p className="font-revista text-[22px] text-ameixa italic">nenhuma leitura em andamento</p>
+      <p className="font-revista text-[22px] text-ameixa italic">qual será a próxima leitura?</p>
       <p className="mt-1 text-[14px] text-tinta-suave">
         {sugestoes.length
-          ? `${sugestoes.length} ${sugestoes.length === 1 ? "sugestão esperando" : "sugestões esperando"} ${modoDe(clube) === "votacao" ? "a votação" : "a vez"}.`
+          ? `${sugestoes.length} ${sugestoes.length === 1 ? "livro sugerido" : "livros sugeridos"} ${modoDe(clube) === "votacao" ? "em votação" : "na fila"}.`
           : organiza(papel)
-            ? "escolha qualquer livro para começar a primeira rodada."
-            : "sugira um livro para começar a primeira rodada."}
+            ? "escolham um livro para começar uma nova história juntos."
+            : "compartilhe uma sugestão com o clube."}
       </p>
       <Link
         href={`/clubes/${clube.id}/${organiza(papel) ? "escolher" : sugestoes.length ? "sugestoes" : "sugerir"}`}
         className="mt-4 inline-flex min-h-11 items-center rounded-full bg-bordo px-5 text-[13px] font-semibold text-creme"
       >
-        {organiza(papel) ? "escolher o livro da vez" : sugestoes.length ? (modoDe(clube) === "votacao" ? "ver e votar" : "ver a fila") : "sugerir um livro"}
+        {organiza(papel) ? "definir próxima leitura" : sugestoes.length ? (modoDe(clube) === "votacao" ? "votar nos sugeridos" : "ver próximas leituras") : "sugerir livro"}
       </Link>
     </section>
   );
@@ -295,10 +295,10 @@ export default function ClubeInicioPage() {
     <section aria-labelledby="t-quem">
       <div className={secao}>
         <h2 id="t-quem" className={titulo}>
-          quem está no clube
+          membros do clube
         </h2>
         <Link href={`/clubes/${clube.id}/membros`} className={linkSecao}>
-          membros
+          ver todos
         </Link>
       </div>
       <ul className="flex flex-wrap gap-3">
@@ -323,7 +323,7 @@ export default function ClubeInicioPage() {
         <li>
           <Link
             href={`/clubes/${clube.id}/convidar`}
-            aria-label="convidar"
+            aria-label="convidar membros"
             className="flex size-10 items-center justify-center rounded-full border border-dashed border-rosa-antigo text-[18px] text-bordo"
           >
             +
@@ -337,15 +337,15 @@ export default function ClubeInicioPage() {
     <section aria-labelledby="t-amou">
       <div className={secao}>
         <h2 id="t-amou" className={titulo}>
-          o que a gente amou
+          favoritos do clube
         </h2>
         <Link href={organiza(papel) ? `/clubes/${clube.id}/favoritos` : `/clubes/${clube.id}/biblioteca`} className={linkSecao}>
-          {organiza(papel) ? "escolher" : "estante"}
+          {organiza(papel) ? "editar destaques" : "nossa estante"}
         </Link>
       </div>
       {amados.length ? (
         <>
-          <p className="mb-2 text-[12px] text-cinza">{escolhidos.length ? "escolhidos pelo clube" : "os mais bem avaliados nas fichas"}</p>
+          <p className="mb-2 text-[12px] text-cinza">{escolhidos.length ? "escolhidos pelo clube" : "mais bem avaliados nas fichas de leitura"}</p>
           <div className="flex items-end gap-4 overflow-x-auto px-3 pt-2 [scrollbar-width:none]">
             {amados.map(({ l }) => (
               <Link key={l.id} href={`/clubes/${clube.id}/livro/${l.id}`} className="w-[84px] flex-none transition-transform hover:-translate-y-1 lg:w-[104px]">
@@ -356,14 +356,14 @@ export default function ClubeInicioPage() {
           <PrateleiraMadeira className="relative -mt-[5px]" />
           <ul className="mt-2 flex gap-4 overflow-hidden px-3 text-[12px] text-tinta-suave">
             {amados.map(({ l, m, n }) => (
-              <li key={l.id} className="w-[84px] flex-none text-center lg:w-[104px]" title={n ? `${n} ${n === 1 ? "ficha" : "fichas"}` : undefined}>
+              <li key={l.id} className="w-[84px] flex-none text-center lg:w-[104px]" title={n ? `${n} ${n === 1 ? "ficha de leitura" : "fichas de leitura"}` : undefined}>
                 {m !== null ? `${virgula(m)}★` : "—"}
               </li>
             ))}
           </ul>
         </>
       ) : (
-        <p className="text-[13px] text-cinza">quando o clube terminar um livro e escrever as fichas, os preferidos aparecem aqui.</p>
+        <p className="text-[13px] text-cinza">os favoritos aparecem aqui quando o clube concluir uma leitura e preencher as fichas.</p>
       )}
     </section>
   );
@@ -383,7 +383,7 @@ export default function ClubeInicioPage() {
         <section id="novidades" aria-labelledby="t-rolando" className="scroll-mt-24">
           <div className={secao}>
             <h2 id="t-rolando" className={titulo}>
-              o que está rolando
+              atividade recente
             </h2>
           </div>
           <FeedDoClube limite={5} />
@@ -426,11 +426,11 @@ function SugerirRapido({
     <section>
       <div className="flex items-baseline justify-between">
         <p className="text-[10px] font-semibold tracking-[.16em] text-bordo uppercase">
-          {votacao ? "sugestões" : "próximas leituras"}
+          {votacao ? "livros sugeridos" : "próximas leituras"}
         </p>
         {fila.length ? (
           <Link href={`/clubes/${clubeId}/sugestoes`} className={linkSecao}>
-            {votacao ? "votar →" : "ver a fila →"}
+            {votacao ? "votar →" : "organizar fila →"}
           </Link>
         ) : null}
       </div>
@@ -447,7 +447,7 @@ function SugerirRapido({
             type="search"
             value={termo}
             onChange={(e) => setTermo(e.target.value)}
-            placeholder="sugerir um livro…"
+            placeholder="buscar livro para sugerir"
             className="w-full bg-transparent text-[13px] outline-none placeholder:text-cinza"
           />
         </label>

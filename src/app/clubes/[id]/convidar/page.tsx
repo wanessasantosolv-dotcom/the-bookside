@@ -57,7 +57,7 @@ function Convite() {
   }
 
   async function enviar() {
-    const texto = `vem pro clube ${clube.nome} no the bookside! o código é ${clube.codigo}`;
+    const texto = `você foi convidado para o clube ${clube.nome} no the bookside. código: ${clube.codigo}`;
     try {
       if (navigator.share)
         await navigator.share({ title: clube.nome, text: texto, url: link });
@@ -77,10 +77,10 @@ function Convite() {
       const e = x as { message?: string; code?: string };
       setErroCargo(
         /moderadora/.test(e?.message ?? "")
-          ? "o clube precisa de pelo menos uma moderadora. passe o cargo para outra pessoa antes."
+          ? "o clube precisa de pelo menos uma pessoa na moderação. passe o cargo para outro membro antes."
           : e?.code === "PGRST202"
             ? "o banco do app precisa ser atualizado: rode de novo o arquivo supabase/social.sql no SQL Editor do Supabase."
-            : `não deu para mudar o cargo de ${nome} agora.`,
+            : `não foi possível mudar o cargo de ${nome} agora.`,
       );
     }
   }
@@ -99,11 +99,11 @@ function Convite() {
       <TopoForm
         voltar={{ href: `/clubes/${clube.id}`, r: clube.nome }}
         rotulo="convidar"
-        titulo={novo ? "clube criado! ✦" : "chama mais gente"}
+        titulo={novo ? "clube criado." : "convidar membros"}
         frase={
           novo
-            ? "agora chame os amigos: mande o link ou o código."
-            : "quem entra pelo link já cai no clube ✦"
+            ? "agora convide os membros pelo link ou pelo código."
+            : "quem abre o link entra direto no clube."
         }
       />
       <div className="mt-6 space-y-6 px-6 lg:max-w-[640px] lg:px-0">
@@ -120,7 +120,7 @@ function Convite() {
               onClick={() => copiar(link, "link")}
               className={`${botao} bg-bordo text-creme`}
             >
-              {copiado === "link" ? "copiado ✓" : "copiar link"}
+              {copiado === "link" ? "link copiado" : "copiar link"}
             </button>
             <button
               type="button"
@@ -150,17 +150,17 @@ function Convite() {
           </button>
           <p className="mt-2 font-accent text-xs italic text-cinza">
             {copiado === "codigo"
-              ? "código copiado ✓"
+              ? "código copiado"
               : "toque no código para copiar."}
           </p>
           <p
             className={`mt-3 text-xs ${vencido ? "font-semibold text-bordo" : "text-cinza"}`}
           >
             {vencido
-              ? "esse convite venceu e não funciona mais."
+              ? "este convite expirou."
               : clube.codigo_expira_em
                 ? `vale até ${new Date(clube.codigo_expira_em).toLocaleDateString("pt-BR", { day: "numeric", month: "long" })}`
-                : "vale sem prazo"}
+                : "sem prazo de validade"}
             {vagas !== null
               ? ` · ${vagas === 0 ? "sem vagas" : `${vagas} ${vagas === 1 ? "vaga" : "vagas"}`}`
               : ""}
@@ -175,8 +175,8 @@ function Convite() {
               {gerando
                 ? "gerando…"
                 : vencido
-                  ? "gerar um convite novo"
-                  : "gerar outro código (o atual para de valer)"}
+                  ? "gerar novo convite"
+                  : "gerar novo código (o atual deixa de valer)"}
             </button>
           ) : vencido ? (
             <p className="mt-1 text-xs text-cinza">
@@ -251,7 +251,7 @@ function Convite() {
                     onClick={() => tirar(m.usuario_id, nomeDe(m.pessoa))}
                     className="min-h-9 px-1 text-xs text-cinza underline underline-offset-2 hover:text-bordo"
                   >
-                    tirar
+                    remover
                   </button>
                 ) : null}
               </li>
@@ -289,7 +289,7 @@ function Convite() {
               href={`/clubes/${clube.id}/escolher`}
               className={`${botaoPrincipal} lg:max-w-[360px]`}
             >
-              escolher o primeiro livro →
+              definir a primeira leitura →
             </Link>
             <Link href={`/clubes/${clube.id}`} className={botaoContorno}>
               depois
@@ -300,7 +300,7 @@ function Convite() {
             href="/clubes/entrar"
             className={`${botaoContorno} flex-1 lg:max-w-[640px]`}
           >
-            entrar com um convite
+            entrar por convite
           </Link>
         )}
       </Rodape>

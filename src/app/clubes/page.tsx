@@ -39,7 +39,7 @@ function Cartao({
         ? Math.min(100, Math.round((meu.paginaAtual / meu.paginas) * 100))
         : 0
     : null;
-  const quemEscolheu = c.lendo?.sugerido_por ? (c.lendo.sugerido_por === eu ? "escolhido por você" : `escolhido por ${nomeDe(pessoas.get(c.lendo.sugerido_por))}`) : null;
+  const quemEscolheu = c.lendo?.sugerido_por ? (c.lendo.sugerido_por === eu ? "sugerido por você" : `sugerido por ${nomeDe(pessoas.get(c.lendo.sugerido_por))}`) : null;
 
   // uma informação de contexto, a mais relevante agora
   const contexto = encontro

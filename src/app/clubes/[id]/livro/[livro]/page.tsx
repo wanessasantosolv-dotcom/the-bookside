@@ -163,7 +163,7 @@ function CartaoFicha({
 
         {f.personagem ? (
           <p className={campoFicha}>
-            <span className={rotuloFicha}>personagem fav: </span>
+            <span className={rotuloFicha}>personagem favorito: </span>
             <span className="text-sm">{f.personagem} ♡</span>
           </p>
         ) : null}
@@ -198,7 +198,7 @@ function CartaoFicha({
             onClick={() => setRevelar(true)}
             className="flex min-h-11 w-full items-center justify-center rounded-md border border-dashed border-bege text-xs font-semibold text-cinza"
           >
-            tem spoiler · tocar para ler
+            contém spoiler · toque para ler
           </button>
         )}
 
@@ -231,8 +231,8 @@ export default function FichasDoLivroPage() {
     return (
       <Animacao
         tipo="estrelas"
-        titulo="calculando a média do clube"
-        sub="cada ficha conta um pouquinho"
+        titulo="calculando as notas do clube"
+        sub="a partir das fichas de leitura"
       />
     );
   if (consulta.erro)
@@ -275,7 +275,7 @@ export default function FichasDoLivroPage() {
                 {l.estado === "lido"
                   ? "encerrada"
                   : l.estado === "lendo"
-                    ? "lendo agora"
+                    ? "leitura atual"
                     : "sugestão"}
               </p>
               <h1 className="mt-1 font-display text-2xl leading-tight font-semibold italic text-bordo lg:font-revista lg:font-normal lg:text-tinta">
@@ -302,12 +302,12 @@ export default function FichasDoLivroPage() {
               href={`/clubes/${clube.id}/concluido/${l.id}`}
               className="mt-3 inline-flex min-h-11 items-center text-[13px] font-semibold text-bordo underline underline-offset-4"
             >
-              compartilhar no story ✦
+              compartilhar no story
             </Link>
           ) : null}
 
           <h2 className="mt-7 text-[10px] font-semibold tracking-[.16em] text-bordo uppercase">
-            as fichas do clube
+            fichas de leitura
           </h2>
           {fichas.length ? (
             <ul className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -325,8 +325,8 @@ export default function FichasDoLivroPage() {
           ) : (
             <Vazio
               className="mt-3"
-              titulo="ninguém escreveu ficha ainda"
-              texto="seja a primeira a contar o que achou."
+              titulo="e então, o que vocês acharam?"
+              texto="nenhuma ficha de leitura publicada ainda."
             />
           )}
         </div>
@@ -365,7 +365,7 @@ export default function FichasDoLivroPage() {
             href={`/clubes/${clube.id}/ficha/${l.id}`}
             className={`${botaoContorno} flex-1 lg:max-w-[560px]`}
           >
-            {minha ? "editar a minha ficha ✎" : "escrever a minha ficha ✎"}
+            {minha ? "editar minha ficha" : "preencher minha ficha"}
           </Link>
         </Rodape>
       ) : null}

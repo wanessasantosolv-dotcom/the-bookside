@@ -31,7 +31,7 @@ type Evento = {
 function NovoEncontro({ aoMarcar }: { aoMarcar: () => void }) {
   const { clube } = useClube();
   const [aberto, setAberto] = useState(false);
-  const [titulo, setTitulo] = useState("conversa do clube");
+  const [titulo, setTitulo] = useState("encontro do clube");
   const [quando, setQuando] = useState("");
   const [local, setLocal] = useState("");
   const [erro, setErro] = useState<string | null>(null);
@@ -39,7 +39,7 @@ function NovoEncontro({ aoMarcar }: { aoMarcar: () => void }) {
 
   async function marcar(e: FormEvent) {
     e.preventDefault();
-    if (!quando) return setErro("escolha o dia e a hora.");
+    if (!quando) return setErro("informe o dia e o horário.");
     setOcupado(true);
     setErro(null);
     try {
@@ -53,7 +53,7 @@ function NovoEncontro({ aoMarcar }: { aoMarcar: () => void }) {
       setLocal("");
       aoMarcar();
     } catch {
-      setErro("não deu para marcar. tente de novo.");
+      setErro("não foi possível agendar o encontro. tente de novo.");
     } finally {
       setOcupado(false);
     }
@@ -66,7 +66,7 @@ function NovoEncontro({ aoMarcar }: { aoMarcar: () => void }) {
         onClick={() => setAberto(true)}
         className="flex min-h-11 items-center rounded-pill bg-bordo px-5 text-[13px] font-semibold text-creme"
       >
-        + marcar encontro
+        + agendar encontro
       </button>
     );
   return (
@@ -100,7 +100,7 @@ function NovoEncontro({ aoMarcar }: { aoMarcar: () => void }) {
           value={local}
           onChange={(e) => setLocal(e.target.value)}
           maxLength={120}
-          placeholder="café da esquina, chamada de vídeo…"
+          placeholder="café, livraria ou chamada de vídeo"
           className={campo}
         />
       </label>
@@ -138,7 +138,7 @@ export default function AgendaPage() {
   }, [clube.id]);
 
   if (consulta.carregando && !consulta.dados)
-    return <Carregando texto="abrindo a agenda…" linhas={2} />;
+    return <Carregando texto="carregando o calendário do clube…" linhas={2} />;
   if (consulta.erro)
     return <ErroOuFalta erro={consulta.erro} onTentar={consulta.recarregar} />;
   const { encontros, livros } = consulta.dados!;
@@ -151,7 +151,7 @@ export default function AgendaPage() {
       quando: new Date(e.quando),
       rotulo: "encontro",
       titulo: e.titulo,
-      detalhe: `${new Date(e.quando).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}${e.local ? ` · ${e.local}` : ""} · marcado ${e.criado_por === eu ? "por você" : `pela ${nomeDe(pessoa(e.criado_por))}`}`,
+      detalhe: `${new Date(e.quando).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}${e.local ? ` · ${e.local}` : ""} · agendado por ${e.criado_por === eu ? "você" : nomeDe(pessoa(e.criado_por))}`,
       encontroId: e.id,
       criado_por: e.criado_por,
     })),
@@ -173,9 +173,9 @@ export default function AgendaPage() {
       .map((l) => ({
         id: `fim-${l.id}`,
         quando: new Date(`${l.prazo}T23:00`),
-        rotulo: "fim da leitura",
+        rotulo: "prazo da leitura",
         titulo: l.livro.titulo,
-        detalhe: "fichas até as 23h",
+        detalhe: "fichas de leitura até 23h",
         href: `/clubes/${clube.id}/ficha/${l.id}`,
       })),
   ];
@@ -222,23 +222,23 @@ export default function AgendaPage() {
           <section aria-label="próximas escolhas" className="mt-6 grid gap-6 border-y border-linha py-5 sm:grid-cols-2 lg:border-fio">
             {vez ? (
               <div>
-                <p className="text-[12px] text-cinza">próxima escolha</p>
+                <p className="text-[12px] text-cinza">ordem de escolha</p>
                 <p className="mt-2 flex items-center gap-3">
                   <Avatar pessoa={vez.pessoa} tamanho={36} />
                   <span className="font-revista text-[20px] text-bordo italic">
-                    {vez.usuario_id === eu ? "a vez é sua" : `a vez é de ${nomeDe(vez.pessoa)}`}
+                    {vez.usuario_id === eu ? "você escolhe a próxima" : `${nomeDe(vez.pessoa)} escolhe a próxima`}
                   </span>
                 </p>
                 {vez.usuario_id === eu ? (
                   <Link href={`/clubes/${clube.id}/escolher`} className="mt-2 inline-flex min-h-10 items-center text-[13px] font-semibold text-bordo hover:underline">
-                    escolher o próximo livro →
+                    definir próxima leitura →
                   </Link>
                 ) : null}
               </div>
             ) : null}
             {fila.length ? (
               <div>
-                <p className="text-[12px] text-cinza">{modo === "votacao" ? "em votação" : "na fila"}</p>
+                <p className="text-[12px] text-cinza">{modo === "votacao" ? "em votação" : "próximas leituras"}</p>
                 <ol className="mt-2 space-y-2">
                   {fila.map((l, i) => (
                     <li key={l.id}>
@@ -256,7 +256,7 @@ export default function AgendaPage() {
                   ))}
                 </ol>
                 <Link href={`/clubes/${clube.id}/sugestoes`} className="mt-2 inline-flex min-h-10 items-center text-[13px] font-semibold text-bordo hover:underline">
-                  {modo === "votacao" ? "votar →" : "ver a fila completa →"}
+                  {modo === "votacao" ? "votar →" : "organizar fila →"}
                 </Link>
               </div>
             ) : null}
@@ -317,13 +317,13 @@ export default function AgendaPage() {
                 <button
                   type="button"
                   onClick={async () => {
-                    if (!confirm(`desmarcar "${e.titulo}"?`)) return;
+                    if (!confirm(`cancelar o encontro "${e.titulo}"?`)) return;
                     await desmarcarEncontro(e.encontroId!);
                     consulta.recarregar();
                   }}
                   className="min-h-9 px-2 text-xs text-cinza underline underline-offset-2 hover:text-bordo"
                 >
-                  desmarcar
+                  cancelar
                 </button>
               ) : null}
             </li>
@@ -333,8 +333,8 @@ export default function AgendaPage() {
       {!lista.length ? (
         <p className="py-8 text-center font-accent text-sm italic text-cinza">
           {aba === "proximos"
-            ? "nada marcado por enquanto ✦"
-            : "nada no passado ainda."}
+            ? "nenhum encontro agendado."
+            : "nenhum encontro anterior."}
         </p>
       ) : null}
     </div>

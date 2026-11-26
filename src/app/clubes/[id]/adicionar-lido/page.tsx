@@ -39,8 +39,8 @@ export default function AdicionarLidoPage() {
     return (
       <div className="px-6 pt-6 lg:px-0">
         <Vazio
-          titulo="só quem modera inclui livros já lidos"
-          texto="peça para a moderadora do clube incluir. você pode escrever a sua ficha nele depois."
+          titulo="só quem organiza pode adicionar leituras anteriores"
+          texto="peça a quem organiza o clube. depois, você pode preencher sua ficha de leitura."
           acao={{
             href: `/clubes/${clube.id}/biblioteca`,
             rotulo: "voltar à estante",
@@ -92,7 +92,7 @@ export default function AdicionarLidoPage() {
       setErro(
         e?.code === "42501" || /row-level security/i.test(e?.message ?? "")
           ? "o banco ainda não deixa incluir livros lidos. rode de novo o arquivo supabase/social.sql no SQL Editor do Supabase."
-          : "não deu para salvar agora. tente de novo.",
+          : "não foi possível salvar agora. tente de novo.",
       );
       setEnviando(false);
     }
@@ -102,9 +102,9 @@ export default function AdicionarLidoPage() {
     <form onSubmit={salvar} className="flex min-h-[70dvh] flex-col">
       <TopoForm
         voltar={{ href: `/clubes/${clube.id}/biblioteca`, r: "estante" }}
-        rotulo="histórico do clube"
-        titulo="um livro que já lemos"
-        frase="para a estante contar toda a história do clube ✦"
+        rotulo="nossa estante"
+        titulo="adicionar leitura anterior"
+        frase="para a estante reunir todas as leituras do clube."
       />
       <div className="mt-6 space-y-6 px-6 lg:max-w-[640px] lg:px-0">
         <Link
@@ -223,7 +223,7 @@ export default function AdicionarLidoPage() {
                   onClick={() => setCadastrar(true)}
                   className="mt-2 min-h-9 text-xs font-semibold text-bordo underline underline-offset-4"
                 >
-                  não achou? cadastrar o livro manualmente
+                  não encontrou? cadastre o livro manualmente
                 </button>
               )}
             </>
@@ -231,7 +231,7 @@ export default function AdicionarLidoPage() {
         </div>
 
         <label className="block">
-          <span className={rotuloCampo}>quando o clube terminou</span>
+          <span className={rotuloCampo}>quando o clube concluiu</span>
           <input
             type="date"
             value={dia}
@@ -251,8 +251,8 @@ export default function AdicionarLidoPage() {
           eu também li: colocar na minha estante como lido
         </label>
         <p className="-mt-3 font-accent text-[13px] italic text-cinza">
-          as outras pessoas do clube podem escrever a ficha delas depois, e o
-          livro entra na estante de cada uma.
+          os outros membros podem preencher a ficha de leitura depois, e o
+          livro entra na estante de cada um.
         </p>
 
         {erro ? (
@@ -267,7 +267,7 @@ export default function AdicionarLidoPage() {
           disabled={enviando || !livro}
           className={`${botaoPrincipal} lg:max-w-[640px]`}
         >
-          {enviando ? "salvando…" : "colocar no histórico do clube"}
+          {enviando ? "salvando…" : "adicionar à nossa estante"}
         </button>
       </Rodape>
     </form>

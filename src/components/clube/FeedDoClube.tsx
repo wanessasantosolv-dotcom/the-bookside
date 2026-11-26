@@ -45,7 +45,7 @@ export function FeedDoClube({ limite }: { limite?: number } = {}) {
   }, [clube.id]);
 
   if (consulta.carregando && !consulta.dados)
-    return <Carregando texto="trazendo as novidades do clube…" />;
+    return <Carregando texto="carregando a atividade do clube…" />;
   if (consulta.erro)
     return <ErroOuFalta erro={consulta.erro} onTentar={consulta.recarregar} />;
   const { atividades, livros, encontros, pessoas } = consulta.dados!;
@@ -69,7 +69,7 @@ export function FeedDoClube({ limite }: { limite?: number } = {}) {
         quando: l.iniciado_em!,
         id: `l-${l.id}`,
         quem: l.sugerido_por,
-        texto: `rodada ${l.rodada ?? ""}: começou a leitura`,
+        texto: l.rodada ? `leitura nº ${l.rodada} começou` : "a leitura começou",
         livro: l.livro,
         detalhe: l.prazo
           ? `até ${new Date(`${l.prazo}T12:00`).toLocaleDateString("pt-BR", { day: "numeric", month: "long" })}`
@@ -81,7 +81,7 @@ export function FeedDoClube({ limite }: { limite?: number } = {}) {
       quando: e.criado_em,
       id: `e-${e.id}`,
       quem: e.criado_por,
-      texto: `marcou "${e.titulo}"`,
+      texto: `agendou o encontro "${e.titulo}"`,
       detalhe: `${new Date(e.quando).toLocaleString("pt-BR", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })}${e.local ? ` · ${e.local}` : ""}`,
       href: `/clubes/${clube.id}/agenda`,
     })),
@@ -136,11 +136,11 @@ export function FeedDoClube({ limite }: { limite?: number } = {}) {
           )
         ) : (
           <Vazio
-            titulo="nada de novo por aqui ainda"
-            texto="quando alguém escrever uma ficha, começar uma leitura ou marcar um encontro, aparece aqui."
+            titulo="nenhuma atividade recente"
+            texto="fichas de leitura publicadas, leituras iniciadas e encontros agendados aparecem aqui."
             acao={{
               href: `/clubes/${clube.id}/leitura`,
-              rotulo: "ver a leitura",
+              rotulo: "ver leitura",
             }}
           />
         )}
@@ -155,7 +155,7 @@ export function FeedDoClube({ limite }: { limite?: number } = {}) {
         </button>
       ) : itens.length ? (
         <p className="py-8 text-center font-accent text-[13px] italic text-cinza">
-          isso é tudo por enquanto ✦
+          isso é tudo por enquanto.
         </p>
       ) : null}
     </div>

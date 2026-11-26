@@ -64,7 +64,7 @@ export default function SugestoesPage() {
   }
 
   async function tirar(l: LivroDoClube) {
-    if (!confirm(`tirar ${l.livro.titulo} das sugestões?`)) return;
+    if (!confirm(`remover ${l.livro.titulo} dos livros sugeridos?`)) return;
     await apagarLivroDoClube(l.id);
     consulta.recarregar();
   }
@@ -87,16 +87,16 @@ export default function SugestoesPage() {
       <TopoForm
         voltar={{ href: `/clubes/${clube.id}/biblioteca`, r: "livros" }}
         rotulo={clube.nome}
-        titulo={votacao ? "sugestões" : "próximas leituras"}
+        titulo={votacao ? "livros sugeridos" : "próximas leituras"}
         frase={
           consulta.dados
-            ? `${lista.length} ${lista.length === 1 ? "livro esperando" : "livros esperando"} a vez${votacao ? " · votação aberta" : ""}${vez ? ` · vez de ${vez.usuario_id === eu ? "você" : nomeDe(vez.pessoa)} escolher` : ""} ✦`
+            ? `${lista.length} ${lista.length === 1 ? "livro sugerido" : "livros sugeridos"}${votacao ? " · votação aberta" : ""}${vez ? ` · ${vez.usuario_id === eu ? "você escolhe" : `${nomeDe(vez.pessoa)} escolhe`} a próxima` : ""}`
             : undefined
         }
       />
       <div className="mt-6 px-6 lg:max-w-[720px] lg:px-0">
         {consulta.carregando && !consulta.dados ? (
-          <Carregando texto="trazendo as sugestões…" linhas={2} />
+          <Carregando texto="carregando os livros sugeridos…" linhas={2} />
         ) : consulta.erro ? (
           <ErroOuFalta erro={consulta.erro} onTentar={consulta.recarregar} />
         ) : lista.length ? (
@@ -171,7 +171,7 @@ export default function SugestoesPage() {
                         onClick={() => tirar(l)}
                         className="mt-1 min-h-8 text-[11px] text-cinza underline underline-offset-2 hover:text-bordo"
                       >
-                        tirar da lista
+                        remover
                       </button>
                     ) : null}
                   </div>
@@ -181,8 +181,8 @@ export default function SugestoesPage() {
           </ul>
         ) : (
           <Vazio
-            titulo="ninguém sugeriu nada ainda"
-            texto="seja a primeira a sugerir o próximo livro do clube."
+            titulo="o que vamos ler depois?"
+            texto="compartilhe uma sugestão com o clube."
           />
         )}
         <div className="mt-6 rounded-md border border-linha px-4 py-3 lg:border-fio">
@@ -191,13 +191,13 @@ export default function SugestoesPage() {
           </p>
           <p className="mt-1 text-[13px] text-cinza">
             {modosDeEscolha.find((m) => m.id === modo)?.nome}:{" "}
-            {modosDeEscolha.find((m) => m.id === modo)?.descricao}. a escolhida
+            {modosDeEscolha.find((m) => m.id === modo)?.descricao}. o livro escolhido
             vira a{" "}
             <Link
               href={`/clubes/${clube.id}/leitura`}
               className="underline underline-offset-2"
             >
-              leitura da vez
+              leitura atual
             </Link>
             .
           </p>

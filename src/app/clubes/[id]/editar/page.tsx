@@ -56,7 +56,7 @@ export default function EditarClubePage() {
     return (
       <div className="px-6 pt-6 lg:px-0">
         <Vazio
-          titulo="só quem modera edita o clube"
+          titulo="só quem organiza pode editar o clube"
           acao={{ href: `/clubes/${clube.id}`, rotulo: "voltar ao clube" }}
         />
       </div>
@@ -64,7 +64,7 @@ export default function EditarClubePage() {
 
   async function salvar(e: FormEvent) {
     e.preventDefault();
-    if (!nome.trim()) return setErro("o clube precisa de um nome.");
+    if (!nome.trim()) return setErro("dê um nome ao clube.");
     setOcupado(true);
     setErro(null);
     try {
@@ -91,7 +91,7 @@ export default function EditarClubePage() {
       setErro(
         faltaCampo
           ? "o banco ainda não tem esse campo. rode de novo o arquivo supabase/social.sql no SQL Editor do Supabase."
-          : "não deu para salvar. tente de novo.",
+          : "não foi possível salvar. tente de novo.",
       );
       setOcupado(false);
     }
@@ -100,7 +100,7 @@ export default function EditarClubePage() {
   async function apagar() {
     if (
       !confirm(
-        `apagar o clube ${clube.nome} para todo mundo? as fichas, sugestões e a agenda somem junto. não dá para desfazer.`,
+        `apagar o clube ${clube.nome} para todos os membros? as fichas de leitura, os livros sugeridos e o calendário também serão apagados. essa ação não pode ser desfeita.`,
       )
     )
       return;
@@ -116,7 +116,7 @@ export default function EditarClubePage() {
       <TopoForm
         voltar={{ href: `/clubes/${clube.id}`, r: "cancelar" }}
         rotulo="editar clube"
-        titulo="sobre o clube"
+        titulo="informações do clube"
       />
       <div className="mt-6 space-y-6 px-6 lg:max-w-[560px] lg:px-0">
         <label className="block">
@@ -251,7 +251,7 @@ export default function EditarClubePage() {
         <fieldset className="space-y-4">
           <legend className={rotuloCampo}>regras do clube</legend>
           <label className="flex items-center justify-between gap-4 text-sm">
-            sugestões por pessoa, por mês
+            sugestões por membro, por mês
             <select
               value={limite}
               onChange={(e) => setLimite(e.target.value)}
@@ -266,7 +266,7 @@ export default function EditarClubePage() {
             </select>
           </label>
           <label className="flex items-center justify-between gap-4 text-sm">
-            máximo de pessoas
+            máximo de membros
             <select
               value={maximo}
               onChange={(e) => setMaximo(e.target.value)}

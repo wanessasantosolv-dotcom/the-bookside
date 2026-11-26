@@ -95,7 +95,7 @@ function Formulario({ l, minha }: { l: LivroDoClube; minha: Ficha | null }) {
       }
       router.push(`/clubes/${clube.id}/livro/${l.id}`);
     } catch {
-      setErro("não deu para publicar agora. tente de novo.");
+      setErro("não foi possível publicar agora. tente de novo.");
       setEnviando(false);
     }
   }
@@ -103,7 +103,7 @@ function Formulario({ l, minha }: { l: LivroDoClube; minha: Ficha | null }) {
   async function excluir() {
     if (
       !confirm(
-        "excluir a sua ficha deste livro? ela sai do mural do clube. a sua estante não muda.",
+        "excluir sua ficha de leitura? ela deixa de aparecer no clube. sua estante continua igual.",
       )
     )
       return;
@@ -113,7 +113,7 @@ function Formulario({ l, minha }: { l: LivroDoClube; minha: Ficha | null }) {
       await apagarFicha(l);
       router.push(`/clubes/${clube.id}/livro/${l.id}`);
     } catch {
-      setErro("não deu para excluir agora. tente de novo.");
+      setErro("não foi possível excluir agora. tente de novo.");
       setEnviando(false);
     }
   }
@@ -123,16 +123,16 @@ function Formulario({ l, minha }: { l: LivroDoClube; minha: Ficha | null }) {
       {enviando ? (
         <Animacao
           tipo="carimbo"
-          titulo="guardando a sua ficha"
-          sub="ela já aparece no mural do livro"
+          titulo="publicando sua ficha"
+          sub="ela aparece nas fichas de leitura do livro"
           tela
         />
       ) : null}
       <TopoForm
-        voltar={{ href: `/clubes/${clube.id}/leitura`, r: "leitura da vez" }}
+        voltar={{ href: `/clubes/${clube.id}/leitura`, r: "leitura atual" }}
         rotulo={l.rodada ? `rodada ${l.rodada}` : "ficha"}
         titulo={l.livro.titulo}
-        frase={minha ? "editando sua ficha ✎" : "como foi a leitura? ✓"}
+        frase={minha ? "editar minha ficha" : "e então, o que você achou?"}
       />
       <div className="mx-6 mt-5 lg:mx-0 lg:max-w-[640px]">
         <FichaLeitura
@@ -154,7 +154,7 @@ function Formulario({ l, minha }: { l: LivroDoClube; minha: Ficha | null }) {
           ) : null}
           {!minha && naEstante ? (
             <label className="block">
-              <span className={rotuloCampo}>terminei em</span>
+              <span className={rotuloCampo}>concluí em</span>
               <input
                 type="date"
                 value={dia}
@@ -187,7 +187,7 @@ function Formulario({ l, minha }: { l: LivroDoClube; minha: Ficha | null }) {
           disabled={enviando}
           className={`${botaoPrincipal} lg:max-w-[640px]`}
         >
-          {enviando ? "publicando…" : minha ? "salvar ficha ✎" : "publicar ✎"}
+          {enviando ? "publicando…" : minha ? "salvar alterações" : "publicar ficha"}
         </button>
       </Rodape>
     </form>
@@ -208,8 +208,8 @@ export default function FichaPage() {
     return (
       <Animacao
         tipo="escrevendo"
-        titulo="abrindo a sua ficha"
-        frase="como foi a leitura?"
+        titulo="carregando sua ficha"
+        frase="e então, o que você achou?"
         sub="só um instante"
       />
     );

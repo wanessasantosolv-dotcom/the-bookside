@@ -65,7 +65,7 @@ export const verbo: Record<TipoAtividade, string> = {
   terminou: "terminou",
   avaliou: "avaliou",
   quer: "quer ler",
-  ficha: "escreveu uma ficha de",
+  ficha: "publicou uma ficha de leitura de",
   progresso: "está lendo",
   trecho: "guardou um trecho de",
   clube: "",

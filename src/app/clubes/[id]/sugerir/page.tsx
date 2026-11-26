@@ -54,7 +54,7 @@ export default function SugerirPage() {
 
   async function enviar(e: FormEvent) {
     e.preventDefault();
-    if (!livro) return setErro("escolha um livro primeiro.");
+    if (!livro) return setErro("selecione um livro primeiro.");
     setEnviando(true);
     setErro(null);
     try {
@@ -74,8 +74,8 @@ export default function SugerirPage() {
     } catch {
       setErro(
         limite
-          ? `não deu para enviar. lembre: cada pessoa sugere ${limite} por mês.`
-          : "não deu para enviar agora. tente de novo.",
+          ? `não foi possível enviar. cada membro pode sugerir ${limite} ${limite === 1 ? "livro" : "livros"} por mês.`
+          : "não foi possível enviar agora. tente de novo.",
       );
       setEnviando(false);
     }
@@ -85,9 +85,9 @@ export default function SugerirPage() {
     <form onSubmit={enviar} className="flex min-h-[70dvh] flex-col">
       <TopoForm
         voltar={{ href: `/clubes/${clube.id}/sugestoes`, r: "sugestões" }}
-        rotulo="sugestões abertas"
-        titulo="sugerir um livro"
-        frase="qual vai para o clube? ✦"
+        rotulo="livros sugeridos"
+        titulo="sugerir livro"
+        frase="compartilhe uma sugestão com o clube."
       />
       <div className="mt-6 space-y-6 px-6 lg:max-w-[640px] lg:px-0">
         <div>
@@ -192,7 +192,7 @@ export default function SugerirPage() {
                   onClick={() => setCadastrar(true)}
                   className="mt-2 min-h-9 text-xs font-semibold text-bordo underline underline-offset-4"
                 >
-                  não achou? cadastrar o livro manualmente
+                  não encontrou? cadastre o livro manualmente
                 </button>
               )}
             </>
@@ -206,7 +206,7 @@ export default function SugerirPage() {
             onChange={(e) => setMotivo(e.target.value)}
             maxLength={280}
             rows={3}
-            placeholder="um thriller que vai fazer a gente discutir até o último capítulo."
+            placeholder="o que faz esse livro render uma boa conversa?"
             className={`${campo} resize-none font-accent italic`}
           />
         </label>
@@ -236,15 +236,15 @@ export default function SugerirPage() {
           <p className={rotuloCampo}>a regra do clube</p>
           <p className="mt-1 text-[13px] text-cinza">
             {limite
-              ? `cada pessoa pode sugerir ${limite} ${limite === 1 ? "livro" : "livros"} por mês.`
-              : "pode sugerir quantos livros quiser."}
+              ? `cada membro pode sugerir ${limite} ${limite === 1 ? "livro" : "livros"} por mês.`
+              : "não há limite de sugestões."}
             {restam !== null ? (
               <b
                 className={`font-semibold ${esgotou ? "text-bordo" : "text-ameixa"}`}
               >
                 {esgotou
-                  ? " você já usou a sua deste mês ✦"
-                  : ` você ainda tem ${restam} ${restam === 1 ? "disponível" : "disponíveis"} ✦`}
+                  ? (limite === 1 ? " você já usou a sua sugestão deste mês." : " você já usou as suas sugestões deste mês.")
+                  : ` ${restam === 1 ? "resta 1 sugestão" : `restam ${restam} sugestões`} neste mês.`}
               </b>
             ) : null}
           </p>
@@ -261,7 +261,7 @@ export default function SugerirPage() {
           disabled={enviando || !livro || esgotou}
           className={`${botaoPrincipal} lg:max-w-[640px]`}
         >
-          {enviando ? "enviando…" : "enviar para as sugestões"}
+          {enviando ? "enviando…" : "sugerir livro"}
         </button>
       </Rodape>
     </form>

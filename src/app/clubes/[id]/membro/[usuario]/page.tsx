@@ -47,7 +47,7 @@ export default function MembroPage() {
       <Animacao
         tipo="livro"
         titulo="abrindo o perfil"
-        sub="trazendo as fichas dela no clube"
+        sub="as fichas de leitura no clube"
       />
     );
   if (consulta.erro)
@@ -184,7 +184,7 @@ export default function MembroPage() {
         ) : null}
 
         <h2 className="mt-7 text-[10px] font-semibold tracking-[.16em] text-bordo uppercase">
-          fichas no clube
+          fichas de leitura
         </h2>
         {fichas.length ? (
           <ul className="mt-2">

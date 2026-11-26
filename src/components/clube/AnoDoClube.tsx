@@ -17,14 +17,14 @@ export function CartaoAnoDoClube({
       className="inverso group flex flex-wrap items-center gap-6 rounded-[12px] bg-bordo px-6 py-6 text-creme lg:flex-nowrap lg:px-8"
     >
       <span className="min-w-0 flex-1">
-        <span className="block text-[12px] tracking-[.12em] opacity-80">o ano do clube</span>
-        <span className="mt-1 block font-revista text-[28px] leading-tight italic lg:text-[34px]">{ano} em retrospectiva</span>
+        <span className="block text-[12px] tracking-[.12em] opacity-80">o ano em livros</span>
+        <span className="mt-1 block font-revista text-[28px] leading-tight italic lg:text-[34px]">retrospectiva {ano}</span>
         <span className="mt-2 block text-[13px] opacity-85">
           {livros.length
-            ? `${livros.length} ${livros.length === 1 ? "livro concluído" : "livros concluídos"} juntos este ano`
-            : "os livros, as notas e os destaques do clube no ano"}
+            ? `${livros.length} ${livros.length === 1 ? "livro lido" : "livros lidos"} juntos neste ano`
+            : "as histórias, as avaliações e os momentos que vocês compartilharam neste ano."}
         </span>
-        <span className="mt-3 inline-block text-[13px] font-semibold underline-offset-4 group-hover:underline">abrir a retrospectiva →</span>
+        <span className="mt-3 inline-block text-[13px] font-semibold underline-offset-4 group-hover:underline">ver retrospectiva →</span>
       </span>
       {livros.length ? (
         <span aria-hidden className="flex items-end">

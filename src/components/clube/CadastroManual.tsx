@@ -28,7 +28,7 @@ export function CadastroManual({
   return (
     <div className="mt-3 space-y-5 rounded-xl border border-linha p-4 lg:rounded-[4px] lg:border-fio">
       <p className="font-accent text-sm italic text-cinza">
-        não achou na busca? cadastre ele do seu jeito ✦
+        não encontrou na busca? cadastre o livro manualmente.
       </p>
       <CamposDoLivro dados={dados} onMudar={setDados} />
       <div className="flex gap-2.5">
