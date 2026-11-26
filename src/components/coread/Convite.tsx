@@ -120,9 +120,9 @@ export function CartaoConvite({
 }
 
 export const botaoPrincipal =
-  "inline-flex h-11 items-center rounded-pill bg-bordo px-5 text-[13px] font-semibold text-creme hover:bg-bordo-suave disabled:opacity-45";
+  "inline-flex h-10 items-center rounded-[6px] bg-bordo px-4 font-texto text-[13px] font-semibold text-creme hover:bg-bordo-suave disabled:opacity-45";
 export const botaoSecundario =
-  "inline-flex h-11 items-center rounded-pill border border-bordo/40 px-4 text-[13px] font-semibold text-bordo hover:border-bordo disabled:opacity-45";
+  "inline-flex h-10 items-center rounded-[6px] border border-bordo/35 px-3.5 font-texto text-[13px] font-medium text-bordo hover:border-bordo disabled:opacity-45";
 export const botaoTexto = "inline-flex min-h-11 items-center px-1 text-[13px] font-semibold text-cinza underline-offset-4 hover:text-bordo hover:underline";
 
 export function LinkDetalhes({ id }: { id: string }) {

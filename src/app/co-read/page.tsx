@@ -91,10 +91,10 @@ function CartaoLeitura({
         />
         <CapaLivro titulo={l.livro.titulo} capa={l.livro.capa} cor={corDoLivro(l.livro.id)} className="w-full -rotate-[1.5deg] [&>span:last-child]:hidden" />
         <div className="relative min-w-0">
-          <p className="font-mono text-[10px] tracking-[.14em] uppercase" style={{ color: e.tinta, opacity: 0.75 }}>
-            {l.nome ? l.nome : "currently co-reading"}
+          <p className="font-texto text-[11px] font-medium tracking-[.06em] uppercase" style={{ color: e.tinta, opacity: 0.7 }}>
+            {l.nome ? l.nome : "co-read"}
           </p>
-          <h3 className={`mt-1 font-revista leading-[1.08] italic ${destaque ? "text-[26px] sm:text-[34px]" : "text-[21px]"}`} style={{ color: e.tinta }}>
+          <h3 className={`mt-1 font-revista leading-[1.1] ${destaque ? "text-[26px] sm:text-[34px]" : "text-[21px]"}`} style={{ color: e.tinta }}>
             {l.livro.titulo}
           </h3>
           <p className="mt-0.5 truncate text-[12px] text-tinta-suave">{l.livro.autor}</p>
@@ -354,7 +354,7 @@ function Conteudo() {
               type="button"
               aria-selected={aba === a.id}
               onClick={() => irPara(a.id)}
-              className={`-mb-px flex min-h-11 flex-none items-center gap-1.5 border-b-2 text-[14px] font-semibold ${aba === a.id ? "border-bordo text-bordo" : "border-transparent text-cinza hover:text-ameixa"}`}
+              className={`-mb-px flex min-h-10 flex-none items-center gap-1.5 border-b-2 font-texto text-[13px] ${aba === a.id ? "border-bordo font-semibold text-ameixa" : "border-transparent font-medium text-cinza hover:text-ameixa"}`}
             >
               {a.nome}
               {n ? <span className="grid size-5 place-items-center rounded-full bg-bordo text-[10px] text-creme">{n}</span> : null}
@@ -390,7 +390,7 @@ function Conteudo() {
             )}
             {avisos.length ? (
               <section aria-labelledby="t-avisos">
-                <h2 id="t-avisos" className="border-b border-linha pb-2 font-revista text-[20px] text-bordo italic lg:border-fio">
+                <h2 id="t-avisos" className="border-b border-linha pb-2 font-revista text-[19px] text-ameixa lg:border-fio">
                   enquanto você estava fora
                 </h2>
                 <ul>
@@ -409,7 +409,7 @@ function Conteudo() {
             {nossas.length ? (
               <section aria-labelledby="t-nossas-previa">
                 <div className="flex items-baseline justify-between border-b border-linha pb-2 lg:border-fio">
-                  <h2 id="t-nossas-previa" className="font-revista text-[20px] text-bordo italic">
+                  <h2 id="t-nossas-previa" className="font-revista text-[19px] text-ameixa">
                     nossas leituras
                   </h2>
                   <button type="button" onClick={() => irPara("nossas")} className="text-[13px] font-semibold text-bordo hover:underline">
@@ -436,7 +436,7 @@ function Conteudo() {
         ) : aba === "convites" ? (
           <div className="space-y-10">
             <section aria-labelledby="t-recebidos">
-              <h2 id="t-recebidos" className="mb-4 font-revista text-[20px] text-bordo italic">
+              <h2 id="t-recebidos" className="mb-4 font-revista text-[19px] text-ameixa">
                 recebidos
               </h2>
               {recebidos.length ? (
@@ -453,7 +453,7 @@ function Conteudo() {
             </section>
             {enviados.length ? (
               <section aria-labelledby="t-enviados">
-                <h2 id="t-enviados" className="mb-4 font-revista text-[20px] text-bordo italic">
+                <h2 id="t-enviados" className="mb-4 font-revista text-[19px] text-ameixa">
                   enviados · aguardando resposta
                 </h2>
                 <ul className="grid gap-8 lg:grid-cols-2">
@@ -464,7 +464,7 @@ function Conteudo() {
               </section>
             ) : null}
             <section aria-labelledby="t-codigo" className="max-w-[460px]">
-              <h2 id="t-codigo" className="font-revista text-[20px] text-bordo italic">
+              <h2 id="t-codigo" className="font-revista text-[19px] text-ameixa">
                 recebeu um código?
               </h2>
               <p className="mt-1 text-[13px] text-tinta-suave">entrar pelo código já vale como aceitar o convite.</p>
@@ -495,11 +495,14 @@ export default function CoreadPage() {
   return (
     <AppShell aba="clubes">
       <div className="flex flex-1 flex-col px-5 pt-2 pb-10 lg:bg-jornal lg:px-12 lg:pt-8">
-        <div className="w-full max-w-[1200px]">
+        <div className="mx-auto w-full max-w-[1200px] lg:mx-0">
           <CabecalhoTogether ativo="coread" />
           {/* cabeçalho da experiência: o seletor acima já diz que é o co-read */}
-          <div className="mb-4 flex items-end justify-between gap-4">
-            <h2 className="font-revista text-[24px] leading-none text-ameixa italic lg:text-[30px]">currently co-reading.</h2>
+          <div className="mb-3 flex items-end justify-between gap-4">
+            <div>
+              <h2 className="font-revista text-[22px] leading-none text-ameixa lg:text-[26px]">lendo juntos</h2>
+              <p className="mt-1 font-texto text-[12px] text-cinza">different bookmarks, same story.</p>
+            </div>
             <Link href="/co-read/novo" className={botaoPrincipal}>
               + novo co-read
             </Link>

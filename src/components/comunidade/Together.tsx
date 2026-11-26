@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect } from "react";
-import { COR, Envelope, Marcadores } from "@/components/coread/Marca";
+import { COR, Marcadores } from "@/components/coread/Marca";
 import { minhasLeiturasJuntas } from "@/lib/lerjunto";
 import { useConsulta, useMeuId } from "@/lib/social";
 
@@ -37,10 +37,10 @@ export function useConvitesPendentes() {
 export function LetteringTogether({ tamanho = 52 }: { tamanho?: number }) {
   return (
     <span className="relative inline-flex items-end leading-none">
-      <svg aria-hidden viewBox="0 0 40 30" width={tamanho * 0.42} height={tamanho * 0.32} className="mr-1 -translate-y-[60%]">
-        <path d="M4 26c0-10 4-17 12-22M20 26c0-10 4-17 12-22" stroke={COR.rosa} strokeWidth="5" strokeLinecap="round" fill="none" />
+      <svg aria-hidden viewBox="0 0 40 30" width={tamanho * 0.34} height={tamanho * 0.26} className="mr-1 -translate-y-[70%]">
+        <path d="M4 26c0-10 4-17 12-22M20 26c0-10 4-17 12-22" stroke={COR.rosa} strokeWidth="3.5" strokeLinecap="round" fill="none" />
       </svg>
-      <span className="font-revista font-semibold tracking-[-.035em] italic" style={{ fontSize: tamanho, color: COR.vinho, lineHeight: 0.9 }}>
+      <span className="font-revista font-normal tracking-[-.03em]" style={{ fontSize: tamanho, color: COR.vinho, lineHeight: 0.95 }}>
         together<span style={{ color: COR.oliva }}>.</span>
       </span>
     </span>
@@ -72,72 +72,49 @@ export function CabecalhoTogether({ ativo }: { ativo: Experiencia | null }) {
   }, [ativo]);
 
   return (
-    <div className="mb-6 lg:mb-8">
-      <header className="flex items-center justify-between gap-4">
+    <div className="mb-6">
+      <header className="flex items-end justify-between gap-4">
         <div className="min-w-0">
           <h1 className="sr-only">comunidade</h1>
           <span className="lg:hidden">
-            <LetteringTogether tamanho={38} />
+            <LetteringTogether tamanho={32} />
           </span>
           <span className="hidden lg:inline">
-            <LetteringTogether tamanho={60} />
+            <LetteringTogether tamanho={42} />
           </span>
-          <p className="mt-1.5 font-revista text-[15px] text-ameixa italic lg:mt-2.5 lg:text-[19px]">good books, better company.</p>
+          <p className="mt-1 font-revista text-[14px] text-tinta-suave lg:text-[16px]">good books, better company.</p>
         </div>
         <Link
           href="/comunidade/convites"
           aria-label={convites ? `convites, ${convites} pendentes` : "convites"}
-          className="relative flex min-h-11 flex-none items-center gap-2 rounded-pill border border-linha px-3 text-[13px] font-semibold text-bordo hover:border-bordo lg:px-4"
+          className="flex min-h-10 flex-none items-center gap-1.5 px-1 font-texto text-[13px] font-medium text-tinta-suave hover:text-bordo"
         >
-          <Envelope tamanho={26} />
-          <span className="hidden sm:inline">convites</span>
-          {convites ? (
-            <span className="absolute -top-1 -right-1 grid size-5 place-items-center rounded-full bg-bordo text-[10px] text-creme">{convites}</span>
-          ) : null}
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <rect x="3" y="5" width="18" height="14" rx="1.5" />
+            <path d="m3.5 6 8.5 7 8.5-7" />
+          </svg>
+          convites
+          {convites ? <span className="ml-0.5 grid min-w-[18px] place-items-center rounded-full bg-bordo px-1 text-[10px] leading-[18px] text-creme">{convites}</span> : null}
         </Link>
       </header>
 
-      {/* as duas experiências, lado a lado: funcionam como abas */}
-      <nav aria-label="experiências" className="mt-5 grid grid-cols-2 gap-3 lg:mt-7 lg:gap-5">
+      {/* clubes · co-read: navegação editorial, não banners */}
+      <nav aria-label="experiências" className="mt-5 flex gap-7 border-b border-linha lg:border-fio">
         <Link
           href="/clubes"
           aria-current={ativo === "clubes" ? "page" : undefined}
-          className={`group relative flex items-center gap-3 overflow-hidden rounded-[4px] border-b-[3px] px-3.5 py-3 transition-colors lg:gap-5 lg:px-6 lg:py-5 ${
-            ativo === "clubes" ? "border-oliva bg-[#E7EADF]" : "border-transparent bg-[#F1F0E8] hover:bg-[#E7EADF]"
-          }`}
+          className={`-mb-px flex min-h-11 items-center gap-2 border-b-2 pb-1 font-texto text-[15px] ${ativo === "clubes" ? "border-oliva font-semibold text-ameixa" : "border-transparent font-medium text-cinza hover:text-ameixa"}`}
         >
-          <span className="flex-none lg:hidden">
-            <EmblemaClubes tamanho={30} />
-          </span>
-          <span className="hidden flex-none lg:block">
-            <EmblemaClubes tamanho={54} />
-          </span>
-          <span className="min-w-0">
-            <span className="block font-revista text-[20px] leading-none font-semibold italic lg:text-[30px]" style={{ color: COR.oliva }}>
-              clubes.
-            </span>
-            <span className="mt-1.5 hidden font-revista text-[14px] italic text-tinta-suave lg:block">our kind of club.</span>
-          </span>
+          <EmblemaClubes tamanho={20} />
+          clubes
         </Link>
         <Link
           href="/co-read"
           aria-current={ativo === "coread" ? "page" : undefined}
-          className={`group relative flex items-center gap-3 overflow-hidden rounded-[4px] border-b-[3px] px-3.5 py-3 transition-colors lg:gap-5 lg:px-6 lg:py-5 ${
-            ativo === "coread" ? "border-bordo bg-[#F7E1E6]" : "border-transparent bg-[#F6ECEC] hover:bg-[#F7E1E6]"
-          }`}
+          className={`-mb-px flex min-h-11 items-center gap-2 border-b-2 pb-1 font-texto text-[15px] ${ativo === "coread" ? "border-bordo font-semibold text-ameixa" : "border-transparent font-medium text-cinza hover:text-ameixa"}`}
         >
-          <span className="flex-none lg:hidden">
-            <Marcadores tamanho={34} linha={false} />
-          </span>
-          <span className="hidden flex-none lg:block">
-            <Marcadores tamanho={60} />
-          </span>
-          <span className="min-w-0">
-            <span className="block font-revista text-[20px] leading-none font-semibold tracking-[-.02em] italic lg:text-[30px]" style={{ color: COR.vinho }}>
-              co-read<span style={{ color: COR.rosa }}>.</span>
-            </span>
-            <span className="mt-1.5 hidden font-revista text-[14px] italic text-tinta-suave lg:block">different bookmarks, same story.</span>
-          </span>
+          <Marcadores tamanho={22} linha={false} />
+          co-read
         </Link>
       </nav>
     </div>

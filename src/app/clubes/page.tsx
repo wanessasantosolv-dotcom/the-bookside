@@ -59,7 +59,7 @@ function Cartao({
       <Link
         href={`/clubes/${c.id}`}
         aria-label={`ver clube ${c.nome}`}
-        className="group grid overflow-hidden rounded-[4px] border border-linha bg-creme-quente transition-colors hover:border-bordo sm:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:border-fio"
+        className="group grid overflow-hidden rounded-[6px] border border-linha bg-creme-quente transition-colors hover:border-bordo sm:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:border-fio"
       >
         {/* identidade do clube */}
         <div className="relative">
@@ -73,7 +73,7 @@ function Cartao({
               <img src={c.foto} alt="" className="-mt-9 size-14 flex-none rounded-full border-[3px] border-creme-quente object-cover" />
             ) : null}
             <div className="min-w-0 flex-1">
-              <h3 className="truncate font-revista text-[22px] leading-tight text-bordo italic">{c.nome}</h3>
+              <h3 className="truncate font-revista text-[20px] leading-tight text-bordo">{c.nome}</h3>
               {c.descricao ? <p className="truncate text-[12px] text-cinza">{c.descricao}</p> : null}
               <div className="mt-2 flex items-center gap-2">
                 <Avatares pessoas={lista} tamanho={22} />
@@ -91,8 +91,8 @@ function Cartao({
             <div className="flex gap-3.5">
               <CapaAuto livro={c.lendo.livro} className="w-[54px] flex-none transition-transform group-hover:-translate-y-0.5 [&>span:last-child]:hidden" />
               <div className="min-w-0 flex-1">
-                <p className="font-mono text-[10px] tracking-[.14em] text-bordo uppercase">the current read.</p>
-                <p className="mt-1 line-clamp-2 font-revista text-[16px] leading-tight text-ameixa italic">{c.lendo.livro.titulo}</p>
+                <p className="font-texto text-[11px] font-medium tracking-[.06em] text-cinza uppercase">leitura atual</p>
+                <p className="mt-1 line-clamp-2 font-revista text-[16px] leading-tight text-ameixa">{c.lendo.livro.titulo}</p>
                 <p className="truncate text-[12px] text-cinza">{c.lendo.livro.autor}</p>
                 {meuPct !== null ? (
                   <div className="mt-2">
@@ -174,15 +174,18 @@ export default function ClubesPage() {
   return (
     <AppShell aba="clubes">
       <div className="flex flex-1 flex-col px-5 pt-2 pb-10 lg:bg-jornal lg:px-12 lg:pt-8">
-        <div className="w-full max-w-[1200px]">
+        <div className="mx-auto w-full max-w-[1200px] lg:mx-0">
           <CabecalhoTogether ativo="clubes" />
-          <div className="mb-4 flex flex-wrap items-end justify-between gap-x-4 gap-y-2">
-            <h2 className="font-revista text-[24px] leading-none text-ameixa italic lg:text-[30px]">meus clubes</h2>
+          <div className="mb-3 flex flex-wrap items-end justify-between gap-x-4 gap-y-2">
+            <div>
+              <h2 className="font-revista text-[22px] leading-none text-ameixa lg:text-[26px]">meus clubes</h2>
+              <p className="mt-1 font-texto text-[12px] text-cinza">our kind of club.</p>
+            </div>
             <div className="flex items-center gap-4">
-              <Link href="/clubes/entrar" className="min-h-11 content-center text-[13px] font-semibold text-cinza hover:text-bordo">
+              <Link href="/clubes/entrar" className="min-h-10 content-center font-texto text-[13px] font-medium text-tinta-suave hover:text-bordo">
                 entrar por convite
               </Link>
-              <Link href="/clubes/novo" className="inline-flex h-11 items-center rounded-pill bg-bordo px-5 text-[13px] font-semibold text-creme hover:bg-bordo-suave">
+              <Link href="/clubes/novo" className="inline-flex h-10 items-center rounded-[6px] bg-bordo px-4 font-texto text-[13px] font-semibold text-creme hover:bg-bordo-suave">
                 + criar clube
               </Link>
             </div>

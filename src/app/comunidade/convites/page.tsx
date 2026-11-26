@@ -40,7 +40,7 @@ function Convites() {
   return (
     <div>
       <div className="flex items-baseline justify-between gap-4">
-        <h2 className="font-revista text-[26px] leading-none text-ameixa italic lg:text-[30px]">you&apos;re invited.</h2>
+        <h2 className="font-revista text-[22px] leading-none text-ameixa lg:text-[26px]">you&apos;re invited.</h2>
       </div>
       <div className="mt-4 flex flex-wrap gap-2" role="group" aria-label="filtrar convites">
         {(
