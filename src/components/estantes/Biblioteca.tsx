@@ -693,7 +693,7 @@ export function BarraDaBiblioteca({
 
 export function SeletorDeFace({ face, onChange }: { face: Face; onChange: (f: Face) => void }) {
   return (
-    <div role="group" aria-label="como ver os livros na estante" className="flex items-center gap-1 text-[13px]">
+    <div role="group" aria-label="como ver os livros na estante" className="relative z-30 flex items-center gap-1 text-[13px]">
       {(["capas", "lombadas"] as const).map((f, i) => (
         <span key={f} className="flex items-center gap-1">
           {i ? <span aria-hidden className="text-bege">·</span> : null}

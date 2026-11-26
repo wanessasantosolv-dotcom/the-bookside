@@ -253,7 +253,7 @@ export default function EstanteAbertaPage() {
               </button>
             ) : null}
           </div>
-          <div className="flex items-center justify-between gap-3 lg:flex-none">
+          <div className="relative z-30 flex items-center justify-between gap-3 lg:flex-none">
             {/* no celular, capas/lombadas fica na mesma linha do modo */}
             <span className="lg:hidden">{vista === "estante" && lista.length ? <SeletorDeFace face={face} onChange={setFace} /> : null}</span>
             <SeletorDeVista vista={vista} onChange={setVista} />
@@ -261,7 +261,7 @@ export default function EstanteAbertaPage() {
         </div>
 
         {vista === "estante" && lista.length ? (
-          <div className="mt-4 hidden lg:block">
+          <div className="relative z-30 mt-4 hidden lg:block">
             <SeletorDeFace face={face} onChange={setFace} />
           </div>
         ) : null}
