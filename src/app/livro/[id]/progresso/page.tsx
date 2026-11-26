@@ -19,6 +19,7 @@ import { corDoLivro } from "@/lib/cores";
 import { infoDoLivro } from "@/lib/estantes";
 import { usePerfil, type LivroSalvo } from "@/lib/perfil-store";
 import { sincronizarProgressoNosClubes } from "@/lib/clubes";
+import { sincronizarProgressoNosCoreads } from "@/lib/lerjunto";
 
 const passo =
   "flex size-11 items-center justify-center rounded-full border border-bege bg-creme-quente text-lg font-semibold text-bordo disabled:text-bege";
@@ -58,6 +59,8 @@ function Progresso({ livro }: { livro: LivroSalvo }) {
     });
     // o clube que lê o mesmo livro acompanha (sem segundo registro)
     void sincronizarProgressoNosClubes(livro, terminou ? paginas || atual : atual, terminou);
+    // e os co-reads do mesmo livro também
+    void sincronizarProgressoNosCoreads({ ...livro, paginas: paginas || undefined }, terminou ? paginas || atual : atual, terminou);
     // terminando, a celebração mesmo oferece "fazer a ficha"; sem terminar,
     // volta pra página do livro normalmente
     if (terminou) celebrarTermino(livro, usePerfil.getState());

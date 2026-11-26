@@ -35,7 +35,7 @@ function Topo({ nome }: { nome: string }) {
         aria-label="atalhos"
         className="order-1 -mr-2 ml-auto flex flex-none items-center gap-0.5 lg:order-none lg:mr-0 lg:ml-0 lg:gap-1.5"
       >
-        <Link href="/buscar" aria-label="buscar livros" data-tour="buscar" className={iconeLink}>
+        <Link href="/buscar" aria-label="buscar livros e autores" data-tour="buscar" className={iconeLink}>
           <svg
             width="19"
             height="19"
@@ -49,7 +49,7 @@ function Topo({ nome }: { nome: string }) {
             <circle cx="11" cy="11" r="7" />
             <path d="m20 20-3.5-3.5" />
           </svg>
-          <span className="hidden lg:inline">buscar livros</span>
+          <span className="hidden lg:inline">livros e autores</span>
         </Link>
         <Link href="/pessoas" aria-label="encontrar pessoas" data-tour="pessoas" className={iconeLink}>
           <svg

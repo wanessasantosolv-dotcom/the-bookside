@@ -276,8 +276,8 @@ export function AcoesDoLivro({
               </>
             ) : null}
             {status === "lendo" || status === "quero" ? (
-              <Link href={`/ler-junto/novo?livro=${id}`} onClick={fechar} className={itemMenu}>
-                ler junto com alguém
+              <Link href={`/co-read/novo?livro=${id}`} onClick={fechar} className={itemMenu}>
+                começar um co-read
               </Link>
             ) : null}
             {status === "lido" || status === "lendo" ? (

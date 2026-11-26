@@ -129,7 +129,7 @@ export function QuoteDoDia() {
 
 // ───────── lendo agora ─────────
 
-function CartaoLeitura({ l, junto, grande }: { l: LivroSalvo; junto?: string; grande?: boolean }) {
+function CartaoLeitura({ l, junto, grande }: { l: LivroSalvo; junto?: { nomes: string; id: string }; grande?: boolean }) {
   const p = pct(l);
   return (
     <article className="flex gap-4">
@@ -141,7 +141,11 @@ function CartaoLeitura({ l, junto, grande }: { l: LivroSalvo; junto?: string; gr
           {l.titulo}
         </Link>
         <span className="mt-0.5 truncate text-[12px] text-cinza">{l.autor}</span>
-        {junto ? <span className="mt-1 truncate text-[11px] text-bordo">lendo junto com {junto}</span> : null}
+        {junto ? (
+          <Link href={`/co-read/${junto.id}`} className="mt-1 truncate text-[11px] text-bordo hover:underline">
+            co-read com {junto.nomes} →
+          </Link>
+        ) : null}
         <div className="mt-auto pt-2.5">
           {p !== null ? (
             <>
@@ -180,10 +184,12 @@ export function LendoAgoraHome() {
   const lendo = livros
     .filter((l) => l.status === "lendo")
     .sort((a, b) => (b.iniciadoEm ?? b.adicionadoEm ?? "").localeCompare(a.iniciadoEm ?? a.adicionadoEm ?? ""));
-  const junto = new Map<string, string>();
+  // lendo em companhia: o co-read do mesmo livro (só quem já aceitou o convite)
+  const junto = new Map<string, { nomes: string; id: string }>();
   for (const j of juntas.dados ?? []) {
-    const outras = j.pessoas.filter((p) => p.usuario_id !== eu);
-    if (outras.length) junto.set(j.livro.id, outras.map((p) => nomeDe(p.pessoa)).join(", "));
+    if (j.encerrada_em || j.pessoas.find((p) => p.usuario_id === eu)?.estado === "convidada") continue;
+    const outras = j.pessoas.filter((p) => p.usuario_id !== eu && p.estado !== "convidada");
+    if (outras.length) junto.set(j.livro.id, { nomes: outras.map((p) => nomeDe(p.pessoa)).join(", "), id: j.id });
   }
   useEffect(() => {
     const el = trilho.current;

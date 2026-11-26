@@ -21,7 +21,7 @@ const PASSOS: Passo[] = [
     alvo: "lendo",
     titulo: "o que você está lendo",
     texto:
-      "atualize a página em que parou, abra o modo foco (⏱) para ler com cronômetro e marque “terminei” quando acabar. dá para ler o mesmo livro junto com uma amiga, cada uma na sua página, sem precisar de clube — é o “ler junto”.",
+      "atualize a página em que parou, abra o modo foco (⏱) para ler com cronômetro e marque “terminei” quando acabar. dá para ler o mesmo livro com uma amiga, cada uma na sua página, sem precisar de clube: é o co-read, em comunidade.",
   },
   {
     alvo: "publicar",

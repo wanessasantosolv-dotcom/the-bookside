@@ -39,14 +39,15 @@ export const abas = [
   },
   {
     id: "clubes",
-    href: "/clubes",
-    rotulo: "clubes",
+    href: "/comunidade",
+    rotulo: "comunidade",
     icone: (
       <>
-        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-        <circle cx="9" cy="7" r="4" />
-        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+        {/* duas pessoas ligadas: comunidade (clubes e co-read) */}
+        <circle cx="8" cy="8" r="3.2" />
+        <circle cx="16.5" cy="9.5" r="2.7" />
+        <path d="M2.5 20a5.5 5.5 0 0 1 11 0" />
+        <path d="M13.2 15.2a4.6 4.6 0 0 1 8.3 3.3" />
       </>
     ),
   },
@@ -65,7 +66,7 @@ export const abas = [
 
 export type Aba = (typeof abas)[number]["id"];
 
-/** Menu inferior do app: início · estantes · descobrir · clubes · perfil (a jornada fica no perfil). */
+/** Menu inferior do app: início · estantes · descobrir · comunidade · perfil (a jornada fica no perfil). */
 export function NavInferior({ ativa }: { ativa: Aba }) {
   return (
     <nav
