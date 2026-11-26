@@ -227,7 +227,7 @@ function Cabecalho({ c, papel, membros, ident }: { c: Clube; papel: Papel | null
             </div>
           </div>
           <div className={`flex flex-col items-center px-5 text-center ${largura}`}>
-            <span className="-mt-12">
+            <span className="relative z-10 -mt-12">
               <SeloDoClube c={c} tamanho="grande" ident={ident} />
             </span>
             <h1 className="mt-3 font-revista text-[32px] leading-[1.05] text-bordo italic lg:text-[44px]">{c.nome}</h1>

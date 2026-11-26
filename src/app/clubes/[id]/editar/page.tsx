@@ -3,8 +3,6 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { CampoFoto } from "@/components/clube/CampoFoto";
-import { CampoCapa } from "@/components/clube/CampoCapa";
 import { useClube } from "@/components/clube/ClubeContexto";
 import {
   botaoPrincipal,
@@ -29,8 +27,6 @@ export default function EditarClubePage() {
   const router = useRouter();
   const [nome, setNome] = useState(clube.nome);
   const [descricao, setDescricao] = useState(clube.descricao ?? "");
-  const [capa, setCapa] = useState<string | null>(clube.capa);
-  const [foto, setFoto] = useState<string | null>(clube.foto ?? null);
   const [tema, setTema] = useState<string>(clube.tema ?? temas[0].id);
   const POR_PAGINA_TEMA = 4;
   const [paginaTema, setPaginaTema] = useState(() =>
@@ -72,13 +68,11 @@ export default function EditarClubePage() {
       await editarClube(clube.id, {
         nome: nome.trim(),
         descricao: descricao.trim() || null,
-        capa,
         tema,
         limite_sugestoes: limite ? Number(limite) : null,
         max_membros: maximo ? Math.max(Number(maximo), membros.length) : null,
         // só manda quando muda (clubes sem a coluna nova continuam salvando o resto)
         ...(escolha !== modoDe(clube) ? { escolha } : {}),
-        ...(foto !== (clube.foto ?? null) ? { foto } : {}),
       });
       recarregar();
       router.push(`/clubes/${clube.id}`);
@@ -140,8 +134,6 @@ export default function EditarClubePage() {
             className={`${campo} resize-none font-accent italic`}
           />
         </label>
-        <CampoFoto valor={foto} onMudar={setFoto} />
-        <CampoCapa valor={capa} onMudar={setCapa} />
         {/* a aparência agora fica toda no club studio (o tema antigo continua salvo, sem mudar) */}
         <section aria-labelledby="t-aparencia">
           <p id="t-aparencia" className={rotuloCampo}>
@@ -154,7 +146,7 @@ export default function EditarClubePage() {
             <span>
               <span className="block text-[15px] font-semibold text-ameixa">club studio</span>
               <span className="block text-[13px] text-tinta-suave">
-                {lerIdentidade(clube.identidade) ? `tema ${temaDoId(lerIdentidade(clube.identidade)!.tema).nome} · cores, fontes, emblema, estantes e layout` : "temas, cores, fontes, emblema, estantes e layout"}
+                foto, capa, emblema, tema, cores, fontes, estantes e layout{lerIdentidade(clube.identidade) ? ` · tema ${temaDoId(lerIdentidade(clube.identidade)!.tema).nome}` : ""}
               </span>
             </span>
             <span className="text-[13px] font-semibold text-bordo">personalizar →</span>

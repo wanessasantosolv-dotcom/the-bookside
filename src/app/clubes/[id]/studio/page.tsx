@@ -9,6 +9,8 @@ import { PrateleiraMadeira } from "@/components/estantes/Biblioteca";
 import { Vazio } from "@/components/social/Estados";
 import { editarClube, livrosDoClube, organiza } from "@/lib/clubes";
 import { Emblema, IconeSimbolo } from "@/components/clube/Emblema";
+import { CampoCapa } from "@/components/clube/CampoCapa";
+import { CampoFoto } from "@/components/clube/CampoFoto";
 import { Ornamento } from "@/components/clube/Ornamento";
 import {
   ESTANTES,
@@ -223,6 +225,8 @@ export default function ClubStudioPage() {
   const [contexto, setContexto] = useState<Contexto>("inicio");
   const [dispositivo, setDispositivo] = useState<"desktop" | "mobile">("desktop");
   const [vistaMobile, setVistaMobile] = useState<"editar" | "previa">("editar");
+  const [foto, setFoto] = useState<string | null>(clube.foto ?? null);
+  const [capa, setCapa] = useState<string | null>(clube.capa);
   const [salvando, setSalvando] = useState(false);
   const [msg, setMsg] = useState<{ tipo: "ok" | "erro"; texto: string } | null>(null);
   const livros = useConsulta(() => livrosDoClube(clube.id).catch(() => []), [clube.id]);
@@ -244,16 +248,20 @@ export default function ClubStudioPage() {
   const alertas = verificarContraste(paleta);
   const graves = alertas.filter((a) => a.grave);
   const tema = temaDoId(ident.tema);
-  const mudou = JSON.stringify(ident) !== JSON.stringify(publicada ?? identidadeInicial(corAntiga)) || !publicada;
+  const mudouFotos = foto !== (clube.foto ?? null) || capa !== clube.capa;
+  const mudou = JSON.stringify(ident) !== JSON.stringify(publicada ?? identidadeInicial(corAntiga)) || !publicada || mudouFotos;
 
   const padrao = padraoDe(ident);
   const emblema = emblemaDe(ident, clube.nome);
+  // sem foto, o emblema aparece de qualquer jeito
+  const usaEmblema = !!ident.emblema?.noAvatar || !foto;
   const modulos = modulosDe(ident);
   function mudarPadrao(x: Partial<ConfigPadrao>) {
     setIdent({ ...ident, padrao: { ...padrao, ...x } });
   }
   function mudarEmblema(x: Partial<TipoEmblema>) {
-    setIdent({ ...ident, emblema: { ...emblema, ...x } });
+    // quem mexe no emblema quer vê-lo: passa a ser o avatar (dá para voltar à foto)
+    setIdent({ ...ident, emblema: { ...emblema, noAvatar: true, ...x } });
   }
   function mudarTitulo(k: ChaveTitulo, v: string) {
     const titulos = { ...(ident.titulos ?? {}) };
@@ -291,7 +299,7 @@ export default function ClubStudioPage() {
     setSalvando(true);
     setMsg(null);
     try {
-      await editarClube(clube.id, { identidade: ident });
+      await editarClube(clube.id, { identidade: ident, ...(mudouFotos ? { foto, capa } : {}) });
       guardarIdentidadeEmCache(clube.id, ident);
       recarregar();
       setMsg({ tipo: "ok", texto: "identidade salva. todos os membros já veem o clube assim." });
@@ -550,13 +558,13 @@ export default function ClubStudioPage() {
             banner
           </h2>
           <p className="text-[13px] text-[#5A4A50]">
-            {clube.capa
-              ? "o clube tem uma foto de capa: ela continua sendo o banner, e a troca de tema não mexe nela. o banner gráfico aparece só quando não há foto."
-              : "sem foto de capa, o banner usa a composição gráfica do tema. dá para colocar um pattern por cima."}{" "}
-            <Link href={`/clubes/${clube.id}/editar`} className="font-semibold text-[#692536] hover:underline">
-              {clube.capa ? "trocar ou ajustar a foto" : "enviar uma foto"}
-            </Link>
+            {capa
+              ? "com foto de capa, ela é o banner. a troca de tema não mexe nela. tire a foto para usar o banner gráfico do tema."
+              : "sem foto de capa, o banner usa a composição gráfica do tema. dá para colocar um pattern por cima."}
           </p>
+          <div className="rounded-[6px] border border-[#E6D5CE] bg-white/60 p-4">
+            <CampoCapa valor={capa} onMudar={setCapa} />
+          </div>
           <label className="flex items-center gap-3 text-[14px]">
             <input
               type="checkbox"
@@ -572,19 +580,45 @@ export default function ClubStudioPage() {
 
       {categoria === "emblema" ? (
         <section aria-labelledby="t-emblema" className="space-y-5">
-          <div className="flex items-start gap-4">
-            <Emblema e={emblema} paleta={paleta} tamanho={96} />
-            <div>
-              <h2 id="t-emblema" className={titulo}>
-                avatar e emblema
-              </h2>
-              <label className="mt-2 flex items-center gap-2.5 text-[14px]">
-                <input type="checkbox" checked={emblema.noAvatar} onChange={(e) => mudarEmblema({ noAvatar: e.target.checked })} className="size-4 accent-[#692536]" />
-                usar o emblema no lugar da foto do clube
-              </label>
-              <p className="mt-1 text-[12px] text-[#7A6A6E]">{clube.foto ? "desmarcado, a foto continua." : "sem foto, o emblema aparece sozinho."}</p>
+          <h2 id="t-emblema" className={titulo}>
+            avatar e emblema
+          </h2>
+          <fieldset>
+            <legend className="mb-2 text-[12px] font-semibold text-[#5A4A50]">o que aparece como avatar do clube</legend>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                aria-pressed={!usaEmblema}
+                onClick={() => setIdent({ ...ident, emblema: { ...emblema, noAvatar: false } })}
+                className={`flex flex-col items-center gap-2 rounded-[6px] border-2 p-3 text-[13px] font-semibold ${!usaEmblema ? "border-[#692536] bg-white" : "border-[#E6D5CE]"}`}
+              >
+                {foto ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={foto} alt="" className="size-16 rounded-full object-cover" />
+                ) : (
+                  <span className="grid size-16 place-items-center rounded-full border border-dashed border-[#B9A6A0] text-[11px] font-normal text-[#7A6A6E]">sem foto</span>
+                )}
+                foto do clube
+              </button>
+              <button
+                type="button"
+                aria-pressed={usaEmblema}
+                onClick={() => setIdent({ ...ident, emblema: { ...emblema, noAvatar: true } })}
+                className={`flex flex-col items-center gap-2 rounded-[6px] border-2 p-3 text-[13px] font-semibold ${usaEmblema ? "border-[#692536] bg-white" : "border-[#E6D5CE]"}`}
+              >
+                <Emblema e={emblema} paleta={paleta} tamanho={64} />
+                emblema
+              </button>
             </div>
-          </div>
+          </fieldset>
+          {!usaEmblema ? (
+            <div className="rounded-[6px] border border-[#E6D5CE] bg-white/60 p-4">
+              <CampoFoto valor={foto} onMudar={setFoto} />
+              <p className="mt-2 text-[12px] text-[#7A6A6E]">{foto ? "a foto vale para todos os membros depois de salvar." : "sem foto, o clube mostra o emblema."}</p>
+            </div>
+          ) : (
+            <p className="text-[12px] text-[#7A6A6E]">monte o emblema abaixo. a foto continua guardada, caso queira voltar.</p>
+          )}
           <fieldset>
             <legend className="mb-2 text-[12px] font-semibold text-[#5A4A50]">formato</legend>
             <div className="flex flex-wrap gap-2">
@@ -917,7 +951,7 @@ export default function ClubStudioPage() {
           ))}
         </div>
       </div>
-      <Previa ident={ident} contexto={contexto} dispositivo={dispositivo} nome={clube.nome} descricao={clube.descricao} foto={clube.foto} capa={clube.capa} livro={atual} lidos={lidos} />
+      <Previa ident={ident} contexto={contexto} dispositivo={dispositivo} nome={clube.nome} descricao={clube.descricao} foto={foto} capa={capa} livro={atual} lidos={lidos} />
       <p className="mt-2 text-center text-[11px] text-[#7A6A6E]">prévia privada: só você vê até salvar.</p>
     </div>
   );
@@ -958,7 +992,7 @@ export default function ClubStudioPage() {
           <button type="button" onClick={salvar} disabled={salvando || !mudou || graves.length > 0} className="inline-flex h-11 items-center rounded-pill bg-[#692536] px-6 text-[13px] font-semibold text-[#F9F5EE] disabled:opacity-45">
             {salvando ? "salvando…" : "salvar identidade"}
           </button>
-          <button type="button" onClick={() => setIdent(publicada ?? identidadeInicial(corAntiga))} disabled={!mudou} className="inline-flex h-11 items-center rounded-pill border border-[#E6D5CE] px-4 text-[13px] font-semibold text-[#2B1420] disabled:opacity-45">
+          <button type="button" onClick={() => (setIdent(publicada ?? identidadeInicial(corAntiga)), setFoto(clube.foto ?? null), setCapa(clube.capa))} disabled={!mudou} className="inline-flex h-11 items-center rounded-pill border border-[#E6D5CE] px-4 text-[13px] font-semibold text-[#2B1420] disabled:opacity-45">
             cancelar
           </button>
           <button
