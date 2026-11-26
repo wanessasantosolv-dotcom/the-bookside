@@ -180,16 +180,12 @@ function LivrosFavoritos({ favoritos, proprio }: { favoritos: LivroSalvo[]; prop
     >
       {favoritos.length ? (
         <div>
-          <ul className="flex items-end gap-3 overflow-x-auto px-3 pt-3 [scrollbar-width:none] sm:gap-5">
+          {/* 4 capas sempre ocupando a largura toda; se houver mais, as outras rolam para o lado */}
+          <ul className="grid snap-x auto-cols-[calc((100%-3*.75rem)/4)] grid-flow-col items-end gap-3 overflow-x-auto px-3 pt-3 [scrollbar-width:none] sm:auto-cols-[calc((100%-3*1.25rem)/4)] sm:gap-5">
             {favoritos.map((l) => (
-              <li key={l.id} className="flex-none">
+              <li key={l.id} className="min-w-0 snap-start">
                 <Link href={`/livro/${l.id}`} aria-label={`${l.titulo}, de ${l.autor}`} className="block transition-transform duration-300 hover:-translate-y-1.5 motion-reduce:transition-none">
-                  <span className="sm:hidden">
-                    <CapaDoLivro livro={l} altura={130} />
-                  </span>
-                  <span className="hidden sm:block">
-                    <CapaDoLivro livro={l} altura={170} />
-                  </span>
+                  <CapaDoLivro livro={l} altura={170} className="aspect-[2/3] !h-auto !w-full !max-w-none !min-w-0 object-cover" />
                 </Link>
               </li>
             ))}
