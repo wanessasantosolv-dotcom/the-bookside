@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Animacao } from "@/components/Animacao";
 import { CapaAuto } from "@/components/CapaAuto";
 import { useClube } from "@/components/clube/ClubeContexto";
@@ -24,6 +24,11 @@ const detalhe =
 export default function RetrospectivaDoClube() {
   const { clube } = useClube();
   const [ano, setAno] = useState(new Date().getFullYear());
+  // a jornada abre um ano específico (?ano=2025)
+  useEffect(() => {
+    const q = Number(new URLSearchParams(window.location.search).get("ano"));
+    if (q > 2000 && q <= new Date().getFullYear()) setAno(q);
+  }, []);
   const [aviso, setAviso] = useState<string | null>(null);
   const consulta = useConsulta(
     () => anoDoClube(clube.id, ano),

@@ -860,3 +860,6 @@ alter table public.clubes add constraint clubes_identidade_valida check (
       and pg_column_size(identidade) < 8000
       and identidade ->> 'tema' in ('botanical', 'dark-academia', 'cherry-club', 'paperback', 'after-hours', 'the-editor'))
 );
+
+-- meta anual de livros do clube ({"2026": 12}); quem pode editar o clube pode definir
+alter table public.clubes add column if not exists metas jsonb;

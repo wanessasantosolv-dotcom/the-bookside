@@ -54,6 +54,7 @@ const abas = [
   { id: "", r: "início" },
   { id: "leitura", r: "leitura atual" },
   { id: "biblioteca", r: "estante" },
+  { id: "jornada", r: "jornada" },
   { id: "agenda", r: "agenda" },
   { id: "membros", r: "membros" },
 ];
@@ -371,7 +372,7 @@ export function ClubeProvedor({
   // membro também mantêm a barra do clube — sem isso, a navegação some
   // assim que a pessoa entra mais fundo e ela precisa ficar voltando
   const comAbas =
-    [base, `${base}/feed`, `${base}/biblioteca`, `${base}/leitura`, `${base}/agenda`, `${base}/membros`].includes(
+    [base, `${base}/feed`, `${base}/biblioteca`, `${base}/jornada`, `${base}/leitura`, `${base}/agenda`, `${base}/membros`].includes(
       pathname,
     ) ||
     pathname.startsWith(`${base}/livro/`) ||

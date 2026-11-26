@@ -40,6 +40,8 @@ export type Clube = {
   escolha?: ModoEscolha | null;
   /** club studio: identidade visual completa (ver @/lib/identidade); null = só o tema antigo */
   identidade?: unknown;
+  /** metas anuais do clube: { "2026": 12 } */
+  metas?: unknown;
 };
 
 export type ModoEscolha = "fila" | "votacao" | "rodizio" | "moderadora" | "sorteio";
@@ -422,6 +424,7 @@ export async function editarClube(
       | "tema"
       | "escolha"
       | "identidade"
+      | "metas"
     >
   >,
 ) {
