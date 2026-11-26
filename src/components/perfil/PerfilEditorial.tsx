@@ -6,7 +6,7 @@ import { CapaAuto } from "@/components/CapaAuto";
 import { CapaDoLivro, PrateleiraMadeira } from "@/components/estantes/Biblioteca";
 import { lembrarLivros } from "@/lib/catalogo";
 import { meusClubes } from "@/lib/clubes";
-import { estrelas, numerosDoPerfil, porDataDeLeitura } from "@/lib/estantes";
+import { estrelas, porDataDeLeitura } from "@/lib/estantes";
 import { generoGenerico, traduzirGenero } from "@/lib/generos";
 import type { Match } from "@/lib/match";
 import { usePerfil, type LivroSalvo, type Perfil } from "@/lib/perfil-store";
@@ -22,11 +22,24 @@ import { atividadesDe, quandoFoi, useConsulta, verbo } from "@/lib/social";
 
 export type AbaDoPerfil = "geral" | "jornada" | "resenhas" | "estantes";
 
-const ABAS: { id: AbaDoPerfil; nome: string }[] = [
-  { id: "geral", nome: "visão geral" },
-  { id: "jornada", nome: "jornada" },
-  { id: "resenhas", nome: "resenhas" },
-  { id: "estantes", nome: "estantes" },
+const ABAS: { id: AbaDoPerfil; nome: string; icone: ReactNode }[] = [
+  {
+    id: "geral",
+    nome: "visão geral",
+    icone: (
+      <>
+        <circle cx="12" cy="8" r="4" />
+        <path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6" />
+      </>
+    ),
+  },
+  {
+    id: "jornada",
+    nome: "jornada",
+    icone: <path d="M5 20v-7M10 20V9M15 20v-5M20 20V5" strokeWidth="2.6" />,
+  },
+  { id: "resenhas", nome: "resenhas", icone: <path d="M4 20h4L19 9l-4-4L4 16zM14 6l4 4" /> },
+  { id: "estantes", nome: "estantes", icone: <path d="M4 4v16M9 4v16M14 6l4 14M3 20h18" /> },
 ];
 
 const suave = (pct: number): CSSProperties => ({ background: `color-mix(in srgb, var(--acc) ${pct}%, transparent)` });
@@ -152,36 +165,6 @@ function Seguidores({ numeros, base }: { numeros: { seguidores: number; seguindo
         <b className="font-semibold text-[var(--tinta)]">{numeros.seguindo}</b> seguindo
       </Link>
     </p>
-  );
-}
-
-/** a faixa de estatísticas do perfil, como era antes: meta (ou lidos no ano), lidos ao todo, lendo, quero ler */
-function Estatisticas({ p, proprio, base, onJornada }: { p: Perfil; proprio: boolean; base: string; onJornada: () => void }) {
-  const de = (s: string) => p.livros.filter((l) => (l.status ?? "lendo") === s).length;
-  const itens = [
-    numerosDoPerfil(p).destaque,
-    { n: de("lido"), r: "lidos ao todo" },
-    { n: de("lendo"), r: "lendo" },
-    { n: de("quero"), r: "quero ler" },
-  ];
-  return (
-    <Link
-      href={proprio ? "/perfil?aba=jornada" : `${base}/estantes/lidos`}
-      onClick={(e) => {
-        if (!proprio) return;
-        e.preventDefault();
-        onJornada();
-      }}
-      aria-label={proprio ? "ver sua jornada" : "ver os lidos"}
-      className="grid grid-cols-4 border-y border-[var(--linha)] hover:opacity-90"
-    >
-      {itens.map((x, i) => (
-        <span key={x.r} className={`py-3.5 text-center lg:py-4 ${i ? "border-l border-[var(--linha)]" : ""}`}>
-          <b className="block font-revista text-[23px] leading-none font-normal text-[var(--acc)] tabular-nums lg:text-[28px]">{x.n}</b>
-          <span className="mt-1.5 block text-[10px] tracking-[.08em] text-[var(--suave)] uppercase lg:text-[11px] lg:tracking-[.12em]">{x.r}</span>
-        </span>
-      ))}
-    </Link>
   );
 }
 
@@ -722,8 +705,8 @@ export function PerfilEditorial({
         )}
 
         {/* abas: linha discreta embaixo da selecionada; presas no topo ao rolar */}
-        <div className="sticky top-0 z-20 mt-5 border-b border-[var(--linha)] bg-[var(--papel)]">
-          <nav role="tablist" aria-label="seções do perfil" className="flex gap-6 overflow-x-auto px-5 [scrollbar-width:none] lg:gap-8 lg:px-2 [&::-webkit-scrollbar]:hidden">
+        <div className="sticky top-0 z-20 mt-5 bg-[var(--papel)] px-5 lg:px-2">
+          <nav role="tablist" aria-label="seções do perfil" className="grid grid-cols-4 border-y border-[var(--linha)]">
             {ABAS.map((a) => (
               <button
                 key={a.id}
@@ -731,21 +714,19 @@ export function PerfilEditorial({
                 type="button"
                 aria-selected={aba === a.id}
                 onClick={() => onAba(a.id)}
-                className={`flex min-h-12 flex-none items-center border-b-2 text-[15px] whitespace-nowrap ${
-                  aba === a.id ? "border-[var(--acc)] font-semibold text-[var(--acc)]" : "border-transparent text-[var(--suave)] hover:text-[var(--tinta)]"
+                className={`-mb-px flex min-h-[54px] items-center justify-center gap-2 border-b-2 px-1 text-[13px] whitespace-nowrap sm:text-[15px] ${
+                  aba === a.id ? "border-[var(--acc)] text-[var(--acc)]" : "border-transparent text-[var(--suave)] hover:text-[var(--tinta)]"
                 }`}
               >
+                <svg aria-hidden width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="hidden flex-none sm:block">
+                  {a.icone}
+                </svg>
                 {a.nome}
               </button>
             ))}
           </nav>
         </div>
 
-        {geral ? (
-          <div className="px-5 pt-6 lg:px-2 lg:pt-8">
-            <Estatisticas p={p} proprio={proprio} base={base} onJornada={() => onAba("jornada")} />
-          </div>
-        ) : null}
         {geral ? (
           <div className="grid gap-9 px-5 pt-7 lg:grid-cols-[minmax(0,1.85fr)_minmax(280px,1fr)] lg:gap-14 lg:px-2 lg:pt-9">
             <div className="min-w-0 space-y-9 lg:space-y-11">
