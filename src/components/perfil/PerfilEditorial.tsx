@@ -625,6 +625,8 @@ export function PerfilEditorial({
   }
 
   const botao = "inline-flex min-h-11 items-center rounded-full px-5 text-[14px] font-semibold";
+  const botaoCapa =
+    "flex min-h-10 items-center rounded-full bg-[#F9F5EE]/90 px-4 text-[13px] font-semibold text-[#6B0D24] shadow-sm backdrop-blur-sm hover:bg-[#F9F5EE]";
   const acoes = proprio ? (
     <div className="flex items-center gap-2">
       <Link href="/perfil/editar" className={`${botao} bg-[var(--acc)] text-[var(--papel)]`}>
@@ -656,40 +658,74 @@ export function PerfilEditorial({
       <div className="mx-auto w-full max-w-[1240px] lg:px-12">
         {geral ? (
           <header>
-            <Banner p={p} />
-            <div className="px-5 lg:px-2">
-              <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
-                <div className="-mt-12 lg:-mt-16">
-                  <span className="lg:hidden">
-                    <Foto p={p} tamanho={96} />
-                  </span>
-                  <span className="hidden lg:block">
-                    <Foto p={p} tamanho={128} />
-                  </span>
-                </div>
-                <div className="order-last w-full sm:order-none sm:w-auto">{acoes}</div>
+            {/* a disposição de antes: capa alta, ações sobre a capa, foto saindo da capa */}
+            <div
+              className={`relative h-[150px] bg-cover bg-center sm:h-[220px] lg:h-[280px] ${p.capaImagem ? "" : `pat-${p.capa}`}`}
+              style={p.capaImagem ? { backgroundImage: `url("${p.capaImagem}")` } : undefined}
+            >
+              <div className="absolute right-5 bottom-4 hidden items-center gap-3 sm:flex lg:right-14 lg:bottom-5">
+                {proprio ? (
+                  <>
+                    <Link href="/perfil/editar" className={botaoCapa}>
+                      editar perfil
+                    </Link>
+                    <Link href="/perfil/configuracoes" className={botaoCapa}>
+                      configurações
+                    </Link>
+                    <button type="button" onClick={compartilhar} className={botaoCapa}>
+                      compartilhar perfil
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    {acoesDela}
+                    <button type="button" onClick={compartilhar} className={botaoCapa}>
+                      compartilhar perfil
+                    </button>
+                  </>
+                )}
               </div>
-              <div className="mt-3">
-                <div className="min-w-0">
-                  <h1 className="font-display text-[32px] leading-[1.05] font-semibold text-[var(--acc)] italic lg:text-[42px]">{nome}</h1>
-                  <p className="mt-1 text-[13px] text-[var(--suave)]">
-                    @{p.usuario}
-                    {arquetipo ? (
-                      <>
-                        {" · "}
-                        <Link href={proprio ? "/teste/resultado" : "/teste"} className="hover:text-[var(--acc)]">
-                          {arquetipo.nome}
-                        </Link>
-                      </>
-                    ) : null}
-                  </p>
-                  <Seguidores numeros={numeros} base={base} />
-                  {p.frase ? (
-                    <p className="mt-2 max-w-[56ch] text-[15px] leading-relaxed text-[var(--tinta)]">{p.frase}</p>
-                  ) : proprio ? (
-                    <Convite href="/perfil/editar" texto="escreva um pouco sobre você" />
-                  ) : null}
-                </div>
+              <div className="absolute bottom-0 left-5 translate-y-1/2 lg:left-14">
+                <span className="lg:hidden">
+                  <Foto p={p} tamanho={96} />
+                </span>
+                <span className="hidden lg:block">
+                  <Foto p={p} tamanho={136} />
+                </span>
+              </div>
+            </div>
+            {/* o nome fica fora da capa, ao lado da foto: sempre fácil de ler */}
+            <div className="pt-2 pl-[132px] pr-5 lg:pl-[220px] lg:pt-4">
+              <h1 className="font-display text-[26px] leading-[1.05] font-semibold text-[var(--acc)] italic lg:font-revista lg:text-[40px] lg:font-normal lg:text-[var(--tinta)]">
+                {nome}
+              </h1>
+              <p className="mt-1 text-[12px] font-semibold text-[var(--acc)]">@{p.usuario}</p>
+              <Seguidores numeros={numeros} base={base} />
+            </div>
+            {/* no celular, as ações ficam embaixo do nome */}
+            <div className="mt-5 px-5 sm:hidden">{acoes}</div>
+            <div className="mt-6 px-5 text-center lg:mt-8">
+              {p.frase ? (
+                <p className="mx-auto max-w-[60ch] font-revista text-[18px] leading-[1.4] text-[var(--acc)] italic lg:text-[21px]">“{p.frase}”</p>
+              ) : proprio ? (
+                <Convite href="/perfil/editar" texto="escreva um pouco sobre você" />
+              ) : null}
+              <div className="mt-4 flex justify-center">
+                {arquetipo ? (
+                  <Link
+                    href={proprio ? "/teste/resultado" : "/teste"}
+                    className="inline-flex min-h-9 items-center rounded-full border border-[var(--acc)] px-4 text-[10px] font-bold tracking-[.12em] text-[var(--acc)] uppercase hover:opacity-80"
+                  >
+                    {arquetipo.nome.replace(/^a /, "")}
+                  </Link>
+                ) : proprio ? (
+                  <Link
+                    href="/teste"
+                    className="inline-flex min-h-9 items-center rounded-full border border-[var(--acc)] px-4 text-[10px] font-bold tracking-[.12em] text-[var(--acc)] uppercase hover:opacity-80"
+                  >
+                    ✧ descubra seu tipo de leitora →
+                  </Link>
+                ) : null}
               </div>
             </div>
           </header>
