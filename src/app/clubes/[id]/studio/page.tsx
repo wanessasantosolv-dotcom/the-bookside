@@ -324,7 +324,7 @@ export default function ClubStudioPage() {
 
   const chip = (on: boolean) =>
     `inline-flex min-h-10 flex-none items-center rounded-pill border px-4 text-[13px] font-semibold ${on ? "border-[#692536] bg-[#692536] text-[#F9F5EE]" : "border-[#E6D5CE] text-[#2B1420] hover:border-[#692536]"}`;
-  const titulo = "font-revista text-[22px] italic text-[#692536]";
+  const titulo = "text-[22px] italic text-[#692536] [font-family:var(--font-fraunces),Georgia,serif]";
 
   const editor = (
     <div className="space-y-8">
@@ -929,8 +929,8 @@ export default function ClubStudioPage() {
           <Link href={`/clubes/${clube.id}`} className="inline-flex min-h-10 items-center text-[13px] font-semibold text-[#692536]">
             ← {clube.nome}
           </Link>
-          <p className="font-revista text-[36px] leading-none font-semibold tracking-[-.03em] text-[#692536] italic lg:text-[48px]">club studio.</p>
-          <p className="mt-1.5 font-revista text-[16px] text-[#2B1420] italic">make it yours.</p>
+          <p className="text-[36px] leading-none font-semibold tracking-[-.03em] text-[#692536] italic lg:text-[48px]" style={{ fontFamily: "var(--font-fraunces), Georgia, serif" }}>club studio.</p>
+          <p className="mt-1.5 text-[16px] text-[#2B1420] italic" style={{ fontFamily: "var(--font-fraunces), Georgia, serif" }}>make it yours.</p>
         </div>
         {!publicada ? (
           <p className="max-w-[320px] text-[13px] text-[#5A4A50]">escolha uma identidade que combine com seu clube. nada muda para os membros até você salvar.</p>

@@ -274,13 +274,13 @@ function Cabecalho({ c, papel, membros, ident }: { c: Clube; papel: Papel | null
               <span className="-mt-10 lg:-mt-12">
                 <SeloDoClube c={c} tamanho="grande" ident={ident} />
               </span>
-              <div className="min-w-0 flex-1 pt-3">
+              <div className="min-w-[min(100%,14rem)] flex-1 pt-3">
                 <h1 className="font-revista text-[30px] leading-[1.05] text-bordo italic lg:text-[40px]">{c.nome}</h1>
                 <p className="mt-1 text-[13px] text-tinta-suave">
                   clube de leitura · {membros} {membros === 1 ? "membro" : "membros"}
                 </p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex w-full gap-2 sm:w-auto">
                 <Link href={`${base}/convidar`} className={acao}>
                   convidar membros
                 </Link>
