@@ -22,6 +22,7 @@ import {
   type ModoEscolha,
 } from "@/lib/clubes";
 import { temas } from "@/lib/dados";
+import { lerIdentidade, temaDoId } from "@/lib/identidade";
 
 export default function EditarClubePage() {
   const { clube, membros, papel, recarregar } = useClube();
@@ -141,119 +142,24 @@ export default function EditarClubePage() {
         </label>
         <CampoFoto valor={foto} onMudar={setFoto} />
         <CampoCapa valor={capa} onMudar={setCapa} />
-        <fieldset>
-          <legend className={rotuloCampo}>tema do clube</legend>
-          <p className="mt-1 mb-2 text-[13px] text-tinta-suave">
-            {clube.identidade ? "este clube usa uma identidade do club studio, que tem prioridade sobre esta cor." : "só a cor de destaque."}{" "}
-            <Link href={`/clubes/${clube.id}/studio`} className="font-semibold text-bordo hover:underline">
-              abrir o club studio →
-            </Link>
+        {/* a aparência agora fica toda no club studio (o tema antigo continua salvo, sem mudar) */}
+        <section aria-labelledby="t-aparencia">
+          <p id="t-aparencia" className={rotuloCampo}>
+            aparência do clube
           </p>
-          <p className="mt-1 font-accent text-[13px] italic text-cinza">
-            define a cor de destaque do cabeçalho do clube.
-          </p>
-          <div className="mt-2 flex items-center gap-2">
-            <button
-              type="button"
-              aria-label="temas anteriores"
-              disabled={paginaTema === 0}
-              onClick={() => setPaginaTema((p) => Math.max(0, p - 1))}
-              className="flex size-9 flex-none items-center justify-center rounded-full border border-bege text-bordo disabled:opacity-30"
-            >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M15 18l-6-6 6-6" />
-              </svg>
-            </button>
-            <div className="grid flex-1 grid-cols-4 gap-2.5">
-              {temas
-                .slice(
-                  paginaTema * POR_PAGINA_TEMA,
-                  paginaTema * POR_PAGINA_TEMA + POR_PAGINA_TEMA,
-                )
-                .map((t) => {
-                  const marcado = t.id === tema;
-                  return (
-                    <label key={t.id} className="block">
-                      <input
-                        type="radio"
-                        name="tema"
-                        className="sr-only"
-                        checked={marcado}
-                        onChange={() => setTema(t.id)}
-                      />
-                      <span
-                        aria-label={t.nome}
-                        className={`flex aspect-square w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-md border-2 p-1 text-center ${
-                          marcado
-                            ? "shadow-[0_6px_14px_-8px_rgba(43,20,32,.5)]"
-                            : "border-transparent"
-                        }`}
-                        style={{
-                          background: t.papel,
-                          borderColor: marcado ? t.destaque : "transparent",
-                        }}
-                      >
-                        <span
-                          aria-hidden
-                          className="size-4 rounded-full"
-                          style={{ background: t.destaque }}
-                        />
-                        <span
-                          className="text-[9px] leading-tight font-semibold"
-                          style={{ color: t.texto }}
-                        >
-                          {t.nome}
-                        </span>
-                      </span>
-                    </label>
-                  );
-                })}
-            </div>
-            <button
-              type="button"
-              aria-label="mais temas"
-              disabled={paginaTema === totalPaginasTema - 1}
-              onClick={() =>
-                setPaginaTema((p) => Math.min(totalPaginasTema - 1, p + 1))
-              }
-              className="flex size-9 flex-none items-center justify-center rounded-full border border-bege text-bordo disabled:opacity-30"
-            >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M9 18l6-6-6-6" />
-              </svg>
-            </button>
-          </div>
-          <div className="mt-2.5 flex justify-center gap-1.5">
-            {Array.from({ length: totalPaginasTema }, (_, i) => (
-              <button
-                key={i}
-                type="button"
-                aria-label={`página ${i + 1} de temas`}
-                aria-current={i === paginaTema}
-                onClick={() => setPaginaTema(i)}
-                className={`size-1.5 rounded-full ${i === paginaTema ? "bg-bordo" : "bg-linha"}`}
-              />
-            ))}
-          </div>
-        </fieldset>
+          <Link
+            href={`/clubes/${clube.id}/studio`}
+            className="mt-2 flex items-center justify-between gap-3 rounded-[6px] border border-linha px-4 py-3.5 hover:border-bordo lg:border-fio"
+          >
+            <span>
+              <span className="block text-[15px] font-semibold text-ameixa">club studio</span>
+              <span className="block text-[13px] text-tinta-suave">
+                {lerIdentidade(clube.identidade) ? `tema ${temaDoId(lerIdentidade(clube.identidade)!.tema).nome} · cores, fontes, emblema, estantes e layout` : "temas, cores, fontes, emblema, estantes e layout"}
+              </span>
+            </span>
+            <span className="text-[13px] font-semibold text-bordo">personalizar →</span>
+          </Link>
+        </section>
         <fieldset className="space-y-4">
           <legend className={rotuloCampo}>regras do clube</legend>
           <label className="flex items-center justify-between gap-4 text-sm">
