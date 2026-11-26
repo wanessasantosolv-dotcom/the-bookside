@@ -238,7 +238,7 @@ export function LivroNaPrateleira({
   const abre = face === "lombadas" ? Math.max(0, larguraCapa - medidasDaLombada(livro, altura).w) : 0;
   return (
     <li
-      className="group relative flex-none snap-start animate-subir transition-[margin] duration-500 ease-[cubic-bezier(.2,.8,.2,1)] hover:z-30 hover:mr-[var(--abre)] focus-within:z-30 focus-within:mr-[var(--abre)] motion-reduce:animate-none motion-reduce:transition-none"
+      className="group relative flex-none snap-start animate-subir transition-[padding] duration-300 ease-[cubic-bezier(.2,.8,.2,1)] hover:z-30 hover:pr-[var(--abre)] focus-within:z-30 focus-within:pr-[var(--abre)] motion-reduce:animate-none motion-reduce:transition-none"
       style={{ animationDelay: `${Math.min(ordem, 12) * 45}ms`, ["--abre" as string]: `${abre}px` } as CSSProperties}
     >
       <Link
@@ -254,7 +254,7 @@ export function LivroNaPrateleira({
             {/* ao passar o mouse, o livro gira a partir da lombada e mostra a capa inteira */}
             <span
               aria-hidden
-              className="pointer-events-none absolute bottom-0 left-0 origin-left opacity-0 transition-[transform,opacity] duration-500 ease-[cubic-bezier(.2,.8,.2,1)] [transform:rotateY(88deg)] group-hover:opacity-100 group-hover:[transform:rotateY(0deg)] group-focus-within:opacity-100 group-focus-within:[transform:rotateY(0deg)] motion-reduce:transition-none"
+              className="pointer-events-none absolute bottom-0 left-0 origin-left opacity-0 transition-[transform,opacity] duration-300 ease-[cubic-bezier(.2,.8,.2,1)] [transform:rotateY(88deg)] group-hover:opacity-100 group-hover:[transform:rotateY(0deg)] group-focus-within:opacity-100 group-focus-within:[transform:rotateY(0deg)] motion-reduce:transition-none"
             >
               <span className="block overflow-hidden rounded-[2px] shadow-[6px_10px_22px_-8px_rgba(43,20,32,.55)]" style={{ width: larguraCapa, height: altura }}>
                 <CapaDoLivro livro={livro} altura={altura} className="!max-w-none !min-w-full !object-cover !shadow-none" />

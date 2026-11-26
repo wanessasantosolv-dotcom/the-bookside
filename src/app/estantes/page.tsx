@@ -19,7 +19,19 @@ function BlocoDaEstante({ b, menu }: { b: Bloco; menu?: ReactNode }) {
   const capas = b.livros.slice(0, 6);
   return (
     <li className="group">
-      <Link href={`/estantes/${b.id}`} className="block pt-2 outline-offset-4" aria-label={`${b.nome}, ${plural(b.livros.length, "livro", "livros")}`}>
+      <div className="mb-2 flex items-end justify-between gap-3 px-1">
+        <Link href={`/estantes/${b.id}`} className="min-w-0 flex-1">
+          <span className="block truncate font-revista text-[21px] leading-tight text-bordo italic decoration-1 underline-offset-4 group-hover:underline sm:text-[22px]">
+            {b.nome}
+          </span>
+          <span className="text-[12px] text-tinta-suave">
+            {plural(b.livros.length, "livro", "livros")}
+            {b.info ? ` · ${b.info}` : ""}
+          </span>
+        </Link>
+        {menu}
+      </div>
+      <Link href={`/estantes/${b.id}`} className="block outline-offset-4" aria-label={`${b.nome}, ${plural(b.livros.length, "livro", "livros")}`}>
         <div className="flex h-[92px] items-end gap-2 overflow-hidden px-3 sm:h-[104px]">
           {capas.length ? (
             capas.map((l, i) => (
@@ -42,18 +54,6 @@ function BlocoDaEstante({ b, menu }: { b: Bloco; menu?: ReactNode }) {
         </div>
         <PrateleiraMadeira className="-mt-[5px]" />
       </Link>
-      <div className="mt-2 flex items-center justify-between gap-3 px-1">
-        <Link href={`/estantes/${b.id}`} className="min-w-0 flex-1">
-          <span className="block truncate font-revista text-[21px] leading-tight text-bordo italic decoration-1 underline-offset-4 group-hover:underline sm:text-[22px]">
-            {b.nome}
-          </span>
-          <span className="text-[12px] text-tinta-suave">
-            {plural(b.livros.length, "livro", "livros")}
-            {b.info ? ` · ${b.info}` : ""}
-          </span>
-        </Link>
-        {menu}
-      </div>
     </li>
   );
 }

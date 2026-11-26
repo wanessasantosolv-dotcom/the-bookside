@@ -12,7 +12,6 @@ import {
   ParaVoce,
   QuoteDoDia,
   SeusClubes,
-  saudacao,
 } from "@/components/inicio/Secoes";
 import { useHidratado } from "@/components/PerfilHidratacao";
 import { SeloNovidades } from "@/components/social/AvisoNovidades";
@@ -31,13 +30,7 @@ function Topo({ nome }: { nome: string }) {
   const foto = usePerfil((s) => s.foto);
   const usuario = usePerfil((s) => s.usuario);
   return (
-    <header className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-5 pt-2 lg:mb-6 lg:flex-nowrap lg:px-0 lg:pt-0">
-      {/* no celular, a saudação fica numa linha só dela, abaixo dos ícones */}
-      <div className="order-2 w-full min-w-0 lg:order-none lg:w-auto">
-        <h1 className="font-revista text-[28px] leading-tight text-bordo italic lg:text-[38px]">
-          {saudacao()}, {(nome || "leitora").split(" ")[0].toLowerCase()}.
-        </h1>
-      </div>
+    <header className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1 px-5 pt-2 lg:mb-6 lg:flex-nowrap lg:px-0 lg:pt-0">
       <nav
         aria-label="atalhos"
         className="order-1 -mr-2 ml-auto flex flex-none items-center gap-0.5 lg:order-none lg:mr-0 lg:ml-0 lg:gap-1.5"
