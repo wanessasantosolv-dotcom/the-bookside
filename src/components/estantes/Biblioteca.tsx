@@ -97,7 +97,7 @@ export function PrateleiraMadeira({ className = "" }: { className?: string }) {
   return (
     <span
       aria-hidden
-      className={`pointer-events-none relative z-10 block h-[27px] bg-[url('/estantes/prateleira.svg')] bg-[length:100%_100%] bg-no-repeat ${className}`}
+      className={`prateleira-madeira pointer-events-none relative z-10 block h-[27px] bg-[url('/estantes/prateleira.svg')] bg-[length:100%_100%] bg-no-repeat ${className}`}
     />
   );
 }

@@ -25,6 +25,7 @@ import {
 } from "@/lib/clubes";
 import { temas } from "@/lib/dados";
 import { coresDoTema } from "@/lib/tema";
+import { TIPOGRAFIAS, estiloDaIdentidade, guardarIdentidadeEmCache, identidadeEmCache, lerIdentidade, temaDoId, type Identidade } from "@/lib/identidade";
 import { useModoEscuro } from "@/components/Aparencia";
 import { useConsulta, useMeuId } from "@/lib/social";
 
@@ -103,9 +104,14 @@ function Menu({ c, papel }: { c: Clube; papel: Papel | null }) {
       {aberto ? (
         <div className="absolute top-12 right-0 z-30 w-56 overflow-hidden rounded-xl border border-linha bg-creme-quente py-1 shadow-[0_14px_30px_-16px_rgba(43,20,32,.45)]">
           {papel === "moderadora" ? (
-            <Link href={`/clubes/${c.id}/editar`} className={item}>
-              editar clube
-            </Link>
+            <>
+              <Link href={`/clubes/${c.id}/editar`} className={item}>
+                editar clube
+              </Link>
+              <Link href={`/clubes/${c.id}/studio`} className={item}>
+                personalizar clube
+              </Link>
+            </>
           ) : null}
           <Link href={`/clubes/${c.id}/convidar`} className={item}>
             convidar membros
@@ -184,11 +190,13 @@ function Cabecalho({ c, papel, membros }: { c: Clube; papel: Papel | null; membr
         <div>
           <div className="relative">
             <div
-              className={`aspect-[3/1] w-full bg-cover bg-center lg:aspect-[6/1] ${c.capa || tema ? "" : "pat-estrelas"}`}
+              className={`aspect-[3/1] w-full bg-cover bg-center lg:aspect-[6/1] ${c.capa || tema || c.identidade ? "" : "pat-estrelas"}`}
               style={
                 c.capa
                   ? { backgroundImage: `linear-gradient(rgba(43,20,32,.02),rgba(43,20,32,.14)), url("${c.capa}")` }
-                  : tema
+                  : lerIdentidade(c.identidade)
+                    ? { background: "var(--club-banner)" }
+                    : tema
                     ? { background: tema.fundo }
                     : undefined
               }
@@ -264,14 +272,23 @@ export function ClubeProvedor({
     const [c, membros] = await Promise.all([clube(id), membrosDe(id)]);
     return c ? { c, membros } : null;
   }, [id]);
+  // a identidade do club studio (ou a última vista, enquanto carrega: sem piscar a cor errada)
+  const [emCache, setEmCache] = useState<Identidade | null>(null);
+  useEffect(() => setEmCache(identidadeEmCache(id)), [id]);
+  const publicada = consulta.dados ? lerIdentidade(consulta.dados.c.identidade) : undefined;
+  useEffect(() => {
+    if (publicada !== undefined) guardarIdentidadeEmCache(id, publicada);
+  }, [id, publicada === undefined ? "?" : JSON.stringify(publicada)]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (consulta.carregando && !consulta.dados)
     return (
-      <Animacao
-        tipo="livro"
-        titulo="abrindo o clube"
-        sub="organizando a estante e as fichas de leitura"
-      />
+      <div style={emCache ? estiloDaIdentidade(emCache) : undefined} className={`clube-tokens flex flex-1 flex-col ${emCache ? "clube-identidade bg-creme" : ""}`}>
+        <Animacao
+          tipo="livro"
+          titulo="abrindo o clube"
+          sub="organizando a estante e as fichas de leitura"
+        />
+      </div>
     );
   if (consulta.erro)
     return <ErroOuFalta erro={consulta.erro} onTentar={consulta.recarregar} />;
@@ -305,8 +322,9 @@ export function ClubeProvedor({
     >
       {/* o tema do clube vale para todas as telas dele, como o tema do perfil */}
       <div
-        style={coresDoTema(c.tema, modoEscuro)}
-        className="flex flex-1 flex-col bg-creme pb-8 lg:bg-jornal"
+        style={publicada ? estiloDaIdentidade(publicada) : coresDoTema(c.tema, modoEscuro)}
+        data-titulo={publicada && !TIPOGRAFIAS.find((t) => t.id === (publicada.tipografia ?? temaDoId(publicada.tema).tipografia))?.italico ? "reto" : undefined}
+        className={`clube-tokens flex flex-1 flex-col bg-creme pb-8 lg:bg-jornal ${publicada ? "clube-identidade" : ""}`}
       >
         {comAbas ? <Cabecalho c={c} papel={papel} membros={membros.length} /> : null}
         <div className={comAbas ? largura : `${largura} lg:py-8`}>

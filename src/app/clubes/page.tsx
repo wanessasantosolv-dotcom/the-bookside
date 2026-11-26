@@ -11,6 +11,7 @@ import { andamento, encontrosDe, meusClubes, modoDe, type Encontro, type ResumoC
 import { usePerfil } from "@/lib/perfil-store";
 import { temas } from "@/lib/dados";
 import { coresDoTema } from "@/lib/tema";
+import { TIPOGRAFIAS, estiloDaIdentidade, lerIdentidade, temaDoId } from "@/lib/identidade";
 import { useModoEscuro } from "@/components/Aparencia";
 import { nomeDe, pessoasPorId, useConsulta, useMeuId } from "@/lib/social";
 
@@ -31,6 +32,7 @@ function Cartao({
   const lista = c.membros.map((id) => pessoas.get(id)!).filter(Boolean);
   const and = c.lendo ? andamento(c.lendo) : null;
   const tema = temas.find((t) => t.id === c.tema);
+  const ident = lerIdentidade(c.identidade);
   const meu = c.lendo ? meusLivros.find((l) => l.id === c.lendo!.livro.id) : undefined;
   const meuPct = meu
     ? meu.status === "lido"
@@ -49,7 +51,11 @@ function Cartao({
       : null;
 
   return (
-    <li style={coresDoTema(c.tema, modoEscuro)}>
+    <li
+      style={ident ? estiloDaIdentidade(ident) : coresDoTema(c.tema, modoEscuro)}
+      data-titulo={ident && !TIPOGRAFIAS.find((t) => t.id === (ident.tipografia ?? temaDoId(ident.tema).tipografia))?.italico ? "reto" : undefined}
+      className={ident ? "clube-tokens clube-identidade" : "clube-tokens"}
+    >
       <Link
         href={`/clubes/${c.id}`}
         aria-label={`ver clube ${c.nome}`}
@@ -58,8 +64,8 @@ function Cartao({
         {/* identidade do clube */}
         <div className="relative">
           <div
-            className={`relative h-[84px] bg-cover bg-center sm:h-[96px] ${c.capa || tema ? "" : "pat-estrelas"}`}
-            style={c.capa ? { backgroundImage: `url("${c.capa}")` } : tema ? { background: tema.fundo } : undefined}
+            className={`relative h-[84px] bg-cover bg-center sm:h-[96px] ${c.capa || tema || ident ? "" : "pat-estrelas"}`}
+            style={c.capa ? { backgroundImage: `url("${c.capa}")` } : ident ? { background: "var(--club-banner)" } : tema ? { background: tema.fundo } : undefined}
           />
           <div className="relative flex gap-3 px-4 pt-2 pb-4">
             {c.foto ? (

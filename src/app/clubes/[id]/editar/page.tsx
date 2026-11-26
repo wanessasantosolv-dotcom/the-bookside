@@ -143,6 +143,12 @@ export default function EditarClubePage() {
         <CampoCapa valor={capa} onMudar={setCapa} />
         <fieldset>
           <legend className={rotuloCampo}>tema do clube</legend>
+          <p className="mt-1 mb-2 text-[13px] text-tinta-suave">
+            {clube.identidade ? "este clube usa uma identidade do club studio, que tem prioridade sobre esta cor." : "só a cor de destaque."}{" "}
+            <Link href={`/clubes/${clube.id}/studio`} className="font-semibold text-bordo hover:underline">
+              abrir o club studio →
+            </Link>
+          </p>
           <p className="mt-1 font-accent text-[13px] italic text-cinza">
             define a cor de destaque do cabeçalho do clube.
           </p>

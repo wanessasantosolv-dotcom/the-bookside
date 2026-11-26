@@ -399,3 +399,44 @@ main {
   from { transform: rotate(-14deg) scale(1.35); opacity: 0; }
   to { transform: rotate(-14deg) scale(1); opacity: .85; }
 }
+
+/* ───────── club studio: a identidade do clube ───────── */
+/* tipografias sem itálico próprio não ganham itálico falso nos títulos */
+.clube-identidade[data-titulo="reto"] .font-revista,
+.clube-identidade[data-titulo="reto"] .font-display { font-style: normal; }
+.clube-identidade .font-revista,
+.clube-identidade .font-display { font-weight: var(--club-heading-weight, inherit); }
+/* a estante ganha a cor do clube, mantendo a textura da madeira */
+.clube-identidade .prateleira-madeira::after {
+  content: ""; position: absolute; inset: 0; background: var(--club-shelf-color);
+  mix-blend-mode: multiply; opacity: .78;
+  -webkit-mask: url('/estantes/prateleira.svg') 0 0 / 100% 100% no-repeat;
+  mask: url('/estantes/prateleira.svg') 0 0 / 100% 100% no-repeat;
+}
+.clube-identidade input, .clube-identidade textarea, .clube-identidade select { color: var(--club-text); }
+/* tokens semânticos dos clubes: o padrão sai dos tokens do app (inclusive do tema antigo
+   aplicado no mesmo elemento); o club studio sobrescreve cada um */
+.clube-tokens {
+  --club-bg: var(--color-creme);
+  --club-bg-secondary: var(--color-mesa);
+  --club-surface: var(--color-papel);
+  --club-surface-elevated: var(--color-creme-quente);
+  --club-surface-accent: var(--color-rosa-fundo);
+  --club-primary: var(--color-bordo);
+  --club-primary-hover: var(--color-bordo-suave);
+  --club-on-primary: var(--color-creme);
+  --club-secondary: var(--color-rosa-antigo);
+  --club-tertiary: var(--color-ouro);
+  --club-accent: var(--color-ouro);
+  --club-text: var(--color-ameixa);
+  --club-text-muted: var(--color-tinta-suave);
+  --club-border: var(--color-linha);
+  --club-divider: var(--color-linha);
+  --club-input-bg: var(--color-creme-quente);
+  --club-progress-track: var(--color-linha);
+  --club-progress-fill: var(--color-bordo);
+  --club-chart-1: var(--color-bordo);
+  --club-chart-2: var(--color-rosa-antigo);
+  --club-chart-3: var(--color-ouro);
+  --club-card-radius: 6px;
+}

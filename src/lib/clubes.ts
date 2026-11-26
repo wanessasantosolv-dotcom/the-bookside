@@ -38,6 +38,8 @@ export type Clube = {
   tema: string | null;
   /** como o clube escolhe os livros (ver modosDeEscolha) */
   escolha?: ModoEscolha | null;
+  /** club studio: identidade visual completa (ver @/lib/identidade); null = só o tema antigo */
+  identidade?: unknown;
 };
 
 export type ModoEscolha = "fila" | "votacao" | "rodizio" | "moderadora" | "sorteio";
@@ -419,6 +421,7 @@ export async function editarClube(
       | "max_membros"
       | "tema"
       | "escolha"
+      | "identidade"
     >
   >,
 ) {
