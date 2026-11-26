@@ -3,6 +3,9 @@
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
+import Link from "next/link";
+import { Selo } from "@/components/desafios/Selo";
+import { CapaDoLivro, PrateleiraMadeira } from "@/components/estantes/Biblioteca";
 import { ComConta, ErroOuFalta } from "@/components/social/Estados";
 import { Avatar } from "@/components/social/Pessoas";
 import { Voltar } from "@/components/Voltar";
@@ -97,90 +100,116 @@ function Detalhe() {
     }
   }
 
-  const raio = 64;
-  const volta = 2 * Math.PI * raio;
 
   return (
     <div>
-      {/* topo */}
-      <div
-        className="inverso rounded-xl p-6 text-creme lg:rounded-[6px] lg:p-8"
-        style={{
-          background: `linear-gradient(150deg, ${modelo?.cor ?? "#6B0D24"}, #2b1420)`,
-        }}
-      >
-        <p className="text-[10px] font-semibold tracking-[.2em] text-rosa-claro uppercase">
-          {modelo?.emoji ?? "✦"} desafio · {dataCurta(d.inicio)} a{" "}
-          {dataCurta(d.fim)}
-        </p>
-        <h1 className="mt-2 font-display text-[30px] leading-[1.05] font-semibold italic lg:font-revista lg:text-[40px] lg:font-normal">
-          {d.titulo}
-        </h1>
-        <div className="mt-6 flex items-center gap-6">
-          <div className="relative size-[150px] flex-none">
-            <svg
-              viewBox="0 0 150 150"
-              className="absolute inset-0 -rotate-90"
-              aria-hidden
-            >
-              <circle
-                cx="75"
-                cy="75"
-                r={raio}
-                fill="none"
-                stroke="rgba(249,245,238,.18)"
-                strokeWidth="10"
-              />
-              <circle
-                cx="75"
-                cy="75"
-                r={raio}
-                fill="none"
-                stroke={pct >= 1 ? "#C9A46A" : "#F2C9D2"}
-                strokeWidth="10"
-                strokeLinecap="round"
-                strokeDasharray={volta}
-                strokeDashoffset={volta * (1 - pct)}
-                style={{ transition: "stroke-dashoffset .8s ease" }}
-              />
-            </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="font-revista text-[34px] leading-none">
-                {meu.progresso.toLocaleString("pt-BR")}
+      {/* topo: o selo, o nome e o meu progresso, no papel */}
+      <div className="grid gap-6 rounded-[10px] bg-creme-quente px-5 py-6 sm:grid-cols-[auto_minmax(0,1fr)] sm:gap-8 lg:px-8 lg:py-8">
+        <span className="flex justify-center sm:justify-start">
+          <Selo
+            tipo={d.tipo}
+            numero={d.meta}
+            rotulo={modelo?.titulo ?? (d.clube_id ? "clube" : "desafio")}
+            cor={modelo?.cor}
+            tamanho={120}
+            girar={-2}
+            estado={pct >= 1 ? "concluido" : resta < 0 ? "encerrado" : "andamento"}
+            data={pct >= 1 ? String(new Date().getFullYear()) : undefined}
+          />
+        </span>
+        <div className="min-w-0">
+          <p className="flex flex-wrap gap-1.5 text-[11px] text-tinta-suave">
+            <span className="rounded-full border border-linha px-2.5 py-0.5">{d.clube_id ? "do clube" : ps.length > 1 ? "com amigas" : "pessoal"}</span>
+            <span className="rounded-full border border-linha px-2.5 py-0.5">
+              {dataCurta(d.inicio)} a {dataCurta(d.fim)}
+            </span>
+            <span className="rounded-full border border-linha px-2.5 py-0.5">
+              {pct >= 1 ? "concluído" : resta < 0 ? "encerrado" : resta === 0 ? "último dia" : `${resta} ${resta === 1 ? "dia" : "dias"} pela frente`}
+            </span>
+          </p>
+          <h1 className="mt-2 font-revista text-[30px] leading-[1.05] text-ameixa lg:text-[40px]">{d.titulo}</h1>
+          {modelo?.descricao ? <p className="mt-1.5 text-[14px] text-tinta-suave">{modelo.descricao}</p> : null}
+          <div className="mt-5">
+            <p className="flex flex-wrap items-baseline gap-x-3">
+              <span className="font-revista text-[34px] leading-none text-bordo tabular-nums">{meu.progresso.toLocaleString("pt-BR")}</span>
+              <span className="text-[14px] text-tinta-suave">
+                de {d.meta.toLocaleString("pt-BR")} {unidade[d.tipo][1]} · {Math.round(pct * 100)}%
               </span>
-              <span className="mt-1 text-[11px] text-rosa-claro">
-                de {d.meta.toLocaleString("pt-BR")}
-              </span>
-            </div>
-          </div>
-          <div className="min-w-0">
-            <p className="font-revista text-xl italic">
+            </p>
+            <span className="mt-2 block h-[6px] max-w-[560px] rounded-full bg-linha" aria-hidden>
+              <span className="block h-full rounded-full bg-bordo transition-[width] duration-700" style={{ width: `${Math.max(2, pct * 100)}%` }} />
+            </span>
+            <p className="mt-2 text-[13px] text-cinza">
               {pct >= 1
-                ? "desafio completo 🏆"
+                ? "meta alcançada ✦"
                 : `faltam ${(d.meta - meu.progresso).toLocaleString("pt-BR")} ${unidade[d.tipo][d.meta - meu.progresso === 1 ? 0 : 1]}`}
             </p>
-            <p className="mt-1 text-[13px] text-rosa-claro">
-              {resta > 0
-                ? `${resta} ${resta === 1 ? "dia" : "dias"} pela frente`
-                : resta === 0
-                  ? "último dia!"
-                  : "o desafio acabou"}
-            </p>
-            {!participo ? (
-              <button
-                type="button"
-                onClick={async () => {
-                  await entrarNoDesafio(d.id);
-                  consulta.recarregar();
-                }}
-                className="mt-4 h-11 rounded-pill bg-creme px-6 text-sm font-semibold text-bordo"
-              >
-                entrar no desafio
-              </button>
-            ) : null}
           </div>
+          {!participo ? (
+            <button
+              type="button"
+              onClick={async () => {
+                await entrarNoDesafio(d.id);
+                consulta.recarregar();
+              }}
+              className="mt-4 inline-flex min-h-11 items-center rounded-full bg-bordo px-6 text-sm font-semibold text-creme"
+            >
+              entrar no desafio
+            </button>
+          ) : null}
         </div>
       </div>
+
+      {/* como conta: as regras de verdade do cálculo, por tipo */}
+      <section className="mt-8" aria-labelledby="t-regras">
+        <h2 id="t-regras" className="border-b border-linha pb-2 font-revista text-[22px] text-bordo italic">
+          como conta
+        </h2>
+        <ul className="mt-3 space-y-1.5 text-[14px] text-tinta-suave">
+          <li>período: de {dataCurta(d.inicio)} a {dataCurta(d.fim)}, pela data em que você marcou cada leitura.</li>
+          {d.tipo === "livros" ? <li>vale cada livro marcado como lido dentro do período.</li> : null}
+          {d.tipo === "paginas" ? (
+            <li>vale o total de páginas dos livros terminados no período, mais as páginas lidas no modo foco em livros ainda não terminados.</li>
+          ) : null}
+          {d.tipo === "pilha" ? <li>vale cada livro terminado no período que já estava na sua estante antes do início do desafio.</li> : null}
+          {d.tipo === "minutos" ? <li>vale o tempo das sessões no modo foco dentro do período.</li> : null}
+          {d.tipo === "dias" ? <li>vale cada dia diferente em que você leu no modo foco dentro do período.</li> : null}
+          {d.tipo === "bingo" ? <li>cada casa se marca sozinha quando um livro terminado no período atende a ela.</li> : null}
+          {ps.length > 1 ? <li>cada pessoa tem a sua própria meta; o progresso de uma não soma no da outra.</li> : null}
+        </ul>
+      </section>
+
+      {/* os livros que contaram (só nos tipos que contam livros) */}
+      {["livros", "paginas", "pilha", "bingo"].includes(d.tipo)
+        ? (() => {
+            const contaram = livros.filter(
+              (l) =>
+                l.status === "lido" &&
+                l.lidoEm &&
+                l.lidoEm.slice(0, 10) >= d.inicio &&
+                l.lidoEm.slice(0, 10) <= d.fim &&
+                (d.tipo !== "pilha" || (l.adicionadoEm && l.adicionadoEm.slice(0, 10) < d.inicio)),
+            );
+            if (!contaram.length) return null;
+            return (
+              <section className="mt-8" aria-labelledby="t-contaram">
+                <h2 id="t-contaram" className="border-b border-linha pb-2 font-revista text-[22px] text-bordo italic">
+                  livros que contaram
+                </h2>
+                <div className="mt-3">
+                  <div className="flex items-end gap-3 overflow-x-auto px-3 pt-2 [scrollbar-width:none]">
+                    {contaram.map((l) => (
+                      <Link key={l.id} href={`/livro/${l.id}`} title={`${l.titulo}${d.tipo === "paginas" && l.paginas ? ` · ${l.paginas} págs.` : ""}`} className="flex-none transition-transform hover:-translate-y-1">
+                        <CapaDoLivro livro={l} altura={110} />
+                      </Link>
+                    ))}
+                  </div>
+                  <PrateleiraMadeira className="-mt-[5px]" />
+                </div>
+              </section>
+            );
+          })()
+        : null}
 
       {/* o bingo */}
       {d.tipo === "bingo" ? (
@@ -252,7 +281,7 @@ function Detalhe() {
                   <span className="flex items-baseline justify-between gap-2 text-sm">
                     <b className="truncate font-semibold">
                       {p.usuario_id === eu ? "você" : nomeDe(p.pessoa)}
-                      {p.concluido_em ? " 🏆" : ""}
+                      {p.concluido_em ? " · concluiu ✦" : ""}
                     </b>
                     <span className="flex-none text-xs text-cinza">
                       {(p.progresso ?? 0).toLocaleString("pt-BR")}/

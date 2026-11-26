@@ -393,3 +393,9 @@ body {
 main {
   overflow-x: clip;
 }
+
+/* o carimbo de "concluído" pousando no selo */
+@keyframes carimbo {
+  from { transform: rotate(-14deg) scale(1.35); opacity: 0; }
+  to { transform: rotate(-14deg) scale(1); opacity: .85; }
+}

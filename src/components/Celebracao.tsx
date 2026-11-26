@@ -9,7 +9,7 @@ import { useCelebracao } from "@/lib/celebrar";
 const PECAS = {
   livro: ["✦", "★", "📖", "✧", "♥"],
   meta: ["✦", "★", "🎉", "✧", "📚", "♥"],
-  desafio: ["✦", "🏆", "★", "✧", "♥"],
+  desafio: ["✦", "✧", "★"],
   amei: ["♥", "♥", "♡", "✦"],
   favorito: ["✦", "★", "✧"],
 };
@@ -129,9 +129,7 @@ export function Celebracao() {
                 <span className="mt-3 block text-4xl">
                   {atual.tipo === "meta"
                     ? "📚"
-                    : atual.tipo === "desafio"
-                      ? "🏆"
-                      : "✦"}
+                    : "✦"}
                 </span>
               )}
               <span className="mt-3 block font-display text-[24px] leading-tight font-semibold italic text-ameixa">
