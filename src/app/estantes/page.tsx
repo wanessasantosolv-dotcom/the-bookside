@@ -14,72 +14,45 @@ const plural = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um :
 
 type Bloco = { id: string; nome: string; livros: LivroSalvo[]; info?: string; estante?: EstanteInfo };
 
-/** uma estante no índice: no celular, uma linha compacta; em telas maiores, mini prateleira com as capas */
+/** uma estante no índice: mini prateleira de madeira com as primeiras capas, nome e quantidade (celular e computador) */
 function BlocoDaEstante({ b, menu }: { b: Bloco; menu?: ReactNode }) {
   const capas = b.livros.slice(0, 6);
-  const contagem = (
-    <span className="text-[12px] text-tinta-suave">
-      {plural(b.livros.length, "livro", "livros")}
-      {b.info ? ` · ${b.info}` : ""}
-    </span>
-  );
   return (
-    <li className="group relative">
-      {/* celular */}
-      <div className="flex items-center gap-2 border-b border-linha sm:hidden">
-        <Link href={`/estantes/${b.id}`} className="flex min-h-[76px] min-w-0 flex-1 items-center gap-4 py-3">
-          <span className="relative h-[60px] w-[66px] flex-none">
-            {capas.length ? (
-              capas.slice(0, 3).map((l, i) => (
-                <span key={l.id} className="absolute bottom-0" style={{ left: i * 13, zIndex: 3 - i }}>
-                  <CapaDoLivro livro={l} altura={58} className="!min-w-0 ring-1 ring-papel" />
+    <li className="group">
+      <Link href={`/estantes/${b.id}`} className="block pt-2 outline-offset-4" aria-label={`${b.nome}, ${plural(b.livros.length, "livro", "livros")}`}>
+        <div className="flex h-[92px] items-end gap-2 overflow-hidden px-3 sm:h-[104px]">
+          {capas.length ? (
+            capas.map((l, i) => (
+              <span
+                key={l.id}
+                className={`flex-none transition-transform duration-300 group-hover:-translate-y-1 motion-reduce:transition-none ${i >= 4 ? "hidden sm:block" : ""}`}
+                style={{ transitionDelay: `${i * 30}ms` }}
+              >
+                <span className="sm:hidden">
+                  <CapaDoLivro livro={l} altura={84} />
                 </span>
-              ))
-            ) : (
-              <span className="absolute inset-y-1 left-0 w-[40px] rounded-[2px] border border-dashed border-rosa-antigo" />
-            )}
+                <span className="hidden sm:block">
+                  <CapaDoLivro livro={l} altura={96} />
+                </span>
+              </span>
+            ))
+          ) : (
+            <span className="mb-3 font-accent text-[13px] text-cinza italic">ainda sem livros</span>
+          )}
+        </div>
+        <PrateleiraMadeira className="-mt-[5px]" />
+      </Link>
+      <div className="mt-2 flex items-center justify-between gap-3 px-1">
+        <Link href={`/estantes/${b.id}`} className="min-w-0 flex-1">
+          <span className="block truncate font-revista text-[21px] leading-tight text-bordo italic decoration-1 underline-offset-4 group-hover:underline sm:text-[22px]">
+            {b.nome}
           </span>
-          <span className="min-w-0 flex-1">
-            <span className="block truncate font-revista text-[20px] leading-tight text-bordo italic">{b.nome}</span>
-            {contagem}
-          </span>
-          <span aria-hidden className="text-[20px] text-cinza">
-            ›
+          <span className="text-[12px] text-tinta-suave">
+            {plural(b.livros.length, "livro", "livros")}
+            {b.info ? ` · ${b.info}` : ""}
           </span>
         </Link>
         {menu}
-      </div>
-      {/* tablet e computador */}
-      <div className="hidden sm:block">
-        <Link href={`/estantes/${b.id}`} className="block rounded-[10px] px-1 pt-3 pb-2 outline-offset-4">
-          <div className="relative">
-            <div className="flex h-[104px] items-end gap-2 overflow-hidden px-3">
-              {capas.length ? (
-                capas.map((l, i) => (
-                  <span
-                    key={l.id}
-                    className="flex-none transition-transform duration-300 group-hover:-translate-y-1 motion-reduce:transition-none"
-                    style={{ transitionDelay: `${i * 30}ms` }}
-                  >
-                    <CapaDoLivro livro={l} altura={96} />
-                  </span>
-                ))
-              ) : (
-                <span className="mb-3 font-accent text-[13px] text-cinza italic">ainda sem livros</span>
-              )}
-            </div>
-            <PrateleiraMadeira className="-mt-[5px]" />
-          </div>
-          <div className="mt-2 flex items-baseline justify-between gap-3 px-1 pr-12">
-            <span className="min-w-0">
-              <span className="block truncate font-revista text-[22px] leading-tight text-bordo italic decoration-1 underline-offset-4 group-hover:underline">
-                {b.nome}
-              </span>
-              {contagem}
-            </span>
-          </div>
-        </Link>
-        {menu ? <div className="absolute top-[140px] right-0">{menu}</div> : null}
       </div>
     </li>
   );
@@ -215,7 +188,7 @@ export default function EstantesPage() {
             </Link>
           </div>
         ) : (
-          <ul className="mt-4 grid border-t border-linha sm:mt-6 sm:gap-x-10 sm:gap-y-8 sm:border-t-0 sm:grid-cols-2 xl:grid-cols-3">
+          <ul className="mt-5 grid gap-y-8 sm:mt-6 sm:grid-cols-2 sm:gap-x-10 xl:grid-cols-3">
             {blocos.map((b) => (
               <BlocoDaEstante key={b.id} b={b} menu={menuDe(b)} />
             ))}
