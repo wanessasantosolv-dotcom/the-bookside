@@ -36,6 +36,34 @@
   --color-alerta: #8a5a21;
   --color-sucesso: #59634f;
 
+  /*
+   * Tokens contextuais: cada experiência tem a sua cor, para o bordô não ser
+   * a resposta padrão de tudo. "-tinta" é a versão para texto (AA sobre as
+   * superfícies); "-suave" é para fundos, trilhos e seleção.
+   */
+  --color-progresso: #59634f; /* barras e anéis de progresso de leitura */
+  --color-progresso-suave: #e3e6cf;
+  --color-meta: #d5dd76; /* metas e conquistas */
+  --color-meta-suave: #eef0c9;
+  --color-meta-tinta: #565f24;
+  --color-diario: #ecaabb; /* diário literário e destaques afetivos */
+  --color-diario-suave: #f6dde4;
+  --color-diario-tinta: #8e4459;
+  --color-descoberta: #8297d1; /* curadorias e descobertas */
+  --color-descoberta-suave: #e2e7f5;
+  --color-descoberta-tinta: #45578c;
+  --color-citacao: #f1dfa0; /* citações, avaliações e recomendações */
+  --color-citacao-suave: #f8efcf;
+  --color-citacao-tinta: #73601a;
+  /* gráficos: paleta categórica (a mesma categoria, a mesma cor, em todo o app) */
+  --color-grafico-1: #692536;
+  --color-grafico-2: #8297d1;
+  --color-grafico-3: #59634f;
+  /* 4–6 em tons mais firmes: rosa, cítrico e manteiga puros somem sobre o creme */
+  --color-grafico-4: #c2617a;
+  --color-grafico-5: #9aa33a;
+  --color-grafico-6: #c9a13b;
+
   --font-display: var(--font-playfair), Georgia, serif;
   --font-accent: var(--font-dm-serif), Georgia, serif;
   --font-sans: var(--font-inter), system-ui, sans-serif;
@@ -113,6 +141,26 @@ html[data-modo="escuro"] {
   --color-erro: #ea8c9d;
   --color-alerta: #e5c17d;
   --color-sucesso: #a8b397;
+  --color-progresso: #a8b397;
+  --color-progresso-suave: #3a3a33;
+  --color-meta: #d5dd76;
+  --color-meta-suave: #3b3a2a;
+  --color-meta-tinta: #d5dd76;
+  --color-diario: #ecaabb;
+  --color-diario-suave: #45293a;
+  --color-diario-tinta: #ecaabb;
+  --color-descoberta: #a3b3e0;
+  --color-descoberta-suave: #2f3045;
+  --color-descoberta-tinta: #a3b3e0;
+  --color-citacao: #f1dfa0;
+  --color-citacao-suave: #3f3428;
+  --color-citacao-tinta: #f1dfa0;
+  --color-grafico-1: #ecaabb;
+  --color-grafico-2: #a3b3e0;
+  --color-grafico-3: #a8b397;
+  --color-grafico-4: #d896a7;
+  --color-grafico-5: #d5dd76;
+  --color-grafico-6: #f1dfa0;
 }
 
 /* no modo escuro, os blocos "de destaque" (vinho/ameixa com texto claro) continuam como no claro */

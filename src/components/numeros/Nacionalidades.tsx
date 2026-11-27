@@ -79,7 +79,7 @@ export function Nacionalidades({ web }: { web?: boolean }) {
                   </span>
                   <span className="mt-1 block h-1.5 overflow-hidden rounded-full bg-linha/70">
                     <span
-                      className="block h-full rounded-full bg-bordo"
+                      className="block h-full rounded-full bg-descoberta"
                       style={{ width: `${(qtd / total) * 100}%` }}
                     />
                   </span>

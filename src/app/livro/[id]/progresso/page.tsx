@@ -126,7 +126,7 @@ function Progresso({ livro }: { livro: LivroSalvo }) {
             aria-label="progresso do livro"
           >
             <i
-              className="block h-full rounded-full bg-bordo transition-[width]"
+              className="block h-full rounded-full bg-progresso transition-[width]"
               style={{ width: `${pct}%` }}
             />
           </div>

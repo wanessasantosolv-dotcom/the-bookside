@@ -20,12 +20,16 @@ export function PequenasCuradorias({ explorar }: { explorar: (consulta: string) 
             <button type="button" onClick={() => explorar(c.consulta)} className="group block w-full overflow-hidden rounded-[8px] border border-linha bg-creme-quente text-left hover:border-bege">
               <span className="relative block aspect-[4/3] overflow-hidden bg-papel">
                 <img src={`/nas-entrelinhas/perguntas/${c.imagem}.png`} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03] motion-reduce:transition-none" />
-                <span aria-hidden className="absolute inset-x-0 bottom-0 h-1" style={{ background: c.cor }} />
+                {/* duas cores da paleta por curadoria: cada seleção com a sua cara */}
+                <span aria-hidden className="absolute inset-x-0 bottom-0 flex h-1.5">
+                  <span className="flex-[2]" style={{ background: c.cor }} />
+                  <span className="flex-1" style={{ background: c.cor2 }} />
+                </span>
               </span>
-              <span className="block px-3 pt-2.5 pb-3">
+              <span className="block px-3 pt-2.5 pb-3" style={{ background: `color-mix(in srgb, ${c.cor} 12%, transparent)` }}>
                 <span className="block font-revista text-[16px] leading-tight text-ameixa">{c.nome}</span>
                 <span className="mt-0.5 block text-[12px] leading-snug text-tinta-suave">{c.descricao}</span>
-                <span className="mt-2 block text-[12px] font-semibold text-bordo">Explorar seleção</span>
+                <span className="mt-2 block text-[12px] font-semibold text-descoberta-tinta">Explorar seleção</span>
               </span>
             </button>
           </li>

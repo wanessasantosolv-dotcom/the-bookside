@@ -290,7 +290,7 @@ function CartaoClube({ c, dados, eu, depois }: { c: ResumoClube; dados: Dados; e
                 <p className="truncate text-[13px] font-semibold text-ameixa">{lendo.livro.titulo}</p>
                 <div className="mt-1.5 flex items-center gap-2">
                   <span aria-hidden className="block h-[3px] min-w-0 flex-1 rounded-full bg-linha">
-                    <span className="block h-full rounded-full bg-bordo" style={{ width: `${meuPct ?? 0}%` }} />
+                    <span className="block h-full rounded-full bg-progresso" style={{ width: `${meuPct ?? 0}%` }} />
                   </span>
                   <span className="flex-none text-[11px] tabular-nums text-tinta-suave">{meuPct === null ? "—" : meuPct === 100 ? "concluí" : `${meuPct}%`}</span>
                 </div>
@@ -424,7 +424,7 @@ function LeiturasCompartilhadas({ leituras, eu }: { leituras: LeituraComPessoas[
                   <p className="truncate text-[12px] text-cinza">com {outras.map((p) => nomeDe(p.pessoa)).join(", ") || "convite enviado"}</p>
                   <div className="mt-1.5 flex items-center gap-2">
                     <span aria-hidden className="block h-[3px] min-w-0 flex-1 rounded-full bg-linha">
-                      <span className="block h-full rounded-full bg-bordo" style={{ width: `${pct}%` }} />
+                      <span className="block h-full rounded-full bg-progresso" style={{ width: `${pct}%` }} />
                     </span>
                     <span className="text-[11px] tabular-nums text-tinta-suave">{minha?.estado === "pausou" ? "em pausa" : pct === 100 ? "concluí" : `${pct}%`}</span>
                   </div>
@@ -463,7 +463,7 @@ function ProximosEncontros({ encontros }: { encontros: Dados["encontros"] }) {
             <Link href={`/clubes/${e.clube_id}/agenda`} className="flex gap-3 py-3 hover:text-bordo">
               <span className="w-14 flex-none text-center">
                 <span className="block text-[11px] text-cinza uppercase">{new Date(e.quando).toLocaleDateString("pt-BR", { month: "short" }).replace(".", "")}</span>
-                <span className="block font-revista text-[24px] leading-none text-bordo">{new Date(e.quando).getDate()}</span>
+                <span className="block font-revista text-[24px] leading-none text-descoberta-tinta">{new Date(e.quando).getDate()}</span>
               </span>
               <span className="min-w-0">
                 <span className="block truncate text-[14px] font-semibold text-ameixa">{e.titulo}</span>

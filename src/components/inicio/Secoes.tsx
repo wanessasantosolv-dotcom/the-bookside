@@ -57,7 +57,7 @@ const pct = (l: LivroSalvo) =>
 function Barra({ valor, className = "" }: { valor: number; className?: string }) {
   return (
     <span className={`block h-[4px] rounded-full bg-linha ${className}`} aria-hidden>
-      <span className="block h-full rounded-full bg-bordo" style={{ width: `${Math.max(2, Math.min(100, valor))}%` }} />
+      <span className="block h-full rounded-full bg-progresso" style={{ width: `${Math.max(2, Math.min(100, valor))}%` }} />
     </span>
   );
 }
@@ -94,8 +94,8 @@ export function QuoteDoDia() {
   }
   const botao = "grid size-10 place-items-center rounded-full text-cinza hover:bg-bordo/5 hover:text-bordo";
   return (
-    <figure className="flex items-start gap-3 rounded-[10px] bg-rosa-fundo/60 px-4 py-4 lg:items-center lg:gap-5 lg:px-6">
-      <span aria-hidden className="font-revista text-[40px] leading-[.8] text-bordo/50 lg:text-[48px]">
+    <figure className="flex items-start gap-3 rounded-[10px] bg-citacao-suave px-4 py-4 lg:items-center lg:gap-5 lg:px-6">
+      <span aria-hidden className="font-revista text-[40px] leading-[.8] text-citacao-tinta/70 lg:text-[48px]">
         “
       </span>
       <div className="min-w-0 flex-1">
@@ -272,13 +272,13 @@ export function MetaDeLeitura({ faixa }: { faixa?: boolean }) {
         aria-label={`meta de ${ano}: ${lidos} de ${meta} livros. ver jornada`}
       >
         <svg aria-hidden width="38" height="38" viewBox="0 0 38 38" className="flex-none -rotate-90">
-          <circle cx="19" cy="19" r={r} fill="none" stroke="var(--color-citrico)" strokeWidth="3.5" />
+          <circle cx="19" cy="19" r={r} fill="none" stroke="var(--color-meta)" strokeWidth="3.5" />
           <circle
             cx="19"
             cy="19"
             r={r}
             fill="none"
-            stroke="var(--color-bordo)"
+            stroke="var(--color-meta-tinta)"
             strokeWidth="3.5"
             strokeLinecap="round"
             strokeDasharray={`${(Math.min(100, p) / 100) * volta} ${volta}`}
@@ -298,12 +298,14 @@ export function MetaDeLeitura({ faixa }: { faixa?: boolean }) {
     <section aria-labelledby="titulo-meta">
       <Cabecalho id="titulo-meta" titulo="meta de leitura" acao={{ href: "/perfil?aba=jornada", rotulo: "jornada" }} />
       <p className="flex items-baseline gap-2">
-        <span className="font-revista text-[34px] leading-none text-bordo tabular-nums">
+        <span className="font-revista text-[34px] leading-none text-meta-tinta tabular-nums">
           {lidos}/{meta}
         </span>
         <span className="text-[13px] text-tinta-suave">livros · {p}%</span>
       </p>
-      <Barra valor={p} className="mt-3" />
+      <span className="mt-3 block h-[5px] rounded-full bg-meta-suave" aria-hidden>
+        <span className="block h-full rounded-full bg-meta-tinta" style={{ width: `${Math.max(2, Math.min(100, p))}%` }} />
+      </span>
       <p className="mt-2 text-[12px] text-cinza">{faltam ? `faltam ${faltam} para a meta de ${ano}` : `meta de ${ano} atingida ✦`}</p>
     </section>
   );
@@ -496,6 +498,7 @@ export function ParaVoce() {
   return (
     <section aria-labelledby="titulo-para-voce">
       <Cabecalho id="titulo-para-voce" titulo="para você" acao={{ href: "/descobrir", rotulo: "descobrir" }} />
+      <span aria-hidden className="-mt-2 mb-3 block h-[3px] w-10 rounded-full bg-descoberta" />
       <ul className="-mx-5 flex snap-x gap-4 overflow-x-auto px-5 pb-1 [scrollbar-width:none] lg:mx-0 lg:grid lg:grid-cols-6 lg:overflow-visible lg:px-0 [&::-webkit-scrollbar]:hidden">
         {itens.map((l) => {
           const ja = guardados.has(l.id);
@@ -513,7 +516,7 @@ export function ParaVoce() {
                     setGuardados((s) => new Set(s).add(l.id));
                   }}
                   aria-label={ja ? `${l.titulo} está no quero ler` : `adicionar ${l.titulo} ao quero ler`}
-                  className="absolute right-1.5 bottom-1.5 grid size-9 place-items-center rounded-full bg-papel/95 text-bordo shadow-sm hover:bg-papel disabled:text-oliva"
+                  className="absolute right-1.5 bottom-1.5 grid size-9 place-items-center rounded-full bg-papel/95 text-descoberta-tinta shadow-sm hover:bg-papel disabled:text-progresso"
                 >
                   <svg aria-hidden width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d={ja ? "M20 6 9 17l-5-5" : "M12 5v14M5 12h14"} />

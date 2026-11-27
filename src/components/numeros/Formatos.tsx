@@ -68,9 +68,9 @@ export function FormatosDoAno({ n, web }: { n: Numeros; web?: boolean }) {
               style={{
                 width: `${(f.qtd / total) * 100}%`,
                 background: [
-                  "var(--color-bordo)",
-                  "var(--color-rosa-antigo)",
-                  "#C9A46A",
+                  "var(--color-grafico-1)",
+                  "var(--color-grafico-2)",
+                  "var(--color-grafico-3)",
                 ][i % 3],
               }}
             />
@@ -85,9 +85,9 @@ export function FormatosDoAno({ n, web }: { n: Numeros; web?: boolean }) {
                 className="flex size-9 flex-none items-center justify-center rounded-full text-creme"
                 style={{
                   background: [
-                    "var(--color-bordo)",
-                    "var(--color-rosa-antigo)",
-                    "#C9A46A",
+                    "var(--color-grafico-1)",
+                    "var(--color-grafico-2)",
+                    "var(--color-grafico-3)",
                   ][i % 3],
                 }}
               >

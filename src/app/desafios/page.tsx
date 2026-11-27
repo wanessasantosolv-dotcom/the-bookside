@@ -55,8 +55,8 @@ const abaDaUrl = (): Aba => {
 
 function Barra({ valor }: { valor: number }) {
   return (
-    <span className="block h-[5px] rounded-full bg-linha" aria-hidden>
-      <span className="block h-full rounded-full bg-bordo transition-[width] duration-500" style={{ width: `${Math.max(2, Math.min(100, valor))}%` }} />
+    <span className="block h-[5px] rounded-full bg-meta-suave" aria-hidden>
+      <span className="block h-full rounded-full bg-meta-tinta transition-[width] duration-500" style={{ width: `${Math.max(2, Math.min(100, valor))}%` }} />
     </span>
   );
 }

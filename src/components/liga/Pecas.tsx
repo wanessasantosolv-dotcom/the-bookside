@@ -64,12 +64,12 @@ const DESENHOS: Record<TipoDistincao, React.ReactNode> = {
 export function Insignia({ tipo, tamanho = 64, apagada }: { tipo: TipoDistincao; tamanho?: number; apagada?: boolean }) {
   return (
     <svg role="img" aria-hidden width={tamanho} height={tamanho * 1.12} viewBox="0 0 48 54" className={apagada ? "opacity-40" : ""}>
-      <ellipse cx="24" cy="27" rx="22" ry="25" fill="var(--color-rosa-fundo)" stroke="var(--color-bordo)" strokeWidth="1.2" />
-      <ellipse cx="24" cy="27" rx="18.5" ry="21.5" fill="none" stroke="var(--color-bordo)" strokeWidth=".6" strokeDasharray="1.4 1.6" />
-      <g fill="none" stroke="var(--color-bordo)" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round" transform="translate(0 2)">
+      <ellipse cx="24" cy="27" rx="22" ry="25" fill="var(--color-meta-suave)" stroke="var(--color-meta-tinta)" strokeWidth="1.2" />
+      <ellipse cx="24" cy="27" rx="18.5" ry="21.5" fill="none" stroke="var(--color-meta-tinta)" strokeWidth=".6" strokeDasharray="1.4 1.6" />
+      <g fill="none" stroke="var(--color-meta-tinta)" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round" transform="translate(0 2)">
         {DESENHOS[tipo]}
       </g>
-      <path d="M17 44.5h14" stroke="var(--color-bordo)" strokeWidth=".8" />
+      <path d="M17 44.5h14" stroke="var(--color-meta-tinta)" strokeWidth=".8" />
     </svg>
   );
 }

@@ -290,7 +290,7 @@ export function CartaoAtividade({
             <div className="mt-2.5 max-w-[320px]">
               <div className="h-1.5 rounded-full bg-rosa-fundo">
                 <i
-                  className="block h-full rounded-full bg-bordo"
+                  className="block h-full rounded-full bg-progresso"
                   style={{ width: `${pct}%` }}
                 />
               </div>

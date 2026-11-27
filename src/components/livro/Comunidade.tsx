@@ -110,7 +110,7 @@ export function EntreLeitores({ c }: { c: Comunidade }) {
                   {x.f} <span className="text-ouro">★</span>
                 </span>
                 <span className="h-[6px] flex-1 overflow-hidden rounded-full bg-linha/60">
-                  <span className="block h-full rounded-full bg-bordo" style={{ width: `${x.parte * 100}%` }} />
+                  <span className="block h-full rounded-full bg-progresso" style={{ width: `${x.parte * 100}%` }} />
                 </span>
                 <span className="w-9 flex-none text-right text-cinza tabular-nums">
                   {Math.round(x.parte * 100)}%

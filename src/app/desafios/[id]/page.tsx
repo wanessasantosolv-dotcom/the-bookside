@@ -136,8 +136,8 @@ function Detalhe() {
                 de {d.meta.toLocaleString("pt-BR")} {unidade[d.tipo][1]} · {Math.round(pct * 100)}%
               </span>
             </p>
-            <span className="mt-2 block h-[6px] max-w-[560px] rounded-full bg-linha" aria-hidden>
-              <span className="block h-full rounded-full bg-bordo transition-[width] duration-700" style={{ width: `${Math.max(2, pct * 100)}%` }} />
+            <span className="mt-2 block h-[6px] max-w-[560px] rounded-full bg-meta-suave" aria-hidden>
+              <span className="block h-full rounded-full bg-meta-tinta transition-[width] duration-700" style={{ width: `${Math.max(2, pct * 100)}%` }} />
             </span>
             <p className="mt-2 text-[13px] text-cinza">
               {pct >= 1
@@ -288,9 +288,9 @@ function Detalhe() {
                       {d.meta.toLocaleString("pt-BR")}
                     </span>
                   </span>
-                  <span className="mt-1 block h-1.5 overflow-hidden rounded-full bg-linha/70">
+                  <span className="mt-1 block h-1.5 overflow-hidden rounded-full bg-meta-suave">
                     <span
-                      className="block h-full rounded-full bg-bordo"
+                      className="block h-full rounded-full bg-meta-tinta"
                       style={{ width: `${pp}%` }}
                     />
                   </span>

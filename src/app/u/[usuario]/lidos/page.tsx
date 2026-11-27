@@ -160,7 +160,7 @@ function Estante({ usuario }: { usuario: string }) {
                 <Link href={`/livro/${l.id}`}>
                   <CapaLivro titulo={l.titulo} capa={l.capa} cor={corDoLivro(l.id)} className="w-full" />
                   <p className="mt-2 line-clamp-2 font-display text-sm leading-tight font-semibold italic lg:font-revista lg:font-normal">{l.titulo}</p>
-                  {l.nota ? <p className="mt-1 text-[10px] text-bordo">{estrelas(l.nota)}</p> : null}
+                  {l.nota ? <p className="mt-1 text-[10px] text-citacao-tinta">{estrelas(l.nota)}</p> : null}
                   <p className="mt-0.5 text-[9px] font-semibold tracking-[.06em] text-cinza uppercase">
                     {quandoNaEstante(l, estante)}
                   </p>
@@ -181,7 +181,7 @@ function Estante({ usuario }: { usuario: string }) {
                     </span>
                     <span className="mt-1 block font-display text-base leading-tight font-semibold italic lg:font-revista lg:font-normal">{l.titulo}</span>
                     <span className="mt-1 flex flex-wrap items-center gap-x-2 text-xs">
-                      {l.nota ? <span className="text-bordo">{estrelas(l.nota)}</span> : null}
+                      {l.nota ? <span className="text-citacao-tinta">{estrelas(l.nota)}</span> : null}
                       {quandoNaEstante(l, estante) ? (
                         <span className="text-[11px] text-cinza">{quandoNaEstante(l, estante)}</span>
                       ) : null}

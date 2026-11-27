@@ -22,8 +22,8 @@ export function Estrela({ cheio, tamanho }: { cheio: 0 | 0.5 | 1; tamanho: numbe
       <path
         clipPath={`url(#${id})`}
         d="M12 2.8l2.75 5.9 6.45.75-4.78 4.4 1.28 6.37L12 17.05 6.3 20.22l1.28-6.37L2.8 9.45l6.45-.75z"
-        fill="var(--color-bordo)"
-        stroke="var(--color-bordo)"
+        fill="var(--color-citacao-tinta)"
+        stroke="var(--color-citacao-tinta)"
         strokeWidth="1.3"
         strokeLinejoin="round"
       />

@@ -30,7 +30,7 @@ export function AmigasComLivro({ livroId }: { livroId: string }) {
             <Avatar pessoa={pessoa} tamanho={30} />
             <span className="min-w-0 text-[13px]">
               <b className="font-semibold">{nomeDe(pessoa)}</b> <span className="text-cinza">{rotulo[livro.status ?? "lendo"] ?? "tem na estante"}</span>
-              {livro.nota ? <span className="block text-xs text-bordo">{estrelas(livro.nota)}</span> : null}
+              {livro.nota ? <span className="block text-xs text-citacao-tinta">{estrelas(livro.nota)}</span> : null}
               {livro.resenha ? <span className="mt-0.5 line-clamp-2 block font-accent text-[13px] italic text-cinza">“{livro.resenha}”</span> : null}
             </span>
           </Link>

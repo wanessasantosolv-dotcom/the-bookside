@@ -24,6 +24,18 @@ export const NOME_STATUS: Record<StatusLivro, string> = {
   abandonado: "abandonado",
 };
 
+/** cada estado de leitura com a sua cor (um pontinho ao lado do nome, nunca a cor sozinha) */
+export const COR_STATUS: Record<StatusLivro, string> = {
+  lendo: "var(--color-progresso)",
+  lido: "var(--color-bordo)",
+  quero: "var(--color-descoberta)",
+  pausado: "var(--color-citacao-tinta)",
+  abandonado: "var(--color-cinza)",
+};
+export function PontoStatus({ l }: { l: LivroSalvo }) {
+  return <span aria-hidden className="mr-1.5 inline-block size-[7px] rounded-full align-middle" style={{ background: l.soNaLista ? "var(--color-bege)" : COR_STATUS[statusDe(l)] }} />;
+}
+
 export const OPCOES_ORDEM: { id: Ordem; nome: string }[] = [
   { id: "personalizada", nome: "personalizado" },
   { id: "recentes", nome: "mais recentes" },
@@ -150,12 +162,12 @@ function Detalhes({ l }: { l: LivroSalvo }) {
       <span className="mt-0.5 block truncate text-[11px] text-cinza">{l.autor}</span>
       <span className="mt-1.5 flex items-center gap-2 text-[11px] text-tinta-suave">
         <span>{l.soNaLista ? "só na lista" : NOME_STATUS[statusDe(l)]}</span>
-        {l.nota ? <span className="text-bordo" aria-label={`nota ${l.nota}`}>{estrelas(l.nota)}</span> : null}
+        {l.nota ? <span className="text-citacao-tinta" aria-label={`nota ${l.nota}`}>{estrelas(l.nota)}</span> : null}
       </span>
       {statusDe(l) === "lendo" && p !== null ? (
         <span className="mt-1.5 flex items-center gap-2 text-[10px] text-cinza">
           <span className="h-[3px] flex-1 rounded-full bg-linha">
-            <span className="block h-full rounded-full bg-bordo" style={{ width: `${Math.round(p * 100)}%` }} />
+            <span className="block h-full rounded-full bg-progresso" style={{ width: `${Math.round(p * 100)}%` }} />
           </span>
           {Math.round(p * 100)}%
         </span>
@@ -498,7 +510,7 @@ export function GradeDeLivros({ livros }: { livros: LivroSalvo[] }) {
             {/* só a capa; a leitura em andamento ganha a barrinha de progresso */}
             {statusDe(l) === "lendo" && progressoDe(l) !== null ? (
               <span aria-label={`${Math.round((progressoDe(l) ?? 0) * 100)}% lido`} className="mx-auto mt-2 block h-[3px] w-3/4 rounded-full bg-linha">
-                <span className="block h-full rounded-full bg-bordo" style={{ width: `${Math.round((progressoDe(l) ?? 0) * 100)}%` }} />
+                <span className="block h-full rounded-full bg-progresso" style={{ width: `${Math.round((progressoDe(l) ?? 0) * 100)}%` }} />
               </span>
             ) : null}
             <span className="sr-only">{l.titulo}, {l.autor}</span>
@@ -536,21 +548,22 @@ export function ListaDeLivros({
               </Link>
               <span className="block truncate text-[12px] text-cinza">{l.autor}</span>
               <span className="mt-0.5 block truncate text-[11px] text-cinza sm:hidden">
+                <PontoStatus l={l} />
                 {l.soNaLista ? "só na lista" : NOME_STATUS[statusDe(l)]}
                 {l.nota ? ` · ${estrelas(l.nota)}` : ""}
                 {statusDe(l) === "lendo" && p !== null ? ` · ${Math.round(p * 100)}%` : ""}
               </span>
               {extras.length ? <span className="mt-0.5 hidden truncate text-[11px] text-cinza sm:block">em {extras.join(", ")}</span> : null}
             </div>
-            <span className="hidden text-[12px] text-tinta-suave sm:block">{l.soNaLista ? "só na lista" : NOME_STATUS[statusDe(l)]}</span>
-            <span className="hidden text-[12px] text-bordo sm:block" aria-label={l.nota ? `nota ${l.nota}` : "sem nota"}>
+            <span className="hidden text-[12px] text-tinta-suave sm:block"><PontoStatus l={l} />{l.soNaLista ? "só na lista" : NOME_STATUS[statusDe(l)]}</span>
+            <span className="hidden text-[12px] text-citacao-tinta sm:block" aria-label={l.nota ? `nota ${l.nota}` : "sem nota"}>
               {l.nota ? estrelas(l.nota) : <span className="text-cinza">—</span>}
             </span>
             <span className="hidden items-center gap-2 text-[11px] text-cinza sm:flex">
               {p !== null && statusDe(l) !== "lido" ? (
                 <>
                   <span className="h-[3px] flex-1 rounded-full bg-linha">
-                    <span className="block h-full rounded-full bg-bordo" style={{ width: `${Math.round(p * 100)}%` }} />
+                    <span className="block h-full rounded-full bg-progresso" style={{ width: `${Math.round(p * 100)}%` }} />
                   </span>
                   {Math.round(p * 100)}%
                 </>
