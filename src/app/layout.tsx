@@ -120,7 +120,10 @@ export const metadata: Metadata = {
   // no iPhone, "Adicionar à Tela de Início" abre em tela cheia, com este nome e ícone
   appleWebApp: { capable: true, title: "bookside", statusBarStyle: "default" },
   icons: {
-    icon: [{ url: "/icons/favicon-32.png", sizes: "32x32", type: "image/png" }],
+    icon: [
+      { url: "/icons/favicon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/icons/favicon-96.png", sizes: "96x96", type: "image/png" },
+    ],
     apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180" }],
   },
   formatDetection: { telephone: false },
