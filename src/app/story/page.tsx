@@ -177,7 +177,7 @@ function Conteudo() {
       <div className="mt-2 lg:grid lg:grid-cols-[minmax(0,3fr)_minmax(340px,2fr)] lg:items-start lg:gap-10">
         {/* pré-visualização: a arte em si, sobre fundo neutro */}
         <div className="lg:sticky lg:top-6">
-          <div className="flex justify-center bg-[#E9E4DE] px-4 py-6 dark:bg-[#2a2226] lg:rounded-[8px] lg:py-10">
+          <div className="flex justify-center bg-[#E9E4DE] px-4 py-6 lg:rounded-[8px] lg:py-10">
             {vazio ? (
               <div className="flex h-[400px] w-[300px] items-center justify-center rounded-[6px] border border-dashed border-bege p-8 text-center text-[14px] text-cinza italic">
                 {tipo === "lendo" ? "nenhum livro em lendo agora." : tipo === "terminei" ? "nenhum livro lido com data ainda." : `nenhum livro terminado em ${MESES[mesNum - 1]} de ${anoMes}.`}
