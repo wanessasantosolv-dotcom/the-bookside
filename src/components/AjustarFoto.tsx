@@ -8,8 +8,8 @@ const ZOOM_MAX = 4;
 /**
  * Formatos de corte. O quadro tem a MESMA proporção de onde a imagem aparece:
  * - foto: círculo 1:1
- * - capa (perfil): 3:1, como as capas do twitter (1500×500); `guia` marca a
- *   faixa do meio que aparece no topo do perfil no computador (mais largo e baixo)
+ * - capa (perfil): 2:1, como no celular; `guia` marca a faixa do meio que
+ *   aparece no topo do perfil no computador (mais largo e baixo)
  * - clube: 3:1, como no celular; no computador a capa vai de ponta a ponta
  *   (5:1), então `guia` marca a faixa do meio que aparece lá
  * - livro: capa de livro 2:3
@@ -26,8 +26,8 @@ type Formato = {
 };
 const FORMATOS: Record<"foto" | "capa" | "clube" | "livro", Formato> = {
   foto: { qw: 260, qh: 260, sw: 400, sh: 400, titulo: "ajuste sua foto", redondo: true, qualidade: 0.85 },
-  capa: { qw: 480, qh: 160, sw: 1500, sh: 500, titulo: "ajuste a capa", redondo: false, qualidade: 0.8, guia: 0.7 },
-  clube: { qw: 480, qh: 160, sw: 1500, sh: 500, titulo: "ajuste a capa do clube", redondo: false, qualidade: 0.8, guia: 0.6 },
+  capa: { qw: 300, qh: 150, sw: 1200, sh: 600, titulo: "ajuste a capa", redondo: false, qualidade: 0.78, guia: 0.47 },
+  clube: { qw: 330, qh: 110, sw: 1500, sh: 500, titulo: "ajuste a capa do clube", redondo: false, qualidade: 0.8, guia: 0.6 },
   livro: { qw: 200, qh: 300, sw: 400, sh: 600, titulo: "ajuste a capa do livro", redondo: false, qualidade: 0.85 },
 };
 
