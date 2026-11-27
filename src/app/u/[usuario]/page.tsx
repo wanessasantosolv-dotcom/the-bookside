@@ -38,7 +38,6 @@ import {
   useConsulta,
   useMeuId,
 } from "@/lib/social";
-import { arquetipos, type ArquetipoId } from "@/lib/teste";
 
 /** "vocês duas": o match com essa leitora, no perfil dela */
 function SecaoMatch({
@@ -215,9 +214,6 @@ function PerfilDela({ usuario }: { usuario: string }) {
     .map((id) => p.livros.find((l) => l.id === id))
     .filter((l) => l !== undefined)
     .slice(0, 4);
-  const arquetipo = p.bookside
-    ? arquetipos[p.bookside.principal as ArquetipoId]
-    : null;
   const base = `/u/${pessoa.usuario}`;
   const meusLivros = new Set(
     usePerfil

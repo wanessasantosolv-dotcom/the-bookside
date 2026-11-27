@@ -9,6 +9,9 @@ const nextConfig: NextConfig = {
       { source: "/ler-junto/novo", destination: "/co-read/novo", permanent: true },
       { source: "/ler-junto/:id", destination: "/co-read/:id", permanent: true },
       { source: "/perfil/configuracoes", destination: "/configuracoes", permanent: true },
+      // o teste antigo deu lugar a nas entrelinhas
+      { source: "/teste", destination: "/nas-entrelinhas", permanent: false },
+      { source: "/teste/:caminho*", destination: "/nas-entrelinhas", permanent: false },
     ];
   },
 };

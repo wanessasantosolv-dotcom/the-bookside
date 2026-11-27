@@ -8,6 +8,7 @@ import { iniciarNuvem } from "@/lib/nuvem";
 import { iniciarAtividades } from "@/lib/social";
 import { usePerfil } from "@/lib/perfil-store";
 import { useTeste } from "@/lib/teste-store";
+import { useEntrelinhas } from "@/lib/entrelinhas-store";
 
 /**
  * O perfil fica salvo no navegador (e, com conta, também no Supabase). Ele só é lido depois que a página monta,
@@ -18,6 +19,7 @@ export function PerfilHidratacao() {
     let parar = () => {};
     let ativo = true;
     void useTeste.persist.rehydrate();
+    void useEntrelinhas.persist.rehydrate();
     // primeiro o que está no navegador; depois a nuvem (se houver conta) por cima
     void Promise.resolve(usePerfil.persist.rehydrate()).then(() => {
       if (!ativo) return;

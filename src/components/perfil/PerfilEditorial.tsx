@@ -12,7 +12,7 @@ import { estrelas, porDataDeLeitura } from "@/lib/estantes";
 import { generoGenerico, traduzirGenero } from "@/lib/generos";
 import type { Match } from "@/lib/match";
 import { usePerfil, type LivroSalvo, type Perfil } from "@/lib/perfil-store";
-import { arquetipos, type ArquetipoId } from "@/lib/teste";
+import { CartaNoPerfil } from "@/components/entrelinhas/CartaNoPerfil";
 import { atividadesDe, quandoFoi, useConsulta, verbo } from "@/lib/social";
 
 /*
@@ -602,7 +602,6 @@ export function PerfilEditorial({
   const [aviso, setAviso] = useState("");
   const base = `/u/${p.usuario}`;
   const nome = p.nome || p.usuario || "leitora";
-  const arquetipo = p.bookside ? arquetipos[p.bookside.principal as ArquetipoId] : null;
   const favoritos = (p.favoritos ?? []).map((id) => p.livros.find((l) => l.id === id)).filter((l): l is LivroSalvo => !!l).slice(0, 6);
   const lendo = p.livros.filter((l) => !l.status || l.status === "lendo");
   const lidos = p.livros.filter((l) => l.status === "lido").sort(porDataDeLeitura);
@@ -677,21 +676,7 @@ export function PerfilEditorial({
               ) : null}
               {temaApp(p.tema) ? <OrnamentoTema tema={temaApp(p.tema)!} nivel={p.decoracao ?? temaApp(p.tema)!.decoracao} className="mx-auto mt-4 max-w-[220px]" /> : null}
               <div className="mt-4 flex justify-center">
-                {arquetipo ? (
-                  <Link
-                    href={proprio ? "/teste/resultado" : "/teste"}
-                    className="inline-flex min-h-9 items-center rounded-full border border-[var(--acc)] px-4 text-[10px] font-bold tracking-[.12em] text-[var(--acc)] uppercase hover:opacity-80"
-                  >
-                    {arquetipo.nome.replace(/^a /, "")}
-                  </Link>
-                ) : proprio ? (
-                  <Link
-                    href="/teste"
-                    className="inline-flex min-h-9 items-center rounded-full border border-[var(--acc)] px-4 text-[10px] font-bold tracking-[.12em] text-[var(--acc)] uppercase hover:opacity-80"
-                  >
-                    ✧ descubra seu tipo de leitora →
-                  </Link>
-                ) : null}
+                <CartaNoPerfil carta={p.cartaLiteraria?.carta} proprio={proprio} />
               </div>
             </div>
           </header>

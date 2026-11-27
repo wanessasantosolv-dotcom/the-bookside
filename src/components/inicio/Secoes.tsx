@@ -1,5 +1,6 @@
 "use client";
 
+import { useEntrelinhas } from "@/lib/entrelinhas-store";
 import Link from "next/link";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { CapaAuto } from "@/components/CapaAuto";
@@ -562,15 +563,15 @@ export function JournalTemporario() {
 
 /** os atalhos que antes eram banners: discretos, no fim */
 export function Atalhos({ children }: { children?: ReactNode }) {
-  const bookside = usePerfil((s) => s.bookside);
+  const carta = useEntrelinhas((s) => s.resultado);
   return (
     <nav aria-label="atalhos" className="flex flex-wrap gap-x-5 gap-y-1 text-[12px]">
       <Link href="/desafios" data-tour="desafios" className="flex min-h-9 items-center font-semibold text-cinza hover:text-bordo">
         desafios de leitura →
       </Link>
-      {!bookside ? (
-        <Link href="/teste" className="flex min-h-9 items-center font-semibold text-cinza hover:text-bordo">
-          que tipo de leitora você é? →
+      {!carta ? (
+        <Link href="/nas-entrelinhas" className="flex min-h-9 items-center font-semibold text-cinza hover:text-bordo">
+          nas entrelinhas: descubra sua carta literária →
         </Link>
       ) : null}
       {children}

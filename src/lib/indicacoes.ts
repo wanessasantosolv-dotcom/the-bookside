@@ -24,6 +24,8 @@ import { usePerfil, type LivroSalvo } from "@/lib/perfil-store";
 import { supabase } from "@/lib/supabase";
 import { RESERVA } from "@/lib/reserva";
 import { arquetipos, type ArquetipoId } from "@/lib/teste";
+import { CATALOGO as CARTAS_ENTRELINHAS, ehCarta } from "@/lib/entrelinhas";
+import { useEntrelinhas } from "@/lib/entrelinhas-store";
 
 export type Indicacao = LivroBusca & {
   motivo: string;
@@ -408,6 +410,13 @@ async function montar(
     ...(tipo ? (ASSUNTOS_DO_TIPO[tipo.id] ?? []) : [])
       .slice(0, 1)
       .map((g) => porGenero(g, `pra ${tipo!.nome.replace(/^a /, "")} · ${g}`)),
+    // a curadoria da carta de nas entrelinhas (títulos reais, achados no catálogo)
+    ...cartaDaPessoa().flatMap((c) => CARTAS_ENTRELINHAS[c].curadoria.map((x) =>
+        livrosDoGoogle(`intitle:"${x.titulo}" inauthor:"${x.autor}"`, "pt", undefined, { inicio: 0 })
+          .then((l) => l.filter((y) => y.capa).slice(0, 1).map((y) => ({ ...y, motivo: `pra ${CARTAS_ENTRELINHAS[c].nome}` })))
+          .catch(() => [] as Indicacao[]),
+      ),
+    ),
     ...assuntos.map((g) => porGenero(g, `do seu gosto · ${g}`)),
     ...assuntos.slice(0, 1).map((g) => porGenero(g, `lançamento · ${g}`, true)),
     tendencias(
@@ -433,10 +442,17 @@ function assinaturaAtual(rodada = 0) {
     (e.favoritos ?? []).join(","),
     (e.gostos ?? []).join(","),
     e.bookside?.principal ?? "",
+    cartaDaPessoa().join(""),
     rodada,
   ].join("|");
 }
 const VALIDADE = 12 * 3600e3;
+
+/** a carta de nas entrelinhas (a do perfil ou o último resultado) */
+function cartaDaPessoa(): ("D" | "X" | "R" | "S" | "W" | "N" | "C" | "E")[] {
+  const c = usePerfil.getState().cartaLiteraria?.carta ?? useEntrelinhas.getState().resultado?.carta;
+  return ehCarta(c) ? [c] : [];
+}
 
 function guardadas(assinatura: string): Indicacao[] | null {
   try {

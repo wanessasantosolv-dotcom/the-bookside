@@ -171,6 +171,8 @@ export type Perfil = {
     livros: string[];
     salvoEm: string;
   } | null;
+  /** a carta de nas entrelinhas exibida no perfil (só a carta: respostas e pontos ficam privados) */
+  cartaLiteraria: { carta: string; em: string } | null;
   onboardingConcluido: boolean;
   /** já viu o passo a passo mostrando onde fica cada coisa no app */
   tourVisto: boolean;
@@ -238,6 +240,7 @@ export const perfilInicial: Perfil = {
   favoritos: [],
   estantesProprias: [],
   bookside: null,
+  cartaLiteraria: null,
   onboardingConcluido: false,
   tourVisto: false,
   novidadesVistasEm: null,

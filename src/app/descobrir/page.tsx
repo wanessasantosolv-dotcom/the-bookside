@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { CapaLivro } from "@/components/CapaLivro";
 import { Curadorias, EntreLeitores, PorAfinidade } from "@/components/descobrir/Secoes";
+import { ChamadaEntrelinhas } from "@/components/entrelinhas/Chamada";
 import { useHidratado } from "@/components/PerfilHidratacao";
 import {
   dadosDoTermino,
@@ -54,6 +55,7 @@ export default function DescobrirPage() {
             <UmaPorVez />
             {/* uma página só: o resto aparece em seções compactas logo abaixo */}
             <div className="mt-10 space-y-10 px-6 lg:px-0">
+              <ChamadaEntrelinhas />
               <PorAfinidade />
               <EntreLeitores />
               <Curadorias />
