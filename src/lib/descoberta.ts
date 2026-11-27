@@ -48,7 +48,7 @@ const norm = (s: string) =>
 
 const cache = new Map<string, Resposta>();
 /** versão do motor de descoberta (muda a chave do cache local junto com a do servidor) */
-const VERSAO = "v5";
+const VERSAO = "v6";
 
 /** filtros objetivos: só passam livros cujo dado confirma o critério */
 function confirma(l: LivroBusca, criterios: Caracteristica[]) {
@@ -101,7 +101,10 @@ type Pedido = { consulta: string; filtros?: string[]; contexto?: Contexto; exclu
 
 export async function buscarDescoberta({ consulta, filtros = [], contexto, excluir = [], sementes: pedidas = [] }: Pedido, signal?: AbortSignal): Promise<Resposta> {
   // abrir uma curadoria pela busca usa a mesma seleção verificada dela
-  const sementes = pedidas.length ? pedidas : (CURADORIAS.find((c) => c.consulta.toLowerCase() === consulta.trim().toLowerCase())?.sementes ?? []);
+  // pelo nome ("Entre livros e segredos") ou pela consulta da curadoria
+  const curadoria = CURADORIAS.find((c) => [c.consulta, c.nome].some((x) => x.toLowerCase() === consulta.trim().toLowerCase()));
+  const sementes = pedidas.length ? pedidas : (curadoria?.sementes ?? []);
+  if (curadoria && consulta.trim().toLowerCase() === curadoria.nome.toLowerCase()) consulta = `${curadoria.consulta} (${curadoria.descricao} Critérios: ${curadoria.criterios.join(", ")})`;
   const chave = JSON.stringify([VERSAO, consulta.trim().toLowerCase(), [...filtros].sort(), contexto?.nome ?? "", contexto?.descricao ?? "", sementes.length]);
   const pronto = cache.get(chave);
   if (pronto) return pronto;

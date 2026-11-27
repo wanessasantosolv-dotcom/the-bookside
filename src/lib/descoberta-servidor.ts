@@ -36,7 +36,7 @@ export type LivroDescoberto = {
 export type ItemDescoberto = { livro: LivroDescoberto; porque?: string; caracteristicas: string[]; fontes: Fonte[]; pesquisaExterna: boolean };
 export type RespostaDescobrir = { versao: string; resultados: ItemDescoberto[]; pesquisaExterna: boolean; avisos: string[]; medidas: Medidas; diagnostico?: Diagnostico | null };
 /** versão do motor: muda a chave do cache e descarta resultados de regras antigas */
-export const VERSAO_DESCOBERTA = "v5";
+export const VERSAO_DESCOBERTA = "v6";
 type Medidas = { candidatos: number; semEdicaoPt: number; naoLiterarios: number; duplicados: number; comFontes: number; semEvidencia: number; metadadosFracos: number; ms: number };
 
 export const SEMANA = 7 * 864e5;
@@ -361,16 +361,21 @@ async function pesquisaTavily(pergunta: string, ids: Set<string>): Promise<{ can
   if (!chave || (!process.env.GROQ_API_KEY && !process.env.GEMINI_API_KEY)) return null;
   const consulta = pergunta.match(/Pesquisa: (.*)/)?.[1] ?? pergunta.split("\n")[0];
   const parecido = pergunta.match(/Parecidos com: (.*)/)?.[1];
-  const buscas = [
-    `melhores livros ${consulta} recomendações${parecido ? ` parecidos com ${parecido}` : ""} edição brasileira`,
-    `best books ${consulta}${parecido ? ` like ${parecido}` : ""} recommendations goodreads reddit literary`,
-  ];
+  // etapa de estratégia: a IA transforma a pesquisa em buscas de recomendação (pt e en)
+  const estrategia = await iaJson(
+    `Você transforma um pedido de leitura em buscas na internet que encontram LISTAS E RECOMENDAÇÕES de livros (crítica, livreiros, Goodreads, Reddit, blogs literários). Interprete frases poéticas pelo sentido (ex.: "entre livros e segredos" = romances ambientados em bibliotecas/livrarias com mistérios). Responda SÓ com JSON {"livros":[],"buscas":[string,string,string]}: duas buscas em inglês e uma em português, curtas e específicas.`,
+    pergunta,
+  );
+  const sugeridas = ((estrategia?.json as { buscas?: unknown } | undefined)?.buscas as unknown[] | undefined)?.map((x) => texto(x, 140)).filter(Boolean).slice(0, 3) ?? [];
+  const buscas = sugeridas.length
+    ? sugeridas
+    : [`melhores livros ${consulta} recomendações${parecido ? ` parecidos com ${parecido}` : ""}`, `best books ${consulta}${parecido ? ` like ${parecido}` : ""} recommendations`];
   const respostas = await Promise.all(
     buscas.map((q) =>
       fetch("https://api.tavily.com/search", {
         method: "POST",
         headers: { "content-type": "application/json", authorization: `Bearer ${chave}` },
-        body: JSON.stringify({ query: q, search_depth: "basic", max_results: 6, include_answer: false }),
+        body: JSON.stringify({ query: q, search_depth: "basic", max_results: 5, include_answer: false }),
         signal: AbortSignal.timeout(15000),
       })
         .then((r) => (r.ok ? r.json() : null))
