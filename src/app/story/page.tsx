@@ -3,6 +3,8 @@
 import { fotografarPng } from "@/lib/fotografar";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useRef, useState } from "react";
+import { CHAMADAS, FORMATOS, MODELOS, Peca, type Conteudo, type Formato, type Modelo } from "@/components/story/Pecas";
+import { diasDeLeitura } from "@/lib/numeros";
 import { AppShell } from "@/components/AppShell";
 import { useHidratado } from "@/components/PerfilHidratacao";
 import {
@@ -36,29 +38,23 @@ const MESES = [
 type Tipo = "terminei" | "lendo" | "mes";
 
 /**
- * Stories para o Instagram (1080×1920): "terminei", "lendo agora" e "meu mês".
- * No celular, "compartilhar" abre o menu do sistema (Instagram, WhatsApp…);
- * no computador, baixa a imagem.
+ * O editor de compartilhamento: uma peça por vez, com modelo, paleta, formato
+ * e informações escolhidas pela pessoa. A pré-visualização é a própria arte
+ * (o PNG sai dela, em 3×). Rota e parâmetros de sempre: ?tipo=&livro=&mes=.
  */
 function Conteudo() {
   const params = useSearchParams();
   const livros = usePerfil((s) => s.livros);
   const usuario = usePerfil((s) => s.usuario);
-  const temaId = usePerfil((s) => s.tema);
   const tipoInicial = (params.get("tipo") as Tipo) || "mes";
-  const [tipo, setTipo] = useState<Tipo>(tipoInicial);
-  const lidos = livros
-    .filter((l) => l.status === "lido" && l.lidoEm)
-    .sort((a, b) => b.lidoEm!.localeCompare(a.lidoEm!));
+  const [tipo, setTipo] = useState<Tipo>(["terminei", "lendo", "mes"].includes(tipoInicial) ? tipoInicial : "mes");
+  const lidos = livros.filter((l) => l.status === "lido" && l.lidoEm).sort((a, b) => b.lidoEm!.localeCompare(a.lidoEm!));
   const lendo = livros.filter((l) => l.status === "lendo");
-  const [livroId, setLivroId] = useState(
-    params.get("livro") ?? lidos[0]?.id ?? "",
-  );
+  const [livroId, setLivroId] = useState(params.get("livro") ?? "");
   const hoje = new Date();
-  // o mês em andamento só entra quando o review dele abre (penúltimo dia do mês)
+  // o mês em andamento só entra quando o diário dele abre (penúltimo dia do mês)
   const review = mesDoReview(hoje);
-  const chaveMes = (a: number, m: number) =>
-    `${a}-${String(m + 1).padStart(2, "0")}`;
+  const chaveMes = (a: number, m: number) => `${a}-${String(m + 1).padStart(2, "0")}`;
   const mesAtual = chaveMes(hoje.getFullYear(), hoje.getMonth());
   const mesReview = review ? chaveMes(review.ano, review.mes) : null;
   const liberado = (m: string) => m < mesAtual || m === mesReview;
@@ -69,218 +65,156 @@ function Conteudo() {
     const anterior = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1);
     return chaveMes(anterior.getFullYear(), anterior.getMonth());
   });
+  const meses = useMemo(() => [...new Set(lidos.map((l) => l.lidoEm!.slice(0, 7)))].filter((m) => m < mesAtual || m === mesReview).sort().reverse(), [lidos, mesAtual, mesReview]);
+  const [anoMes, mesNum] = [Number(mesSel.slice(0, 4)), Number(mesSel.slice(5, 7))];
+  const doMes = lidos.filter((l) => l.lidoEm!.startsWith(mesSel)).sort((a, b) => a.lidoEm!.localeCompare(b.lidoEm!));
 
-  // os meses que tiveram leituras (para escolher)
-  const meses = useMemo(
-    () =>
-      [...new Set(lidos.map((l) => l.lidoEm!.slice(0, 7)))]
-        .filter((m) => m < mesAtual || m === mesReview)
-        .sort()
-        .reverse(),
-    [lidos, mesAtual, mesReview],
-  );
-  const [anoMes, mesNum] = [
-    Number(mesSel.slice(0, 4)),
-    Number(mesSel.slice(5, 7)),
-  ];
-  const doMes = lidos
-    .filter((l) => l.lidoEm!.startsWith(mesSel))
-    .sort((a, b) => a.lidoEm!.localeCompare(b.lidoEm!));
+  // o livro da peça
+  const opcoesLivro = tipo === "terminei" ? lidos : tipo === "lendo" ? lendo : [];
+  const livro = opcoesLivro.find((l) => l.id === livroId) ?? opcoesLivro[0];
 
-  // poucos estilos: o seu tema + três fixos (claro, vinho e preto)
-  const estilos = useMemo(() => {
-    const fixos = ["biblioteca-classica", "veludo-vinho", "preto-e-branco"];
-    const ids = fixos.includes(temaId) || !temaId ? fixos : [temaId, ...fixos];
-    return ids
-      .map((id) => temas.find((t) => t.id === id))
-      .filter((t): t is (typeof temas)[number] => !!t)
-      .map(estiloDoTema);
-  }, [temaId]);
-  const [estiloId, setEstiloId] = useState(temaId || "biblioteca-classica");
-  const e = estilos.find((x) => x.id === estiloId) ?? estilos[0];
+  const [modelo, setModelo] = useState<Modelo>("editorial");
+  const infoModelo = MODELOS.find((m) => m.id === modelo)!;
+  const [paletaId, setPaletaId] = useState(infoModelo.paletas[0].id);
+  const paleta = infoModelo.paletas.find((p) => p.id === paletaId) ?? infoModelo.paletas[0];
+  const [formato, setFormato] = useState<Formato>("story");
+  const [chamada, setChamada] = useState<string | null>(null);
+  const [propria, setPropria] = useState("");
+  const [mostrar, setMostrar] = useState<Record<string, boolean>>({ leitor: false });
+  const on = (k: string) => mostrar[k] !== false;
 
-  const indice = Math.max(
-    0,
-    estilos.findIndex((x) => x.id === e.id),
-  );
-  const trilho = useRef<HTMLDivElement>(null);
-  function irPara(i: number) {
-    const el = trilho.current;
-    const alvo = el?.children[i] as HTMLElement | undefined;
-    if (!el || !alvo || !estilos[i]) return;
-    setEstiloId(estilos[i].id);
-    el.scrollTo({
-      left: alvo.offsetLeft - (el.clientWidth - alvo.clientWidth) / 2,
-      behavior: "smooth",
-    });
-  }
-  // ao arrastar com o dedo, o estilo do meio é o escolhido
-  const rolagem = useRef<ReturnType<typeof setTimeout>>(undefined);
-  function aoRolar() {
-    clearTimeout(rolagem.current);
-    rolagem.current = setTimeout(() => {
-      const el = trilho.current;
-      if (!el) return;
-      const meio = el.scrollLeft + el.clientWidth / 2;
-      let melhor = 0;
-      let dist = Infinity;
-      [...el.children].forEach((c, i) => {
-        const h = c as HTMLElement;
-        const d = Math.abs(h.offsetLeft + h.clientWidth / 2 - meio);
-        if (d < dist) [dist, melhor] = [d, i];
-      });
-      if (estilos[melhor]) setEstiloId(estilos[melhor].id);
-    }, 120);
-  }
+  // as informações possíveis vêm só do que existe nos dados
+  const dias = livro ? diasDeLeitura(livro) : null;
+  const doAno = lidos.filter((l) => l.lidoEm!.startsWith(String(hoje.getFullYear()))).length;
+  const disponiveis: { id: string; rotulo: string; valor?: string }[] =
+    tipo === "mes"
+      ? [
+          { id: "qtd", rotulo: "livros no mês", valor: String(doMes.length) },
+          { id: "paginas", rotulo: "páginas", valor: doMes.reduce((t, l) => t + (l.paginas ?? 0), 0) ? doMes.reduce((t, l) => t + (l.paginas ?? 0), 0).toLocaleString("pt-BR") : undefined },
+        ]
+      : livro
+        ? [
+            { id: "fim", rotulo: "concluído em", valor: tipo === "terminei" && livro.lidoEm && !livro.lidoSoAno ? new Date(livro.lidoEm).toLocaleDateString("pt-BR", { day: "numeric", month: "short", year: "numeric" }) : undefined },
+            { id: "inicio", rotulo: "início", valor: livro.iniciadoEm ? new Date(livro.iniciadoEm).toLocaleDateString("pt-BR", { day: "numeric", month: "short" }) : undefined },
+            { id: "paginas", rotulo: "páginas", valor: livro.paginas ? String(livro.paginas) : undefined },
+            { id: "duracao", rotulo: "duração", valor: tipo === "terminei" && dias ? `${dias} ${dias === 1 ? "dia" : "dias"}` : undefined },
+            { id: "ano", rotulo: `livros em ${hoje.getFullYear()}`, valor: tipo === "terminei" && doAno ? String(doAno) : undefined },
+          ]
+        : [];
+  const comValor = disponiveis.filter((d) => d.valor);
+  const temNota = tipo === "terminei" && !!livro?.nota;
+  const temCitacao = !!livro?.citacao?.trim();
+  const temResenha = !!livro?.resenha?.trim();
+  const temProgresso = tipo === "lendo" && !!livro?.paginas && !!livro?.paginaAtual;
 
-  const [mostrar, setMostrar] = useState<Mostrar>({});
+  const frase = propria.trim() || chamada || CHAMADAS[tipo][0];
+  const conteudo: Conteudo = {
+    chamada: frase,
+    livro: tipo === "mes" ? undefined : livro,
+    livros: tipo === "mes" ? doMes : undefined,
+    contexto: tipo === "mes" ? `${MESES[mesNum - 1]} de ${anoMes}` : undefined,
+    mostrarCapa: on("capa"),
+    mostrarTitulo: on("titulo"),
+    mostrarAutor: on("autor"),
+    nota: temNota && on("nota") ? livro!.nota : undefined,
+    dados: comValor.filter((d) => on(d.id)).map((d) => ({ rotulo: d.rotulo, valor: d.valor! })),
+    trecho: temCitacao && on("citacao") ? { tipo: "citação", texto: livro!.citacao!.trim().slice(0, 180) } : temResenha && on("resenha") ? { tipo: "resenha", texto: livro!.resenha!.trim().slice(0, 160) } : undefined,
+    progresso: temProgresso && on("progresso") ? Math.min(100, Math.round((livro!.paginaAtual! / livro!.paginas!) * 100)) : undefined,
+    leitor: mostrar.leitor && usuario ? usuario : undefined,
+  };
+
   const quadro = useRef<HTMLDivElement>(null);
   const [gerando, setGerando] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
-
-  async function compartilhar() {
+  const podeCompartilhar = typeof navigator !== "undefined" && !!navigator.canShare;
+  async function gerar(acao: "salvar" | "compartilhar") {
     if (!quadro.current) return;
     setGerando(true);
     setAviso(null);
     try {
-      const png = await fotografarPng(quadro.current, {
-        pixelRatio: 3,
-        // cada capa tem o seu endereço (sem isto, todas viravam a primeira)
-        includeQueryParams: true,
-      });
+      await document.fonts.ready;
+      const png = await fotografarPng(quadro.current, { pixelRatio: 3, includeQueryParams: true });
       const blob = await (await fetch(png)).blob();
-      const nome = `the-bookside-${tipo}.png`;
+      const nome = `the-bookside-${tipo}-${formato}.png`;
       const arquivo = new File([blob], nome, { type: "image/png" });
-      if (navigator.canShare?.({ files: [arquivo] })) {
+      if (acao === "compartilhar" && navigator.canShare?.({ files: [arquivo] })) {
         await navigator.share({ files: [arquivo], title: "the bookside" });
       } else {
         const a = document.createElement("a");
         a.href = png;
         a.download = nome;
         a.click();
-        setAviso("imagem baixada ✓ é só postar no story.");
+        setAviso("imagem salva ✓");
       }
     } catch (x) {
-      if ((x as Error).name !== "AbortError")
-        setAviso("não deu para gerar a imagem agora. tente de novo.");
+      if ((x as Error).name !== "AbortError") setAviso("não deu para gerar a imagem agora. tente de novo.");
     } finally {
       setGerando(false);
     }
   }
 
-  const livro = livros.find((l) => l.id === livroId);
-  const vazio =
-    (tipo === "terminei" && !livro) ||
-    (tipo === "lendo" && !lendo.length) ||
-    (tipo === "mes" && !doMes.length);
+  const vazio = (tipo !== "mes" && !livro) || (tipo === "mes" && !doMes.length);
+  const alto = FORMATOS.find((f) => f.id === formato)!.alto;
+  const escala = formato === "story" ? 0.86 : 1;
+  const rotulo = "mb-2 block text-[12px] font-semibold text-tinta-suave";
+  const chip = (ativo: boolean) => `flex min-h-10 items-center rounded-[6px] border px-3 text-[13px] ${ativo ? "border-bordo bg-rosa-fundo font-semibold text-bordo" : "border-linha text-ameixa hover:border-bege"}`;
+  const select = "h-11 w-full appearance-none rounded-[6px] border border-linha bg-transparent px-3 text-[14px] text-ameixa outline-none focus:border-bordo";
 
-  const opcoes: [keyof Mostrar, string][] =
-    tipo === "terminei"
-      ? [
-          ["data", "data"],
-          ["nota", "nota"],
-          ...(livro?.citacao
-            ? [["resenha", "trecho da resenha"] as [keyof Mostrar, string]]
-            : []),
-          ["detalhes", "dias e páginas"],
-        ]
-      : tipo === "lendo"
-        ? [["progresso", "progresso"]]
-        : [
-            ["numeros", "números do mês"],
-            ["favorito", "favorito do mês"],
-          ];
-
-  const historia = (est: EstiloStory, ref?: React.Ref<HTMLDivElement>) =>
-    tipo === "terminei" && livro ? (
-      <StoryTerminei
-        ref={ref}
-        e={est}
-        usuario={usuario}
-        livro={livro}
-        mostrar={mostrar}
-      />
-    ) : tipo === "lendo" ? (
-      <StoryLendo
-        ref={ref}
-        e={est}
-        usuario={usuario}
-        livros={[...lendo.filter((l) => l.id === livroId), ...lendo.filter((l) => l.id !== livroId)]}
-        mostrar={mostrar}
-      />
-    ) : (
-      <StoryMes
-        ref={ref}
-        e={est}
-        usuario={usuario}
-        mes={MESES[mesNum - 1]}
-        ano={anoMes}
-        livros={doMes}
-        mostrar={mostrar}
-      />
-    );
-
-  const pilula = (on: boolean) =>
-    `flex min-h-10 items-center rounded-pill border px-3.5 text-[13px] font-semibold whitespace-nowrap transition-colors ${
-      on ? "border-bordo bg-bordo text-creme" : "border-linha text-cinza hover:text-ameixa"
-    }`;
-  const campo =
-    "h-12 w-full border-0 border-b-[1.5px] border-ameixa bg-transparent px-0 font-display text-[17px] italic text-ameixa outline-none focus:border-bordo";
-  const rotuloCampo =
-    "font-maquina mb-2 block text-[10px] tracking-[.12em] text-rosa-antigo uppercase";
+  const interruptor = (id: string, nome: string) => (
+    <button key={id} type="button" aria-pressed={on(id)} onClick={() => setMostrar((m) => ({ ...m, [id]: !on(id) }))} className={chip(on(id))}>
+      {on(id) ? "✓ " : ""}
+      {nome}
+    </button>
+  );
 
   return (
-    <div className="flex flex-1 flex-col px-6 pt-2 pb-10 lg:bg-jornal lg:px-12 lg:pt-8">
-      <Voltar
-        padrao="/numeros"
-        className="-ml-2 flex min-h-11 w-fit items-center px-2 text-[13px] font-semibold text-bordo"
-      />
-      <h1 className="mt-1 font-display text-[26px] leading-[1.1] font-semibold italic text-bordo lg:font-revista lg:text-[40px] lg:font-normal lg:text-tinta">
-        compartilhar no story
-      </h1>
-      <p className="mt-1.5 hidden font-accent text-sm italic text-cinza sm:block">
-        escolha o que mostrar e passe pelos estilos. a imagem sai no tamanho do
-        story ✦
-      </p>
+    <div className="flex flex-1 flex-col pb-10 lg:bg-jornal lg:px-10 lg:pt-6">
+      <div className="flex items-center justify-between px-5 pt-2 lg:px-0 lg:pt-0">
+        <Voltar padrao="/numeros" className="-ml-2 flex min-h-11 w-fit items-center px-2 text-[13px] font-semibold text-bordo" />
+        <h1 className="font-revista text-[20px] text-bordo italic lg:text-[24px]">compartilhar.</h1>
+      </div>
 
-      <div className="mt-4 lg:mt-6 lg:grid lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start lg:gap-12">
-        <div className="space-y-6 lg:rounded-[20px] lg:bg-creme-quente lg:p-7 lg:shadow-[0_20px_40px_-26px_rgba(43,20,32,.22)]">
-          <div
-            role="radiogroup"
-            aria-label="o que compartilhar"
-            className="-mx-6 flex gap-6 overflow-x-auto border-b border-linha px-6 [scrollbar-width:none] lg:mx-0 lg:px-0 [&::-webkit-scrollbar]:hidden"
-          >
-            {(
-              [
-                ["mes", "meu mês"],
-                ["terminei", "terminei um livro"],
-                ["lendo", "lendo agora"],
-              ] as const
-            ).map(([id, r]) => (
-              <button
-                key={id}
-                type="button"
-                role="radio"
-                aria-checked={tipo === id}
-                onClick={() => setTipo(id)}
-                className={`flex min-h-11 flex-none items-center border-b-2 text-[14px] whitespace-nowrap ${
-                  tipo === id ? "border-bordo font-semibold text-bordo" : "border-transparent text-cinza"
-                }`}
-              >
+      <div className="mt-2 lg:grid lg:grid-cols-[minmax(0,3fr)_minmax(340px,2fr)] lg:items-start lg:gap-10">
+        {/* pré-visualização: a arte em si, sobre fundo neutro */}
+        <div className="lg:sticky lg:top-6">
+          <div className="flex justify-center bg-[#E9E4DE] px-4 py-6 dark:bg-[#2a2226] lg:rounded-[8px] lg:py-10">
+            {vazio ? (
+              <div className="flex h-[400px] w-[300px] items-center justify-center rounded-[6px] border border-dashed border-bege p-8 text-center text-[14px] text-cinza italic">
+                {tipo === "lendo" ? "nenhum livro em lendo agora." : tipo === "terminei" ? "nenhum livro lido com data ainda." : `nenhum livro terminado em ${MESES[mesNum - 1]} de ${anoMes}.`}
+              </div>
+            ) : (
+              <div style={{ width: 360 * escala, height: alto * escala }} className="shadow-[0_24px_50px_-24px_rgba(43,20,32,.55)]">
+                <div style={{ transform: `scale(${escala})`, transformOrigin: "top left" }}>
+                  <Peca ref={quadro} modelo={modelo} c={conteudo} formato={formato} paleta={paleta} />
+                </div>
+              </div>
+            )}
+          </div>
+          <div role="radiogroup" aria-label="formato" className="mt-3 flex justify-center gap-2 px-5">
+            {FORMATOS.map((f) => (
+              <button key={f.id} type="button" role="radio" aria-checked={formato === f.id} onClick={() => setFormato(f.id)} className={chip(formato === f.id)}>
+                {f.nome}
+                <span className="ml-1.5 hidden text-[11px] font-normal text-cinza sm:inline">{f.px}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* controles */}
+        <div className="mt-6 space-y-6 px-5 lg:mt-0 lg:px-0">
+          <div role="radiogroup" aria-label="o que compartilhar" className="flex gap-5 border-b border-linha">
+            {([["terminei", "Terminei"], ["lendo", "Lendo"], ["mes", "Meu mês"]] as const).map(([id, r]) => (
+              <button key={id} type="button" role="radio" aria-checked={tipo === id} onClick={() => (setTipo(id), setChamada(null))} className={`-mb-px min-h-11 border-b-2 text-[14px] ${tipo === id ? "border-bordo font-semibold text-bordo" : "border-transparent text-cinza"}`}>
                 {r}
               </button>
             ))}
           </div>
 
-          {tipo === "terminei" ? (
+          {tipo !== "mes" && opcoesLivro.length ? (
             <label className="block">
-              <span className={rotuloCampo}>qual livro?</span>
-              <select
-                value={livroId}
-                onChange={(ev) => setLivroId(ev.target.value)}
-                className={campo}
-              >
-                {lidos.map((l) => (
+              <span className={rotulo}>Livro</span>
+              <select value={livro?.id ?? ""} onChange={(ev) => setLivroId(ev.target.value)} className={select}>
+                {opcoesLivro.map((l) => (
                   <option key={l.id} value={l.id}>
                     {l.titulo}
                   </option>
@@ -290,177 +224,89 @@ function Conteudo() {
           ) : null}
           {tipo === "mes" ? (
             <label className="block">
-              <span className={rotuloCampo}>qual mês?</span>
-              <select
-                value={mesSel}
-                onChange={(ev) => setMesSel(ev.target.value)}
-                className={campo}
-              >
-                {[...new Set([mesSel, ...meses])]
-                  .sort()
-                  .reverse()
-                  .map((m) => (
-                    <option key={m} value={m}>
-                      {MESES[Number(m.slice(5, 7)) - 1]} de {m.slice(0, 4)}
-                    </option>
-                  ))}
+              <span className={rotulo}>Mês</span>
+              <select value={mesSel} onChange={(ev) => setMesSel(ev.target.value)} className={select}>
+                {[...new Set([mesSel, ...meses])].sort().reverse().map((m) => (
+                  <option key={m} value={m}>
+                    {MESES[Number(m.slice(5, 7)) - 1]} de {m.slice(0, 4)}
+                  </option>
+                ))}
               </select>
             </label>
           ) : null}
 
-          {opcoes.length ? (
-            <div>
-              <span className={rotuloCampo}>o que aparece</span>
-              <div className="flex flex-wrap gap-2">
-                {opcoes.map(([k, r]) => {
-                  const on = mostrar[k] !== false;
-                  return (
-                    <button
-                      key={k}
-                      type="button"
-                      aria-pressed={on}
-                      onClick={() => setMostrar((m) => ({ ...m, [k]: !on }))}
-                      className={pilula(on)}
-                    >
-                      {on ? "✓ " : ""}
-                      {r}
-                    </button>
-                  );
-                })}
-              </div>
+          <div>
+            <span className={rotulo}>Modelo</span>
+            <div className="grid grid-cols-2 gap-2">
+              {MODELOS.map((m) => (
+                <button key={m.id} type="button" aria-pressed={modelo === m.id} onClick={() => (setModelo(m.id), setPaletaId(m.paletas[0].id))} className={`rounded-[6px] border px-3 py-2.5 text-left ${modelo === m.id ? "border-bordo bg-rosa-fundo" : "border-linha hover:border-bege"}`}>
+                  <span className="block font-revista text-[16px] text-ameixa">{m.nome}</span>
+                  <span className="block text-[11px] text-cinza">{m.descricao}</span>
+                </button>
+              ))}
             </div>
-          ) : null}
-
-          <div className="hidden lg:block">
-            <BotaoCompartilhar
-              onClick={compartilhar}
-              gerando={gerando}
-              desabilitado={vazio}
-            />
-            {aviso ? (
-              <p className="mt-2 text-[13px] text-cinza">{aviso}</p>
-            ) : null}
           </div>
-        </div>
 
-        {/* a prévia, no tamanho do celular */}
-        <div className="mt-6 flex flex-col items-center lg:mt-0">
-          {vazio ? (
-            <div className="flex h-[640px] w-[360px] max-w-full items-center justify-center rounded-[14px] border border-dashed border-bege p-8 text-center font-accent text-[15px] italic text-cinza">
-              {tipo === "lendo"
-                ? "nenhum livro na sua estante de lendo agora."
-                : tipo === "terminei"
-                  ? "você ainda não marcou nenhum livro como lido."
-                  : `nenhum livro terminado em ${MESES[mesNum - 1]} de ${anoMes}.`}
+          <div>
+            <span className={rotulo}>Paleta</span>
+            <div className="flex flex-wrap gap-2">
+              {infoModelo.paletas.map((p) => (
+                <button key={p.id} type="button" aria-pressed={paleta.id === p.id} aria-label={p.nome} title={p.nome} onClick={() => setPaletaId(p.id)} className={`flex items-center gap-2 rounded-[6px] border px-2.5 py-1.5 text-[12px] ${paleta.id === p.id ? "border-bordo text-bordo" : "border-linha text-ameixa"}`}>
+                  <span aria-hidden className="flex overflow-hidden rounded-full border border-black/10">
+                    {[p.fundo, p.destaque, p.bloco].map((c, i) => (
+                      <span key={i} className="block size-4" style={{ background: c }} />
+                    ))}
+                  </span>
+                  {p.nome}
+                </button>
+              ))}
             </div>
-          ) : (
-            <div className="w-full">
-              <div className="relative">
-                <div
-                  ref={trilho}
-                  onScroll={aoRolar}
-                  className="flex snap-x snap-mandatory gap-4 overflow-x-auto px-[calc(50%-148px)] py-4 [scrollbar-width:none] lg:px-[calc(50%-162px)]"
-                >
-                  {estilos.map((x, i) => (
-                    <button
-                      key={x.id}
-                      type="button"
-                      aria-label={`estilo ${x.nome}`}
-                      aria-pressed={x.id === e.id}
-                      onClick={() => irPara(i)}
-                      className={`h-[525px] w-[295px] flex-none snap-center overflow-hidden rounded-[14px] text-left transition-opacity lg:h-[576px] lg:w-[324px] ${
-                        x.id === e.id
-                          ? "shadow-[0_24px_50px_-24px_rgba(43,20,32,.6)]"
-                          : "opacity-60"
-                      }`}
-                    >
-                      <div className="pointer-events-none origin-top-left scale-[.82] lg:scale-[.9]">
-                        {historia(x, x.id === e.id ? quadro : undefined)}
-                      </div>
-                    </button>
-                  ))}
-                </div>
-                {(
-                  [
-                    [-1, "‹", "estilo anterior", "left-0"],
-                    [1, "›", "próximo estilo", "right-0"],
-                  ] as const
-                ).map(([d, seta, r, lado]) => (
-                  <button
-                    key={d}
-                    type="button"
-                    aria-label={r}
-                    disabled={indice + d < 0 || indice + d >= estilos.length}
-                    onClick={() => irPara(indice + d)}
-                    className={`absolute top-1/2 ${lado} flex size-11 -translate-y-1/2 items-center justify-center rounded-full border border-linha bg-creme text-2xl text-bordo shadow-md disabled:opacity-0`}
-                  >
-                    {seta}
-                  </button>
-                ))}
-              </div>
-              <p className="mt-1 text-center font-display text-[15px] font-semibold italic text-ameixa lg:font-revista lg:font-normal">
-                {e.id === temaId ? "seu tema" : e.nome}
-              </p>
-              <div className="mt-2 flex justify-center gap-1.5">
-                {estilos.map((x, i) => (
-                  <button
-                    key={x.id}
-                    type="button"
-                    aria-label={x.nome}
-                    onClick={() => irPara(i)}
-                    className={`h-2 rounded-full transition-all ${x.id === e.id ? "w-5 bg-bordo" : "w-2 bg-bege"}`}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-          <div className="sticky bottom-[calc(84px+env(safe-area-inset-bottom))] z-10 mt-5 w-full max-w-[360px] lg:hidden">
-            <BotaoCompartilhar
-              onClick={compartilhar}
-              gerando={gerando}
-              desabilitado={vazio}
-            />
-            {aviso ? (
-              <p className="mt-2 text-center text-[13px] text-cinza">{aviso}</p>
-            ) : null}
           </div>
+
+          <div>
+            <span className={rotulo}>Frase</span>
+            <div className="flex flex-wrap gap-2">
+              {CHAMADAS[tipo].map((f) => (
+                <button key={f} type="button" aria-pressed={!propria && frase === f} onClick={() => (setChamada(f), setPropria(""))} className={chip(!propria && frase === f)}>
+                  {f}
+                </button>
+              ))}
+            </div>
+            <input value={propria} onChange={(ev) => setPropria(ev.target.value.slice(0, 48))} placeholder="ou escreva a sua (até 48 letras)" className={`${select} mt-2`} />
+          </div>
+
+          <div>
+            <span className={rotulo}>O que aparece</span>
+            <div className="flex flex-wrap gap-2">
+              {tipo !== "mes" ? [interruptor("capa", "capa"), interruptor("titulo", "título"), interruptor("autor", "autoria")] : interruptor("capa", "capas")}
+              {temNota ? interruptor("nota", "avaliação") : null}
+              {temProgresso ? interruptor("progresso", "progresso") : null}
+              {comValor.map((d) => interruptor(d.id, d.rotulo))}
+              {temCitacao ? interruptor("citacao", "citação favorita") : null}
+              {temResenha && !(temCitacao && on("citacao")) ? interruptor("resenha", "trecho da resenha") : null}
+              {usuario ? (
+                <button type="button" aria-pressed={!!mostrar.leitor} onClick={() => setMostrar((m) => ({ ...m, leitor: !m.leitor }))} className={chip(!!mostrar.leitor)}>
+                  {mostrar.leitor ? "✓ " : ""}@{usuario}
+                </button>
+              ) : null}
+            </div>
+            <p className="mt-2 text-[11px] text-cinza">Só aparecem informações que existem no seu registro. Seu @ fica de fora, a menos que você ligue.</p>
+          </div>
+
+          <div className="sticky bottom-[calc(76px+env(safe-area-inset-bottom))] z-10 flex gap-2 bg-creme py-2 lg:static lg:bg-transparent">
+            {podeCompartilhar ? (
+              <button type="button" onClick={() => gerar("compartilhar")} disabled={gerando || vazio} className="flex h-12 flex-1 items-center justify-center rounded-[6px] bg-bordo text-[14px] font-semibold text-creme disabled:opacity-45">
+                {gerando ? "gerando…" : "Compartilhar"}
+              </button>
+            ) : null}
+            <button type="button" onClick={() => gerar("salvar")} disabled={gerando || vazio} className={`flex h-12 flex-1 items-center justify-center rounded-[6px] text-[14px] font-semibold disabled:opacity-45 ${podeCompartilhar ? "border border-bege text-ameixa" : "bg-bordo text-creme"}`}>
+              {gerando && !podeCompartilhar ? "gerando…" : "Salvar imagem"}
+            </button>
+          </div>
+          {aviso ? <p className="text-[13px] text-cinza">{aviso}</p> : null}
         </div>
       </div>
     </div>
-  );
-}
-
-function BotaoCompartilhar({
-  onClick,
-  gerando,
-  desabilitado,
-}: {
-  onClick: () => void;
-  gerando: boolean;
-  desabilitado: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={gerando || desabilitado}
-      className="flex h-12 w-full items-center justify-center gap-2 rounded-pill bg-ameixa px-8 text-sm font-semibold text-creme hover:bg-bordo-escuro disabled:opacity-45 lg:w-auto"
-    >
-      <svg
-        aria-hidden
-        width="16"
-        height="16"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.9"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M12 3v12M7 8l5-5 5 5M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5" />
-      </svg>
-      {gerando ? "gerando a imagem…" : "compartilhar no story"}
-    </button>
   );
 }
 
