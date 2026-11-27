@@ -11,11 +11,37 @@ import { andamento, encontrosDe, meusClubes, modoDe, type Encontro, type ResumoC
 import { usePerfil } from "@/lib/perfil-store";
 import { temas } from "@/lib/dados";
 import { coresDoTema } from "@/lib/tema";
-import { TIPOGRAFIAS, estiloDaIdentidade, lerIdentidade, temaDoId } from "@/lib/identidade";
+import { TIPOGRAFIAS, ajustarContraste, ehEscura, emblemaDe, estiloDaIdentidade, lerIdentidade, misturar, paletaDe, temaDoId } from "@/lib/identidade";
+import { Emblema } from "@/components/clube/Emblema";
+import type { CSSProperties } from "react";
 import { useModoEscuro } from "@/components/Aparencia";
 import { nomeDe, pessoasPorId, useConsulta, useMeuId } from "@/lib/social";
 
-/** um clube: identidade à esquerda, a leitura atual e uma pendência à direita */
+/**
+ * Um clube como um pequeno espaço literário: capa panorâmica, avatar e nome numa
+ * composição editorial, os membros, a leitura atual com o meu progresso e uma
+ * informação de contexto. Cada cartão usa as cores, a capa, o emblema e o pattern
+ * do próprio clube; no modo escuro do app, só a cor de destaque vem do clube.
+ */
+function estiloDoCartao(ident: ReturnType<typeof lerIdentidade>, tema: string | null, escuro: boolean): CSSProperties {
+  if (!ident) return coresDoTema(tema, escuro) as CSSProperties;
+  const p = paletaDe(ident);
+  const completo = estiloDaIdentidade(ident);
+  if (!escuro || ehEscura(p)) return completo;
+  // app escuro + clube claro: mantém as superfícies escuras do app, leva só o destaque e a capa
+  const destaque = ajustarContraste(p.primaria, "#1D1517", 4.5);
+  return {
+    "--color-bordo": destaque,
+    "--color-bordo-suave": destaque,
+    "--color-rosa-fundo": misturar(p.complementar, "#1D1517", 0.18),
+    "--club-banner": completo["--club-banner" as keyof CSSProperties],
+    "--club-progress-fill": destaque,
+    "--club-heading-font": completo["--club-heading-font" as keyof CSSProperties],
+    "--font-revista": completo["--font-revista" as keyof CSSProperties],
+    "--club-card-radius": completo["--club-card-radius" as keyof CSSProperties],
+  } as CSSProperties;
+}
+
 function Cartao({
   c,
   pessoas,
@@ -33,103 +59,98 @@ function Cartao({
   const and = c.lendo ? andamento(c.lendo) : null;
   const tema = temas.find((t) => t.id === c.tema);
   const ident = lerIdentidade(c.identidade);
-  const meu = c.lendo ? meusLivros.find((l) => l.id === c.lendo!.livro.id) : undefined;
-  const meuPct = meu
-    ? meu.status === "lido"
-      ? 100
-      : meu.paginas && meu.paginaAtual
-        ? Math.min(100, Math.round((meu.paginaAtual / meu.paginas) * 100))
-        : 0
-    : null;
-  const quemEscolheu = c.lendo?.sugerido_por ? (c.lendo.sugerido_por === eu ? "sugerido por você" : `sugerido por ${nomeDe(pessoas.get(c.lendo.sugerido_por))}`) : null;
-
-  // uma informação de contexto, a mais relevante agora
+  const usaEmblema = ident && (ident.emblema?.noAvatar || !c.foto);
+  const meu = c.lendo ? meusLivros.find((l) => l.id === c.lendo!.livro.id || l.titulo.toLowerCase() === c.lendo!.livro.titulo.toLowerCase()) : undefined;
+  const meuPct = meu ? (meu.status === "lido" ? 100 : meu.paginas && meu.paginaAtual ? Math.min(100, Math.round((meu.paginaAtual / meu.paginas) * 100)) : 0) : null;
+  const restam = and ? (and.faltam > 1 ? `${and.faltam} dias restantes` : and.faltam === 1 ? "1 dia restante" : +and.fim >= Date.now() ? "prazo hoje" : "prazo encerrado") : null;
   const contexto = encontro
-    ? { rotulo: "next book date.", texto: new Date(encontro.quando).toLocaleString("pt-BR", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) }
+    ? `book date · ${new Date(encontro.quando).toLocaleString("pt-BR", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).replace(".", "")}`
     : !c.lendo && c.sugestoes
-      ? { rotulo: modoDe(c) === "votacao" ? "votação aberta" : "próxima escolha", texto: `${c.sugestoes} ${c.sugestoes === 1 ? "livro sugerido" : "livros sugeridos"}` }
+      ? `${c.sugestoes} ${c.sugestoes === 1 ? "livro sugerido" : "livros sugeridos"}${modoDe(c) === "votacao" ? " · votação aberta" : ""}`
       : null;
+  const fundoCapa: CSSProperties = c.capa
+    ? { backgroundImage: `url("${c.capa}")` }
+    : ident
+      ? { background: "var(--club-banner)" }
+      : tema
+        ? { background: tema.fundo }
+        : {};
 
   return (
     <li
-      style={ident ? estiloDaIdentidade(ident) : coresDoTema(c.tema, modoEscuro)}
+      style={estiloDoCartao(ident, c.tema, modoEscuro)}
       data-titulo={ident && !TIPOGRAFIAS.find((t) => t.id === (ident.tipografia ?? temaDoId(ident.tema).tipografia))?.italico ? "reto" : undefined}
-      className={ident ? "clube-tokens clube-identidade" : "clube-tokens"}
+      className={`min-w-0 ${ident ? "clube-tokens clube-identidade" : "clube-tokens"}`}
     >
       <Link
         href={`/clubes/${c.id}`}
-        aria-label={`ver clube ${c.nome}`}
-        className="group grid overflow-hidden rounded-[6px] border border-linha bg-creme-quente transition-colors hover:border-bordo sm:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:border-fio"
+        aria-label={`abrir o clube ${c.nome}`}
+        className="group relative flex h-full flex-col overflow-hidden border border-linha/70 bg-creme-quente transition-[transform,box-shadow] duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_34px_-24px_rgba(20,10,14,.55)] motion-reduce:transition-none motion-reduce:hover:translate-y-0 lg:border-fio"
+        style={{ borderRadius: "var(--club-card-radius, 8px)" }}
       >
-        {/* identidade do clube */}
-        <div className="relative">
-          <div
-            className={`relative h-[84px] bg-cover bg-center sm:h-[96px] ${c.capa || tema || ident ? "" : "pat-estrelas"}`}
-            style={c.capa ? { backgroundImage: `url("${c.capa}")` } : ident ? { background: "var(--club-banner)" } : tema ? { background: tema.fundo } : undefined}
-          />
-          <div className="relative flex gap-3 px-4 pt-2 pb-4">
-            {c.foto ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={c.foto} alt="" className="-mt-9 size-14 flex-none rounded-full border-[3px] border-creme-quente object-cover" />
-            ) : null}
-            <div className="min-w-0 flex-1">
-              <h3 className="truncate font-revista text-[20px] leading-tight text-bordo">{c.nome}</h3>
-              {c.descricao ? <p className="truncate text-[12px] text-cinza">{c.descricao}</p> : null}
-              <div className="mt-2 flex items-center gap-2">
-                <Avatares pessoas={lista} tamanho={22} />
-                <span className="text-[12px] text-tinta-suave">
-                  {c.membros.length} {c.membros.length === 1 ? "membro" : "membros"}
-                </span>
-              </div>
-            </div>
-          </div>
+        {/* capa panorâmica */}
+        <div className={`relative aspect-[16/7] bg-cover bg-center ${c.capa || ident || tema ? "" : "pat-estrelas"}`} style={fundoCapa}>
+          <span aria-hidden className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/20 to-transparent" />
+          <span
+            aria-hidden
+            className="absolute top-3 right-3 grid size-8 place-items-center rounded-full bg-creme/85 text-bordo backdrop-blur transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 motion-reduce:transition-none"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+              <path d="M7 17 17 7M9 7h8v8" />
+            </svg>
+          </span>
         </div>
 
-        {/* leitura atual + uma pendência */}
-        <div className="flex flex-col border-t border-linha px-4 py-4 sm:border-t-0 sm:border-l lg:border-fio lg:px-5">
+        {/* identidade */}
+        <div className="relative px-4 pb-3">
+          <div className="-mt-7 flex items-end gap-3">
+            {usaEmblema ? (
+              <Emblema e={emblemaDe(ident!, c.nome)} paleta={paletaDe(ident!)} tamanho={56} className="flex-none drop-shadow-[0_4px_8px_rgba(0,0,0,.18)]" />
+            ) : c.foto ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={c.foto} alt="" className="size-14 flex-none rounded-full border-[3px] border-creme-quente object-cover" />
+            ) : (
+              <span className="grid size-14 flex-none place-items-center rounded-full border-[3px] border-creme-quente bg-rosa-fundo font-revista text-[22px] text-bordo">{c.nome.charAt(0).toLowerCase()}</span>
+            )}
+            <span className="mb-0.5 flex min-w-0 items-center gap-1.5">
+              <Avatares pessoas={lista.slice(0, 4)} tamanho={20} />
+              <span className="text-[11px] whitespace-nowrap text-tinta-suave">
+                {c.membros.length} {c.membros.length === 1 ? "membro" : "membros"}
+              </span>
+            </span>
+          </div>
+          <h3 className="mt-2.5 line-clamp-2 font-revista text-[21px] leading-[1.1] text-bordo">{c.nome}</h3>
+          {c.descricao ? <p className="mt-1 line-clamp-2 text-[12px] leading-relaxed text-tinta-suave">{c.descricao}</p> : null}
+        </div>
+
+        {/* leitura atual */}
+        <div className="mx-3 mt-auto mb-3 rounded-[calc(var(--club-card-radius,8px)*.75)] bg-rosa-fundo/70 px-3 py-3">
           {c.lendo ? (
-            <div className="flex gap-3.5">
-              <CapaAuto livro={c.lendo.livro} className="w-[54px] flex-none transition-transform group-hover:-translate-y-0.5 [&>span:last-child]:hidden" />
+            <div className="flex gap-3">
+              <CapaAuto livro={c.lendo.livro} className="w-[42px] flex-none shadow-[0_6px_12px_-8px_rgba(0,0,0,.5)] [&>span:last-child]:hidden" />
               <div className="min-w-0 flex-1">
-                <p className="font-texto text-[11px] font-medium tracking-[.06em] text-cinza uppercase">leitura atual</p>
-                <p className="mt-1 line-clamp-2 font-revista text-[16px] leading-tight text-ameixa">{c.lendo.livro.titulo}</p>
-                <p className="truncate text-[12px] text-cinza">{c.lendo.livro.autor}</p>
-                {meuPct !== null ? (
-                  <div className="mt-2">
-                    <span className="flex justify-between text-[11px] text-tinta-suave">
-                      <span>minha leitura</span>
-                      <span className="tabular-nums">{meuPct === 100 ? "concluída" : `${meuPct}%`}</span>
-                    </span>
-                    <span className="mt-1 block h-[4px] rounded-full bg-linha" aria-hidden>
-                      <span className="block h-full rounded-full bg-bordo" style={{ width: `${Math.max(meuPct, 2)}%` }} />
-                    </span>
-                  </div>
-                ) : null}
-                <p className="mt-1.5 text-[11px] text-tinta-suave">
-                  {[and ? (and.faltam > 0 ? `${and.faltam} ${and.faltam === 1 ? "dia restante" : "dias restantes"}` : "prazo encerrado") : null, quemEscolheu].filter(Boolean).join(" · ")}
-                </p>
+                <p className="text-[10px] font-medium tracking-[.08em] text-tinta-suave uppercase">leitura atual</p>
+                <p className="mt-0.5 truncate font-revista text-[15px] leading-tight text-ameixa">{c.lendo.livro.titulo}</p>
+                <p className="truncate text-[11px] text-tinta-suave">{c.lendo.livro.autor}</p>
+                <div className="mt-2 flex items-center gap-2">
+                  <span className="block h-[3px] min-w-0 flex-1 rounded-full bg-linha/80" aria-hidden>
+                    <span className="block h-full rounded-full bg-bordo" style={{ width: `${Math.max(meuPct ?? 0, meuPct ? 3 : 0)}%` }} />
+                  </span>
+                  <span className="flex-none text-[10px] tabular-nums text-tinta-suave">
+                    {meuPct === null ? "—" : meuPct === 100 ? "concluí" : `${meuPct}%`}
+                    {restam ? ` · ${restam}` : ""}
+                  </span>
+                </div>
               </div>
             </div>
           ) : (
-            <div>
-              <p className="font-revista text-[17px] text-ameixa italic">qual será a próxima leitura?</p>
-              <p className="mt-1 text-[12px] text-tinta-suave">{c.membros.length > 1 ? "sugira um livro para o clube." : "convide membros e sugira o primeiro livro."}</p>
-            </div>
+            <p className="text-[13px] text-ameixa">
+              <span className="font-revista text-[15px]">qual será a próxima leitura?</span>
+              <span className="mt-0.5 block text-[11px] text-tinta-suave">{c.membros.length > 1 ? "sugiram um livro para o clube." : "convide membros e sugira o primeiro livro."}</span>
+            </p>
           )}
-          <div className="mt-auto flex items-end justify-between gap-3 pt-3">
-            {contexto ? (
-              <p className="min-w-0 text-[12px]">
-                <span className="block font-mono text-[10px] tracking-[.12em] text-oliva uppercase">{contexto.rotulo}</span>
-                <span className="text-ameixa">{contexto.texto}</span>
-              </p>
-            ) : (
-              <span />
-            )}
-            <span className="flex-none text-[13px] font-semibold text-bordo">
-              ver clube <span className="inline-block transition-transform group-hover:translate-x-0.5">→</span>
-            </span>
-          </div>
         </div>
+        {contexto ? <p className="px-4 pb-3 text-[11px] text-tinta-suave">{contexto}</p> : null}
       </Link>
     </li>
   );
@@ -153,7 +174,7 @@ function Lista() {
   const { clubes, pessoas, proximo } = consulta.dados!;
 
   return clubes.length ? (
-    <ul className={`grid gap-5 ${clubes.length > 1 ? "xl:grid-cols-2" : ""}`}>
+    <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
       {clubes.map((c) => (
         <Cartao key={c.id} c={c} pessoas={pessoas} eu={eu} encontro={proximo.get(c.id) ?? null} />
       ))}
