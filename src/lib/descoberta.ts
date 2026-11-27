@@ -48,7 +48,7 @@ const norm = (s: string) =>
 
 const cache = new Map<string, Resposta>();
 /** versão do motor de descoberta (muda a chave do cache local junto com a do servidor) */
-const VERSAO = "v3";
+const VERSAO = "v4";
 
 /** filtros objetivos: só passam livros cujo dado confirma o critério */
 function confirma(l: LivroBusca, criterios: Caracteristica[]) {
@@ -129,7 +129,8 @@ export async function buscarDescoberta({ consulta, filtros = [], contexto, exclu
 
   // um título que parece pesquisa ("O Pequeno Príncipe", "Cem anos de solidão"): a obra exata vem primeiro
   const exatos =
-    consulta.trim() && consulta.trim().split(/\s+/).length <= 7
+    // só quando a pesquisa não pediu características (senão o livro com o mesmo nome da busca furava a fila)
+    consulta.trim() && consulta.trim().split(/\s+/).length <= 7 && !criterios.length && !sementes.length && !contexto
       ? buscarLivros(consulta.trim(), signal)
           .then((r) => r.filter((l) => (norm(l.titulo) === norm(consulta) || norm(l.titulo).startsWith(`${norm(consulta)} `)) && ehEdicaoPt(l) && !naoLiterario(l, consulta)).slice(0, 3))
           .catch(() => [] as LivroBusca[])
@@ -161,8 +162,12 @@ export async function buscarDescoberta({ consulta, filtros = [], contexto, exclu
           resultados?: { livro: LivroBusca; porque?: string; caracteristicas: string[]; fontes: { titulo: string; url: string; tipo: TipoFonte }[] }[];
           pesquisaExterna?: boolean;
           avisos?: string[];
+          diagnostico?: unknown;
+          medidas?: unknown;
         } | null)
       : null;
+    if (dados) console.info("[descobrir]", consulta, dados.diagnostico, dados.medidas);
+    else if (r) console.info("[descobrir] falhou", r.status);
     if (dados?.resultados?.length) {
       pesquisaExterna = !!dados.pesquisaExterna;
       resultados = dados.resultados.map((x, i) => ({
