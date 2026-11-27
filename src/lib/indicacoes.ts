@@ -8,6 +8,7 @@
  * 4. lançamentos nesses gêneros.
  * Só edições em português, com capa, que ela ainda não tem nem já passou.
  */
+import { naoLiterario } from "@/lib/descoberta-qualidade";
 import { useEffect, useMemo, useState } from "react";
 import {
   naEstante,
@@ -173,7 +174,7 @@ function parteEmPortugues(t: string) {
 /** é edição em português? (o Google diz o idioma; a sinopse confirma) */
 /** edição em português (idioma da edição + o título/sinopse não parecem inglês) */
 export const emPortugues = (l: LivroBusca) =>
-  l.idioma === "pt" && !pareceIngles(`${l.titulo} ${l.sinopse ?? ""}`);
+  l.idioma === "pt" && !pareceIngles(`${l.titulo} ${l.sinopse ?? ""}`) && !naoLiterario(l);
 
 /** gênero da estante (em português ou como o Google manda) → assunto de busca */
 function assuntoDe(genero: string) {
@@ -413,7 +414,7 @@ async function montar(
     // a curadoria da carta de nas entrelinhas (títulos reais, achados no catálogo)
     ...cartaDaPessoa().flatMap((c) => CARTAS_ENTRELINHAS[c].curadoria.map((x) =>
         livrosDoGoogle(`intitle:"${x.titulo}" inauthor:"${x.autor}"`, "pt", undefined, { inicio: 0 })
-          .then((l) => l.filter((y) => y.capa).slice(0, 1).map((y) => ({ ...y, motivo: `pra ${CARTAS_ENTRELINHAS[c].nome}` })))
+          .then((l) => l.filter((y) => y.capa && emPortugues(y)).slice(0, 1).map((y) => ({ ...y, motivo: `pra ${CARTAS_ENTRELINHAS[c].nome}` })))
           .catch(() => [] as Indicacao[]),
       ),
     ),

@@ -31,7 +31,7 @@ export function SelecaoDoMomento({ explorar }: { explorar: (q: string) => void }
   useEffect(() => {
     const ctrl = new AbortController();
     const lidos = usePerfil.getState().livros.filter((l) => l.status === "lido").map((l) => l.titulo);
-    buscarDescoberta({ consulta: c.consulta, excluir: lidos }, ctrl.signal)
+    buscarDescoberta({ consulta: `${c.consulta} (critérios: ${c.criterios.join(", ")})`, excluir: lidos, sementes: c.sementes }, ctrl.signal)
       .then((r) => {
         if (ctrl.signal.aborted) return;
         const comCapa = r.resultados.filter((x) => x.livro.capa).slice(0, 5);

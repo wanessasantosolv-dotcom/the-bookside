@@ -22,6 +22,10 @@ export type LivroBusca = LivroCatalogo & {
   idioma?: string;
   /** nota média dos leitores na fonte (Google Books ou Open Library) */
   avaliacao?: { media: number; total: number };
+  /** categorias e subtítulo da fonte (para separar literatura de dicionários, apostilas…) */
+  categorias?: string[];
+  subtitulo?: string;
+  editora?: string;
 };
 
 const CAMPOS =
@@ -165,6 +169,8 @@ function doGoogle(v: VolumeGB, i: number): LivroBusca | null {
       info.industryIdentifiers?.find((x) => x.type === "ISBN_10")
     )?.identifier,
     idioma: info.language,
+    categorias: info.categories,
+    subtitulo: info.subtitle,
     avaliacao:
       info.averageRating && info.ratingsCount
         ? { media: info.averageRating, total: info.ratingsCount }

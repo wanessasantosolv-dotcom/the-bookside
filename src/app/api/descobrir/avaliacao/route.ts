@@ -1,0 +1,76 @@
+/**
+ * Avaliação da descoberta: roda as consultas de referência no mesmo motor do
+ * app e devolve as medidas automáticas (edições em português, materiais não
+ * literários barrados, duplicatas, cobertura de fontes, tempo). A relevância
+ * dos dez primeiros continua exigindo leitura humana: os títulos vêm na resposta.
+ * Uso (logada): /api/descobrir/avaliacao?de=0&ate=6  (lotes, para caber no tempo)
+ */
+import { contaValida, executarDescoberta } from "@/lib/descoberta-servidor";
+import { ehEdicaoPt, naoLiterario } from "@/lib/descoberta-qualidade";
+
+export const maxDuration = 60;
+
+const CONSULTAS = [
+  "Livros coreanos",
+  "Livros coreanos acolhedores",
+  "Livros considerados calmos",
+  "Livros cozy",
+  "Literatura japonesa",
+  "Literatura africana contemporânea",
+  "Literatura brasileira",
+  "Melhores clássicos russos",
+  "Livros parecidos com Recursão",
+  "Livros semelhantes a Piranesi",
+  "Histórias ambientadas em livrarias",
+  "Livros sobre luto",
+  "Livros curtos e melancólicos",
+  "Fantasia sem romance",
+  "Narradores não confiáveis",
+  "Livros que parecem filmes do Studio Ghibli",
+  "Livros recomendados por críticos literários",
+  "Obras premiadas",
+];
+
+export async function GET(req: Request) {
+  const url = new URL(req.url);
+  const token = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? url.searchParams.get("token") ?? undefined;
+  const segredo = process.env.CRON_SECRET && req.headers.get("x-cron-secret") === process.env.CRON_SECRET;
+  if (!segredo && !(await contaValida(token))) return Response.json({ erro: "entre na sua conta" }, { status: 401 });
+  const de = Math.max(0, Number(url.searchParams.get("de")) || 0);
+  const ate = Math.min(CONSULTAS.length, Number(url.searchParams.get("ate")) || de + 6);
+  const lote = CONSULTAS.slice(de, ate);
+  const rodadas = await Promise.all(
+    lote.map(async (consulta) => {
+      const r = await executarDescoberta({ consulta });
+      const dez = r.resultados.slice(0, 10);
+      return {
+        consulta,
+        resultados: r.resultados.length,
+        pesquisaExterna: r.pesquisaExterna,
+        edicoesPt: dez.filter((x) => ehEdicaoPt(x.livro)).length,
+        naoLiterariosNaTela: dez.filter((x) => naoLiterario(x.livro)).length,
+        comFontes: dez.filter((x) => x.fontes.length).length,
+        medidas: r.medidas,
+        dezPrimeiros: dez.map((x) => `${x.livro.titulo} — ${x.livro.autor}${x.livro.editora ? ` (${x.livro.editora})` : ""}`),
+        avisos: r.avisos,
+      };
+    }),
+  );
+  const soma = (f: (x: (typeof rodadas)[number]) => number) => rodadas.reduce((s, x) => s + f(x), 0);
+  const mostrados = soma((x) => Math.min(10, x.resultados));
+  return Response.json({
+    lote: [de, ate],
+    resumo: {
+      consultas: rodadas.length,
+      semResultado: rodadas.filter((x) => !x.resultados).length,
+      percentualEdicoesPt: mostrados ? Math.round((soma((x) => x.edicoesPt) / mostrados) * 100) : null,
+      naoLiterariosNaTela: soma((x) => x.naoLiterariosNaTela),
+      barradosNaoLiterarios: soma((x) => x.medidas.naoLiterarios),
+      barradosSemEdicaoPt: soma((x) => x.medidas.semEdicaoPt),
+      duplicatasRemovidas: soma((x) => x.medidas.duplicados),
+      coberturaDeFontes: mostrados ? Math.round((soma((x) => x.comFontes) / mostrados) * 100) : null,
+      tempoMedioMs: Math.round(soma((x) => x.medidas.ms) / Math.max(1, rodadas.length)),
+    },
+    rodadas,
+  });
+}

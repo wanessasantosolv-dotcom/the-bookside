@@ -416,6 +416,32 @@ function Resultados({
                 </p>
                 {r.caracteristicas.length ? <p className="mt-1 text-[11px] text-tinta-suave">{r.caracteristicas.slice(0, 3).map((c) => c.nome).join(" · ")}</p> : null}
                 {r.porque ? <p className="mt-1 text-[13px] leading-snug text-tinta-suave italic">{r.porque}</p> : null}
+                {r.fontes?.length || l.editora ? (
+                  <details className="mt-1 text-[12px] text-cinza">
+                    <summary className="inline-flex min-h-7 cursor-pointer list-none items-center underline-offset-4 hover:text-bordo hover:underline [&::-webkit-details-marker]:hidden">por que este livro?</summary>
+                    <div className="mt-1 space-y-1 border-l border-linha pl-3">
+                      {l.editora || l.isbn ? (
+                        <p>
+                          Edição em português{l.editora ? ` · ${l.editora}` : ""}
+                          {l.isbn ? ` · ISBN ${l.isbn}` : ""}
+                        </p>
+                      ) : null}
+                      {r.fontes?.length ? (
+                        <p>
+                          Recomendado em:{" "}
+                          {r.fontes.map((f, i) => (
+                            <span key={f.url}>
+                              {i ? ", " : ""}
+                              <a href={f.url} target="_blank" rel="noopener noreferrer" className="text-tinta-suave underline decoration-linha underline-offset-2 hover:text-bordo">
+                                {f.titulo}
+                              </a>
+                            </span>
+                          ))}
+                        </p>
+                      ) : null}
+                    </div>
+                  </details>
+                ) : null}
                 <div className="mt-2 flex flex-wrap items-center gap-1">
                   {modo.tipo === "lista" ? (
                     naLista ? (

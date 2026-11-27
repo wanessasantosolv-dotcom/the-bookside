@@ -9,6 +9,8 @@
  * 5. aplica só as restrições que os dados confirmam (páginas, idioma, ano).
  */
 import { buscarLivros, chaveTitulo, livrosDoGoogle, type LivroBusca } from "@/lib/catalogo";
+import { CURADORIAS } from "@/lib/curadorias";
+import { ehEdicaoPt, naoLiterario, type TipoFonte } from "@/lib/descoberta-qualidade";
 import { supabase } from "@/lib/supabase";
 import { CARACTERISTICAS, PORID, ehBuscaDireta, interpretarBusca, type Caracteristica, type Interpretacao } from "@/lib/taxonomia";
 
@@ -18,6 +20,8 @@ export type Resultado = {
   porque?: string;
   /** características interpretativas apontadas para este livro */
   caracteristicas: Caracteristica[];
+  /** referências reais (páginas da internet) que sustentam a recomendação */
+  fontes?: { titulo: string; url: string; tipo: TipoFonte }[];
 };
 
 export type Contexto = { nome: string; descricao?: string; titulos?: string[] };
@@ -28,6 +32,8 @@ export type Resposta = {
   criterios: Caracteristica[];
   resultados: Resultado[];
   fonte: "catalogo" | "descoberta" | "palavras";
+  /** a recomendação passou por pesquisa em fontes literárias na internet */
+  pesquisaExterna?: boolean;
   avisos: string[];
 };
 
@@ -69,28 +75,18 @@ function semRepetir(lista: Resultado[], excluir: Set<string>) {
   });
 }
 
-/** acha o registro real de um candidato: título igual e sobrenome do autor batendo */
-async function conferir(titulo: string, autor: string, signal?: AbortSignal): Promise<LivroBusca | null> {
-  const sobrenome = norm(autor).split(" ").pop() ?? "";
-  const t = norm(titulo);
-  const achar = (r: LivroBusca[]) => {
-    const certos = r.filter((l) => norm(l.titulo).startsWith(t.slice(0, Math.max(6, Math.min(t.length, 24)))) && norm(l.autor).includes(sobrenome));
-    return certos.find((l) => l.capa && l.idioma === "pt") ?? certos.find((l) => l.capa) ?? certos[0] ?? null;
-  };
-  const r = await livrosDoGoogle(`intitle:"${titulo}" inauthor:"${sobrenome}"`, undefined, signal, { inicio: 0 }).catch(() => [] as LivroBusca[]);
-  return achar(r) ?? achar(await buscarLivros(`${titulo} ${autor}`, signal).catch(() => [] as LivroBusca[]));
-}
-
 async function token() {
   if (!supabase) return null;
   const { data } = await supabase.auth.getSession();
   return data.session?.access_token ?? null;
 }
 
-type Pedido = { consulta: string; filtros?: string[]; contexto?: Contexto; excluir?: string[] };
+type Pedido = { consulta: string; filtros?: string[]; contexto?: Contexto; excluir?: string[]; sementes?: { titulo: string; autor: string }[] };
 
-export async function buscarDescoberta({ consulta, filtros = [], contexto, excluir = [] }: Pedido, signal?: AbortSignal): Promise<Resposta> {
-  const chave = JSON.stringify([consulta.trim().toLowerCase(), [...filtros].sort(), contexto?.nome ?? "", contexto?.descricao ?? ""]);
+export async function buscarDescoberta({ consulta, filtros = [], contexto, excluir = [], sementes: pedidas = [] }: Pedido, signal?: AbortSignal): Promise<Resposta> {
+  // abrir uma curadoria pela busca usa a mesma seleção verificada dela
+  const sementes = pedidas.length ? pedidas : (CURADORIAS.find((c) => c.consulta.toLowerCase() === consulta.trim().toLowerCase())?.sementes ?? []);
+  const chave = JSON.stringify([consulta.trim().toLowerCase(), [...filtros].sort(), contexto?.nome ?? "", contexto?.descricao ?? "", sementes.length]);
   const pronto = cache.get(chave);
   if (pronto) return pronto;
 
@@ -99,13 +95,15 @@ export async function buscarDescoberta({ consulta, filtros = [], contexto, exclu
   const avisos = [...interpretacao.avisos];
   const fora = new Set(excluir.map(chaveTitulo));
   const subjetivos = criterios.filter((c) => !c.objetiva);
-  const direta = ehBuscaDireta(interpretacao) && !subjetivos.length && !contexto;
+  const direta = ehBuscaDireta(interpretacao) && !subjetivos.length && !contexto && !sementes.length;
 
   // 1. título, autor ou ISBN: o catálogo de sempre, com correspondência exata primeiro
   if (direta && consulta.trim()) {
     const r = await buscarLivros(consulta.trim(), signal);
     const resultados = semRepetir(
-      r.filter((l) => confirma(l, criterios)).map((livro) => ({ livro, caracteristicas: [] })),
+      r
+        .filter((l) => confirma(l, criterios) && !naoLiterario(l, consulta))
+        .map((livro) => ({ livro, caracteristicas: [] })),
       new Set(),
     );
     const resposta: Resposta = { interpretacao, criterios, resultados, fonte: "catalogo", avisos };
@@ -117,16 +115,17 @@ export async function buscarDescoberta({ consulta, filtros = [], contexto, exclu
   const exatos =
     consulta.trim() && consulta.trim().split(/\s+/).length <= 7
       ? buscarLivros(consulta.trim(), signal)
-          .then((r) => r.filter((l) => norm(l.titulo) === norm(consulta) || norm(l.titulo).startsWith(`${norm(consulta)} `)).slice(0, 3))
+          .then((r) => r.filter((l) => (norm(l.titulo) === norm(consulta) || norm(l.titulo).startsWith(`${norm(consulta)} `)) && ehEdicaoPt(l) && !naoLiterario(l, consulta)).slice(0, 3))
           .catch(() => [] as LivroBusca[])
       : Promise.resolve([] as LivroBusca[]);
 
-  // 2. descoberta: candidatos da IA, conferidos no catálogo
+  // 2. descoberta: pesquisa contextual + edição em português verificada, tudo no servidor
   const tk = await token();
   let resultados: Resultado[] = [];
   let fonte: Resposta["fonte"] = "descoberta";
+  let pesquisaExterna = false;
   if (tk) {
-    const r = await fetch("/api/ia/descoberta", {
+    const r = await fetch("/api/descobrir", {
       method: "POST",
       signal,
       headers: { "content-type": "application/json", authorization: `Bearer ${tk}` },
@@ -138,17 +137,25 @@ export async function buscarDescoberta({ consulta, filtros = [], contexto, exclu
         contexto: contexto ? [contexto.nome, contexto.descricao, contexto.titulos?.length ? `já tem: ${contexto.titulos.slice(0, 12).join("; ")}` : ""].filter(Boolean).join(" · ") : "",
         excluir: [...excluir.slice(0, 50), ...(contexto?.titulos ?? []).slice(0, 20)],
         ids: CARACTERISTICAS.filter((c) => !c.objetiva).map((c) => c.id),
+        sementes,
       }),
     }).catch(() => null);
-    const dados = r?.ok ? ((await r.json().catch(() => null)) as { livros?: { titulo: string; autor: string; porque: string; caracteristicas: string[] }[] } | null) : null;
-    if (dados?.livros?.length) {
-      const conferidos = await Promise.all(
-        dados.livros.map(async (c): Promise<Resultado | null> => {
-          const livro = await conferir(c.titulo, c.autor, signal);
-          return livro ? { livro, porque: c.porque || undefined, caracteristicas: c.caracteristicas.map((id) => PORID.get(id)).filter((x): x is Caracteristica => !!x) } : null;
-        }),
-      );
-      resultados = conferidos.filter((x): x is Resultado => !!x);
+    const dados = r?.ok
+      ? ((await r.json().catch(() => null)) as {
+          resultados?: { livro: LivroBusca; porque?: string; caracteristicas: string[]; fontes: { titulo: string; url: string; tipo: TipoFonte }[] }[];
+          pesquisaExterna?: boolean;
+          avisos?: string[];
+        } | null)
+      : null;
+    if (dados?.resultados?.length) {
+      pesquisaExterna = !!dados.pesquisaExterna;
+      resultados = dados.resultados.map((x, i) => ({
+        livro: { ...x.livro, cor: x.livro.cor ?? ["#692536", "#8297D1", "#667255", "#D8A8B6"][i % 4] },
+        porque: x.porque,
+        caracteristicas: x.caracteristicas.map((id) => PORID.get(id)).filter((c): c is Caracteristica => !!c),
+        fontes: x.fontes,
+      }));
+      for (const a of dados.avisos ?? []) if (!avisos.includes(a)) avisos.push(a);
     }
   }
 
@@ -167,7 +174,7 @@ export async function buscarDescoberta({ consulta, filtros = [], contexto, exclu
     const semTermos = interpretacao.sem.flatMap((c) => [norm(c.nome), ...c.termos.map(norm)]);
     resultados = listas
       .flat()
-      .filter((l) => l.capa)
+      .filter((l) => l.capa && ehEdicaoPt(l) && !naoLiterario(l, consulta))
       .filter((l) => !semTermos.some((s) => norm(l.genero ?? "").includes(s)))
       .map((livro) => ({ livro, caracteristicas: [] }));
     if (subjetivos.length || interpretacao.parecidoCom) avisos.push("A busca por sensações e temas não está disponível agora. Mostramos resultados por palavras-chave, que podem não corresponder a todos os critérios.");
@@ -178,7 +185,7 @@ export async function buscarDescoberta({ consulta, filtros = [], contexto, exclu
     [...primeiros, ...resultados.filter((r) => confirma(r.livro, criterios))],
     fora,
   );
-  const resposta: Resposta = { interpretacao, criterios, resultados, fonte, avisos };
+  const resposta: Resposta = { interpretacao, criterios, resultados, fonte, avisos, pesquisaExterna };
   if (resultados.length) cache.set(chave, resposta);
   return resposta;
 }
