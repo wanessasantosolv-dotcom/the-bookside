@@ -187,7 +187,7 @@ function SeloDoClube({ c, tamanho, ident }: { c: Clube; tamanho: "pequeno" | "gr
  */
 function Cabecalho({ c, papel, membros, ident }: { c: Clube; papel: Papel | null; membros: number; ident: Identidade | null }) {
   const layout = ident ? cabecalhoDe(ident) : "editorial";
-  const faixa = ident && ident.padrao && padraoDe(ident).onde.includes("faixa") && decoracaoDe(ident) !== "minimal";
+  const faixa = ident && ident.padrao && padraoDe(ident).onde.includes("faixa");
   const pathname = usePathname();
   const base = `/clubes/${c.id}`;
   const inicio = pathname === base || pathname === `${base}/feed`;

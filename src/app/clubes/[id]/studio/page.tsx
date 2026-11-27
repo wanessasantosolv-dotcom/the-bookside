@@ -97,7 +97,7 @@ function Previa({
   const paleta = paletaDe(ident);
   const comEmblema = ident.emblema?.noAvatar || !foto;
   const pd = padraoDe(ident);
-  const faixa = !!ident.padrao && pd.onde.includes("faixa") && decoracaoDe(ident) !== "minimal";
+  const faixa = !!ident.padrao && pd.onde.includes("faixa");
   const grande = contexto === "inicio" && layout !== "compact";
   return (
     <div
@@ -350,10 +350,9 @@ export default function ClubStudioPage() {
             ["elementos", "elementos gráficos"],
             ["estantes", "estantes"],
             ["layout", "layout"],
-            ["titulos", "identidade verbal"],
           ] as const
         ).map(([id, n]) => (
-          <button key={id} type="button" aria-pressed={categoria === id} onClick={() => setCategoria(id)} className={chip(categoria === id)}>
+          <button key={id} type="button" aria-pressed={categoria === id} onClick={() => { setCategoria(id); if (id === "estantes") setContexto("estante"); }} className={chip(categoria === id)}>
             {n}
           </button>
         ))}
