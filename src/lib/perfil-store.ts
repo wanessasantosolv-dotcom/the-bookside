@@ -190,8 +190,12 @@ export type Perfil = {
   decoracao: "minimal" | "editorial" | "expressive" | null;
   /** as cores do tema do perfil valem para o app inteiro */
   temaNoApp: boolean;
-  /** o tema do perfil fica só no perfil (padrão: vale no app todo) */
+  /** o tema do perfil fica só no perfil (padrão: vale no app todo) — antigo; o tema do app agora é temaApp */
   temaSoNoPerfil: boolean;
+  /** o tema da interface (configurações → aparência); sem ele, vale o comportamento antigo */
+  temaApp?: string | null;
+  /** o perfil público acompanha o tema do app (padrão) */
+  perfilSegueApp?: boolean | null;
   /** as leituras (comecei, terminei, notas, progresso) aparecem no feed dos amigos */
   publicarNoFeed: boolean;
   /** livros tirados da estante (para não voltarem quando outro aparelho sincronizar) */
@@ -247,6 +251,8 @@ export const perfilInicial: Perfil = {
   decoracao: null,
   temaNoApp: false,
   temaSoNoPerfil: false,
+  temaApp: null,
+  perfilSegueApp: null,
   publicarNoFeed: true,
 };
 
@@ -360,4 +366,15 @@ export function sugerirUsuario(nome: string) {
     .replace(/[^a-z0-9]+/g, ".")
     .replace(/^\.+|\.+$/g, "")
     .slice(0, 24);
+}
+
+/** o tema que vale na interface: o escolhido em configurações ou, para quem nunca escolheu, o do perfil */
+export function temaDoApp(s: Pick<Perfil, "temaApp" | "temaSoNoPerfil" | "tema">): string | undefined {
+  if (s.temaApp) return s.temaApp;
+  return s.temaSoNoPerfil ? undefined : s.tema;
+}
+
+/** o perfil acompanha o app? (padrão: sim, menos para quem tinha separado os dois) */
+export function perfilSegue(s: Pick<Perfil, "perfilSegueApp" | "temaSoNoPerfil">): boolean {
+  return s.perfilSegueApp ?? !s.temaSoNoPerfil;
 }

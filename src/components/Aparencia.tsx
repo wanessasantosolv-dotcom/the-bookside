@@ -31,7 +31,9 @@ export function Aparencia() {
       if (escuro) document.documentElement.dataset.modo = "escuro";
       else delete document.documentElement.dataset.modo;
       const s = usePerfil.getState();
-      const t = s.temaSoNoPerfil ? undefined : temaApp(s.tema);
+      // o app é sempre institucional; os temas são só do perfil
+      const t = undefined as ReturnType<typeof temaApp>;
+      void s;
       document
         .querySelector('meta[name="theme-color"]')
         ?.setAttribute("content", t ? (escuro ? t.escuro.fundo : t.claro.fundo) : escuro ? "#1a1416" : "#6b0d24");
@@ -41,14 +43,17 @@ export function Aparencia() {
     return () => mq.removeEventListener("change", aplicar);
   }, [aparencia]);
   // o tema do perfil no app todo (se a pessoa ligou em configurações)
+  // os temas valem só no perfil (escopo da página): a interface fica com a identidade do the bookside
   const tema = usePerfil((s) => s.tema);
-  const temaNoApp = usePerfil((s) => !s.temaSoNoPerfil);
+  const temaNoApp = false;
   const modoEscuro = useModoEscuro();
   const estiloEstante = usePerfil((s) => s.estiloEstante ?? "auto");
   const decoracao = usePerfil((s) => s.decoracao ?? null);
   // atributos do tema (cantos, decoração, estante) e a cor da estante
   useEffect(() => {
-    aplicarExtrasDoTema(temaNoApp ? tema : undefined, modoEscuro, estiloEstante, decoracao);
+    aplicarExtrasDoTema(undefined, modoEscuro, "auto", null);
+    void estiloEstante;
+    void decoracao;
   }, [tema, temaNoApp, modoEscuro, estiloEstante, decoracao]);
   useEffect(() => {
     const raiz = document.documentElement;

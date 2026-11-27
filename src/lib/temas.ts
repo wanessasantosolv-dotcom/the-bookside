@@ -68,12 +68,12 @@ export const TEMAS_APP: TemaApp[] = [
     decoracao: "editorial",
     banner: "linhas",
     claro: {
-      fundo: "#F6F0E5", superficie: "#EDE1D9", primaria: "#692536", secundaria: "#59634F", acento: "#ECAABB",
-      texto: "#38252C", borda: "#D8C9BF", sobrePrimaria: "#F6F0E5", bloco: "#692536", sobreBloco: "#F6F0E5", estante: "#9A6B43",
+      fundo: "#F6F0E5", superficie: "#EDE1D9", primaria: "#692536", secundaria: "#59634F", acento: "#C88E9F",
+      texto: "#38252C", borda: "#D8D0C7", sobrePrimaria: "#F6F0E5", bloco: "#692536", sobreBloco: "#F6F0E5", estante: "#9A6B43",
     },
     escuro: {
-      fundo: "#21191D", superficie: "#35272E", primaria: "#ECAABB", secundaria: "#A8B397", acento: "#80374D",
-      texto: "#F2E4DB", borda: "#503B45", sobrePrimaria: "#21191D", bloco: "#80374D", sobreBloco: "#F6F0E5", estante: "#7A5235",
+      fundo: "#211C1E", superficie: "#49313A", primaria: "#D4A6B2", secundaria: "#404339", acento: "#85606B",
+      texto: "#EEE2DE", borda: "#464041", sobrePrimaria: "#211C1E", bloco: "#53222F", sobreBloco: "#EEE2DE", estante: "#7A5235",
     },
   },
   {
@@ -87,12 +87,12 @@ export const TEMAS_APP: TemaApp[] = [
     decoracao: "expressive",
     banner: "xadrez",
     claro: {
-      fundo: "#F2D9E9", superficie: "#E3D2F1", primaria: "#752963", secundaria: "#B5A2E3", acento: "#D9ED58", acento2: "#EC8DC5",
-      texto: "#39253D", borda: "#C5A4CF", sobrePrimaria: "#FFFFFF", bloco: "#752963", sobreBloco: "#FFFFFF", estante: "#B5A2E3",
+      fundo: "#F5EFE9", superficie: "#EDE0E6", primaria: "#874C70", secundaria: "#C6CA91", acento: "#D6ADC7",
+      texto: "#44333F", borda: "#D9D1CE", sobrePrimaria: "#F5EFE9", bloco: "#874C70", sobreBloco: "#F5EFE9", estante: "#C6CA91",
     },
     escuro: {
-      fundo: "#291D36", superficie: "#40304E", primaria: "#F0B4DA", secundaria: "#9B85C8", acento: "#D9ED58", acento2: "#EC8DC5",
-      texto: "#F5E8F6", borda: "#5C446D", sobrePrimaria: "#291D36", bloco: "#5E2450", sobreBloco: "#F5E8F6", estante: "#9B85C8",
+      fundo: "#251F26", superficie: "#483747", primaria: "#D6ADC7", secundaria: "#7E7D61", acento: "#8F7487",
+      texto: "#EDE3EC", borda: "#49424A", sobrePrimaria: "#251F26", bloco: "#6A3E5A", sobreBloco: "#EDE3EC", estante: "#6E5A6C",
     },
   },
   {
@@ -107,12 +107,12 @@ export const TEMAS_APP: TemaApp[] = [
     decoracao: "minimal",
     banner: "grade",
     claro: {
-      fundo: "#F2F0EB", superficie: "#E5E3DE", primaria: "#1D1D1D", secundaria: "#696969", acento: "#CC332D",
-      texto: "#1D1D1D", borda: "#C8C7C2", sobrePrimaria: "#FFFFFF", bloco: "#1D1D1D", sobreBloco: "#F2F0EB", estante: "#1D1D1D",
+      fundo: "#F2EFE9", superficie: "#E5E1D9", primaria: "#373532", secundaria: "#B9B4AB", acento: "#A65349",
+      texto: "#373532", borda: "#D4D1CC", sobrePrimaria: "#F2EFE9", bloco: "#373532", sobreBloco: "#F2EFE9", estante: "#373532",
     },
     escuro: {
-      fundo: "#191919", superficie: "#262626", primaria: "#E8E8E3", secundaria: "#A4A4A0", acento: "#EF6256",
-      texto: "#F2F0EB", borda: "#414141", sobrePrimaria: "#191919", bloco: "#2E2E2E", sobreBloco: "#F2F0EB", estante: "#A4A4A0",
+      fundo: "#222120", superficie: "#393735", primaria: "#DBD7CE", secundaria: "#75726C", acento: "#713F39",
+      texto: "#EDEBE5", borda: "#474543", sobrePrimaria: "#222120", bloco: "#312F2D", sobreBloco: "#EDEBE5", estante: "#8A857D",
     },
   },
   {
@@ -125,12 +125,12 @@ export const TEMAS_APP: TemaApp[] = [
     decoracao: "editorial",
     banner: "constelacao",
     claro: {
-      fundo: "#E5EAF2", superficie: "#D1D9ED", primaria: "#263C85", secundaria: "#6478B7", acento: "#C5A66E", acento2: "#B6C3EB",
-      texto: "#26314D", borda: "#B7C2DB", sobrePrimaria: "#FFFFFF", bloco: "#263C85", sobreBloco: "#FFFFFF", estante: "#2E3D6B",
+      fundo: "#EEEFF1", superficie: "#E1E5ED", primaria: "#414D70", secundaria: "#BAA47D", acento: "#A5B0CA",
+      texto: "#343A4B", borda: "#D0D2D6", sobrePrimaria: "#EEEFF1", bloco: "#414D70", sobreBloco: "#EEEFF1", estante: "#414D70",
     },
     escuro: {
-      fundo: "#151D38", superficie: "#253456", primaria: "#BDC9FF", secundaria: "#879ACC", acento: "#DDC48A", acento2: "#364979",
-      texto: "#EDF0FC", borda: "#43547C", sobrePrimaria: "#151D38", bloco: "#2C3E78", sobreBloco: "#EDF0FC", estante: "#364979",
+      fundo: "#20232D", superficie: "#343C4F", primaria: "#B5C1DE", secundaria: "#756A59", acento: "#70788B",
+      texto: "#E3E6EE", borda: "#434650", sobrePrimaria: "#20232D", bloco: "#37405C", sobreBloco: "#E3E6EE", estante: "#3E4863",
     },
   },
   {
@@ -143,12 +143,12 @@ export const TEMAS_APP: TemaApp[] = [
     decoracao: "editorial",
     banner: "arcos",
     claro: {
-      fundo: "#F5E5CB", superficie: "#E9D3AC", primaria: "#963A1E", secundaria: "#6A7043", acento: "#D9A23B", acento2: "#BC764B",
-      texto: "#503626", borda: "#CFB58D", sobrePrimaria: "#FFF4E2", bloco: "#963A1E", sobreBloco: "#FFF4E2", estante: "#8A5A2B",
+      fundo: "#F5EEE1", superficie: "#ECE0CB", primaria: "#8C523A", secundaria: "#84876C", acento: "#C9A36C",
+      texto: "#4C3E32", borda: "#DAD2C5", sobrePrimaria: "#F5EEE1", bloco: "#8C523A", sobreBloco: "#F5EEE1", estante: "#8A5A2B",
     },
     escuro: {
-      fundo: "#30251B", superficie: "#443326", primaria: "#E5B16D", secundaria: "#989C59", acento: "#C9683C", acento2: "#D9A23B",
-      texto: "#F0DFC5", borda: "#644B34", sobrePrimaria: "#30251B", bloco: "#8E3B20", sobreBloco: "#FFF4E2", estante: "#6E4A2C",
+      fundo: "#29231E", superficie: "#48382C", primaria: "#D3AF89", secundaria: "#5B5A49", acento: "#89704D",
+      texto: "#EFE2CF", borda: "#4D453E", sobrePrimaria: "#29231E", bloco: "#784B37", sobreBloco: "#EFE2CF", estante: "#6E4A2C",
     },
   },
   {
@@ -161,12 +161,12 @@ export const TEMAS_APP: TemaApp[] = [
     decoracao: "editorial",
     banner: "folhas",
     claro: {
-      fundo: "#E8EBDC", superficie: "#D7DDCA", primaria: "#40543A", secundaria: "#788A65", acento: "#D0B7A1", acento2: "#A5B18A",
-      texto: "#34432D", borda: "#BAC4AD", sobrePrimaria: "#F4F3E8", bloco: "#40543A", sobreBloco: "#F4F3E8", estante: "clara",
+      fundo: "#EFF0E7", superficie: "#E0E5D6", primaria: "#52654B", secundaria: "#C6AF9A", acento: "#A9B49A",
+      texto: "#394635", borda: "#D2D5CB", sobrePrimaria: "#EFF0E7", bloco: "#52654B", sobreBloco: "#EFF0E7", estante: "clara",
     },
     escuro: {
-      fundo: "#202820", superficie: "#303B2F", primaria: "#C3D2A4", secundaria: "#7B936A", acento: "#C6A58D", acento2: "#566C4D",
-      texto: "#E6EBDD", borda: "#465642", sobrePrimaria: "#202820", bloco: "#3F5238", sobreBloco: "#F4F3E8", estante: "#8A6A48",
+      fundo: "#222820", superficie: "#364234", primaria: "#B9C6A7", secundaria: "#7C7263", acento: "#737C69",
+      texto: "#E3E8DB", borda: "#454B42", sobrePrimaria: "#222820", bloco: "#44533E", sobreBloco: "#E3E8DB", estante: "#8A6A48",
     },
   },
   {
@@ -179,12 +179,12 @@ export const TEMAS_APP: TemaApp[] = [
     decoracao: "editorial",
     banner: "borboletas",
     claro: {
-      fundo: "#EEE5FA", superficie: "#DDD0F1", primaria: "#684599", secundaria: "#9676C4", acento: "#B69ADD", acento2: "#C3CDD9",
-      texto: "#3E2B58", borda: "#D7C5EB", sobrePrimaria: "#FFFFFF", bloco: "#684599", sobreBloco: "#FFFFFF", estante: "#B69ADD",
+      fundo: "#F3EFF5", superficie: "#E8E0EE", primaria: "#6C5882", secundaria: "#C5C3D0", acento: "#B9A6CD",
+      texto: "#493D53", borda: "#D8D3DB", sobrePrimaria: "#F3EFF5", bloco: "#6C5882", sobreBloco: "#F3EFF5", estante: "#B9A6CD",
     },
     escuro: {
-      fundo: "#251B37", superficie: "#403052", primaria: "#CDB5F1", secundaria: "#9676C4", acento: "#B69ADD", acento2: "#D3D7E5",
-      texto: "#F0E8FC", borda: "#57436D", sobrePrimaria: "#251B37", bloco: "#55397F", sobreBloco: "#F0E8FC", estante: "#6E5596",
+      fundo: "#25212C", superficie: "#40364D", primaria: "#C7B5DC", secundaria: "#7D7A86", acento: "#7E718D",
+      texto: "#EBE4F0", borda: "#49444F", sobrePrimaria: "#25212C", bloco: "#5E4E6E", sobreBloco: "#EBE4F0", estante: "#6E5F80",
     },
   },
   {
@@ -198,12 +198,12 @@ export const TEMAS_APP: TemaApp[] = [
     decoracao: "editorial",
     banner: "ornamento",
     claro: {
-      fundo: "#F0DDE0", superficie: "#E3C3CC", primaria: "#601329", secundaria: "#87334B", acento: "#A75B70", acento2: "#C3A47F",
-      texto: "#400D1E", borda: "#D6B5BE", sobrePrimaria: "#FFF0F2", bloco: "#601329", sobreBloco: "#FFF0F2", estante: "#5A1A2A",
+      fundo: "#F4EAE9", superficie: "#EAD7DC", primaria: "#702A40", secundaria: "#BFA78B", acento: "#BC8697",
+      texto: "#492D36", borda: "#D9CCCC", sobrePrimaria: "#F4EAE9", bloco: "#702A40", sobreBloco: "#F4EAE9", estante: "#5A1A2A",
     },
     escuro: {
-      fundo: "#260D17", superficie: "#3D1021", primaria: "#E5B8C4", secundaria: "#A75B70", acento: "#87334B", acento2: "#C3A47F",
-      texto: "#F4DFE5", borda: "#633247", sobrePrimaria: "#260D17", bloco: "#501326", sobreBloco: "#F4DFE5", estante: "#501326",
+      fundo: "#291C23", superficie: "#472B39", primaria: "#D5A5B6", secundaria: "#7C685C", acento: "#815C69",
+      texto: "#EFE0E5", borda: "#4D3F46", sobrePrimaria: "#291C23", bloco: "#5B2637", sobreBloco: "#EFE0E5", estante: "#5A2A3A",
     },
   },
 ];
@@ -304,22 +304,16 @@ export function tokensDoTema(t: TemaApp, escuro: boolean): CSSProperties {
     "--tema-banner": bannerDoTema(t, v),
     "--tema-primaria": v.primaria,
     "--tema-acento": v.acento,
-    "--font-display": FONTES[t.fonteDisplay ?? t.fonte],
-    "--font-revista": FONTES[t.fonte],
-    // sem peso próprio: "initial" deixa valer o peso do componente
-    "--peso-titulo": t.peso ? String(t.peso) : "initial",
-    "--titulo-estilo": t.italico ? "italic" : "normal",
+    // a tipografia é a mesma em todos os temas (a do the bookside): só cores e desenhos mudam
+    "--peso-titulo": "initial",
+    "--titulo-estilo": "italic",
   } as CSSProperties;
 }
 
 /** os atributos que o <html> (ou a área do perfil) recebe com o tema */
 export function atributosDoTema(t: TemaApp | undefined) {
-  return {
-    "data-tema-app": t?.id,
-    "data-titulo-app": t && !t.italico ? "reto" : undefined,
-    "data-peso-app": t?.peso ? "1" : undefined,
-    "data-cantos-app": t?.reto ? "retos" : undefined,
-  };
+  // a geometria (cantos, pesos) é a mesma em todos os temas
+  return { "data-tema-app": t?.id };
 }
 
 /** a cor da estante para a escolha da pessoa (auto: a do tema) */
@@ -357,4 +351,14 @@ function lum(hex: string) {
 export function contraste(a: string, b: string) {
   const [x, y] = [lum(a), lum(b)].sort((m, n) => n - m);
   return (x + 0.05) / (y + 0.05);
+}
+
+/** a estante do perfil (no escopo da página do perfil): a cor e o atributo do acabamento */
+export function estanteDoPerfil(estilo: EstiloEstante | undefined, id: string | null | undefined, escuro: boolean) {
+  const t = temaApp(id);
+  const cor = corDaEstanteApp(estilo ?? "auto", t, escuro);
+  return {
+    estilo: (cor ? { "--app-estante": cor } : {}) as CSSProperties,
+    atributo: estilo === "minimalista" ? "minimalista" : estanteClareia(estilo, t, escuro) ? "clara" : undefined,
+  };
 }

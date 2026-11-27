@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
       { source: "/ler-junto", destination: "/co-read", permanent: true },
       { source: "/ler-junto/novo", destination: "/co-read/novo", permanent: true },
       { source: "/ler-junto/:id", destination: "/co-read/:id", permanent: true },
+      { source: "/perfil/configuracoes", destination: "/configuracoes", permanent: true },
     ];
   },
 };

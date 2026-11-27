@@ -5,8 +5,6 @@ import Link from "next/link";
 import { AppShell } from "@/components/AppShell";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { aplicarExtrasDoTema } from "@/components/Aparencia";
-import { coresDoTema } from "@/lib/tema";
 import { AjustarFoto } from "@/components/AjustarFoto";
 import { CampoUsuario } from "@/components/CampoUsuario";
 import type { SituacaoUsuario } from "@/lib/usuario";
@@ -36,19 +34,14 @@ type Rascunho = Pick<
   | "capa"
   | "capaImagem"
   | "capaPosY"
-  | "aparencia"
   | "estiloEstante"
   | "decoracao"
-  | "temaSoNoPerfil"
-  | "publicarNoFeed"
-  | "estantesProprias"
 >;
-type Categoria = "perfil" | "aparencia" | "privacidade";
+type Categoria = "perfil" | "identidade";
 
 const CATEGORIAS: [Categoria, string][] = [
-  ["perfil", "meu perfil"],
-  ["aparencia", "aparência"],
-  ["privacidade", "privacidade"],
+  ["perfil", "Informações"],
+  ["identidade", "Identidade visual"],
 ];
 
 /** o modo escuro que vale para uma escolha de aparência (sistema: o do aparelho) */
@@ -64,20 +57,6 @@ function useEscuroDe(aparencia: Aparencia) {
   return aparencia === "escuro" || (aparencia === "sistema" && doSistema);
 }
 
-/** aplica (ou desfaz) a aparência e o tema no app inteiro, para ver como fica antes de salvar */
-function aplicarNoApp(tema: string | undefined, escuro: boolean, estante: EstiloEstante, decoracao: Decoracao | null) {
-  const raiz = document.documentElement;
-  if (escuro) raiz.dataset.modo = "escuro";
-  else delete raiz.dataset.modo;
-  const cores = (tema ? coresDoTema(tema, escuro) : undefined) ?? {};
-  for (const [k, v] of Object.entries(cores)) if (k.startsWith("--")) raiz.style.setProperty(k, String(v));
-  const legado = temas.find((x) => x.id === tema);
-  if (legado && "escuro" in legado && escuro) raiz.dataset.temaEscuro = "1";
-  else delete raiz.dataset.temaEscuro;
-  aplicarExtrasDoTema(tema, escuro, estante, decoracao);
-  return Object.keys(cores).filter((k) => k.startsWith("--"));
-}
-
 function Formulario({ inicial }: { inicial: Rascunho }) {
   const router = useRouter();
   const atualizar = usePerfil((s) => s.atualizar);
@@ -87,7 +66,7 @@ function Formulario({ inicial }: { inicial: Rascunho }) {
   const [categoria, setCategoria] = useState<Categoria>(() => {
     if (typeof window === "undefined") return "perfil";
     const c = new URLSearchParams(window.location.search).get("aba");
-    return c === "aparencia" || c === "privacidade" ? c : "perfil";
+    return c === "identidade" || c === "aparencia" ? "identidade" : "perfil";
   });
   const [previaAberta, setPreviaAberta] = useState(false);
   const fotoRef = useRef<HTMLInputElement>(null);
@@ -99,19 +78,18 @@ function Formulario({ inicial }: { inicial: Rascunho }) {
   const usuarioAntigo = inicial.usuario;
   const usuarioOk = r.usuario === usuarioAntigo || situacaoUsuario === "ok" || situacaoUsuario === "sem_internet";
   const valido = !!(r.nome.trim() && r.usuario.trim() && usuarioOk);
-  const escuro = useEscuroDe(r.aparencia);
-
-  // prévia ao vivo no app inteiro; ao sair (salvando ou não), volta ao que estiver salvo
+  // a prévia pode mostrar claro ou escuro sem mudar a preferência do app
+  const escuroDoApp = useEscuroDe(usePerfil.getState().aparencia ?? "claro");
+  const [escuroPrevia, setEscuroPrevia] = useState<boolean | null>(null);
+  const escuro = escuroPrevia ?? escuroDoApp;
+  const mudou = JSON.stringify(r) !== JSON.stringify(inicial);
   useEffect(() => {
-    const raiz = document.documentElement;
-    const chaves = aplicarNoApp(r.temaSoNoPerfil ? undefined : r.tema, escuro, r.estiloEstante ?? "auto", r.decoracao ?? null);
-    return () => {
-      for (const k of chaves) raiz.style.removeProperty(k);
-      const s = usePerfil.getState();
-      const escuroSalvo = s.aparencia === "escuro" || (s.aparencia === "sistema" && matchMedia("(prefers-color-scheme: dark)").matches);
-      aplicarNoApp(s.temaSoNoPerfil ? undefined : s.tema, escuroSalvo, s.estiloEstante ?? "auto", s.decoracao ?? null);
+    const aviso = (e: BeforeUnloadEvent) => {
+      if (mudou) e.preventDefault();
     };
-  }, [r.tema, r.temaSoNoPerfil, escuro, r.estiloEstante, r.decoracao]);
+    window.addEventListener("beforeunload", aviso);
+    return () => window.removeEventListener("beforeunload", aviso);
+  }, [mudou]);
 
   function salvar() {
     if (!valido) return;
@@ -120,7 +98,7 @@ function Formulario({ inicial }: { inicial: Rascunho }) {
   }
 
   function restaurarAparencia() {
-    mudar({ tema: "the-original", estiloEstante: "auto", decoracao: null, temaSoNoPerfil: false });
+    mudar({ tema: "the-original", estiloEstante: "auto", decoracao: null });
   }
 
   function trocarCategoria(c: Categoria) {
@@ -206,8 +184,7 @@ function Formulario({ inicial }: { inicial: Rascunho }) {
                 ajustarCapa={() => setCapaParaAjustar(r.capaImagem)}
               />
             ) : null}
-            {categoria === "aparencia" ? <AparenciaSecao r={r} mudar={mudar} escuro={escuro} abrirPrevia={() => setPreviaAberta(true)} /> : null}
-            {categoria === "privacidade" ? <Privacidade r={r} mudar={mudar} /> : null}
+            {categoria === "identidade" ? <AparenciaSecao r={r} mudar={mudar} escuro={escuro} onEscuro={setEscuroPrevia} abrirPrevia={() => setPreviaAberta(true)} /> : null}
 
             {/* ações */}
             <div className="fixed inset-x-0 bottom-0 z-30 flex items-center gap-2 border-t border-linha bg-creme/95 px-4 py-3 backdrop-blur-sm lg:static lg:mt-10 lg:border-t lg:bg-transparent lg:px-0 lg:pt-6 lg:backdrop-blur-none">
@@ -222,7 +199,7 @@ function Formulario({ inicial }: { inicial: Rascunho }) {
               <Link href="/perfil" className="flex h-10 items-center rounded-[6px] border border-bege px-4 text-[14px] font-semibold text-ameixa">
                 cancelar
               </Link>
-              {categoria === "aparencia" ? (
+              {categoria === "identidade" ? (
                 <button type="button" onClick={restaurarAparencia} className="ml-auto hidden h-10 px-2 text-[13px] font-semibold text-tinta-suave underline-offset-4 hover:underline sm:block">
                   restaurar padrão
                 </button>
@@ -502,7 +479,7 @@ const DECORACOES: [Decoracao, string, string][] = [
   ["expressive", "expressive", "mais presença"],
 ];
 
-function AparenciaSecao({ r, mudar, escuro, abrirPrevia }: { r: Rascunho; mudar: (d: Partial<Rascunho>) => void; escuro: boolean; abrirPrevia: () => void }) {
+function AparenciaSecao({ r, mudar, escuro, onEscuro, abrirPrevia }: { r: Rascunho; mudar: (d: Partial<Rascunho>) => void; escuro: boolean; onEscuro: (v: boolean) => void; abrirPrevia: () => void }) {
   const atual = temaApp(r.tema);
   const legado = ehTemaLegado(r.tema) ? temas.find((t) => t.id === r.tema) : undefined;
   const nivel = r.decoracao ?? atual?.decoracao ?? "editorial";
@@ -514,37 +491,21 @@ function AparenciaSecao({ r, mudar, escuro, abrirPrevia }: { r: Rascunho; mudar:
       <div className="flex items-end justify-between gap-3">
         <div>
           <p className="font-revista text-[30px] leading-none text-ameixa italic lg:text-[34px]">make it yours.</p>
-          <p className="mt-1.5 text-[13px] text-cinza">escolha seu tema e, à parte, se o app fica claro ou escuro.</p>
+          <p className="mt-1.5 text-[13px] text-cinza">A identidade visual do seu perfil.</p>
         </div>
         <button type="button" onClick={abrirPrevia} className="flex h-10 flex-none items-center rounded-[6px] border border-bege px-3.5 text-[13px] font-semibold text-bordo xl:hidden">
           ver prévia
         </button>
       </div>
 
-      {/* aparência: claro / escuro / sistema */}
-      <section aria-labelledby="t-modo">
-        <h2 id="t-modo" className={rotulo}>
-          aparência
-        </h2>
-        <div role="radiogroup" aria-labelledby="t-modo" className="flex max-w-[380px] gap-1 rounded-[7px] bg-papel p-1">
-          {(
-            [
-              ["claro", "claro", "M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10z M12 2v2 M12 20v2 M4 12H2 M22 12h-2 M5 5l1.4 1.4 M17.6 17.6 19 19 M5 19l1.4-1.4 M17.6 6.4 19 5"],
-              ["escuro", "escuro", "M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"],
-              ["sistema", "sistema", "M3 5h18v11H3z M8 20h8 M12 16v4"],
-            ] as [Aparencia, string, string][]
-          ).map(([id, nome, d]) => (
-            <button key={id} type="button" role="radio" aria-checked={r.aparencia === id} onClick={() => mudar({ aparencia: id })} className={segmento(r.aparencia === id)}>
-              <svg aria-hidden width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                {d.split(" M").map((p, i) => (
-                  <path key={i} d={i ? `M${p}` : p} />
-                ))}
-              </svg>
-              {nome}
-            </button>
-          ))}
-        </div>
-      </section>
+      {/* só a prévia: claro ou escuro (a preferência do app fica em configurações) */}
+      <div role="radiogroup" aria-label="ver a prévia em" className="flex max-w-[260px] gap-1 rounded-[7px] bg-papel p-1">
+        {([[false, "prévia clara"], [true, "prévia escura"]] as const).map(([v, nome]) => (
+          <button key={nome} type="button" role="radio" aria-checked={escuro === v} onClick={() => onEscuro(v)} className={segmento(escuro === v)}>
+            {nome}
+          </button>
+        ))}
+      </div>
 
       {/* os oito temas */}
       <section aria-labelledby="t-temas">
@@ -643,78 +604,6 @@ function AparenciaSecao({ r, mudar, escuro, abrirPrevia }: { r: Rascunho; mudar:
         </div>
       </section>
 
-      {/* complementares */}
-      <section>
-        <label className="flex cursor-pointer items-start gap-3 text-[13px]">
-          <input type="checkbox" checked={!r.temaSoNoPerfil} onChange={(e) => mudar({ temaSoNoPerfil: !e.target.checked })} className="mt-0.5 size-5 flex-none accent-bordo" />
-          <span>
-            <b className="font-semibold">usar o tema no app todo</b>
-            <span className="block text-cinza">desligado, o tema fica só no seu perfil.</span>
-          </span>
-        </label>
-      </section>
-    </div>
-  );
-}
-
-// ───────── privacidade ─────────
-
-function Privacidade({ r, mudar }: { r: Rascunho; mudar: (d: Partial<Rascunho>) => void }) {
-  const linha = "flex cursor-pointer items-start justify-between gap-4 border-b border-linha py-3.5";
-  return (
-    <div className="space-y-8">
-      <section aria-labelledby="t-feed">
-        <h2 id="t-feed" className={tituloSecao}>
-          atividades
-        </h2>
-        <label className={linha}>
-          <span className="text-[14px]">
-            <b className="font-semibold">mostrar minhas leituras no feed</b>
-            <span className="block text-[12px] text-cinza">quando você começa, termina, dá nota ou registra progresso, quem te segue vê.</span>
-          </span>
-          <input type="checkbox" checked={r.publicarNoFeed} onChange={(e) => mudar({ publicarNoFeed: e.target.checked })} className="mt-1 size-5 flex-none accent-bordo" />
-        </label>
-      </section>
-
-      <section aria-labelledby="t-estantes">
-        <h2 id="t-estantes" className={tituloSecao}>
-          estantes
-        </h2>
-        {r.estantesProprias.length ? (
-          <ul>
-            {r.estantesProprias.map((e) => (
-              <li key={e.id}>
-                <label className={linha}>
-                  <span className="flex items-center gap-2.5 text-[14px]">
-                    <span aria-hidden className="size-3 rounded-full" style={{ background: e.cor }} />
-                    <span>
-                      <b className="font-semibold">{e.nome}</b>
-                      <span className="block text-[12px] text-cinza">{e.publica ? "aparece no seu perfil" : "só você vê"}</span>
-                    </span>
-                  </span>
-                  <input
-                    type="checkbox"
-                    checked={e.publica}
-                    aria-label={`estante ${e.nome} pública`}
-                    onChange={(ev) => mudar({ estantesProprias: r.estantesProprias.map((x) => (x.id === e.id ? { ...x, publica: ev.target.checked } : x)) })}
-                    className="mt-1 size-5 flex-none accent-bordo"
-                  />
-                </label>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="mt-2 text-[13px] text-cinza">você ainda não criou estantes próprias. lidos, lendo e quero ler aparecem no seu perfil.</p>
-        )}
-      </section>
-
-      <p className="text-[12px] text-cinza">
-        conta, senha e seus dados ficam em{" "}
-        <Link href="/perfil/configuracoes" className="font-semibold text-bordo underline-offset-4 hover:underline">
-          configurações
-        </Link>
-        .
-      </p>
     </div>
   );
 }
@@ -735,12 +624,8 @@ export default function EditarPerfilPage() {
         capa: p.capa,
         capaImagem: p.capaImagem,
         capaPosY: p.capaPosY ?? 50,
-        aparencia: p.aparencia ?? "claro",
         estiloEstante: p.estiloEstante ?? "auto",
         decoracao: p.decoracao ?? null,
-        temaSoNoPerfil: !!p.temaSoNoPerfil,
-        publicarNoFeed: p.publicarNoFeed ?? true,
-        estantesProprias: p.estantesProprias ?? [],
       }}
     />
   );

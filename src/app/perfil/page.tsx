@@ -10,6 +10,7 @@ import { PerfilEditorial, type AbaDoPerfil } from "@/components/perfil/PerfilEdi
 import { ResenhasLista } from "@/components/perfil/ResenhasLista";
 import { usePerfil } from "@/lib/perfil-store";
 import { contagemSeguidores, useConsulta, useMeuId } from "@/lib/social";
+import { estanteDoPerfil } from "@/lib/temas";
 import { estiloDoPerfil } from "@/lib/tema";
 
 const ABAS: AbaDoPerfil[] = ["geral", "jornada", "resenhas", "estantes"];
@@ -42,7 +43,13 @@ export default function PerfilPage() {
   }
 
   return (
-    <AppShell aba="perfil" style={estiloDoPerfil(p.tema, modoEscuro)} className="acc-tema [&_main]:!bg-[var(--papel)] [&_main]:!text-[var(--tinta)]">
+    <AppShell aba="perfil" className="[&_main]:!bg-[var(--papel,var(--color-creme))]">
+      {/* o tema do perfil vale só aqui dentro (a navegação continua institucional) */}
+      <div
+        style={{ ...estiloDoPerfil(p.tema, modoEscuro), ...estanteDoPerfil(p.estiloEstante, p.tema, modoEscuro).estilo }}
+        data-previa-estante={estanteDoPerfil(p.estiloEstante, p.tema, modoEscuro).atributo}
+        className="acc-tema flex flex-1 flex-col bg-[var(--papel)] text-[var(--tinta)]"
+      >
       <PerfilEditorial
         p={p}
         proprio
@@ -56,6 +63,7 @@ export default function PerfilPage() {
           estantes: <EstantesDela p={p} base="" nome="" propria />,
         }}
       />
+      </div>
     </AppShell>
   );
 }

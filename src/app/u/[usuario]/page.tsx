@@ -18,7 +18,7 @@ import { BotaoSeguir, CartaoAtividade } from "@/components/social/Pessoas";
 import { lembrarLivros } from "@/lib/catalogo";
 import { corDoLivro } from "@/lib/cores";
 import { estiloDoPerfil } from "@/lib/tema";
-import { temaApp } from "@/lib/temas";
+import { estanteDoPerfil } from "@/lib/temas";
 import { calcularMatch, rotuloDoMatch, type Match } from "@/lib/match";
 import { linkDaAutoria } from "@/lib/autores";
 import { AnelMatch } from "@/components/social/AnelMatch";
@@ -257,7 +257,7 @@ function PerfilDela({ usuario }: { usuario: string }) {
     .sort((a, b) => (b.lidoEm ?? "").localeCompare(a.lidoEm ?? ""));
 
   return (
-    <div style={estilo} data-cantos={temaApp(p.tema)?.reto ? "retos" : "normal"} className="acc-tema">
+    <div style={{ ...estilo, ...estanteDoPerfil(p.estiloEstante, p.tema, modoEscuro).estilo }} data-previa-estante={estanteDoPerfil(p.estiloEstante, p.tema, modoEscuro).atributo} className="acc-tema">
       <PerfilEditorial
         p={p}
         proprio={false}

@@ -608,46 +608,21 @@ export function PerfilEditorial({
   const lidos = p.livros.filter((l) => l.status === "lido").sort(porDataDeLeitura);
   const geral = aba === "geral";
 
-  async function compartilhar() {
-    const url = `${window.location.origin}${base}`;
-    try {
-      if (navigator.share) await navigator.share({ title: `${nome} no the bookside`, url });
-      else {
-        await navigator.clipboard.writeText(url);
-        setAviso("link do perfil copiado");
-        setTimeout(() => setAviso(""), 2400);
-      }
-    } catch {
-      /* cancelou */
-    }
-  }
-
   const botao = "inline-flex min-h-11 items-center rounded-full px-5 text-[14px] font-semibold";
-  const iconeCapa = "grid size-8 place-items-center rounded-full transition-colors hover:bg-bordo/10";
   const acoes = proprio ? (
     <div className="flex items-center gap-2">
-      <Link href="/perfil/editar" className={`${botao} bg-[var(--acc)] text-[var(--papel)]`}>
+      <Link href="/perfil/editar" className={`${botao} !min-h-10 !rounded-[6px] !px-4 bg-[var(--acc)] text-[var(--papel)]`}>
         editar perfil
       </Link>
       <MenuMais
         itens={[
-          { nome: "personalizar (cores e capa)", href: "/perfil/editar" },
           { nome: "livros favoritos", href: "/perfil/favoritos" },
           { nome: p.citacaoPerfil ? "trocar citação" : "adicionar citação", onClick: () => setEscolhendo(true) },
-          { nome: "compartilhar perfil", onClick: compartilhar },
-          { nome: "configurações", href: "/perfil/configuracoes" },
         ]}
       />
     </div>
   ) : (
-    <div className="flex items-center gap-2">
-      {acoesDela}
-      <button type="button" onClick={compartilhar} aria-label="compartilhar perfil" className="grid size-11 place-items-center rounded-full border border-[var(--linha)] text-[var(--acc)] hover:border-[var(--acc)]">
-        <svg aria-hidden width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 2v14" />
-        </svg>
-      </button>
-    </div>
+    <div className="flex items-center gap-2">{acoesDela}</div>
   );
 
   return (
@@ -668,25 +643,12 @@ export function PerfilEditorial({
               className={`relative h-[150px] bg-cover bg-center sm:h-[220px] lg:h-[280px] lg:!bg-transparent lg:!bg-none ${p.capaImagem ? "" : `pat-${p.capa}`}`}
               style={p.capaImagem ? { backgroundImage: `url("${p.capaImagem}")`, backgroundPosition: `center ${p.capaPosY ?? 50}%` } : undefined}
             >
-              {/* ações discretas: uma pílula de ícones no canto da capa, longe da foto */}
-              <div className="absolute top-3 right-3 hidden items-center rounded-full bg-creme/85 p-1 text-bordo shadow-sm backdrop-blur-md sm:flex lg:top-4 lg:right-14">
-                {proprio ? (
-                  <>
-                    <Link href="/perfil/editar" aria-label="editar perfil" title="editar perfil" className={iconeCapa}>
-                      <svg aria-hidden width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 20h4L19 9l-4-4L4 16v4zM14 6l4 4" /></svg>
-                    </Link>
-                    <span aria-hidden className="h-4 w-px bg-bordo/25" />
-                    <Link href="/perfil/configuracoes" aria-label="configurações" title="configurações" className={iconeCapa}>
-                      <svg aria-hidden width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" /></svg>
-                    </Link>
-                    <span aria-hidden className="h-4 w-px bg-bordo/25" />
-                  </>
-                ) : null}
-                <button type="button" onClick={compartilhar} aria-label="compartilhar perfil" title="compartilhar perfil" className={iconeCapa}>
-                  <svg aria-hidden width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 2v14" /></svg>
-                </button>
-              </div>
-              {!proprio ? <div className="absolute right-5 bottom-4 hidden items-center gap-3 sm:flex lg:right-14 lg:bottom-5">{acoesDela}</div> : null}
+              {/* configurações: um acesso independente, no canto da capa */}
+              {proprio ? (
+                <Link href="/configuracoes" aria-label="configurações" title="configurações" className="absolute top-3 right-3 grid size-10 place-items-center rounded-full bg-creme/85 text-bordo shadow-sm backdrop-blur-md hover:bg-creme lg:top-4 lg:right-14">
+                  <svg aria-hidden width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" /></svg>
+                </Link>
+              ) : null}
               <div className="absolute bottom-0 left-5 translate-y-1/2 lg:left-14">
                 <span className="lg:hidden">
                   <Foto p={p} tamanho={96} />
@@ -705,7 +667,7 @@ export function PerfilEditorial({
               <Seguidores numeros={numeros} base={base} />
             </div>
             {/* no celular, as ações ficam embaixo do nome */}
-            <div className="mt-5 px-5 sm:hidden">{acoes}</div>
+            <div className="mt-5 px-5 lg:pl-[220px]">{acoes}</div>
             <div className="mt-6 px-5 text-center lg:mt-8">
               {p.frase ? (
                 <p className="mx-auto max-w-[60ch] font-revista text-[18px] leading-[1.4] text-[var(--acc)] italic lg:text-[21px]">“{p.frase}”</p>

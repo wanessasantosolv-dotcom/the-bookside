@@ -206,7 +206,7 @@ export function ComConta({
         <Vazio
           titulo="isso precisa de uma conta"
           texto="amigos, clubes e comentários ficam na nuvem. o app está no modo local, só neste navegador."
-          acao={{ href: "/perfil/configuracoes", rotulo: "ver configurações" }}
+          acao={{ href: "/configuracoes", rotulo: "ver configurações" }}
         />
       </div>
     );

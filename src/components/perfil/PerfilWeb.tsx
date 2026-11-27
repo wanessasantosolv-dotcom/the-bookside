@@ -189,7 +189,7 @@ export function PerfilWeb({
                 <Link href="/perfil/editar" className={botaoHero}>
                   editar perfil
                 </Link>
-                <Link href="/perfil/configuracoes" className={botaoHero}>
+                <Link href="/configuracoes" className={botaoHero}>
                   configurações
                 </Link>
                 <button
