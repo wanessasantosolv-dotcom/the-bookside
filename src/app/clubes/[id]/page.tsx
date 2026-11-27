@@ -154,7 +154,7 @@ function Turma({ membros, turma, eu, clubeId }: { membros: Membro[]; turma: Map<
           const a = turma.get(m.usuario_id);
           return (
             <li key={m.usuario_id} className="flex min-w-0 items-center gap-2">
-              <Link href={m.pessoa.usuario ? `/clubes/${clubeId}/membro/${m.pessoa.usuario}` : "#"} className="flex-none">
+              <Link href={m.pessoa.usuario ? `/u/${m.pessoa.usuario}` : "#"} className="flex-none">
                 <Avatar pessoa={m.pessoa} tamanho={22} />
               </Link>
               <span className="min-w-0 flex-1">
@@ -311,7 +311,7 @@ export default function ClubeInicioPage() {
         {membros.slice(0, 12).map((m) => (
           <li key={m.usuario_id}>
             <Link
-              href={m.pessoa.usuario ? `/clubes/${clube.id}/membro/${m.pessoa.usuario}` : "#"}
+              href={m.pessoa.usuario ? `/u/${m.pessoa.usuario}` : "#"}
               title={m.usuario_id === eu ? "você" : nomeDe(m.pessoa)}
               aria-label={m.usuario_id === eu ? "você" : nomeDe(m.pessoa)}
             >

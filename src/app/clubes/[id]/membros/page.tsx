@@ -103,13 +103,13 @@ export default function MembrosPage() {
             {numeros.map((x) => (
               <li key={x.m.usuario_id} className="border-b border-linha py-4 last:border-b-0 lg:border-fio">
                 <div className="flex items-start gap-3.5">
-                  <Link href={x.m.pessoa.usuario ? `/clubes/${clube.id}/membro/${x.m.pessoa.usuario}` : "#"} className="flex-none">
+                  <Link href={x.m.pessoa.usuario ? `/u/${x.m.pessoa.usuario}` : "#"} className="flex-none">
                     <Avatar pessoa={x.m.pessoa} tamanho={44} />
                   </Link>
                   <div className="min-w-0 flex-1">
                     <p className="flex flex-wrap items-baseline gap-x-2">
                       <Link
-                        href={x.m.pessoa.usuario ? `/clubes/${clube.id}/membro/${x.m.pessoa.usuario}` : "#"}
+                        href={x.m.pessoa.usuario ? `/u/${x.m.pessoa.usuario}` : "#"}
                         className="text-[15px] font-semibold text-ameixa hover:text-bordo"
                       >
                         {x.m.usuario_id === eu ? "você" : nomeDe(x.m.pessoa)}

@@ -128,7 +128,7 @@ function CartaoFicha({
         <Link
           href={
             pessoa?.usuario
-              ? `/clubes/${clubeId}/membro/${pessoa.usuario}`
+              ? `/u/${pessoa.usuario}`
               : "#"
           }
           className="mt-2.5 flex min-w-0 items-center gap-2"

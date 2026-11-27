@@ -15,6 +15,7 @@ export default function NovaEstantePage() {
   const router = useRouter();
   const criarEstante = usePerfil((s) => s.criarEstante);
   const [nome, setNome] = useState("");
+  const [descricao, setDescricao] = useState("");
   const [publica, setPublica] = useState(false);
 
   return (
@@ -51,6 +52,19 @@ export default function NovaEstantePage() {
             />
           </label>
 
+          <label className="mt-[18px] block">
+            <span className={rotulo}>descrição (opcional)</span>
+            <textarea
+              value={descricao}
+              maxLength={160}
+              rows={2}
+              placeholder="ex: livros tranquilos, contemplativos e acolhedores"
+              onChange={(e) => setDescricao(e.target.value)}
+              className="w-full resize-none rounded-sm border border-bege bg-creme-quente px-3 py-2.5 text-[15px] outline-none placeholder:text-cinza focus:border-bordo focus:ring-1 focus:ring-bordo"
+            />
+            <span className="mt-1 block text-[11px] text-cinza">ajuda a sugerir livros que combinam com a estante.</span>
+          </label>
+
           <fieldset className="mt-[18px]">
             <legend className={rotulo}>visibilidade</legend>
             <div className="mt-1 flex gap-2">
@@ -85,7 +99,7 @@ export default function NovaEstantePage() {
         <Botao
           disabled={!nome.trim()}
           onClick={() => {
-            const id = criarEstante({ nome: nome.trim(), cor: COR_PADRAO, publica });
+            const id = criarEstante({ nome: nome.trim(), cor: COR_PADRAO, publica, ...(descricao.trim() ? { descricao: descricao.trim() } : {}) });
             router.push(`/estantes/${id}`);
           }}
         >

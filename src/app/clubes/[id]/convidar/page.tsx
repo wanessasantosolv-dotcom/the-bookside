@@ -198,7 +198,7 @@ function Convite() {
                 <Link
                   href={
                     m.pessoa.usuario
-                      ? `/clubes/${clube.id}/membro/${m.pessoa.usuario}`
+                      ? `/u/${m.pessoa.usuario}`
                       : "#"
                   }
                   className="flex min-w-0 flex-1 items-center gap-3"

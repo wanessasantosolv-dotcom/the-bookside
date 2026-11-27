@@ -142,7 +142,13 @@ export type EstantePropria = {
   cor: string;
   publica: boolean;
   criadaEm: string;
+  /** o que a lista reúne, escrito pela pessoa (ajuda a sugerir livros) */
+  descricao?: string;
+  /** livros que estão só na lista (sem entrar na estante pessoal nem ganhar status) */
+  livros?: ItemDeLista[];
 };
+
+export type ItemDeLista = { id: string; titulo: string; autor: string; capa?: string; paginas?: number; adicionadoEm: string };
 
 export type Perfil = {
   email: string | null;
