@@ -13,7 +13,7 @@ import { contagemSeguidores, useConsulta, useMeuId } from "@/lib/social";
 import { estanteDoPerfil } from "@/lib/temas";
 import { estiloDoPerfil } from "@/lib/tema";
 
-const ABAS: AbaDoPerfil[] = ["geral", "jornada", "resenhas", "estantes"];
+const ABAS: AbaDoPerfil[] = ["geral", "jornada", "resenhas"];
 const daUrl = (): AbaDoPerfil => {
   const a = new URLSearchParams(window.location.search).get("aba") as AbaDoPerfil | null;
   return a && ABAS.includes(a) ? a : "geral";

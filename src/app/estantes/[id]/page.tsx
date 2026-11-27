@@ -6,13 +6,14 @@ import { notFound, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   FilaDaPrateleira,
-  GradeDeLivros,
+  MODOS_ESTANTE,
   ListaDeLivros,
-  useFaceSalva,
   useVistaSalva,
 } from "@/components/estantes/Biblioteca";
 import { useAcoesDoLivro } from "@/components/estantes/AcoesDoLivro";
-import { AlternarFace, BarraCompacta } from "@/components/estantes/BarraCompacta";
+import { BarraCompacta } from "@/components/estantes/BarraCompacta";
+import { PilhaDeCapas } from "@/components/estantes/Vitrine";
+import { BotaoFiltros, PainelFiltros } from "@/components/estantes/PainelFiltros";
 import { AppShell } from "@/components/AppShell";
 import { AvisoRemovido } from "@/components/AvisoRemovido";
 import { useHidratado } from "@/components/PerfilHidratacao";
@@ -56,9 +57,10 @@ export default function EstanteAbertaPage() {
   const proprias = usePerfil((s) => s.estantesProprias);
   const idsFavoritos = usePerfil((s) => s.favoritos);
   const [vista, setVista] = useVistaSalva();
-  const [face, setFace] = useFaceSalva();
+  const [extra, setExtra] = useState<{ ordem: string; autor?: string; notaMin?: number }>({ ordem: "padrao" });
+  const [filtrosAbertos, setFiltrosAbertos] = useState(false);
   const { acoesDoLivro, estantesDoLivro, janela } = useAcoesDoLivro();
-  const { porAndar, alturaCapa } = usePorAndar(face);
+  const { porAndar, alturaCapa } = usePorAndar(vista === "pe" ? "lombadas" : "capas");
   const [filtro, setFiltro] = useState<Filtro>("todos");
   const [busca, setBusca] = useState("");
   const [adicionados, setAdicionados] = useState(0);
@@ -103,7 +105,7 @@ export default function EstanteAbertaPage() {
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .trim();
-  const lista = todos.filter((l) => {
+  const filtrada = todos.filter((l) => {
     if (
       termo &&
       !`${l.titulo} ${l.autor}`
@@ -120,6 +122,24 @@ export default function EstanteAbertaPage() {
     if (filtro === "amei") return !!l.amei;
     return true;
   });
+  // o mesmo painel de filtros de todas as estantes: ordem, autor e avaliação
+  const autoresDaEstante = [...new Set(todos.map((l) => l.autor).filter(Boolean))].sort((a, b) => a.localeCompare(b, "pt-BR"));
+  const lista = filtrada
+    .filter((l) => (!extra.autor || l.autor === extra.autor) && (!extra.notaMin || (l.nota ?? 0) >= extra.notaMin))
+    .sort((a, b) =>
+      extra.ordem === "titulo"
+        ? a.titulo.localeCompare(b.titulo, "pt-BR")
+        : extra.ordem === "autor"
+          ? (a.autor ?? "").localeCompare(b.autor ?? "", "pt-BR")
+          : extra.ordem === "avaliacao"
+            ? (b.nota ?? 0) - (a.nota ?? 0)
+            : extra.ordem === "antigos"
+              ? (dataDoLivro(a) ?? "9").localeCompare(dataDoLivro(b) ?? "9")
+              : extra.ordem === "recentes"
+                ? (dataDoLivro(b) ?? "").localeCompare(dataDoLivro(a) ?? "")
+                : 0,
+    );
+  const extrasAtivos = [extra.autor, extra.notaMin, extra.ordem !== "padrao" ? extra.ordem : null].filter(Boolean).length;
   const grupos = lista.reduce<{ mes: string; livros: LivroSalvo[] }[]>(
     (acc, l) => {
       const mes = mesDe(dataDoLivro(l));
@@ -198,14 +218,10 @@ export default function EstanteAbertaPage() {
             busca={busca}
             onBusca={todos.length > 4 ? setBusca : undefined}
             placeholder="Buscar nesta estante"
-            modos={[
-              { id: "estante", nome: "Prateleiras", icone: "M3 20h18 M5 20V9h3v11 M10 20V6h3v14 M15 20v-9h3l1 9" },
-              { id: "grade", nome: "Grade", icone: "M4 4h6v6H4z M14 4h6v6h-6z M4 14h6v6H4z M14 14h6v6h-6z" },
-              { id: "lista", nome: "Lista", icone: "M4 6h2 M9 6h11 M4 12h2 M9 12h11 M4 18h2 M9 18h11" },
-            ]}
+            modos={MODOS_ESTANTE}
             modo={vista}
             onModo={(v) => setVista(v as typeof vista)}
-            extra={vista === "estante" && lista.length ? <AlternarFace face={face} onChange={setFace} /> : null}
+            extra={todos.length > 1 ? <BotaoFiltros ativos={extrasAtivos} onAbrir={() => setFiltrosAbertos(true)} /> : null}
           />
         </div>
         <div className="flex-1 px-6 pt-4 pb-8 lg:px-0 lg:pt-8">
@@ -228,14 +244,14 @@ export default function EstanteAbertaPage() {
                 </BotaoLink>
               ) : null}
             </div>
-          ) : vista === "estante" ? (
+          ) : vista === "estante" || vista === "pe" ? (
             <div className="space-y-10">
               {Array.from({ length: Math.ceil(lista.length / porAndar) }, (_, k) => (
-                <FilaDaPrateleira key={k} livros={lista.slice(k * porAndar, (k + 1) * porAndar)} altura={alturaCapa} face={face} />
+                <FilaDaPrateleira key={k} livros={lista.slice(k * porAndar, (k + 1) * porAndar)} altura={alturaCapa} face={vista === "pe" ? "lombadas" : "capas"} />
               ))}
             </div>
-          ) : vista === "grade" ? (
-            <GradeDeLivros livros={lista} />
+          ) : vista === "leque" ? (
+            <PilhaDeCapas livros={lista.map((l) => ({ id: l.id, titulo: l.titulo, autor: l.autor, capa: l.capa, paginas: l.paginas }))} />
           ) : (
             grupos.map((g, gi) => (
               <section key={g.mes} className={gi ? "mt-8" : ""}>
@@ -247,6 +263,18 @@ export default function EstanteAbertaPage() {
         </div>
       </div>
       {janela}
+      {filtrosAbertos ? (
+        <PainelFiltros
+          ativos={extrasAtivos}
+          onLimpar={() => setExtra({ ordem: "padrao" })}
+          onFechar={() => setFiltrosAbertos(false)}
+          campos={[
+            { rotulo: "Ordenar por", valor: extra.ordem, opcoes: [["padrao", "Ordem da estante"], ["recentes", "Mais recentes"], ["antigos", "Mais antigos"], ["titulo", "Título"], ["autor", "Autor"], ["avaliacao", "Avaliação"]], onMudar: (v) => setExtra((e) => ({ ...e, ordem: v })) },
+            ...(autoresDaEstante.length > 1 ? [{ rotulo: "Autor", valor: extra.autor ?? "", opcoes: [["", "todos"], ...autoresDaEstante.map((a) => [a, a] as [string, string])] as [string, string][], onMudar: (v: string) => setExtra((e) => ({ ...e, autor: v || undefined })) }] : []),
+            ...(todos.some((l) => l.nota) ? [{ rotulo: "Minha avaliação", valor: String(extra.notaMin ?? ""), opcoes: [["", "qualquer"], ["3", "3 ou mais"], ["4", "4 ou mais"], ["4.5", "4,5 ou mais"]] as [string, string][], onMudar: (v: string) => setExtra((e) => ({ ...e, notaMin: v ? Number(v) : undefined })) }] : []),
+          ]}
+        />
+      ) : null}
     </AppShell>
   );
 }

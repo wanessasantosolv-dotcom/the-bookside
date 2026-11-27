@@ -35,13 +35,13 @@ const ABAS: { id: AbaDoPerfil; nome: string; icone: ReactNode }[] = [
       </>
     ),
   },
+  { id: "estantes", nome: "estantes", icone: <path d="M4 4v16M9 4v16M14 6l4 14M3 20h18" /> },
   {
     id: "jornada",
     nome: "jornada",
     icone: <path d="M5 20v-7M10 20V9M15 20v-5M20 20V5" strokeWidth="2.6" />,
   },
   { id: "resenhas", nome: "resenhas", icone: <path d="M4 20h4L19 9l-4-4L4 16zM14 6l4 4" /> },
-  { id: "estantes", nome: "estantes", icone: <path d="M4 4v16M9 4v16M14 6l4 14M3 20h18" /> },
 ];
 
 const suave = (pct: number): CSSProperties => ({ background: `color-mix(in srgb, var(--acc) ${pct}%, transparent)` });
@@ -696,8 +696,9 @@ export function PerfilEditorial({
 
         {/* abas: linha discreta embaixo da selecionada; presas no topo ao rolar */}
         <div className="sticky top-0 z-20 mt-5 bg-[var(--papel)] px-5 lg:px-2">
-          <nav role="tablist" aria-label="seções do perfil" className="grid grid-cols-4 border-y border-[var(--linha)]">
-            {ABAS.map((a) => (
+          <nav role="tablist" aria-label="seções do perfil" className={`grid border-y border-[var(--linha)] ${proprio ? "grid-cols-3" : "grid-cols-4"}`}>
+            {/* no seu perfil as estantes já moram em "estantes" do app; a aba só aparece no perfil dos outros */}
+            {ABAS.filter((a) => !(proprio && a.id === "estantes")).map((a) => (
               <button
                 key={a.id}
                 role="tab"

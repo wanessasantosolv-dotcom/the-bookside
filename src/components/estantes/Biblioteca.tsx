@@ -9,7 +9,14 @@ import type { LivroSalvo, StatusLivro } from "@/lib/perfil-store";
 
 // ───────── tipos e utilidades ─────────
 
-export type Vista = "estante" | "grade" | "lista";
+/** as quatro formas de ver qualquer estante (pessoal, de outra pessoa ou do clube) */
+export type Vista = "estante" | "leque" | "pe" | "lista";
+export const MODOS_ESTANTE: { id: Vista; nome: string; icone: string }[] = [
+  { id: "estante", nome: "Prateleiras", icone: "M3 20h18 M5 20V9h3v11 M10 20V6h3v14 M15 20v-9h3l1 9" },
+  { id: "leque", nome: "Leque de capas", icone: "M12 20L5 8l4-2 3 14 M12 20l3-14 4 2-7 12" },
+  { id: "pe", nome: "Estante de pé", icone: "M5 3h14v18H5z M5 9h14 M5 15h14" },
+  { id: "lista", nome: "Catálogo", icone: "M4 6h2 M9 6h11 M4 12h2 M9 12h11 M4 18h2 M9 18h11" },
+];
 /** na estante: as capas de frente ou as lombadas, como numa estante de verdade */
 export type Face = "capas" | "lombadas";
 export type Escopo = "estantes" | "todos";
@@ -573,7 +580,7 @@ export function ListaDeLivros({
                 "—"
               )}
             </span>
-            <MenuDeAcoes rotulo={`ações de ${l.titulo}`} acoes={acoesDoLivro(l)} />
+            {acoesDoLivro(l).length ? <MenuDeAcoes rotulo={`ações de ${l.titulo}`} acoes={acoesDoLivro(l)} /> : <span />}
           </li>
         );
       })}
@@ -584,28 +591,27 @@ export function ListaDeLivros({
 // ───────── barra (LibraryToolbar + ViewSwitcher) ─────────
 
 export function SeletorDeVista({ vista, onChange }: { vista: Vista; onChange: (v: Vista) => void }) {
-  const opcoes: { id: Vista; nome: string }[] = [
-    { id: "estante", nome: "estante" },
-    { id: "grade", nome: "grade" },
-    { id: "lista", nome: "lista" },
-  ];
   return (
-    <div role="group" aria-label="modo de visualização" className="flex gap-1 sm:gap-1.5">
-      {opcoes.map((o) => (
+    <span role="radiogroup" aria-label="visualização" className="flex rounded-[6px] border border-linha p-0.5">
+      {MODOS_ESTANTE.map((m) => (
         <button
-          key={o.id}
+          key={m.id}
           type="button"
-          aria-pressed={vista === o.id}
-          onClick={() => onChange(o.id)}
-          className={`flex h-10 items-center justify-center gap-1.5 rounded-[10px] border px-3 text-[12px] font-medium sm:h-[52px] sm:w-[68px] sm:flex-col sm:gap-0.5 sm:px-0 sm:text-[11px] ${
-            vista === o.id ? "border-bordo bg-bordo text-creme" : "border-linha text-ameixa hover:border-bordo"
-          }`}
+          role="radio"
+          aria-checked={vista === m.id}
+          aria-label={m.nome}
+          title={m.nome}
+          onClick={() => onChange(m.id)}
+          className={`grid size-10 place-items-center rounded-[4px] sm:size-9 ${vista === m.id ? "bg-rosa-fundo text-bordo" : "text-tinta-suave hover:text-ameixa"}`}
         >
-          <Icone d={ICONES[o.id]} />
-          {o.nome}
+          <svg aria-hidden width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+            {m.icone.split(" M").map((p, i) => (
+              <path key={i} d={i ? `M${p}` : p} />
+            ))}
+          </svg>
         </button>
       ))}
-    </div>
+    </span>
   );
 }
 
@@ -754,7 +760,8 @@ export function useVistaSalva(): [Vista, (v: Vista) => void] {
   useEffect(() => {
     try {
       const v = localStorage.getItem("bookside-estantes-vista");
-      if (v === "estante" || v === "grade" || v === "lista") setVista(v);
+      if (v === "estante" || v === "leque" || v === "pe" || v === "lista") setVista(v);
+      else if (v === "grade") setVista("estante");
     } catch {
       /* sem armazenamento: fica a estante */
     }

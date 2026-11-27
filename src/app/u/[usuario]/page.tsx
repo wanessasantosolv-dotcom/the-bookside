@@ -139,7 +139,7 @@ function SecaoMatch({
   );
 }
 
-const ABAS_DELA: AbaDoPerfil[] = ["geral", "jornada", "resenhas", "estantes"];
+const ABAS_DELA: AbaDoPerfil[] = ["geral", "estantes", "jornada", "resenhas"];
 const abaDaUrl = (): AbaDoPerfil => {
   const a = new URLSearchParams(window.location.search).get("aba") as AbaDoPerfil | null;
   return a && ABAS_DELA.includes(a) ? a : "geral";

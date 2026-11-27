@@ -158,32 +158,41 @@ export function PrateleiraCapas({
   );
 }
 
-/** livros fanados tipo leque, pro computador — mesma ideia da versão celular, só que maior. */
+/**
+ * Leque de capas: os livros bagunçados numa pilha, como capas largadas na mesa.
+ * Cada capa tem giro, deslocamento e sobreposição próprios (fixos por livro,
+ * então a pilha não muda a cada visita); passar o mouse traz a capa para cima.
+ */
 export function LequeLinhaWeb({ livros }: { livros: ItemVitrine[] }) {
-  const mostrados = livros.slice(0, 6);
-  const giros = ["-9deg", "-5deg", "-1deg", "3deg", "7deg", "11deg"];
-  if (!mostrados.length)
-    return (
-      <p className="font-accent text-sm italic text-cinza">
-        ainda sem livros ✦
-      </p>
-    );
+  return <PilhaDeCapas livros={livros} />;
+}
+
+export function PilhaDeCapas({ livros, largura = 104 }: { livros: ItemVitrine[]; largura?: number }) {
+  if (!livros.length) return <p className="font-accent text-sm italic text-cinza">ainda sem livros ✦</p>;
   return (
-    <div className="flex h-[186px] items-end pl-2">
-      {mostrados.map((l, i) => (
-        <Link
-          key={l.id}
-          href={l.href ?? `/livro/${l.id}`}
-          className="-ml-6 w-[108px] flex-none transition-transform first:ml-0 hover:z-10 hover:-translate-y-2"
-          style={{ transform: `rotate(${giros[i]})`, zIndex: i }}
-        >
-          <CapaAuto
-            livro={l}
-            className="w-full shadow-[2px_6px_14px_-4px_rgba(43,20,32,.4)]"
-          />
-        </Link>
-      ))}
-    </div>
+    <ul className="flex flex-wrap items-start justify-center px-3 pt-4 pb-6 sm:justify-start" style={{ rowGap: 4 }}>
+      {livros.map((l, i) => {
+        const h = hashLombada(l.id, 3);
+        const giro = ((h % 25) - 12) * 0.9; // -11° a 11°
+        const desce = (h >> 5) % 22; // 0 a 21px
+        const encaixe = 18 + ((h >> 9) % 18); // quanto encosta na vizinha
+        return (
+          <li
+            key={l.id}
+            className="group relative flex-none transition-transform duration-200 hover:z-50 hover:-translate-y-2 hover:rotate-0 focus-within:z-50 motion-reduce:transition-none"
+            style={{ width: largura, marginLeft: i ? -encaixe : 0, marginTop: desce, transform: `rotate(${giro}deg)`, zIndex: (h >> 3) % 20 }}
+          >
+            <Link href={l.href ?? `/livro/${l.id}`} title={`${l.titulo} · ${l.autor}`} className="block">
+              <CapaAuto livro={l} className="w-full shadow-[3px_8px_16px_-6px_rgba(43,20,32,.45)] [&>span:last-child]:hidden" />
+              <span className="sr-only">
+                {l.titulo}, {l.autor}
+              </span>
+            </Link>
+            {l.acao ? <span className="absolute top-1 right-1">{l.acao}</span> : null}
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 
