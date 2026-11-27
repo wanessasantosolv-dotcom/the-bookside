@@ -1,4 +1,5 @@
 "use client";
+import { ComSpoiler } from "@/components/marginalia/ComSpoiler";
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -171,7 +172,7 @@ function Resenha({ l, modo, acoes }: { l: LivroSalvo; modo: Modo; acoes: AcaoDoM
             <Nota nota={l.nota} />
             {l.lidoEm ? <span>{l.lidoSoAno ? `lido em ${new Date(l.lidoEm).getFullYear()}` : `lido em ${dataLonga(l.lidoEm)}`}</span> : null}
           </div>
-          <p className="mt-1.5 line-clamp-2 text-[13px] leading-relaxed text-tinta-suave">{l.resenha}</p>
+          <ComSpoiler spoiler={l.resenhaSpoiler}><p className="mt-1.5 line-clamp-2 text-[13px] leading-relaxed text-tinta-suave">{l.resenha}</p></ComSpoiler>
         </div>
         <MenuDeAcoes semTexto rotulo={`ações da resenha de ${l.titulo}`} acoes={acoes} />
       </li>
@@ -197,7 +198,7 @@ function Resenha({ l, modo, acoes }: { l: LivroSalvo; modo: Modo; acoes: AcaoDoM
             <Nota nota={l.nota} grande />
           </div>
           <div className="mt-0 lg:mt-3">
-            <Texto texto={l.resenha ?? ""} linhas={5} />
+            <ComSpoiler spoiler={l.resenhaSpoiler}><Texto texto={l.resenha ?? ""} linhas={5} /></ComSpoiler>
           </div>
           {l.citacao ? (
             <blockquote className="mt-4 border-l-2 border-bordo/40 pl-3 font-accent text-[15px] text-bordo italic">
@@ -231,12 +232,12 @@ function Destaque({ l, acoes }: { l: LivroSalvo; acoes: AcaoDoMenu[] }) {
             <Nota nota={l.nota} grande />
           </div>
           <div className="mt-4 hidden lg:block">
-            <Texto texto={l.resenha ?? ""} linhas={3} />
+            <ComSpoiler spoiler={l.resenhaSpoiler}><Texto texto={l.resenha ?? ""} linhas={3} /></ComSpoiler>
           </div>
         </div>
         <MenuDeAcoes semTexto rotulo={`ações da resenha de ${l.titulo}`} acoes={acoes} />
         <div className="col-span-3 mt-4 lg:hidden">
-          <Texto texto={l.resenha ?? ""} linhas={3} />
+          <ComSpoiler spoiler={l.resenhaSpoiler}><Texto texto={l.resenha ?? ""} linhas={3} /></ComSpoiler>
         </div>
       </div>
     </section>

@@ -1,5 +1,6 @@
 "use client";
 import { soAno } from "@/lib/estantes";
+import { ComSpoiler } from "@/components/marginalia/ComSpoiler";
 
 import { Voltar } from "@/components/Voltar";
 import Link from "next/link";
@@ -147,9 +148,11 @@ function FichaNoLivro({
             <p className="text-[10px] font-semibold tracking-[.14em] text-cinza uppercase">
               {livro.resenha ? "o que eu achei" : "anotação"}
             </p>
-            <p className="mt-1 text-[14px] leading-[1.6] break-words whitespace-pre-line text-ameixa">
-              {texto}
-            </p>
+            <ComSpoiler spoiler={!!livro.resenha && livro.resenhaSpoiler}>
+              <p className="mt-1 text-[14px] leading-[1.6] break-words whitespace-pre-line text-ameixa">
+                {texto}
+              </p>
+            </ComSpoiler>
           </div>
         ) : null}
       </div>
