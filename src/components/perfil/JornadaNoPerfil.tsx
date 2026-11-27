@@ -481,22 +481,46 @@ function Ritmo({ n }: { n: Numeros }) {
               .map((m) => `${m.mes} ${m.livros}`)
               .join(", ")}`}
           >
-            {meses.map((m) => {
+            {meses.map((m, mi) => {
               const destaque = forte && m.mes === forte.mes;
+              // cada livro do mês é um livro deitado na pilha
+              const grossura = Math.max(3, Math.min(18, (alto - 6) / max));
+              const tons = destaque
+                ? ["var(--color-ameixa)", "color-mix(in srgb, var(--color-ameixa) 80%, var(--color-bordo))", "color-mix(in srgb, var(--color-ameixa) 88%, var(--color-creme))"]
+                : [
+                    "color-mix(in srgb, var(--color-rosa-antigo) 55%, var(--color-creme))",
+                    "color-mix(in srgb, var(--color-bordo) 45%, var(--color-creme))",
+                    "color-mix(in srgb, var(--color-rosa-antigo) 35%, var(--color-creme))",
+                    "color-mix(in srgb, var(--color-bordo) 30%, var(--color-papel))",
+                  ];
               return (
                 <span
                   key={m.mes}
-                  className="block flex-1 rounded-t-[3px]"
+                  className="flex h-full flex-1 flex-col-reverse items-center"
                   title={m.futuro ? undefined : `${m.mes}: ${m.livros}`}
-                  style={{
-                    height: m.futuro ? 0 : m.livros ? Math.max(8, (m.livros / max) * alto) : 3,
-                    background: !m.livros
-                      ? "var(--color-linha)"
-                      : destaque
-                        ? "var(--color-ameixa)"
-                        : "color-mix(in srgb, var(--color-rosa-antigo) 50%, var(--color-creme))",
-                  }}
-                />
+                >
+                  {m.futuro ? null : m.livros ? (
+                    Array.from({ length: m.livros }, (_, i) => {
+                      const r = ((mi * 7 + i * 13) % 10) / 10; // variação fixa, sem sorteio a cada render
+                      return (
+                        <span
+                          key={i}
+                          className="block shrink-0 rounded-[2px]"
+                          style={{
+                            height: grossura - (grossura > 6 ? 1.5 : 0.5),
+                            marginTop: grossura > 6 ? 1.5 : 0.5,
+                            width: `${72 + r * 26}%`,
+                            transform: `translateX(${(r - 0.5) * 10}%)`,
+                            background: tons[(mi + i) % tons.length],
+                            boxShadow: grossura > 7 ? "inset 0 -1px 0 rgba(0,0,0,.18), inset 4px 0 0 rgba(255,255,255,.12)" : undefined,
+                          }}
+                        />
+                      );
+                    })
+                  ) : (
+                    <span className="block h-[3px] w-full rounded-full bg-linha" />
+                  )}
+                </span>
               );
             })}
           </div>
