@@ -72,8 +72,19 @@ export function coresDoTema(
       "--color-bordo-suave": claro,
       "--color-vinho": claro,
       "--color-rosa-antigo": mistura(t.destaque, 80, "#F5EFE6"),
-      "--color-rosa-fundo": mistura(t.destaque, 16, "var(--color-creme)"),
-      "--color-rosa-claro": mistura(t.destaque, 55, "var(--color-creme)"),
+      // o fundo escuro acompanha o tema (um escuro neutro tingido pela cor do tema), não o vinho do app
+      "--color-creme": mistura(t.destaque, 7, "#141214"),
+      "--color-jornal": mistura(t.destaque, 7, "#141214"),
+      "--color-mesa": mistura(t.destaque, 5, "#0d0c0d"),
+      "--color-creme-quente": mistura(t.destaque, 9, "#1d1b1d"),
+      "--color-papel": mistura(t.destaque, 10, "#222023"),
+      "--color-linha": mistura(t.destaque, 14, "#333034"),
+      "--color-fio": mistura(t.destaque, 14, "#333034"),
+      "--color-bege": mistura(t.destaque, 18, "#4a464b"),
+      "--color-cinza": mistura(t.destaque, 10, "#b0abaf"),
+      "--color-grafite": mistura(t.destaque, 10, "#b0abaf"),
+      "--color-rosa-fundo": mistura(t.destaque, 18, "#141214"),
+      "--color-rosa-claro": mistura(t.destaque, 45, "#141214"),
     } as CSSProperties;
   }
 
