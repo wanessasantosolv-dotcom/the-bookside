@@ -34,6 +34,8 @@ type Linha = {
   escolhido: number;
   /** AAAA-MM-DD; vazio = sem data */
   lidoEm: string;
+  /** só o ano (quando não se sabe o dia nem o mês) */
+  lidoAno?: number;
   nota: number;
   reacao?: Reacao;
   formato?: FormatoLivro;
@@ -84,6 +86,7 @@ export default function ImportarPage() {
         opcoes,
         escolhido: opcoes.length ? 0 : -1,
         lidoEm: item.lidoEm ?? "",
+        lidoAno: item.lidoEm ? undefined : item.lidoAno,
         nota: item.nota ?? 0,
         reacao: item.reacao,
         formato: item.formato,
@@ -182,7 +185,10 @@ export default function ImportarPage() {
           status: l.reacao === "abandonei" ? "abandonado" : "lido",
           lidoEm: l.lidoEm
             ? new Date(`${l.lidoEm}T12:00:00`).toISOString()
-            : existente?.lidoEm,
+            : l.lidoAno
+              ? new Date(`${l.lidoAno}-01-01T12:00:00`).toISOString()
+              : existente?.lidoEm,
+          lidoSoAno: l.lidoEm ? undefined : l.lidoAno ? true : existente?.lidoSoAno,
           ...(l.reacao ? { reacao: l.reacao } : {}),
           ...(l.reacao === "favoritado" ? { amei: true } : {}),
           ...(l.formato ? { formato: l.formato } : {}),
@@ -322,7 +328,7 @@ export default function ImportarPage() {
               <button
                 type="button"
                 onClick={() =>
-                  setLinhas((ls) => ls!.map((l) => ({ ...l, lidoEm: "" })))
+                  setLinhas((ls) => ls!.map((l) => ({ ...l, lidoEm: "", lidoAno: undefined })))
                 }
                 className="min-h-9 rounded-pill border border-bege px-3.5 font-semibold text-ameixa hover:border-bordo"
               >
@@ -332,7 +338,7 @@ export default function ImportarPage() {
                 type="button"
                 onClick={() =>
                   setLinhas((ls) =>
-                    ls!.map((l) => ({ ...l, lidoEm: l.item.lidoEm ?? "" })),
+                    ls!.map((l) => ({ ...l, lidoEm: l.item.lidoEm ?? "", lidoAno: l.item.lidoEm ? undefined : l.item.lidoAno })),
                   )
                 }
                 className="min-h-9 rounded-pill border border-bege px-3.5 font-semibold text-ameixa hover:border-bordo"
@@ -454,25 +460,54 @@ export default function ImportarPage() {
                           </p>
                         ) : null}
                         <div className="flex flex-wrap items-center gap-2">
-                          <label className="flex items-center gap-2 text-xs text-cinza">
-                            terminei em
-                            <input
-                              type="date"
-                              value={l.lidoEm}
-                              max={hoje()}
-                              onChange={(e) =>
-                                mudar(i, { lidoEm: e.target.value })
-                              }
-                              className="min-h-10 rounded-md border border-linha bg-creme-quente px-2 text-sm text-ameixa"
-                            />
-                          </label>
+                          {l.lidoAno && !l.lidoEm ? (
+                            <label className="flex items-center gap-2 text-xs text-cinza">
+                              li em
+                              <input
+                                type="number"
+                                inputMode="numeric"
+                                min={1900}
+                                max={new Date().getFullYear()}
+                                value={l.lidoAno}
+                                onChange={(e) => mudar(i, { lidoAno: Number(e.target.value) || undefined })}
+                                aria-label="ano da leitura"
+                                className="min-h-10 w-20 rounded-md border border-linha bg-creme-quente px-2 text-sm text-ameixa"
+                              />
+                              <span>· sem dia e mês</span>
+                            </label>
+                          ) : (
+                            <label className="flex items-center gap-2 text-xs text-cinza">
+                              terminei em
+                              <input
+                                type="date"
+                                value={l.lidoEm}
+                                max={hoje()}
+                                onChange={(e) =>
+                                  mudar(i, { lidoEm: e.target.value, lidoAno: undefined })
+                                }
+                                className="min-h-10 rounded-md border border-linha bg-creme-quente px-2 text-sm text-ameixa"
+                              />
+                            </label>
+                          )}
                           <button
                             type="button"
-                            aria-pressed={!l.lidoEm}
+                            aria-pressed={!!l.lidoAno && !l.lidoEm}
                             onClick={() =>
-                              mudar(i, { lidoEm: l.lidoEm ? "" : hoje() })
+                              l.lidoAno && !l.lidoEm
+                                ? mudar(i, { lidoAno: undefined, lidoEm: `${l.lidoAno}-01-01` })
+                                : mudar(i, { lidoAno: Number((l.lidoEm || hoje()).slice(0, 4)), lidoEm: "" })
                             }
-                            className={`min-h-10 rounded-pill px-3 text-xs font-semibold ${!l.lidoEm ? "bg-bordo text-creme" : "border border-bege text-ameixa"}`}
+                            className={`min-h-10 rounded-pill px-3 text-xs font-semibold ${l.lidoAno && !l.lidoEm ? "bg-bordo text-creme" : "border border-bege text-ameixa"}`}
+                          >
+                            só sei o ano
+                          </button>
+                          <button
+                            type="button"
+                            aria-pressed={!l.lidoEm && !l.lidoAno}
+                            onClick={() =>
+                              mudar(i, !l.lidoEm && !l.lidoAno ? { lidoEm: hoje() } : { lidoEm: "", lidoAno: undefined })
+                            }
+                            className={`min-h-10 rounded-pill px-3 text-xs font-semibold ${!l.lidoEm && !l.lidoAno ? "bg-bordo text-creme" : "border border-bege text-ameixa"}`}
                           >
                             sem data
                           </button>

@@ -1,4 +1,5 @@
 "use client";
+import { soAno } from "@/lib/estantes";
 
 import { Voltar } from "@/components/Voltar";
 import Link from "next/link";
@@ -66,13 +67,13 @@ function FichaNoLivro({
     (c) => livro.notas?.[c],
   );
   const texto = livro.resenha ?? livro.anotacao;
-  const quando = livro.lidoEm
+  const quando = soAno(livro) ?? (livro.lidoEm
     ? new Date(livro.lidoEm).toLocaleDateString("pt-BR", {
         day: "numeric",
         month: "short",
         year: "numeric",
       })
-    : null;
+    : null);
   return (
     <section className="mx-6 mt-6 overflow-hidden rounded-[14px] border border-linha bg-creme-quente lg:mx-0 lg:mt-8 lg:rounded-[6px] lg:border-fio">
       <header className="flex items-start justify-between gap-3 border-b border-linha px-4 pt-4 pb-3.5 lg:border-fio lg:px-5">

@@ -10,6 +10,8 @@ export type ItemImport = {
   autor?: string;
   /** AAAA-MM-DD */
   lidoEm?: string;
+  /** só o ano da leitura (sem dia e mês) */
+  lidoAno?: number;
   iniciadoEm?: string;
   paginas?: number;
   /** 0,5 a 5 */
@@ -151,6 +153,14 @@ function dataDeNumero(n: number) {
   return new Date(ms).toISOString().slice(0, 10);
 }
 
+/** "2016" sozinho: o ano da leitura, sem dia nem mês */
+export function lerAnoSolto(v: string | number | undefined | null): number | undefined {
+  const t = typeof v === "number" ? String(v) : v?.trim();
+  if (!t || !/^\d{4}$/.test(t)) return undefined;
+  const ano = Number(t);
+  return ano >= 1900 && ano <= new Date().getFullYear() ? ano : undefined;
+}
+
 /** a ordem das datas de uma coluna inteira (05/03 é 5 de março ou 3 de maio?) */
 export function ordemDaColuna(valores: (string | undefined)[], padrao: OrdemData = "dm"): OrdemData {
   let dm = 0;
@@ -263,6 +273,7 @@ export function lerArquivo(conteudo: string): ItemImport[] {
         titulo,
         autor: texto(o.autor, 200),
         lidoEm: data(o.lidoEm),
+        lidoAno: data(o.lidoEm) ? undefined : (numero(o.lidoAno, 1900, 2200) ?? lerAnoSolto(o.lidoEm as string | number | undefined)),
         iniciadoEm: data(o.iniciadoEm),
         paginas: numero(o.paginas, 1, 20000),
         nota: numero(o.nota, 0.5, 5),

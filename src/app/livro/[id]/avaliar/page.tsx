@@ -42,7 +42,10 @@ function Formulario({ livro }: { livro: LivroSalvo & { paginas?: number } }) {
   const [erro, setErro] = useState<string | null>(null);
   const [reacao, setReacao] = useState<Reacao | undefined>(livro.reacao);
   const [dia, setDia] = useState(diaDaData(livro.lidoEm) ?? diaLocal());
-  const lidoEm = dataDoDia(dia);
+  // quando a pessoa sabe só o ano
+  const [soAno, setSoAno] = useState(!!livro.lidoSoAno);
+  const [ano, setAno] = useState(() => Number((diaDaData(livro.lidoEm) ?? diaLocal()).slice(0, 4)));
+  const lidoEm = soAno ? new Date(`${ano}-01-01T12:00:00`).toISOString() : dataDoDia(dia);
 
   function salvar(e: FormEvent) {
     e.preventDefault();
@@ -59,7 +62,7 @@ function Formulario({ livro }: { livro: LivroSalvo & { paginas?: number } }) {
       },
       {
         status: abandonou ? "abandonado" : "lido",
-        ...(abandonou ? { paradoEm: lidoEm } : { lidoEm }),
+        ...(abandonou ? { paradoEm: lidoEm } : { lidoEm, lidoSoAno: soAno || undefined }),
         nota: nota || undefined,
         reacao,
         ...(reacao === "favoritado" ? { amei: true } : {}),
@@ -114,14 +117,33 @@ function Formulario({ livro }: { livro: LivroSalvo & { paginas?: number } }) {
               <span className={rotuloCampo}>
                 {reacao === "abandonei" ? "parei em" : "terminei em"}
               </span>
-              <input
-                type="date"
-                value={dia}
-                max={diaLocal()}
-                onChange={(e) => e.target.value && setDia(e.target.value)}
-                className={campo}
-              />
+              {soAno && reacao !== "abandonei" ? (
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={1900}
+                  max={new Date().getFullYear()}
+                  value={ano}
+                  onChange={(e) => setAno(Number(e.target.value) || ano)}
+                  aria-label="ano em que leu"
+                  className={campo}
+                />
+              ) : (
+                <input
+                  type="date"
+                  value={dia}
+                  max={diaLocal()}
+                  onChange={(e) => e.target.value && setDia(e.target.value)}
+                  className={campo}
+                />
+              )}
             </label>
+            {reacao !== "abandonei" ? (
+              <label className="mt-2 flex min-h-11 cursor-pointer items-center gap-2.5 text-[13px] text-tinta-suave">
+                <input type="checkbox" checked={soAno} onChange={(e) => setSoAno(e.target.checked)} className="size-5 accent-bordo" />
+                só sei o ano (não lembro o dia nem o mês)
+              </label>
+            ) : null}
           </FichaLeitura>
           <p className="mt-3 font-accent text-[13px] italic text-cinza">
             essa ficha fica no seu perfil, fora de qualquer clube.

@@ -1,4 +1,5 @@
 "use client";
+import { soAno } from "@/lib/estantes";
 
 import Link from "next/link";
 import { useState } from "react";
@@ -207,7 +208,7 @@ export function MeuCapitulo({
         {status === "lido" ? (
           <>
             <Dado r="começou" v={data(livro.iniciadoEm)} />
-            <Dado r="terminou" v={data(livro.lidoEm) ?? "sem data"} />
+            <Dado r="terminou" v={soAno(livro) ?? data(livro.lidoEm) ?? "sem data"} />
             <Dado
               r="tempo de leitura"
               v={(() => {

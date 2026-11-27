@@ -130,7 +130,7 @@ function Rodape({ l }: { l: LivroSalvo }) {
   const r = reacaoDe(l.reacao);
   return (
     <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[12px] text-cinza [&>span[aria-hidden]]:select-none">
-      {l.lidoEm ? <span>lido em {dataLonga(l.lidoEm)}</span> : <span>sem data de leitura</span>}
+      {l.lidoEm ? <span>{l.lidoSoAno ? `lido em ${new Date(l.lidoEm).getFullYear()}` : `lido em ${dataLonga(l.lidoEm)}`}</span> : <span>sem data de leitura</span>}
       {g ? (
         <>
           <span aria-hidden>·</span>
@@ -169,7 +169,7 @@ function Resenha({ l, modo, acoes }: { l: LivroSalvo; modo: Modo; acoes: AcaoDoM
           </div>
           <div className="mt-1 flex flex-wrap items-center gap-x-3 text-[12px] text-cinza">
             <Nota nota={l.nota} />
-            {l.lidoEm ? <span>lido em {dataLonga(l.lidoEm)}</span> : null}
+            {l.lidoEm ? <span>{l.lidoSoAno ? `lido em ${new Date(l.lidoEm).getFullYear()}` : `lido em ${dataLonga(l.lidoEm)}`}</span> : null}
           </div>
           <p className="mt-1.5 line-clamp-2 text-[13px] leading-relaxed text-tinta-suave">{l.resenha}</p>
         </div>

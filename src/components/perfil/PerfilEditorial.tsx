@@ -299,7 +299,7 @@ function UltimasLeituras({ lidos, href }: { lidos: LivroSalvo[]; href: string })
               </span>
               {l.lidoEm ? (
                 <span className="block text-[10px] text-[var(--suave)]">
-                  {new Date(l.lidoEm).toLocaleDateString("pt-BR", { day: "numeric", month: "short" }).replace(".", "")}
+                  {l.lidoSoAno ? new Date(l.lidoEm).getFullYear() : new Date(l.lidoEm).toLocaleDateString("pt-BR", { day: "numeric", month: "short" }).replace(".", "")}
                 </span>
               ) : null}
             </Link>

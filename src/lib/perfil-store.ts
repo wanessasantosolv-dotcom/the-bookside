@@ -43,6 +43,8 @@ export type LivroSalvo = {
   paginaAtual?: number;
   iniciadoEm?: string;
   lidoEm?: string;
+  /** a pessoa sabe só o ano em que leu (lidoEm fica em 1º de janeiro, sem valer como dia nem mês) */
+  lidoSoAno?: boolean;
   /** 0,5 a 5 */
   nota?: number;
   /** sessões do modo foco: quando começou, quantos minutos e quantas páginas */

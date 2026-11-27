@@ -139,7 +139,7 @@ export default function ImportarNoClubePage() {
         item,
         opcoes,
         escolhido: opcoes.length ? 0 : -1,
-        dia: item.lidoEm ?? diaLocal(),
+        dia: item.lidoEm ?? (item.lidoAno ? `${item.lidoAno}-01-01` : diaLocal()),
         // já no clube: só entra de novo se o arquivo trouxer fichas para completar
         incluir: !jaNoClube || !!item.fichas?.length || temFicha(item),
         jaNoClube,

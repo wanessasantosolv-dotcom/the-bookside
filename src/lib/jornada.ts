@@ -169,7 +169,7 @@ export type MesDoAno = {
 export function mesesDoAno(lidos: LivroSalvo[]): MesDoAno[] {
   return MESES.map((mes, i) => {
     const doMes = lidos.filter(
-      (l) => l.lidoEm && new Date(l.lidoEm).getMonth() === i,
+      (l) => l.lidoEm && !l.lidoSoAno && new Date(l.lidoEm).getMonth() === i,
     );
     const comNota = doMes
       .filter((l) => l.nota)

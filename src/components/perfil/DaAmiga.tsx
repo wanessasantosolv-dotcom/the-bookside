@@ -30,7 +30,7 @@ export function JornadaResumida({ p, nome }: { p: Perfil; nome: string }) {
   const media = notas.length ? notas.reduce((t, n) => t + n, 0) / notas.length : null;
   const genero = maisFrequente(lidos.filter((l) => !generoGenerico(l.genero)).map((l) => traduzirGenero(l.genero)));
   const autoria = maisFrequente(lidos.map((l) => l.autor));
-  const porMes = MESES.map((_, m) => lidos.filter((l) => new Date(l.lidoEm!).getMonth() === m).length);
+  const porMes = MESES.map((_, m) => lidos.filter((l) => !l.lidoSoAno && new Date(l.lidoEm!).getMonth() === m).length);
   const maior = Math.max(1, ...porMes);
   const mesAtual = new Date().getMonth();
   const meta = p.meta || null;

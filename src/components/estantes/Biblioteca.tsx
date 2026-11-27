@@ -551,7 +551,7 @@ export function ListaDeLivros({
                   {Math.round(p * 100)}%
                 </>
               ) : statusDe(l) === "lido" ? (
-                l.lidoEm ? new Date(l.lidoEm).toLocaleDateString("pt-BR", { month: "short", year: "numeric" }).replace(".", "") : "lido"
+                l.lidoEm ? (l.lidoSoAno ? String(new Date(l.lidoEm).getFullYear()) : new Date(l.lidoEm).toLocaleDateString("pt-BR", { month: "short", year: "numeric" }).replace(".", "")) : "lido"
               ) : (
                 "—"
               )}

@@ -104,6 +104,11 @@ export function estrelas(nota?: number) {
   );
 }
 
+/** "em 2016" quando a pessoa sabe só o ano em que leu */
+export function soAno(l: { lidoEm?: string; lidoSoAno?: boolean }) {
+  return l.lidoSoAno && l.lidoEm ? `em ${new Date(l.lidoEm).getFullYear()}` : null;
+}
+
 export function dataCurta(iso?: string) {
   if (!iso) return "";
   return new Date(iso)

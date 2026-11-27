@@ -6,7 +6,7 @@
  * O .xlsx é um zip com XML dentro: lemos o índice do zip, abrimos as partes
  * com o DecompressionStream do navegador e o XML com o DOMParser.
  */
-import { dataDoExcel, lerArquivo, lerDataSolta, lerLista, ordemDaColuna, type ItemImport, type OrdemData } from "@/lib/importar";
+import { dataDoExcel, lerAnoSolto, lerArquivo, lerDataSolta, lerLista, ordemDaColuna, type ItemImport, type OrdemData } from "@/lib/importar";
 import type { FormatoLivro, Reacao } from "@/lib/perfil-store";
 
 // ───────── zip mínimo ─────────
@@ -241,10 +241,10 @@ function acharColunas(cabecalho: string[]) {
 const naoEhLeitura = /inicio|inicia|start|comec|added|adicion|public|lancamento|nasc|criad|creat|edic|modif|updat|atualiz|import|compr|purchas|birth|year|ano|due|prazo/;
 
 /** quantos valores da coluna são datas de verdade */
-function taxaDeDatas(corpo: string[][], i: number) {
+function taxaDeDatas(corpo: string[][], i: number, aceitaAno = false) {
   const vals = corpo.slice(0, 60).map((l) => l[i]?.trim()).filter(Boolean) as string[];
   if (!vals.length) return { vals: 0, datas: 0 };
-  return { vals: vals.length, datas: vals.filter((v) => lerDataSolta(v)).length };
+  return { vals: vals.length, datas: vals.filter((v) => lerDataSolta(v) || (aceitaAno && lerAnoSolto(v))).length };
 }
 
 /** sem coluna de data reconhecida: usa a coluna em que quase todos os valores são datas (e cujo nome não é de outra data) */
@@ -332,7 +332,8 @@ export function planilhaParaItens(linhas: string[][]): ItemImport[] {
   if (iCab >= 0) {
     // a coluna de leitura achada pelo nome precisa ter datas de verdade ("lido: sim" não serve)
     if (idx.lidoEm !== undefined) {
-      const { vals, datas } = taxaDeDatas(corpo, idx.lidoEm);
+      // pelo nome já sabemos que é a data de leitura: um ano sozinho vale (leu em 2016, sem dia)
+      const { vals, datas } = taxaDeDatas(corpo, idx.lidoEm, true);
       if (vals && datas < vals * 0.3) idx.lidoEm = undefined;
     }
     if (idx.lidoEm === undefined) {
@@ -362,6 +363,7 @@ export function planilhaParaItens(linhas: string[][]): ItemImport[] {
       titulo: titulo.replace(/\s*\(([^)]*#\d+[^)]*)\)\s*$/, "").slice(0, 200),
       autor: de(l, "autor")?.slice(0, 200),
       lidoEm: lerDataSolta(de(l, "lidoEm"), ordemLido),
+      lidoAno: lerDataSolta(de(l, "lidoEm"), ordemLido) ? undefined : lerAnoSolto(de(l, "lidoEm")),
       iniciadoEm: lerDataSolta(de(l, "iniciadoEm"), ordemInicio),
       paginas: paginas > 0 && paginas < 20000 ? paginas : undefined,
       nota: lerNotaSolta(de(l, "nota"), escala),
@@ -449,6 +451,7 @@ export function lerTextoQualquer(conteudo: string): ItemImport[] {
           autor: n.autor ?? g.autor,
           // a leitura genérica decide dia/mês olhando a coluna inteira
           lidoEm: g.lidoEm ?? n.lidoEm,
+          lidoAno: g.lidoEm ?? n.lidoEm ? undefined : (g.lidoAno ?? n.lidoAno),
           iniciadoEm: g.iniciadoEm ?? n.iniciadoEm,
           nota: n.nota ?? g.nota,
           paginas: n.paginas ?? g.paginas,

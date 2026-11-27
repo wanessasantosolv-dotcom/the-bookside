@@ -97,7 +97,7 @@ export function calcularNumeros(
   const ultimoMes = ano === hoje.getFullYear() ? hoje.getMonth() : 11;
   const porMes = Array.from({ length: ultimoMes + 1 }, (_, m) => ({
     mes: MESES[m],
-    livros: lidos.filter((l) => new Date(l.lidoEm!).getMonth() === m).length,
+    livros: lidos.filter((l) => !l.lidoSoAno && new Date(l.lidoEm!).getMonth() === m).length,
   }));
   const maisForte = porMes.reduce<(typeof porMes)[number] | null>(
     (a, b) => (b.livros > (a?.livros ?? 0) ? b : a),
@@ -168,11 +168,11 @@ export function calcularNumeros(
   const mesAMes = MESES.slice(0, ultimoMes + 1)
     .map((mes, m) => {
       const doMes = lidos
-        .filter((l) => l.nota && new Date(l.lidoEm!).getMonth() === m)
+        .filter((l) => l.nota && !l.lidoSoAno && new Date(l.lidoEm!).getMonth() === m)
         .sort((a, b) => (b.nota ?? 0) - (a.nota ?? 0));
       return {
         mes,
-        total: lidos.filter((l) => new Date(l.lidoEm!).getMonth() === m).length,
+        total: lidos.filter((l) => !l.lidoSoAno && new Date(l.lidoEm!).getMonth() === m).length,
         melhor: doMes[0] ?? null,
         pior:
           doMes.length > 1 && doMes.at(-1)!.nota! < doMes[0].nota!
