@@ -930,6 +930,12 @@ export async function completarLivroDoClube(
   if (error) throw semColunaNova(error);
 }
 
+/** troca a capa de um livro do clube (vale para todo mundo no clube) */
+export async function trocarCapaNoClube(l: LivroDoClube, capa: string) {
+  const { error } = await db().from("clube_livros").update({ livro: { ...l.livro, capa } }).eq("id", l.id);
+  if (error) throw error;
+}
+
 const SINCRONIZADOS = "bookside-clube-na-estante";
 const chaveLivro = (t: string) =>
   t

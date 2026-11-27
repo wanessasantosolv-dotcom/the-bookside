@@ -1,6 +1,7 @@
 "use client";
 
 import { CapaAuto } from "@/components/CapaAuto";
+import { TrocarCapa } from "@/components/TrocarCapa";
 import { Animacao } from "@/components/Animacao";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -15,6 +16,8 @@ import {
   fichasDe,
   pessoaDaFicha,
   livroDoClube,
+  organiza,
+  trocarCapaNoClube,
   media,
   virgula,
   type Ficha,
@@ -217,7 +220,8 @@ function CartaoFicha({
 
 export default function FichasDoLivroPage() {
   const { livro } = useParams<{ livro: string }>();
-  const { clube, membros } = useClube();
+  const { clube, membros, papel } = useClube();
+  const [trocandoCapa, setTrocandoCapa] = useState(false);
   const eu = useMeuId();
   const consulta = useConsulta(async () => {
     const [l, fichas] = await Promise.all([
@@ -257,6 +261,22 @@ export default function FichasDoLivroPage() {
 
   return (
     <div className="flex min-h-[70dvh] flex-col">
+      {trocandoCapa ? (
+        <TrocarCapa
+          titulo={l.livro.titulo}
+          autor={l.livro.autor}
+          atual={l.livro.capa}
+          onFechar={() => setTrocandoCapa(false)}
+          onEscolher={async (capa) => {
+            try {
+              await trocarCapaNoClube(l, capa);
+              consulta.recarregar();
+            } catch {
+              alert("não foi possível trocar a capa agora.");
+            }
+          }}
+        />
+      ) : null}
       <TopoForm
         voltar={{ href: `/clubes/${clube.id}/biblioteca`, r: "livros" }}
         rotulo={clube.nome}
@@ -265,10 +285,14 @@ export default function FichasDoLivroPage() {
       <div className="px-6 lg:grid lg:max-w-[1000px] lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-10 lg:px-0">
         <div>
           <div className="mt-4 flex gap-4 rounded-xl border border-linha bg-creme-quente p-4 lg:rounded-[4px] lg:border-fio lg:bg-transparent">
-            <CapaAuto
-              livro={l.livro}
-              className="w-[84px] [&>span:last-child]:hidden"
-            />
+            <div className="flex w-[84px] flex-none flex-col items-center gap-1">
+              <CapaAuto livro={l.livro} className="w-[84px] [&>span:last-child]:hidden" />
+              {organiza(papel) || l.sugerido_por === eu ? (
+                <button type="button" onClick={() => setTrocandoCapa(true)} className="min-h-9 text-[11px] font-semibold text-bordo">
+                  trocar capa
+                </button>
+              ) : null}
+            </div>
             <div className="min-w-0">
               <p className="text-[9px] font-semibold tracking-[.14em] text-bordo uppercase">
                 {l.rodada ? `rodada ${l.rodada} · ` : ""}
