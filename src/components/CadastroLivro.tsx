@@ -88,6 +88,9 @@ export function CamposDoLivro({
   const [ajustar, setAjustar] = useState<string | null>(null);
   const [capasAchadas, setCapasAchadas] = useState<string[]>([]);
   const [busca, setBusca] = useState<EstadoBusca | null>(null);
+  // o que a internet achou fica numa prévia: só entra no formulário se a pessoa aceitar
+  const [achado, setAchado] = useState<Awaited<ReturnType<typeof infoNaInternet>> | null>(null);
+  const [antes, setAntes] = useState<DadosDoLivro | null>(null);
   const mudar = (parte: Partial<DadosDoLivro>) =>
     onMudar((d) => ({ ...d, ...parte }));
 
@@ -98,7 +101,20 @@ export function CamposDoLivro({
     try {
       const r = await infoNaInternet(dados.titulo.trim(), dados.autor.trim());
       if (!r) return setBusca({ estado: "nada" });
-      setCapasAchadas(r.capas);
+      setAchado(r);
+      setBusca({ estado: "pronto", fonte: r.fonte, emIngles: r.emIngles, passos: r.passos });
+    } catch {
+      setBusca({ estado: "erro" });
+    }
+  }
+
+  function usarAchado() {
+    const r = achado;
+    if (!r) return;
+    setAntes(dados);
+    setCapasAchadas(r.capas);
+    setAchado(null);
+    {
       onMudar((d) => ({
         ...d,
         titulo: r.titulo || d.titulo,
@@ -109,15 +125,13 @@ export function CamposDoLivro({
         capa:
           r.capa && (!d.capa || !d.capa.startsWith("data:")) ? r.capa : d.capa,
       }));
-      setBusca({
-        estado: "pronto",
-        fonte: r.fonte,
-        emIngles: r.emIngles,
-        passos: r.passos,
-      });
-    } catch {
-      setBusca({ estado: "erro" });
     }
+  }
+
+  function desfazer() {
+    if (antes) onMudar(antes);
+    setAntes(null);
+    setCapasAchadas([]);
   }
 
   return (
@@ -187,8 +201,38 @@ export function CamposDoLivro({
             ? "✦ procurando o livro…"
             : "✦ completar com a internet"}
         </button>
+        {achado ? (
+          <div className="mt-2 flex gap-3 rounded-[6px] border border-linha bg-creme-quente p-3">
+            <CapaLivro titulo={achado.titulo || dados.titulo} capa={achado.capa ?? undefined} cor={corDoLivro(achado.titulo || dados.titulo)} className="w-[54px] flex-none" />
+            <div className="min-w-0 flex-1">
+              <p className="text-[12px] text-cinza">É este livro?</p>
+              <p className="truncate font-revista text-[16px] text-ameixa italic">{achado.titulo || dados.titulo}</p>
+              <p className="truncate text-[12px] text-tinta-suave">
+                {[achado.autor, achado.paginas ? `${achado.paginas} páginas` : null].filter(Boolean).join(" · ")}
+              </p>
+              {achado.sinopse ? <p className="mt-1 line-clamp-2 text-[12px] text-cinza">{achado.sinopse}</p> : null}
+              <div className="mt-2 flex flex-wrap gap-2">
+                <button type="button" onClick={usarAchado} className="h-9 rounded-[6px] bg-bordo px-3 text-[12px] font-semibold text-creme">
+                  Usar esses dados
+                </button>
+                <button type="button" onClick={() => (setAchado(null), setBusca(null))} className="h-9 rounded-[6px] border border-bege px-3 text-[12px] font-semibold text-ameixa">
+                  Não é esse
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : antes ? (
+          <p className="mt-1 text-xs text-cinza">
+            dados preenchidos com a internet.{" "}
+            <button type="button" onClick={desfazer} className="font-semibold text-bordo underline underline-offset-2">
+              desfazer
+            </button>
+          </p>
+        ) : null}
         <p className="text-xs text-cinza">
-          {busca?.estado === "pronto"
+          {achado
+            ? "nada foi preenchido ainda: confira antes de usar."
+            : busca?.estado === "pronto"
             ? `pronto! confira os dados antes de salvar.${
                 busca.fonte
                   ? ` (sinopse: ${busca.fonte}${busca.emIngles ? ", só achei em inglês" : ""})`

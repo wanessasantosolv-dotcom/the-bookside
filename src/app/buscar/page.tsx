@@ -107,9 +107,17 @@ function Busca() {
         />
       </label>
 
-      <p className="eyebrow mt-6 mb-1 !text-[10px] text-bordo">
-        {estado === "sugestoes" ? "sugestões" : "resultados"}
-      </p>
+      {/* antes de digitar: nada de lista fixa de sugestões (aqui se procura um livro específico) */}
+      {estado === "sugestoes" ? (
+        <p className="mt-6 text-[13px] text-tinta-suave">
+          Digite o título, a autoria ou o ISBN do livro.{" "}
+          <Link href="/descobrir" className="font-semibold text-bordo hover:underline">
+            Procurando ideias? Descobrir →
+          </Link>
+        </p>
+      ) : (
+        <p className="eyebrow mt-6 mb-1 !text-[10px] text-bordo">resultados</p>
+      )}
       <EstadoBusca
         estado={estado}
         vazio={!resultados.length}
@@ -117,7 +125,7 @@ function Busca() {
         volta="/buscar"
       />
       <ul>
-        {(estado === "carregando" ? [] : resultados).map((l) => {
+        {(estado === "carregando" || estado === "sugestoes" ? [] : resultados).map((l) => {
           const ok = hidratado && estaNaEstante(l.id);
           return (
             <li

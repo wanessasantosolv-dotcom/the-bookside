@@ -9,8 +9,7 @@ import { CapaJournal } from "@/components/journal/Revista";
 import { useEdicao } from "@/components/journal/useEdicao";
 import { Avatar } from "@/components/social/Pessoas";
 import { lembrarLivros } from "@/lib/catalogo";
-import { minhasLeiturasJuntas } from "@/lib/lerjunto";
-import { citacoes, citacaoDoDia } from "@/lib/citacoes";
+import { sincronizarProgressoNosCoreads, minhasLeiturasJuntas } from "@/lib/lerjunto";
 import { andamento, encontrosDe, meusClubes, type Encontro, type ResumoClube } from "@/lib/clubes";
 import { corDoLivro } from "@/lib/cores";
 import { estrelas, lidosNoAno } from "@/lib/estantes";
@@ -73,61 +72,6 @@ export function saudacao(hora = new Date().getHours()) {
 
 // ───────── quote do dia ─────────
 
-export function QuoteDoDia() {
-  const hoje = citacaoDoDia();
-  const inicio = Math.max(0, citacoes.indexOf(hoje));
-  const [passo, setPasso] = useState(0);
-  const [aviso, setAviso] = useState("");
-  const c = citacoes[(inicio + passo) % citacoes.length];
-  const texto = `“${c.texto}” — ${c.autor}${c.livro ? `, ${c.livro}` : ""}`;
-  async function compartilhar() {
-    try {
-      if (navigator.share) await navigator.share({ text: texto });
-      else {
-        await navigator.clipboard.writeText(texto);
-        setAviso("citação copiada");
-        setTimeout(() => setAviso(""), 2200);
-      }
-    } catch {
-      /* cancelou */
-    }
-  }
-  const botao = "grid size-10 place-items-center rounded-full text-cinza hover:bg-bordo/5 hover:text-bordo";
-  return (
-    <figure className="flex items-start gap-3 rounded-[10px] border border-linha bg-creme-quente px-4 py-4 lg:items-center lg:gap-5 lg:px-6">
-      <span aria-hidden className="font-revista text-[40px] leading-[.8] text-rosa-antigo lg:text-[48px]">
-        “
-      </span>
-      <div className="min-w-0 flex-1">
-        <blockquote className="font-revista text-[17px] leading-[1.4] text-ameixa lg:text-[19px]">
-          <i>{c.texto}</i>
-        </blockquote>
-        <figcaption className="mt-1.5 text-[11px] font-semibold tracking-[.12em] text-cinza">
-          {c.autor}
-          {c.livro ? <span className="font-normal"> · {c.livro}</span> : null}
-        </figcaption>
-      </div>
-      <div className="-mr-2 flex flex-none flex-col lg:flex-row">
-        <button type="button" onClick={compartilhar} aria-label="compartilhar citação" className={botao}>
-          <svg aria-hidden width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 2v14" />
-          </svg>
-        </button>
-        <button type="button" onClick={() => setPasso((p) => p + 1)} aria-label="outra citação" className={botao}>
-          <svg aria-hidden width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5M21 12a9 9 0 0 1-15 6.7L3 16M3 21v-5h5" />
-          </svg>
-        </button>
-      </div>
-      {aviso ? (
-        <span role="status" className="sr-only">
-          {aviso}
-        </span>
-      ) : null}
-    </figure>
-  );
-}
-
 // ───────── lendo agora ─────────
 
 function CartaoLeitura({ l, junto, grande }: { l: LivroSalvo; junto?: { nomes: string; id: string }; grande?: boolean }) {
@@ -161,18 +105,69 @@ function CartaoLeitura({ l, junto, grande }: { l: LivroSalvo; junto?: { nomes: s
           ) : (
             <span className="text-[11px] text-cinza">sem progresso registrado</span>
           )}
-          <Link
-            href={`/livro/${l.id}/progresso`}
-            className="mt-3 inline-flex min-h-10 items-center gap-1.5 rounded-full border border-bordo px-3.5 text-[12px] font-semibold text-bordo hover:bg-bordo/5"
-          >
-            <svg aria-hidden width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <path d="M12 5v14M5 12h14" />
-            </svg>
-            registrar leitura
-          </Link>
+          <RegistrarAqui l={l} />
         </div>
       </div>
     </article>
+  );
+}
+
+/** registrar a página ali mesmo, sem sair do início (estante, co-reads e clubes acompanham pela sincronização de sempre) */
+function RegistrarAqui({ l }: { l: LivroSalvo }) {
+  const editarLivro = usePerfil((s) => s.editarLivro);
+  const [aberto, setAberto] = useState(false);
+  const [pagina, setPagina] = useState(l.paginaAtual ?? 0);
+  const [total, setTotal] = useState(l.paginas ?? 0);
+  const [feito, setFeito] = useState(false);
+  function salvar(terminou: boolean) {
+    const p = terminou ? total || pagina : pagina;
+    const agora = new Date().toISOString();
+    editarLivro(
+      { id: l.id, titulo: l.titulo, autor: l.autor, capa: l.capa, genero: l.genero },
+      { status: terminou ? "lido" : "lendo", paginaAtual: p, paginas: total || undefined, ...(terminou ? { lidoEm: agora } : {}) },
+    );
+    void sincronizarProgressoNosCoreads({ id: l.id, titulo: l.titulo, paginas: total || undefined }, p, terminou).catch(() => null);
+    setAberto(false);
+    setFeito(true);
+    setTimeout(() => setFeito(false), 2200);
+  }
+  if (!aberto)
+    return (
+      <span className="mt-3 flex items-center gap-3">
+        <button type="button" onClick={() => setAberto(true)} className="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-bordo px-3.5 text-[12px] font-semibold text-bordo hover:bg-bordo/5">
+          <svg aria-hidden width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+          registrar leitura
+        </button>
+        {feito ? <span role="status" className="text-[11px] text-progresso-tinta">salvo ✓</span> : null}
+      </span>
+    );
+  return (
+    <div className="mt-3 rounded-[6px] border border-linha bg-creme-quente p-3">
+      <label className="flex flex-wrap items-center gap-2 text-[12px] text-tinta-suave">
+        página
+        <input type="number" inputMode="numeric" min={0} max={total || undefined} value={pagina || ""} onChange={(e) => setPagina(Math.max(0, Math.min(total || 99999, Number(e.target.value) || 0)))} className="h-10 w-20 rounded-[6px] border border-bege bg-creme px-2 text-[15px] text-ameixa outline-none focus:border-bordo" autoFocus />
+        de
+        {l.paginas ? (
+          <b className="font-semibold text-ameixa">{l.paginas}</b>
+        ) : (
+          <input type="number" inputMode="numeric" min={1} placeholder="total" value={total || ""} onChange={(e) => setTotal(Math.max(0, Number(e.target.value) || 0))} className="h-10 w-20 rounded-[6px] border border-bege bg-creme px-2 text-[15px] text-ameixa outline-none focus:border-bordo" />
+        )}
+      </label>
+      {total ? <input type="range" min={0} max={total} value={pagina} onChange={(e) => setPagina(Number(e.target.value))} aria-label="página atual" className="mt-2 w-full accent-[var(--color-bordo)]" /> : null}
+      <div className="mt-2 flex flex-wrap gap-2">
+        <button type="button" onClick={() => salvar(false)} className="h-9 rounded-[6px] bg-bordo px-3 text-[12px] font-semibold text-creme">
+          Salvar
+        </button>
+        <button type="button" onClick={() => salvar(true)} className="h-9 rounded-[6px] border border-bege px-3 text-[12px] font-semibold text-ameixa">
+          Terminei
+        </button>
+        <button type="button" onClick={() => setAberto(false)} className="h-9 px-2 text-[12px] text-cinza">
+          cancelar
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -215,8 +210,8 @@ export function LendoAgoraHome() {
           {/* computador: dois ou três lado a lado; mais que isso, rolagem */}
           <ul className="hidden snap-x gap-8 overflow-x-auto pb-1 [scrollbar-width:thin] lg:flex">
             {lendo.map((l) => (
-              <li key={l.id} className="w-[calc(50%-16px)] min-w-[300px] flex-none snap-start xl:w-[calc(33.333%-22px)]">
-                <CartaoLeitura l={l} junto={junto.get(l.id)} />
+              <li key={l.id} className={`flex-none snap-start ${lendo.length === 1 ? "w-full max-w-[520px]" : "w-[calc(50%-16px)] min-w-[300px]"}`}>
+                <CartaoLeitura l={l} junto={junto.get(l.id)} grande={lendo.length === 1} />
               </li>
             ))}
           </ul>

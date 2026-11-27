@@ -1,5 +1,6 @@
 "use client";
 
+import { DesafiosNaJornada, PalavrasGuardadas } from "@/components/inicio/Edicao";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { CapaLivro } from "@/components/CapaLivro";
@@ -1486,6 +1487,8 @@ export function JornadaNoPerfil() {
 
       {atual ? <DiasEntrePaginas livros={livros} /> : null}
 
+      {atual ? <DesafiosNaJornada /> : null}
+
       {n.total ? (
         <>
           <Ritmo n={n} />
@@ -1512,6 +1515,8 @@ export function JornadaNoPerfil() {
           ) : null}
         </div>
       )}
+
+      {atual ? <PalavrasGuardadas /> : null}
 
       {semData ? (
         <p className="border-t border-linha pt-4 text-[11px] text-cinza lg:border-fio">

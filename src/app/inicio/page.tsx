@@ -9,10 +9,9 @@ import {
   JournalTemporario,
   LendoAgoraHome,
   MetaDeLeitura,
-  ParaVoce,
-  QuoteDoDia,
   SeusClubes,
 } from "@/components/inicio/Secoes";
+import { DesafiosHome, EntrePalavras, EntrelinhasHome } from "@/components/inicio/Edicao";
 import { useHidratado } from "@/components/PerfilHidratacao";
 import { SeloNovidades } from "@/components/social/AvisoNovidades";
 import { ComConta } from "@/components/social/Estados";
@@ -119,39 +118,47 @@ export default function InicioPage() {
         <div className="mx-auto w-full max-w-[1240px]">
           <Topo nome={nome} />
 
-          {/* ───── computador: duas colunas assimétricas ───── */}
-          <div className="hidden gap-10 lg:grid lg:grid-cols-[minmax(0,2.1fr)_minmax(280px,1fr)] xl:gap-14">
-            <div className="min-w-0 space-y-10">
-              <QuoteDoDia />
-              <LendoAgoraHome />
-              <ComConta>
-                <EntreLeitores />
-              </ComConta>
-              <ParaVoce />
+          {/* ───── computador: a citação numa faixa compacta e duas colunas (60/40) ───── */}
+          <div className="hidden lg:block">
+            <EntrePalavras />
+            <div className="mt-8 grid grid-cols-[minmax(0,3fr)_minmax(0,2fr)] gap-12 xl:gap-14">
+              <div className="min-w-0 space-y-10">
+                <LendoAgoraHome />
+                <ComConta>
+                  <DesafiosHome />
+                </ComConta>
+                <ComConta>
+                  <EntreLeitores />
+                </ComConta>
+              </div>
+              <aside className="min-w-0 space-y-10">
+                <MetaDeLeitura />
+                <ComConta>
+                  <SeusClubes limite={3} />
+                </ComConta>
+                <EntrelinhasHome />
+                <JournalTemporario />
+                <Atalhos />
+              </aside>
             </div>
-            <aside className="min-w-0 space-y-10">
-              <JournalTemporario />
-              <MetaDeLeitura />
-              <ComConta>
-                <SeusClubes limite={3} />
-              </ComConta>
-              <Atalhos />
-            </aside>
           </div>
 
-          {/* ───── celular: uma coluna, na ordem do guia ───── */}
+          {/* ───── celular: uma coluna, prioridades do guia ───── */}
           <div className="space-y-8 px-5 pt-4 lg:hidden">
-            <QuoteDoDia />
+            <EntrePalavras />
             <LendoAgoraHome />
             <MetaDeLeitura faixa />
             <ComConta>
-              <EntreLeitores />
+              <DesafiosHome />
             </ComConta>
+            <EntrelinhasHome />
             <ComConta>
               <SeusClubes limite={1} />
             </ComConta>
-            <ParaVoce />
             <JournalTemporario />
+            <ComConta>
+              <EntreLeitores />
+            </ComConta>
             <Atalhos />
           </div>
         </div>

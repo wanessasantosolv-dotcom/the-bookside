@@ -181,6 +181,8 @@ export type Perfil = {
   } | null;
   /** a carta de nas entrelinhas exibida no perfil (só a carta: respostas e pontos ficam privados) */
   cartaLiteraria: { carta: string; em: string } | null;
+  /** citações guardadas a partir do "entre palavras" do início (não ligadas a uma leitura) */
+  palavrasGuardadas: { id: string; texto: string; autor: string; obra: string; em: string; origem: "inicio" }[];
   /** compartilha as métricas pessoais de leitura com a liga dos leitores dos clubes */
   ligaPessoal: boolean;
   onboardingConcluido: boolean;
@@ -252,6 +254,7 @@ export const perfilInicial: Perfil = {
   bookside: null,
   cartaLiteraria: null,
   ligaPessoal: true,
+  palavrasGuardadas: [],
   onboardingConcluido: false,
   tourVisto: false,
   novidadesVistasEm: null,
