@@ -91,7 +91,7 @@ function MenuMais({ itens }: { itens: { nome: string; href?: string; onClick?: (
         aria-label="mais opções"
         aria-expanded={aberto}
         onClick={() => setAberto((v) => !v)}
-        className="grid size-11 place-items-center rounded-full border border-[var(--linha)] text-[var(--acc)] hover:border-[var(--acc)]"
+        className="grid size-9 place-items-center rounded-[6px] border border-[var(--linha)] text-[var(--acc)] hover:border-[var(--acc)]"
       >
         <svg aria-hidden width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
           <circle cx="5" cy="12" r="1.7" />
@@ -608,10 +608,9 @@ export function PerfilEditorial({
   const lidos = p.livros.filter((l) => l.status === "lido").sort(porDataDeLeitura);
   const geral = aba === "geral";
 
-  const botao = "inline-flex min-h-11 items-center rounded-full px-5 text-[14px] font-semibold";
   const acoes = proprio ? (
     <div className="flex items-center gap-2">
-      <Link href="/perfil/editar" className={`${botao} !min-h-10 !rounded-[6px] !px-4 bg-[var(--acc)] text-[var(--papel)]`}>
+      <Link href="/perfil/editar" className="inline-flex h-9 items-center rounded-[6px] border border-[var(--linha)] px-3.5 text-[13px] font-semibold text-[var(--tinta)] hover:border-[var(--acc)] hover:text-[var(--acc)]">
         editar perfil
       </Link>
       <MenuMais
@@ -659,16 +658,18 @@ export function PerfilEditorial({
               </div>
             </div>
             {/* o nome fica fora da capa, ao lado da foto: sempre fácil de ler */}
-            <div className="pt-2 pl-[132px] pr-5 lg:pl-[220px] lg:pt-4">
+            <div className="flex flex-col gap-3 pt-2 pr-5 pl-[132px] lg:flex-row lg:items-end lg:justify-between lg:pt-4 lg:pl-[220px]">
+              <div className="min-w-0">
               <h1 className="font-display text-[26px] leading-[1.05] font-semibold text-[var(--acc)] italic lg:font-revista lg:text-[40px] lg:font-normal lg:text-[var(--tinta)]">
                 {nome}
               </h1>
               <p className="mt-1 text-[12px] font-semibold text-[var(--acc)]">@{p.usuario}</p>
               <Seguidores numeros={numeros} base={base} />
+              </div>
+              {/* ações compactas: ao lado do nome no computador, logo abaixo no celular */}
+              <div className="flex-none">{acoes}</div>
             </div>
-            {/* no celular, as ações ficam embaixo do nome */}
-            <div className="mt-5 px-5 lg:pl-[220px]">{acoes}</div>
-            <div className="mt-6 px-5 text-center lg:mt-8">
+            <div className="mt-5 px-5 text-center lg:mt-6">
               {p.frase ? (
                 <p className="mx-auto max-w-[60ch] font-revista text-[18px] leading-[1.4] text-[var(--acc)] italic lg:text-[21px]">“{p.frase}”</p>
               ) : proprio ? (
