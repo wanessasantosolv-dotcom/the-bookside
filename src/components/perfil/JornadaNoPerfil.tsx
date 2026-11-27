@@ -376,16 +376,26 @@ function MesEmRevista({ ano }: { livros?: LivroSalvo[]; ano: number }) {
   // aparece do penúltimo dia do mês até o dia 5 do seguinte (ver edicaoEmDestaque)
   const chave = edicaoEmDestaque();
   if (chave && Number(chave.slice(0, 4)) === ano) return <JournalDoMes chave={chave} />;
+  // a próxima edição abre no penúltimo dia do mês
+  const hoje = new Date();
+  const abre = new Date(hoje.getFullYear(), hoje.getMonth() + 1, -1);
+  const faltam = Math.max(0, Math.ceil((+abre - +new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate())) / 864e5));
+  const mes = hoje.toLocaleDateString("pt-BR", { month: "long" });
   return (
-    <Link
-      href="/journal"
-      className="flex items-center justify-between gap-3 rounded-[14px] border border-linha px-5 py-3.5 hover:border-bordo lg:rounded-[10px] lg:border-fio"
-    >
-      <span className="min-w-0">
-        <span className="block text-[10px] font-semibold tracking-[.18em] text-cinza uppercase">diário literário</span>
-        <span className="mt-0.5 block font-display text-[18px] text-ameixa lg:font-revista">suas edições mensais</span>
+    <Link href="/journal" className="grao group relative flex items-center gap-5 overflow-hidden rounded-[6px] bg-rosa-editorial px-5 py-5 lg:px-7">
+      <span aria-hidden className="absolute -right-10 -bottom-12 size-40 rounded-full bg-rosa-antigo/40" />
+      {/* a miniatura de uma edição: o diário é uma revista do mês */}
+      <span aria-hidden className="relative flex h-[92px] w-[68px] flex-none -rotate-3 flex-col justify-between rounded-[3px] bg-bordo p-2 text-creme shadow-[0_12px_22px_-12px_rgba(43,20,32,.6)] transition-transform group-hover:rotate-0">
+        <span className="font-revista text-[13px] leading-none italic">diário.</span>
+        <span className="block h-px bg-creme/40" />
+        <span className="font-revista text-[22px] leading-none">{String(hoje.getMonth() + 1).padStart(2, "0")}</span>
       </span>
-      <span aria-hidden className="text-[18px] text-cinza">›</span>
+      <span className="relative min-w-0 flex-1">
+        <span className="block font-revista text-[24px] leading-tight text-bordo italic lg:text-[28px]">diário literário.</span>
+        <span className="mt-0.5 block text-[13px] text-ameixa">Suas edições mensais, com capas, números e trechos.</span>
+        <span className="mt-1 block text-[12px] text-tinta-suave">{faltam ? `A edição de ${mes} abre em ${faltam} ${faltam === 1 ? "dia" : "dias"}.` : `A edição de ${mes} abre hoje.`}</span>
+      </span>
+      <span className="relative flex-none text-[13px] font-semibold text-bordo group-hover:underline">ver edições →</span>
     </Link>
   );
 }

@@ -106,19 +106,29 @@ const ehEscura = (hex: string) => {
   return ((n >> 16) * 299 + ((n >> 8) & 255) * 587 + (n & 255) * 114) / 1000 < 140;
 };
 
-/** capas: uma ou várias (mês), ajustadas ao espaço */
-function Capas({ c, largura, girar = 0, sombra = true }: { c: Conteudo; largura: number; girar?: number; sombra?: boolean }) {
-  if (c.livros?.length) {
-    const ls = c.livros.slice(0, 6);
-    const w = ls.length > 3 ? largura * 0.42 : ls.length > 1 ? largura * 0.55 : largura;
-    return (
-      <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 6, maxWidth: largura * 1.6 }}>
-        {ls.map((l, i) => (
-          <Capa key={l.id} l={l} largura={Math.round(w)} girar={ls.length > 1 ? [-4, 3, -2, 4, -3, 2][i] : girar} sombra={sombra} />
-        ))}
-      </div>
-    );
-  }
+/** capas do mês: uma grade arrumada que ocupa a largura toda (com "+N" quando sobram) */
+function CapasDoMes({ livros, largura, formato, cor }: { livros: LivroSalvo[]; largura: number; formato: Formato; cor: string }) {
+  const max = formato === "story" ? 6 : formato === "vertical" ? 4 : 3;
+  const mostrar = livros.slice(0, livros.length > max ? max - 1 : max);
+  const resto = livros.length - mostrar.length;
+  const colunas = mostrar.length + (resto ? 1 : 0) <= 4 && formato !== "story" ? Math.max(2, mostrar.length + (resto ? 1 : 0)) : 3;
+  const gap = 10;
+  const w = Math.floor((largura - gap * (colunas - 1)) / colunas);
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: `repeat(${colunas}, ${w}px)`, gap, justifyContent: "center" }}>
+      {mostrar.map((l, i) => (
+        <Capa key={l.id} l={l} largura={w} girar={[-2, 1.5, -1, 2, -1.5, 1][i % 6]} />
+      ))}
+      {resto ? (
+        <div style={{ width: w, aspectRatio: "2 / 3", border: `1px dashed ${cor}`, borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: serif, fontStyle: "italic", fontSize: 22, color: cor }}>+{resto}</div>
+      ) : null}
+    </div>
+  );
+}
+
+/** capa de um livro (ou, no mês, a grade de capas) */
+function Capas({ c, largura, girar = 0, sombra = true, formato = "story", cor = "#692536" }: { c: Conteudo; largura: number; girar?: number; sombra?: boolean; formato?: Formato; cor?: string }) {
+  if (c.livros?.length) return <CapasDoMes livros={c.livros} largura={308} formato={formato} cor={cor} />;
   return c.livro ? <Capa l={c.livro} largura={largura} girar={girar} sombra={sombra} /> : null;
 }
 
@@ -189,6 +199,11 @@ const Editorial = forwardRef<HTMLDivElement, Props>(function Editorial({ c, form
         <span>nº {new Date().getFullYear()}</span>
       </div>
       <p style={{ fontFamily: serif, fontStyle: "italic", fontSize: curto ? 26 : 34, lineHeight: 1, color: p.destaque, marginTop: curto ? 12 : 22, ...clamp(2) }}>{c.chamada}</p>
+      {c.livros?.length ? (
+        <div style={{ flex: 1, minHeight: 0, display: "flex", alignItems: "center", justifyContent: "center", marginTop: curto ? 10 : 18 }}>
+          {c.mostrarCapa ? <Capas c={c} largura={0} formato={formato} cor={p.destaque} /> : null}
+        </div>
+      ) : (
       <div style={{ display: "flex", gap: 16, marginTop: curto ? 14 : 24, flex: 1, minHeight: 0, alignItems: formato === "story" ? "flex-start" : "center" }}>
         {c.mostrarCapa ? (
           <div style={{ flex: "none" }}>
@@ -203,6 +218,7 @@ const Editorial = forwardRef<HTMLDivElement, Props>(function Editorial({ c, form
           {formato !== "quadrado" ? <Trecho c={c} cor={p.texto} suave={p.suave} linhas={formato === "story" ? 6 : 3} /> : null}
         </div>
       </div>
+      )}
       <Dados c={c} cor={p.texto} suave={p.suave} fio={fio} />
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 10 }}>
         <span style={{ fontSize: 8, color: p.suave, letterSpacing: ".14em", textTransform: "uppercase" }}>{c.leitor ? `@${c.leitor}` : ""}</span>
@@ -225,7 +241,7 @@ const ExLibris = forwardRef<HTMLDivElement, Props>(function ExLibris({ c, format
         <span style={{ color: p.destaque, fontSize: 10, letterSpacing: 6, margin: "6px 0" }}>✦ ✦ ✦</span>
         {c.mostrarCapa ? (
           <div style={{ padding: 6, border: `1px solid ${p.destaque}`, borderRadius: 4, marginTop: 4 }}>
-            <Capas c={c} largura={formato === "story" ? 132 : curto ? 74 : 96} sombra={false} />
+            {c.livros?.length ? <div style={{ width: 250 }}><CapasDoMes livros={c.livros} largura={250} formato={formato} cor={p.destaque} /></div> : <Capas c={c} largura={formato === "story" ? 132 : curto ? 74 : 96} sombra={false} />}
           </div>
         ) : null}
         {c.mostrarTitulo && c.livro ? <p style={{ fontFamily: serif, fontSize: tamTitulo(titulo, curto ? 17 : 21), lineHeight: 1.1, color: p.texto, marginTop: 12, ...clamp(3) }}>{titulo}</p> : null}
@@ -260,7 +276,7 @@ const Contracapa = forwardRef<HTMLDivElement, Props>(function Contracapa({ c, fo
       <div style={{ position: "relative", display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
         <p style={{ fontFamily: sans, fontWeight: 800, fontSize: curto ? 26 : 34, lineHeight: 0.92, letterSpacing: "-.02em", color: p.destaque, textTransform: "lowercase", maxWidth: 230, ...clamp(3) }}>{c.chamada}</p>
         <div style={{ display: "flex", alignItems: "flex-end", gap: 14, marginTop: "auto" }}>
-          {c.mostrarCapa ? <Capas c={c} largura={formato === "story" ? 160 : curto ? 98 : 120} girar={-4} /> : null}
+          {c.mostrarCapa ? c.livros?.length ? <div style={{ width: 308 }}><CapasDoMes livros={c.livros} largura={308} formato={formato} cor={p.destaque} /></div> : <Capas c={c} largura={formato === "story" ? 160 : curto ? 98 : 120} girar={-4} /> : null}
           <div style={{ minWidth: 0, flex: 1, paddingBottom: 4 }}>
             {c.mostrarTitulo && c.livro ? <p style={{ fontFamily: serif, fontSize: tamTitulo(titulo, curto ? 18 : 22), lineHeight: 1.05, color: ehEscura(p.bloco) ? "#F8F4EE" : p.texto, ...clamp(4) }}>{titulo}</p> : null}
             {c.mostrarAutor && c.livro ? <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: ".14em", textTransform: "uppercase", color: ehEscura(p.bloco) ? "#F8F4EE" : p.suave, marginTop: 4 }}>{c.livro.autor}</p> : null}
@@ -295,7 +311,7 @@ const Memorias = forwardRef<HTMLDivElement, Props>(function Memorias({ c, format
           <span aria-hidden style={{ position: "absolute", top: -8, left: "50%", width: 70, height: 16, marginLeft: -35, background: p.papel, opacity: 0.8, transform: "rotate(4deg)" }} />
           {c.mostrarCapa ? (
             <div style={{ background: "#EDE6DC", padding: 10, display: "flex", justifyContent: "center" }}>
-              <Capas c={c} largura={formato === "story" ? 150 : curto ? 86 : 112} sombra={false} />
+              {c.livros?.length ? <div style={{ width: 230 }}><CapasDoMes livros={c.livros} largura={230} formato={formato} cor={p.destaque} /></div> : <Capas c={c} largura={formato === "story" ? 150 : curto ? 86 : 112} sombra={false} />}
             </div>
           ) : (
             <div style={{ width: 160, height: 120, background: "#EDE6DC" }} />

@@ -13,6 +13,7 @@
  *  6. guarda o resultado em cache (memória + tabela descoberta_cache, 7 dias).
  * Nada da pessoa vai para o Google: só a pesquisa e títulos de livros.
  */
+import { obrasFixas } from "@/lib/curadoria-fixa";
 import { chaveDaObra, diversificar, ehEdicaoPt, naoLiterario, pontuar, tipoDaFonte, type TipoFonte } from "@/lib/descoberta-qualidade";
 
 type Fonte = { titulo: string; url: string; tipo: TipoFonte; dominio: string };
@@ -331,12 +332,17 @@ export async function executarDescoberta(corpo: Record<string, unknown>): Promis
   const contextual = consulta || criterios.length || parecido ? await pesquisaContextual(pergunta, ids) : null;
   const externa = !!contextual?.externa;
   diagnostico = contextual?.diagnostico ?? null;
+  // plano B sem IA: a curadoria fixa das características pedidas (conferida no catálogo como tudo)
+  const idsPedidos = criterios.map((c) => c.match(/\(([a-z0-9-]+),/)?.[1]).filter((x): x is string => !!x);
+  const fixas = !contextual?.candidatos.length ? obrasFixas(idsPedidos) : [];
+  if (fixas.length) avisos.push("A curadoria automática está indisponível agora: mostramos uma seleção editorial fixa para essas características, conferida no catálogo.");
   // elegibilidade: candidato da pesquisa só entra com pelo menos uma página real que o recomende
   const comEvidencia = (contextual?.candidatos ?? []).filter((c) => c.fontes.length || !externa);
   medidas.semEvidencia = (contextual?.candidatos.length ?? 0) - comEvidencia.length;
   const candidatos: Candidato[] = [
     ...sementes.map((s) => ({ ...s, porque: "", caracteristicas: [], fontes: [] })),
     ...comEvidencia,
+    ...fixas.map((s) => ({ ...s, porque: "", caracteristicas: [], fontes: [] })),
   ];
   medidas.candidatos = candidatos.length;
 
