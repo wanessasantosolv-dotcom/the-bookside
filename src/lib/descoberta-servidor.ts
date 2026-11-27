@@ -300,11 +300,27 @@ async function pesquisaContextual(pergunta: string, ids: Set<string>): Promise<{
 
 /* ───────── Groq (IA gratuita) e Tavily (busca na internet) ───────── */
 
+/**
+ * Os modelos de texto disponíveis na conta do Groq (a lista muda com o tempo):
+ * pergunta à própria API e prefere os maiores de uso geral.
+ */
+let modelosGroq: { em: number; lista: string[] } | null = null;
+export async function modelosDoGroq(chave: string): Promise<string[]> {
+  if (modelosGroq && Date.now() - modelosGroq.em < 36e5) return modelosGroq.lista;
+  const r = await fetch("https://api.groq.com/openai/v1/models", { headers: { authorization: `Bearer ${chave}` }, signal: AbortSignal.timeout(8000) }).catch(() => null);
+  const d = r?.ok ? ((await r.json().catch(() => ({}))) as { data?: { id: string; active?: boolean }[] }) : {};
+  const ids = (d.data ?? []).filter((m) => m.active !== false).map((m) => m.id).filter((id) => !/whisper|tts|guard|embed|vision|audio|orpheus|playai|compound/i.test(id));
+  const peso = (id: string) => (/gpt-oss-120b/.test(id) ? 0 : /llama-4-maverick|kimi|qwen3-32b|70b/.test(id) ? 1 : /llama-4-scout|gpt-oss-20b/.test(id) ? 2 : /8b|instant/.test(id) ? 4 : 3);
+  const lista = ids.sort((a, b) => peso(a) - peso(b)).slice(0, 4);
+  modelosGroq = { em: Date.now(), lista };
+  return lista;
+}
+
 /** pede JSON a uma IA: Groq primeiro (gratuito), depois Gemini (se houver cota) */
 async function iaJson(sistema: string, pergunta: string): Promise<{ json: { livros?: Record<string, unknown>[] }; modelo: string } | null> {
   const groq = process.env.GROQ_API_KEY;
   if (groq) {
-    for (const modelo of [process.env.GROQ_MODEL, "llama-3.3-70b-versatile", "llama-3.1-8b-instant"].filter((m, i, a): m is string => !!m && a.indexOf(m) === i)) {
+    for (const modelo of [process.env.GROQ_MODEL, ...(await modelosDoGroq(groq))].filter((m, i, a): m is string => !!m && a.indexOf(m) === i)) {
       const r = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
         headers: { "content-type": "application/json", authorization: `Bearer ${groq}` },

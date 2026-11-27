@@ -1,3 +1,5 @@
+import { modelosDoGroq } from "@/lib/descoberta-servidor";
+
 /**
  * Saúde da descoberta (sem dados de ninguém): diz se as chaves existem e como
  * o Gemini (com e sem busca do Google) e o Google Books estão respondendo.
@@ -47,9 +49,10 @@ export async function GET() {
         .then(async (r) => ({ ok: r.ok, status: r.status, resultados: r.ok ? ((await r.json()) as { results?: unknown[] }).results?.length ?? 0 : 0 }))
         .catch((e: Error) => ({ ok: false, status: 0, erro: e.message }))
     : { ok: false, motivo: "sem TAVILY_API_KEY" };
+  const disponiveis = process.env.GROQ_API_KEY ? await modelosDoGroq(process.env.GROQ_API_KEY) : [];
   const groq = process.env.GROQ_API_KEY
-    ? await fetch("https://api.groq.com/openai/v1/chat/completions", { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${process.env.GROQ_API_KEY}` }, body: JSON.stringify({ model: process.env.GROQ_MODEL || "llama-3.3-70b-versatile", messages: [{ role: "user", content: "Responda só: ok" }], max_tokens: 5 }), signal: AbortSignal.timeout(15000) })
-        .then(async (r) => ({ ok: r.ok, status: r.status, amostra: (await r.text()).slice(0, 120) }))
+    ? await fetch("https://api.groq.com/openai/v1/chat/completions", { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${process.env.GROQ_API_KEY}` }, body: JSON.stringify({ model: process.env.GROQ_MODEL || disponiveis[0], messages: [{ role: "user", content: "Responda só: ok" }], max_tokens: 5 }), signal: AbortSignal.timeout(15000) })
+        .then(async (r) => ({ ok: r.ok, status: r.status, modelo: process.env.GROQ_MODEL || disponiveis[0], disponiveis, amostra: (await r.text()).slice(0, 120) }))
         .catch((e: Error) => ({ ok: false, status: 0, erro: e.message }))
     : { ok: false, motivo: "sem GROQ_API_KEY" };
   const valor = { modelo, geminiComBusca: comBusca, geminiSemBusca: semBusca, tavily, groq, googleBooks: livros };
