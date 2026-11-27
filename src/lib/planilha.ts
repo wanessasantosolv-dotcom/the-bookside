@@ -6,7 +6,7 @@
  * O .xlsx é um zip com XML dentro: lemos o índice do zip, abrimos as partes
  * com o DecompressionStream do navegador e o XML com o DOMParser.
  */
-import { lerArquivo, lerData, lerLista, type ItemImport } from "@/lib/importar";
+import { dataDoExcel, lerArquivo, lerDataSolta, lerLista, ordemDaColuna, type ItemImport, type OrdemData } from "@/lib/importar";
 import type { FormatoLivro, Reacao } from "@/lib/perfil-store";
 
 // ───────── zip mínimo ─────────
@@ -152,13 +152,6 @@ export async function lerXlsx(buffer: ArrayBuffer): Promise<string[][]> {
   return linhas;
 }
 
-/** número de série do Excel (dias desde 30/12/1899) → AAAA-MM-DD */
-function dataDoExcel(n: number) {
-  if (!Number.isFinite(n) || n < 1 || n > 80_000) return undefined;
-  const d = new Date(Date.UTC(1899, 11, 30) + Math.round(n) * 86_400_000);
-  return d.toISOString().slice(0, 10);
-}
-
 // ───────── csv ─────────
 
 /** CSV/TSV com aspas (o separador é adivinhado: vírgula, ponto e vírgula ou tab). */
@@ -213,8 +206,8 @@ const sem = (t: string) =>
 const colunas: Record<string, string[]> = {
   titulo: ["titulo", "title", "livro", "nome", "obra", "book", "book title", "nome do livro", "titulo do livro", "name"],
   autor: ["autor", "autora", "autoria", "author", "autores", "authors", "escritor", "escritora", "author name", "nome do autor", "creator"],
-  lidoEm: ["data", "lido em", "terminei", "terminei em", "data de leitura", "date read", "data lido", "data de termino", "fim", "termino", "lido", "last date read", "dates read", "data leitura", "dt leitura", "date finished", "finished", "read at", "data fim", "data de conclusao", "concluido em"],
-  iniciadoEm: ["comecei", "comecei em", "inicio", "data de inicio", "date started", "iniciado em", "started", "data inicio", "dt inicio"],
+  lidoEm: ["data", "lido em", "lidoem", "lida em", "read date", "data da leitura", "finished on", "finished at", "date completed", "completed", "terminei", "terminei em", "data de leitura", "date read", "data lido", "data de termino", "fim", "termino", "lido", "last date read", "dates read", "data leitura", "dt leitura", "date finished", "finished", "read at", "data fim", "data de conclusao", "concluido em"],
+  iniciadoEm: ["comecei", "comecei em", "iniciadoem", "iniciado", "started on", "started at", "start date", "data de inicio da leitura", "inicio", "data de inicio", "date started", "iniciado em", "started", "data inicio", "dt inicio"],
   nota: ["nota", "my rating", "rating", "estrelas", "avaliacao", "minha nota", "star rating", "stars", "minha avaliacao", "ranking", "score"],
   paginas: ["paginas", "pages", "number of pages", "n paginas", "num paginas", "qtd paginas", "page count", "num pages", "numero de paginas"],
   resenha: ["resenha", "my review", "review", "comentario", "o que achei", "opiniao", "notes", "anotacoes"],
@@ -237,77 +230,62 @@ function acharColunas(cabecalho: string[]) {
   if (idx.lidoEm === undefined) {
     const i = cabecalho.findIndex((h, k) => {
       const n = sem(h);
-      return !Object.values(idx).includes(k) && /\b(data|date|termin|lido|lida|read|finish|conclu|fim)\b|termin|conclu/.test(n) && !/inicio|start|comec|added|adicion|public|lancamento|nasc|criad|edic/.test(n);
+      return !Object.values(idx).includes(k) && /\b(data|date|termin|lido|lida|read|finish|conclu|fim)\b|termin|conclu/.test(n) && !naoEhLeitura.test(n);
     });
     if (i >= 0) idx.lidoEm = i;
   }
   return idx;
 }
 
-/** sem coluna de data reconhecida: usa a coluna em que quase todos os valores são datas */
-function colunaDeDatas(corpo: string[][], usadas: number[]) {
-  const amostra = corpo.slice(0, 40);
-  if (!amostra.length) return undefined;
-  const largura = Math.max(...amostra.map((l) => l.length));
+/** colunas de data que NÃO são a data de leitura (adicionado, publicado, nascimento…) */
+const naoEhLeitura = /inicio|inicia|start|comec|added|adicion|public|lancamento|nasc|criad|creat|edic|modif|updat|atualiz|import|compr|purchas|birth|year|ano|due|prazo/;
+
+/** quantos valores da coluna são datas de verdade */
+function taxaDeDatas(corpo: string[][], i: number) {
+  const vals = corpo.slice(0, 60).map((l) => l[i]?.trim()).filter(Boolean) as string[];
+  if (!vals.length) return { vals: 0, datas: 0 };
+  return { vals: vals.length, datas: vals.filter((v) => lerDataSolta(v)).length };
+}
+
+/** sem coluna de data reconhecida: usa a coluna em que quase todos os valores são datas (e cujo nome não é de outra data) */
+function colunaDeDatas(cabecalho: string[], corpo: string[][], usadas: number[]) {
+  if (!corpo.length) return undefined;
+  const largura = Math.max(cabecalho.length, ...corpo.slice(0, 60).map((l) => l.length));
   let melhor: { i: number; n: number } | undefined;
   for (let i = 0; i < largura; i++) {
-    if (usadas.includes(i)) continue;
-    const vals = amostra.map((l) => l[i]?.trim()).filter(Boolean);
-    if (vals.length < Math.max(1, amostra.length * 0.3)) continue;
-    const n = vals.filter((v) => /\d/.test(v!) && lerDataSolta(v) && !/^\d{1,4}$/.test(v!)).length;
-    if (n >= vals.length * 0.7 && (!melhor || n > melhor.n)) melhor = { i, n };
+    if (usadas.includes(i) || naoEhLeitura.test(sem(cabecalho[i] ?? ""))) continue;
+    const { vals, datas } = taxaDeDatas(corpo, i);
+    if (vals < Math.max(1, Math.min(60, corpo.length) * 0.3)) continue;
+    if (datas >= vals * 0.7 && (!melhor || datas > melhor.n)) melhor = { i, n: datas };
   }
   return melhor?.i;
 }
 
-const MESES_NOME: Record<string, number> = {
-  jan: 1, janeiro: 1, january: 1, fev: 2, fevereiro: 2, feb: 2, february: 2, mar: 3, marco: 3, march: 3,
-  abr: 4, abril: 4, apr: 4, april: 4, mai: 5, maio: 5, may: 5, jun: 6, junho: 6, june: 6, jul: 7, julho: 7, july: 7,
-  ago: 8, agosto: 8, aug: 8, august: 8, set: 9, setembro: 9, sep: 9, sept: 9, september: 9, out: 10, outubro: 10, oct: 10, october: 10,
-  nov: 11, novembro: 11, november: 11, dez: 12, dezembro: 12, dec: 12, december: 12,
-};
-
-/** datas escritas de vários jeitos → AAAA-MM-DD */
-export function lerDataSolta(v: string | undefined): string | undefined {
-  if (!v) return undefined;
-  // "2024/03/01-2024/03/20" (intervalo do storygraph): fica com a última data
-  const iso = v.match(/\d{4}[-/.]\d{1,2}[-/.]\d{1,2}/g);
-  const partes = iso && iso.length > 1 ? iso : v.split(/\s+[-–]\s+/);
-  const t = partes[partes.length - 1].trim().replace(/[T\s]\d{1,2}:\d{2}.*$/, "");
-  let m = t.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/);
-  if (m) return lerData(m[3], m[2], m[1]);
-  m = t.match(/^(\d{4})(\d{2})(\d{2})$/);
-  if (m) return lerData(m[3], m[2], m[1]);
-  m = t.match(/^(\d{1,2})[-/.](\d{1,2})(?:[-/.](\d{2,4}))?$/);
-  if (m) {
-    // 05/14/2024 (formato americano): o "mês" passa de 12, então troca
-    if (Number(m[2]) > 12 && Number(m[1]) <= 12) return lerData(m[2], m[1], m[3]);
-    return lerData(m[1], m[2], m[3]);
+/** a escala das notas da coluna: 5, 10 ou 100 (uma nota 4 numa coluna de 0 a 10 é 2 estrelas) */
+function escalaDaColuna(valores: (string | undefined)[]) {
+  let max = 0;
+  for (const v of valores) {
+    if (!v || /★/.test(v)) continue;
+    const m = v.replace(",", ".").match(/^\s*(\d+(?:\.\d+)?)\s*(?:\/\s*(\d+))?\s*$/);
+    if (!m) continue;
+    if (m[2]) return Number(m[2]);
+    max = Math.max(max, Number(m[1]));
   }
-  if (/^\d{5}(\.\d+)?$/.test(t)) return dataDoExcel(Number(t));
-  // "14 de maio de 2024", "14 mai 2024", "May 14, 2024", "maio de 2024"
-  const n = sem(t);
-  m = n.match(/^(\d{1,2}) (?:de )?([a-z]+)(?: (?:de )?(\d{2,4}))?$/);
-  if (m && MESES_NOME[m[2]]) return lerData(m[1], String(MESES_NOME[m[2]]), m[3]);
-  m = n.match(/^([a-z]+) (\d{1,2}) (\d{4})$/);
-  if (m && MESES_NOME[m[1]]) return lerData(m[2], String(MESES_NOME[m[1]]), m[3]);
-  m = n.match(/^([a-z]+) (?:de )?(\d{4})$/);
-  if (m && MESES_NOME[m[1]]) return lerData("1", String(MESES_NOME[m[1]]), m[2]);
-  // último recurso: o próprio navegador entende (ex.: "Tue May 14 2024")
-  const d = new Date(v);
-  if (!Number.isNaN(+d) && d.getFullYear() > 1900 && d.getFullYear() < 2200) return d.toISOString().slice(0, 10);
-  return undefined;
+  return max > 10 ? 100 : max > 5 ? 10 : 5;
 }
 
-function lerNotaSolta(v: string | undefined) {
+function lerNotaSolta(v: string | undefined, escala = 5) {
   if (!v) return undefined;
   const cheias = (v.match(/★/g) ?? []).length;
   if (cheias) return Math.min(5, cheias + (/½/.test(v) ? 0.5 : 0));
-  const n = Number(v.replace(",", ".").replace(/\/\s*5$/, ""));
-  if (!Number.isFinite(n) || n <= 0) return undefined;
-  // notas de 0 a 10 viram 0 a 5
-  const em5 = n > 5 && n <= 10 ? n / 2 : n;
-  return em5 <= 5 ? Math.round(em5 * 2) / 2 : undefined;
+  const m = v.replace(",", ".").match(/^\s*(\d+(?:\.\d+)?)\s*(?:\/\s*(\d+))?\s*$/);
+  if (!m) return undefined;
+  const n = Number(m[1]);
+  const base = m[2] ? Number(m[2]) : escala;
+  if (!Number.isFinite(n) || n <= 0 || !base || n > base) return undefined;
+  const em5 = (n / base) * 5;
+  // meia estrela mais próxima (4,25 do storygraph vira 4,5; nunca 0)
+  return Math.max(0.5, Math.round(em5 * 2) / 2);
 }
 
 // a ordem importa: "não gostei" antes de "gostei"
@@ -345,17 +323,32 @@ export function planilhaParaItens(linhas: string[][]): ItemImport[] {
     const c = acharColunas(l);
     return c.titulo !== undefined;
   });
+  const cabecalho = iCab >= 0 ? linhas[iCab] : [];
   const idx =
     iCab >= 0
-      ? acharColunas(linhas[iCab])
+      ? acharColunas(cabecalho)
       : { titulo: 0, autor: 1, lidoEm: 2, nota: 3 };
   const corpo = iCab >= 0 ? linhas.slice(iCab + 1) : linhas;
-  if (iCab >= 0 && idx.lidoEm === undefined) {
-    const i = colunaDeDatas(corpo, Object.values(idx) as number[]);
-    if (i !== undefined) idx.lidoEm = i;
+  if (iCab >= 0) {
+    // a coluna de leitura achada pelo nome precisa ter datas de verdade ("lido: sim" não serve)
+    if (idx.lidoEm !== undefined) {
+      const { vals, datas } = taxaDeDatas(corpo, idx.lidoEm);
+      if (vals && datas < vals * 0.3) idx.lidoEm = undefined;
+    }
+    if (idx.lidoEm === undefined) {
+      const i = colunaDeDatas(cabecalho, corpo, Object.values(idx).filter((x): x is number => x !== undefined));
+      if (i !== undefined) idx.lidoEm = i;
+    }
   }
   const de = (l: string[], c: keyof typeof colunas) =>
     idx[c] !== undefined ? l[idx[c]!]?.trim() || undefined : undefined;
+
+  // decisões por coluna inteira, não linha a linha: a ordem dia/mês e a escala das notas
+  const ingles = cabecalho.some((h) => /\b(date|read|title|rating)\b/.test(sem(h)));
+  const padrao: OrdemData = ingles ? "md" : "dm";
+  const ordemLido = ordemDaColuna(corpo.map((l) => de(l, "lidoEm")), padrao);
+  const ordemInicio = ordemDaColuna(corpo.map((l) => de(l, "iniciadoEm")), ordemLido);
+  const escala = escalaDaColuna(corpo.map((l) => de(l, "nota")));
 
   const itens: ItemImport[] = [];
   for (const l of corpo) {
@@ -368,10 +361,10 @@ export function planilhaParaItens(linhas: string[][]): ItemImport[] {
     itens.push({
       titulo: titulo.replace(/\s*\(([^)]*#\d+[^)]*)\)\s*$/, "").slice(0, 200),
       autor: de(l, "autor")?.slice(0, 200),
-      lidoEm: lerDataSolta(de(l, "lidoEm")),
-      iniciadoEm: lerDataSolta(de(l, "iniciadoEm")),
+      lidoEm: lerDataSolta(de(l, "lidoEm"), ordemLido),
+      iniciadoEm: lerDataSolta(de(l, "iniciadoEm"), ordemInicio),
       paginas: paginas > 0 && paginas < 20000 ? paginas : undefined,
-      nota: lerNotaSolta(de(l, "nota")),
+      nota: lerNotaSolta(de(l, "nota"), escala),
       resenha: de(l, "resenha")?.replace(/<br\s*\/?>/gi, "\n").slice(0, 4000),
       personagem: de(l, "personagem")?.slice(0, 120),
       citacao: de(l, "citacao")?.slice(0, 1000),
@@ -443,7 +436,25 @@ export function lerTextoQualquer(conteudo: string): ItemImport[] {
       } catch {
         nossos = [];
       }
-      return nossos.length ? nossos : planilhaParaItens(jsonParaLinhas(bruto));
+      const genericos = planilhaParaItens(jsonParaLinhas(bruto));
+      if (!nossos.length) return genericos;
+      // json no nosso formato, mas com datas/notas escritas de outro jeito ou em outros campos:
+      // completa o que faltou com a leitura genérica do mesmo livro
+      const porTitulo = new Map(genericos.map((g) => [sem(g.titulo), g]));
+      return nossos.map((n) => {
+        const g = porTitulo.get(sem(n.titulo));
+        if (!g) return n;
+        return {
+          ...n,
+          autor: n.autor ?? g.autor,
+          // a leitura genérica decide dia/mês olhando a coluna inteira
+          lidoEm: g.lidoEm ?? n.lidoEm,
+          iniciadoEm: g.iniciadoEm ?? n.iniciadoEm,
+          nota: n.nota ?? g.nota,
+          paginas: n.paginas ?? g.paginas,
+          resenha: n.resenha ?? g.resenha,
+        };
+      });
     }
   }
   // parece planilha? (cabeçalho com título reconhecido)

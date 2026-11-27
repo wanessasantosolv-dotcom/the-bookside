@@ -57,9 +57,112 @@ export function lerData(d: string, m: string, a?: string): string | undefined {
   const dia = Number(d);
   const mes = Number(m);
   if (!(dia >= 1 && dia <= 31 && mes >= 1 && mes <= 12)) return undefined;
-  let ano = a ? Number(a.length === 2 ? `20${a}` : a) : new Date().getFullYear();
-  if (!a && new Date(ano, mes - 1, dia) > new Date()) ano -= 1;
+  let ano: number;
+  if (!a) {
+    ano = new Date().getFullYear();
+    if (new Date(ano, mes - 1, dia) > new Date()) ano -= 1;
+  } else if (a.length === 2) {
+    // "98" é 1998; "24" é 2024 (o que passar do ano que vem vira século passado)
+    const yy = Number(a);
+    ano = 2000 + yy > new Date().getFullYear() + 1 ? 1900 + yy : 2000 + yy;
+  } else ano = Number(a);
+  if (!(ano >= 1000 && ano <= 2200)) return undefined;
+  // 31/02 não existe: recusa em vez de inventar outro dia
+  const teste = new Date(Date.UTC(ano, mes - 1, dia));
+  if (teste.getUTCMonth() !== mes - 1) return undefined;
   return `${ano}-${dois(mes)}-${dois(dia)}`;
+}
+
+/** número de série do Excel (dias desde 30/12/1899) → AAAA-MM-DD */
+export function dataDoExcel(n: number) {
+  if (!Number.isFinite(n) || n < 1 || n > 80_000) return undefined;
+  const d = new Date(Date.UTC(1899, 11, 30) + Math.round(n) * 86_400_000);
+  return d.toISOString().slice(0, 10);
+}
+
+const semAcento = (t: string) =>
+  t
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+
+const MESES_NOME: Record<string, number> = {
+  jan: 1, janeiro: 1, january: 1, fev: 2, fevereiro: 2, feb: 2, february: 2, mar: 3, marco: 3, march: 3,
+  abr: 4, abril: 4, apr: 4, april: 4, mai: 5, maio: 5, may: 5, jun: 6, junho: 6, june: 6, jul: 7, julho: 7, july: 7,
+  ago: 8, agosto: 8, aug: 8, august: 8, set: 9, setembro: 9, sep: 9, sept: 9, september: 9, out: 10, outubro: 10, oct: 10, october: 10,
+  nov: 11, novembro: 11, november: 11, dez: 12, dezembro: 12, dec: 12, december: 12,
+};
+const DIAS_SEMANA = /^(seg|ter|qua|qui|sex|sab|dom|mon|tue|wed|thu|fri|sat|sun)[a-z]*\s+/;
+
+/** dia/mês ("dm") ou mês/dia ("md") para datas tipo 05/03/2024 */
+export type OrdemData = "dm" | "md";
+
+/**
+ * Datas escritas de vários jeitos → AAAA-MM-DD, sempre o dia escrito no
+ * arquivo (sem converter fuso). Só aceita o que é claramente uma data:
+ * um ano sozinho ("2016"), um número solto ou "sim" não viram 1º de janeiro.
+ */
+export function lerDataSolta(v: string | number | undefined | null, ordem: OrdemData = "dm"): string | undefined {
+  if (v === undefined || v === null || v === "") return undefined;
+  if (typeof v === "number") return dataDeNumero(v);
+  const bruto = v.trim();
+  if (!bruto) return undefined;
+  // "2024/03/01-2024/03/20" ou "2023/01/02, 2024/03/04" (storygraph): fica com a última data
+  const iso = bruto.match(/\d{4}[-/.]\d{1,2}[-/.]\d{1,2}/g);
+  if (iso && iso.length > 1) return lerDataSolta(iso[iso.length - 1], ordem);
+  const partes = bruto.split(/\s+[-–]\s+|\s*,\s*(?=\d{1,2}[-/.]\d{1,2}[-/.]\d)/);
+  const t = partes[partes.length - 1]
+    .trim()
+    .replace(/^(\d{4}[-/.]\d{1,2}[-/.]\d{1,2})[T\s].*$/, "$1")
+    .replace(/^(\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4})[T\s,]+\d{1,2}:\d{2}.*$/, "$1");
+  let m = t.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/);
+  if (m) return lerData(m[3], m[2], m[1]);
+  m = t.match(/^(\d{4})(\d{2})(\d{2})$/);
+  if (m) return lerData(m[3], m[2], m[1]);
+  m = t.match(/^(\d{1,2})[-/.](\d{1,2})(?:[-/.](\d{2}|\d{4}))?$/);
+  if (m) {
+    const a = Number(m[1]);
+    const b = Number(m[2]);
+    // quando um dos números passa de 12 não há dúvida; senão vale a ordem da coluna
+    if (b > 12 && a <= 12) return lerData(m[2], m[1], m[3]);
+    if (a > 12) return lerData(m[1], m[2], m[3]);
+    return ordem === "md" ? lerData(m[2], m[1], m[3]) : lerData(m[1], m[2], m[3]);
+  }
+  if (/^\d+(\.\d+)?$/.test(t)) return dataDeNumero(Number(t));
+  // "14 de maio de 2024", "14 mai 2024", "May 14, 2024", "maio de 2024", "Tue May 14 2024"
+  const n = semAcento(t).replace(DIAS_SEMANA, "").replace(/\b(\d{1,2})(st|nd|rd|th|o)\b/g, "$1");
+  m = n.match(/^(\d{1,2}) (?:de )?([a-z]+)\.?(?: (?:de )?(\d{4}))?$/);
+  if (m && MESES_NOME[m[2]]) return lerData(m[1], String(MESES_NOME[m[2]]), m[3]);
+  m = n.match(/^([a-z]+) (\d{1,2})(?: (\d{4}))?(?: \d{1,2} \d{2}.*)?$/);
+  if (m && MESES_NOME[m[1]]) return lerData(m[2], String(MESES_NOME[m[1]]), m[3]);
+  m = n.match(/^([a-z]+) (?:de )?(\d{4})$/);
+  if (m && MESES_NOME[m[1]]) return lerData("1", String(MESES_NOME[m[1]]), m[2]);
+  return undefined;
+}
+
+/** número: série do Excel (5 dígitos) ou timestamp em segundos/milissegundos */
+function dataDeNumero(n: number) {
+  if (!Number.isFinite(n)) return undefined;
+  if (n >= 10_000 && n <= 80_000) return dataDoExcel(n);
+  const ms = n > 1e11 && n < 1e14 ? n : n > 1e8 && n < 1e11 ? n * 1000 : NaN;
+  if (Number.isNaN(ms)) return undefined;
+  return new Date(ms).toISOString().slice(0, 10);
+}
+
+/** a ordem das datas de uma coluna inteira (05/03 é 5 de março ou 3 de maio?) */
+export function ordemDaColuna(valores: (string | undefined)[], padrao: OrdemData = "dm"): OrdemData {
+  let dm = 0;
+  let md = 0;
+  for (const v of valores) {
+    const m = v?.trim().match(/^(\d{1,2})[-/.](\d{1,2})(?:[-/.]\d{2,4})?(?:[T\s,].*)?$/);
+    if (!m) continue;
+    if (Number(m[1]) > 12) dm++;
+    else if (Number(m[2]) > 12) md++;
+  }
+  if (dm || md) return md > dm ? "md" : "dm";
+  return padrao;
 }
 
 /** Estrelas escritas: ★★★½, "3,5", "3.5/5", "nota 4". */
@@ -112,7 +215,7 @@ function numero(v: unknown, min: number, max: number) {
   return Number.isFinite(n) && n >= min && n <= max ? n : undefined;
 }
 function data(v: unknown) {
-  return typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : undefined;
+  return typeof v === "string" || typeof v === "number" ? lerDataSolta(v) : undefined;
 }
 
 const reacoesValidas: Reacao[] = ["favoritado", "adorei", "gostei", "neutro", "nao", "abandonei"];
