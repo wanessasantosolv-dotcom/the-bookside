@@ -1,5 +1,6 @@
 import { VigiaGeneros } from "@/components/VigiaGeneros";
 import Link from "next/link";
+import { BotaoMais } from "@/components/BotaoMais";
 import type { CSSProperties, ReactNode } from "react";
 import { ExigeConta } from "@/components/ExigeConta";
 import { abas, NavInferior, type Aba } from "@/components/NavInferior";
@@ -72,6 +73,7 @@ export function AppShell({
             <div className="lg:hidden">
               <NavInferior ativa={aba} />
             </div>
+            <BotaoMais />
           </>
         ) : null}
       </main>
