@@ -1,5 +1,6 @@
 "use client";
 
+import { LeituraCompleta } from "@/components/clube/LeituraCompleta";
 import { FeedDoClube } from "@/components/clube/FeedDoClube";
 import { CapaAuto } from "@/components/CapaAuto";
 import { PrateleiraMadeira } from "@/components/estantes/Biblioteca";
@@ -113,17 +114,7 @@ function LeituraAtual({
             </div>
           ) : null}
         </div>
-        <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
-          <Link
-            href={`/livro/${meu?.id ?? lendo.livro.id}/progresso`}
-            className="inline-flex min-h-11 items-center rounded-full bg-bordo px-5 text-[13px] font-semibold text-creme hover:bg-bordo-suave"
-          >
-            registrar leitura
-          </Link>
-          <Link href={`/clubes/${clubeId}/leitura`} className={linkSecao}>
-            ver leitura →
-          </Link>
-        </div>
+
       </div>
     </article>
   );
@@ -276,6 +267,12 @@ export default function ClubeInicioPage() {
         </div>
       ) : null}
       <LeituraAtual lendo={lendo} membros={membros} turma={turma} eu={eu} clubeId={clube.id} />
+      {/* atualizar minha leitura, impressões, fichas e pendências aqui mesmo (sem aba de leitura) */}
+      {i === 0 ? (
+        <div className="mt-8">
+          <LeituraCompleta embutida />
+        </div>
+      ) : null}
     </section>
   ) : (
     <section aria-label="leitura atual" className="rounded-[10px] bg-rosa-fundo px-5 py-6">
