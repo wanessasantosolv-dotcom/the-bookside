@@ -16,6 +16,8 @@ import type { FormatoLivro, LivroSalvo } from "@/lib/perfil-store";
 export type Termino = {
   /** ISO; sem data = a pessoa não lembra (ou não quer dizer) quando terminou */
   lidoEm?: string;
+  /** a pessoa sabe só o ano */
+  lidoSoAno?: boolean;
   nota?: number;
   formato?: FormatoLivro;
 };
@@ -24,6 +26,7 @@ export type Termino = {
 export function dadosDoTermino(t: Termino): Partial<LivroSalvo> {
   return {
     lidoEm: t.lidoEm,
+    lidoSoAno: t.lidoSoAno || undefined,
     ...(t.nota ? { nota: t.nota } : {}),
     ...(t.formato ? { formato: t.formato } : {}),
   };
@@ -53,6 +56,8 @@ export function PerguntaTermino({
   const hoje = diaLocal();
   const [dia, setDia] = useState(diaDaData(inicial) ?? hoje);
   const [semData, setSemData] = useState(false);
+  const [soAno, setSoAno] = useState(false);
+  const [ano, setAno] = useState(() => Number((diaDaData(inicial) ?? hoje).slice(0, 4)));
   const [nota, setNota] = useState(notaInicial ?? 0);
   const [formato, setFormato] = useState<FormatoLivro | undefined>(
     formatoInicial,
@@ -79,14 +84,16 @@ export function PerguntaTermino({
     </button>
   );
   const atalho = (valor: string, rotulo: string) =>
-    chip(!semData && dia === valor, rotulo, () => {
+    chip(!semData && !soAno && dia === valor, rotulo, () => {
       setSemData(false);
+      setSoAno(false);
       setDia(valor);
     });
 
   function confirmar() {
     onConfirmar({
-      lidoEm: semData || !dia ? undefined : dataDoDia(dia > hoje ? hoje : dia),
+      lidoEm: semData ? undefined : soAno ? new Date(`${ano}-01-01T12:00:00`).toISOString() : !dia ? undefined : dataDoDia(dia > hoje ? hoje : dia),
+      lidoSoAno: !semData && soAno,
       nota: nota || undefined,
       formato,
     });
@@ -119,22 +126,43 @@ export function PerguntaTermino({
         <div className="mt-4 flex flex-wrap gap-2">
           {atalho(hoje, "hoje")}
           {atalho(ontem(), "ontem")}
-          {chip(semData, "sem data", () => setSemData((v) => !v))}
+          {chip(soAno && !semData, "só sei o ano", () => {
+            setSemData(false);
+            setSoAno((v) => !v);
+          })}
+          {chip(semData, "sem data", () => {
+            setSoAno(false);
+            setSemData((v) => !v);
+          })}
         </div>
         {semData ? (
           <p className="mt-3 text-[12px] text-cinza">
             o livro entra nos lidos, mas não conta em nenhum mês nem na meta do
             ano. dá para pôr a data depois.
           </p>
-        ) : (
+        ) : soAno ? (
           <label className="mt-4 block">
+            <span className={rotuloCampo}>li em (ano)</span>
+            <input
+              type="number"
+              inputMode="numeric"
+              min={1900}
+              max={Number(hoje.slice(0, 4))}
+              value={ano}
+              onChange={(e) => setAno(Number(e.target.value) || ano)}
+              className={`${campo} min-w-0`}
+            />
+            <span className="mt-1.5 block text-[12px] text-cinza">conta no ano, mas não em nenhum mês.</span>
+          </label>
+        ) : (
+          <label className="mt-4 block min-w-0">
             <span className={rotuloCampo}>terminei em</span>
             <input
               type="date"
               value={dia}
               max={hoje}
               onChange={(e) => setDia(e.target.value)}
-              className={campo}
+              className={`${campo} block w-full max-w-full min-w-0 appearance-none`}
             />
           </label>
         )}

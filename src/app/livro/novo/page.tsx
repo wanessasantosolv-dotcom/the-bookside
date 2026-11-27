@@ -39,6 +39,9 @@ function Cadastro() {
   );
   const [status, setStatus] = useState<StatusLivro>("quero");
   const [lidoEm, setLidoEm] = useState(hoje());
+  // "só sei o ano" e "sem data"
+  const [quando, setQuando] = useState<"dia" | "ano" | "sem">("dia");
+  const [ano, setAno] = useState(new Date().getFullYear());
   const [nota, setNota] = useState(0);
   const [formato, setFormato] = useState<FormatoLivro | undefined>();
   const [erro, setErro] = useState<string | null>(null);
@@ -75,7 +78,8 @@ function Cadastro() {
         ...(status === "lendo" ? { iniciadoEm: agora } : {}),
         ...(status === "lido"
           ? {
-              lidoEm: new Date(`${lidoEm}T12:00:00`).toISOString(),
+              lidoEm: quando === "sem" ? undefined : new Date(quando === "ano" ? `${ano}-01-01T12:00:00` : `${lidoEm}T12:00:00`).toISOString(),
+              lidoSoAno: quando === "ano" || undefined,
               paginaAtual: l.paginas,
               nota: nota || undefined,
             }
@@ -129,17 +133,39 @@ function Cadastro() {
         ) : null}
 
         {status === "lido" ? (
-          <div className="grid grid-cols-2 gap-3">
-            <label className="block">
-              <span className={rotuloCampo}>terminei em</span>
-              <input
-                type="date"
-                value={lidoEm}
-                max={hoje()}
-                onChange={(e) => setLidoEm(e.target.value)}
-                className={campo}
-              />
-            </label>
+          <div className="space-y-4">
+            <div className="flex flex-wrap gap-2">
+              {(
+                [
+                  ["dia", "sei a data"],
+                  ["ano", "só sei o ano"],
+                  ["sem", "sem data"],
+                ] as const
+              ).map(([id, nome]) => (
+                <button key={id} type="button" aria-pressed={quando === id} onClick={() => setQuando(id)} className={pilula(quando === id)}>
+                  {nome}
+                </button>
+              ))}
+            </div>
+            {quando === "dia" ? (
+              <label className="block min-w-0">
+                <span className={rotuloCampo}>terminei em</span>
+                <input
+                  type="date"
+                  value={lidoEm}
+                  max={hoje()}
+                  onChange={(e) => setLidoEm(e.target.value)}
+                  className={`${campo} block w-full max-w-full min-w-0 appearance-none`}
+                />
+              </label>
+            ) : quando === "ano" ? (
+              <label className="block">
+                <span className={rotuloCampo}>li em (ano)</span>
+                <input type="number" inputMode="numeric" min={1900} max={new Date().getFullYear()} value={ano} onChange={(e) => setAno(Number(e.target.value) || ano)} className={campo} />
+              </label>
+            ) : (
+              <p className="text-[12px] text-cinza">o livro entra nos lidos sem contar em nenhum mês nem na meta. dá para pôr a data depois.</p>
+            )}
             <div>
               <p className={rotuloCampo}>sua nota</p>
               <EstrelasInput valor={nota} onMudar={setNota} rotulo="sua nota" />

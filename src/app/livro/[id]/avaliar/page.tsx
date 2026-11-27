@@ -154,7 +154,6 @@ function Marginalia({ livro }: { livro: LivroSalvo & { paginas?: number } }) {
 
   function validar() {
     const e: typeof erros = {};
-    if (!notaGeral && !r.reacao) e.nota = "dê uma nota ou escolha um veredito para salvar a ficha.";
     if (r.fim && r.fim > hoje) e.datas = "a data de conclusão não pode estar no futuro.";
     else if (r.inicio && r.inicio > hoje) e.datas = "a data de início não pode estar no futuro.";
     else if (r.inicio && r.fim && r.fim < r.inicio) e.datas = "a conclusão não pode ser antes do início.";
@@ -164,7 +163,7 @@ function Marginalia({ livro }: { livro: LivroSalvo & { paginas?: number } }) {
 
   function publicar() {
     if (!validar()) {
-      document.getElementById(erros.nota ? "t-avaliacao" : "t-leitura")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      document.getElementById("t-leitura")?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
     const agora = new Date().toISOString();

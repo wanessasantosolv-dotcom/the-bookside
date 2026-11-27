@@ -623,7 +623,7 @@ export function PerfilEditorial({
   }
 
   const botao = "inline-flex min-h-11 items-center rounded-full px-5 text-[14px] font-semibold";
-  const iconeCapa = "grid size-8 place-items-center rounded-full transition-colors hover:bg-[#6B0D24]/10";
+  const iconeCapa = "grid size-8 place-items-center rounded-full transition-colors hover:bg-bordo/10";
   const acoes = proprio ? (
     <div className="flex items-center gap-2">
       <Link href="/perfil/editar" className={`${botao} bg-[var(--acc)] text-[var(--papel)]`}>
@@ -669,17 +669,17 @@ export function PerfilEditorial({
               style={p.capaImagem ? { backgroundImage: `url("${p.capaImagem}")`, backgroundPosition: `center ${p.capaPosY ?? 50}%` } : undefined}
             >
               {/* ações discretas: uma pílula de ícones no canto da capa, longe da foto */}
-              <div className="absolute top-3 right-3 hidden items-center rounded-full bg-[#F9F5EE]/80 p-1 text-[#6B0D24] shadow-sm backdrop-blur-md sm:flex lg:top-4 lg:right-14">
+              <div className="absolute top-3 right-3 hidden items-center rounded-full bg-creme/85 p-1 text-bordo shadow-sm backdrop-blur-md sm:flex lg:top-4 lg:right-14">
                 {proprio ? (
                   <>
                     <Link href="/perfil/editar" aria-label="editar perfil" title="editar perfil" className={iconeCapa}>
                       <svg aria-hidden width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 20h4L19 9l-4-4L4 16v4zM14 6l4 4" /></svg>
                     </Link>
-                    <span aria-hidden className="h-4 w-px bg-[#6B0D24]/20" />
+                    <span aria-hidden className="h-4 w-px bg-bordo/25" />
                     <Link href="/perfil/configuracoes" aria-label="configurações" title="configurações" className={iconeCapa}>
                       <svg aria-hidden width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" /></svg>
                     </Link>
-                    <span aria-hidden className="h-4 w-px bg-[#6B0D24]/20" />
+                    <span aria-hidden className="h-4 w-px bg-bordo/25" />
                   </>
                 ) : null}
                 <button type="button" onClick={compartilhar} aria-label="compartilhar perfil" title="compartilhar perfil" className={iconeCapa}>

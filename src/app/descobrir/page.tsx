@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { CapaLivro } from "@/components/CapaLivro";
 import { useHidratado } from "@/components/PerfilHidratacao";
@@ -20,6 +20,7 @@ import {
   type Indicacao,
 } from "@/lib/indicacoes";
 import { nuvemPronta } from "@/lib/nuvem";
+import { estantesDasAmigas, nomeDe, type PessoaResumo } from "@/lib/social";
 import { usePerfil, type StatusLivro } from "@/lib/perfil-store";
 
 /**
@@ -150,6 +151,30 @@ function OQueAcharam({ livro }: { livro: Indicacao }) {
 
 /* ───────── uma por vez ───────── */
 
+/** quem eu sigo e já leu cada livro (pelo título), carregado uma vez */
+function useAmigasQueLeram() {
+  const [mapa, setMapa] = useState<Map<string, PessoaResumo[]>>(new Map());
+  useEffect(() => {
+    let vivo = true;
+    estantesDasAmigas()
+      .then((lista) => {
+        const m = new Map<string, PessoaResumo[]>();
+        for (const { pessoa, livros } of lista)
+          for (const l of livros)
+            if (l.status === "lido") {
+              const k = chaveTitulo(l.titulo);
+              m.set(k, [...(m.get(k) ?? []), pessoa]);
+            }
+        if (vivo) setMapa(m);
+      })
+      .catch(() => {});
+    return () => {
+      vivo = false;
+    };
+  }, []);
+  return mapa;
+}
+
 function UmaPorVez() {
   const guardarLivro = usePerfil((s) => s.guardarLivro);
   const queroLer = usePerfil(
@@ -185,6 +210,29 @@ function UmaPorVez() {
     ) ??
       naFila);
   const sinopse = useSinopse(livro);
+  const amigas = useAmigasQueLeram();
+  const leram = livro ? (amigas.get(chaveTitulo(livro.titulo)) ?? []) : [];
+  const [sinopseAberta, setSinopseAberta] = useState(false);
+  useEffect(() => setSinopseAberta(false), [livro?.id]);
+
+  // infinita: perto do fim da fila já busca outra leva e junta no fim (sem repetir)
+  const pedindo = useRef(false);
+  const levasVazias = useRef(0);
+  useEffect(() => {
+    if (!fila || pedindo.current || indicacoes.carregando) return;
+    if (indice >= fila.length - 2 && levasVazias.current < 3) {
+      pedindo.current = true;
+      indicacoes.maisUmaRodada();
+    }
+  }, [indice, fila, indicacoes]);
+  useEffect(() => {
+    if (!pedindo.current || indicacoes.carregando || !fila) return;
+    pedindo.current = false;
+    const vistos = new Set(fila.map((l) => chaveTitulo(l.titulo)));
+    const novos = indicacoes.lista.filter((l) => !vistos.has(chaveTitulo(l.titulo)));
+    levasVazias.current = novos.length ? 0 : levasVazias.current + 1;
+    if (novos.length) setFila((f) => [...(f ?? []), ...novos]);
+  }, [indicacoes.carregando, indicacoes.lista, fila]);
 
   function responder(status: StatusLivro | null, termino?: Termino) {
     if (!livro) return;
@@ -203,8 +251,8 @@ function UmaPorVez() {
   }
 
   function maisUmaRodada() {
-    setFila(null);
-    setIndice(0);
+    levasVazias.current = 0;
+    pedindo.current = true;
     indicacoes.maisUmaRodada();
   }
 
@@ -275,15 +323,42 @@ function UmaPorVez() {
               {livro.titulo}
             </p>
             <p className="mt-1 text-[11px] font-semibold tracking-[.1em] text-cinza uppercase">
-              {livro.autor}
+              <Link href={`/autor/${encodeURIComponent(livro.autor)}`} className="underline-offset-4 hover:text-bordo hover:underline">
+                {livro.autor}
+              </Link>
               {livro.ano ? ` · ${livro.ano}` : ""}
               {livro.paginas ? ` · ${livro.paginas} páginas` : ""}
             </p>
+            {leram.length ? (
+              <p className="mt-2 flex items-center justify-center gap-1.5 text-[11px] text-tinta-suave sm:justify-start">
+                <span className="flex -space-x-1.5">
+                  {leram.slice(0, 3).map((p) =>
+                    p.foto ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img key={p.id} src={p.foto} alt="" className="size-4 rounded-full border border-creme object-cover" />
+                    ) : (
+                      <span key={p.id} className="size-4 rounded-full border border-creme bg-rosa-claro" />
+                    ),
+                  )}
+                </span>
+                {leram.length === 1 ? `${nomeDe(leram[0])} leu` : `${nomeDe(leram[0])} e mais ${leram.length - 1} leram`}
+              </p>
+            ) : null}
             <OQueAcharam livro={livro} />
             {sinopse ? (
-              <p className="mt-3 line-clamp-6 text-[13px] leading-normal text-tinta-suave lg:line-clamp-[9] lg:text-[15px] lg:leading-[1.6]">
-                {sinopse}
-              </p>
+              <>
+                <p className={`mt-3 text-[13px] leading-normal text-tinta-suave lg:text-[15px] lg:leading-[1.6] ${sinopseAberta ? "" : "line-clamp-6 lg:line-clamp-[9]"}`}>
+                  {sinopse}
+                </p>
+                {sinopse.length > 280 ? (
+                  <button type="button" onClick={() => setSinopseAberta((v) => !v)} className="mt-1 min-h-9 self-center text-[12px] font-semibold text-bordo sm:self-start">
+                    {sinopseAberta ? "ver menos" : "ver mais"}
+                  </button>
+                ) : null}
+                <Link href={`/livro/${livro.id}`} className="self-center text-[12px] font-semibold text-cinza underline underline-offset-4 sm:self-start">
+                  ver a página do livro
+                </Link>
+              </>
             ) : null}
             <div className="mt-5 flex justify-center gap-7 sm:justify-start">
               <button
@@ -317,6 +392,14 @@ function UmaPorVez() {
               </button>
             </div>
           </div>
+        </div>
+      ) : pedindo.current || indicacoes.carregando ? (
+        <div className="mt-4 flex animate-pulse flex-col items-center gap-5 sm:flex-row sm:items-start lg:gap-10">
+          <span className="block aspect-[2/3] w-[160px] rounded-[4px] bg-linha lg:w-[260px]" />
+          <span className="w-full flex-1 space-y-3 pt-2">
+            <span className="block h-3 w-40 rounded bg-linha" />
+            <span className="block h-7 w-64 rounded bg-linha" />
+          </span>
         </div>
       ) : (
         <div className="py-6 text-center sm:text-left">
