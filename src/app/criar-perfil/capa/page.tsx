@@ -37,7 +37,7 @@ export default function CapaPage() {
             <label
               key={p}
               className={`relative block h-[84px] cursor-pointer rounded-md border bg-creme-quente p-2 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-bordo ${
-                marcado ? "border-bordo shadow-[0_0_0_1px_#6B0D24]" : "border-linha"
+                marcado ? "border-bordo shadow-[0_0_0_1px_#692536]" : "border-linha"
               }`}
             >
               <input

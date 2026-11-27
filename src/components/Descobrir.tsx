@@ -87,7 +87,7 @@ export function Descobrir({
       </Tela>
     );
 
-  const icone = (d: string, cor = "#2B1420") => (
+  const icone = (d: string, cor = "#38252C") => (
     <svg
       width="24"
       height="24"

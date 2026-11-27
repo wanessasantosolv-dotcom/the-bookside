@@ -272,7 +272,7 @@ export function MetaDeLeitura({ faixa }: { faixa?: boolean }) {
         aria-label={`meta de ${ano}: ${lidos} de ${meta} livros. ver jornada`}
       >
         <svg aria-hidden width="38" height="38" viewBox="0 0 38 38" className="flex-none -rotate-90">
-          <circle cx="19" cy="19" r={r} fill="none" stroke="var(--color-linha)" strokeWidth="3.5" />
+          <circle cx="19" cy="19" r={r} fill="none" stroke="var(--color-citrico)" strokeWidth="3.5" />
           <circle
             cx="19"
             cy="19"

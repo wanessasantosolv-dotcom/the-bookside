@@ -52,7 +52,7 @@ export function LendoJunto() {
                   <Link
                     key={p.id}
                     href={p.usuario ? `/u/${p.usuario}` : "#"}
-                    className="rounded-full ring-2 ring-[var(--papel,#F9F5EE)]"
+                    className="rounded-full ring-2 ring-[var(--papel,#F6F0E5)]"
                     aria-label={`${nomeDe(p)} também está lendo`}
                   >
                     <Avatar pessoa={p} tamanho={20} />

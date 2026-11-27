@@ -13,7 +13,7 @@ const PECAS = {
   amei: ["♥", "♥", "♡", "✦"],
   favorito: ["✦", "★", "✧"],
 };
-const CORES = ["#6B0D24", "#B75A6B", "#C9A46A", "#E8B4BF", "#6B7A5E"];
+const CORES = ["#692536", "#C27C8D", "#C9A46A", "#ECAABB", "#6B7A5E"];
 const EYEBROW = {
   livro: "terminei! ✦",
   meta: "meta do ano batida",

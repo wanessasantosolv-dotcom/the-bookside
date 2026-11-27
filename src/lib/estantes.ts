@@ -21,31 +21,31 @@ export const ESTANTES_FIXAS: EstanteInfo[] = [
     id: "lendo",
     nome: "lendo agora",
     status: "lendo",
-    etiqueta: { fundo: "#B75A6B", texto: "#FFFFFF" },
+    etiqueta: { fundo: "#C27C8D", texto: "#FFFFFF" },
   },
   {
     id: "lidos",
     nome: "lidos",
     status: "lido",
-    etiqueta: { fundo: "#6B0D24", texto: "#F9F5EE" },
+    etiqueta: { fundo: "#692536", texto: "#F6F0E5" },
   },
   {
     id: "quero-ler",
     nome: "quero ler",
     status: "quero",
-    etiqueta: { fundo: "#E8B4BF", texto: "#6B0D24" },
+    etiqueta: { fundo: "#ECAABB", texto: "#692536" },
   },
   {
     id: "pausados",
     nome: "pausados",
     status: "pausado",
-    etiqueta: { fundo: "#C9A46A", texto: "#2B1420" },
+    etiqueta: { fundo: "#C9A46A", texto: "#38252C" },
   },
   {
     id: "abandonados",
     nome: "abandonados",
     status: "abandonado",
-    etiqueta: { fundo: "#7A6A6E", texto: "#F9F5EE" },
+    etiqueta: { fundo: "#715F65", texto: "#F6F0E5" },
   },
 ];
 
@@ -56,7 +56,7 @@ export function todasAsEstantes(proprias: EstantePropria[]): EstanteInfo[] {
       id: p.id,
       nome: p.nome,
       propria: p,
-      etiqueta: { fundo: p.cor, texto: "#F9F5EE" },
+      etiqueta: { fundo: p.cor, texto: "#F6F0E5" },
     })),
   ];
 }

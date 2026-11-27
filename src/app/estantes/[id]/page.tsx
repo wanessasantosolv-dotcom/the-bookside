@@ -64,7 +64,7 @@ export default function EstanteAbertaPage() {
 
   if (!hidratado) return <AppShell aba="estantes">{null}</AppShell>;
   // além das estantes, "todos os livros" e "meus favoritos" também abrem aqui
-  const etiqueta = { fundo: "#6B0D24", texto: "#F9F5EE" };
+  const etiqueta = { fundo: "#692536", texto: "#F6F0E5" };
   const estante: EstanteInfo | undefined =
     id === "todos"
       ? { id: "todos", nome: "todos os livros", etiqueta }

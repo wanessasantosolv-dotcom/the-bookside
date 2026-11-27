@@ -43,9 +43,9 @@ export const arquetipos: Record<ArquetipoId, Arquetipo> = {
     explorar:
       "Thrillers curtos e aventuras de ritmo acelerado são ótimos caminhos, mas vale testar histórias mais contemplativas.",
     livros: [
-      { titulo: "Recursão", autor: "Blake Crouch", porque: "pra quem não consegue parar no capítulo", cor: "#6B0D24" },
-      { titulo: "Jogos Vorazes", autor: "Suzanne Collins", porque: "ritmo que não dá trégua", cor: "#2B1420" },
-      { titulo: "A Empregada", autor: "Freida McFadden", porque: "uma virada atrás da outra", cor: "#B75A6B" },
+      { titulo: "Recursão", autor: "Blake Crouch", porque: "pra quem não consegue parar no capítulo", cor: "#692536" },
+      { titulo: "Jogos Vorazes", autor: "Suzanne Collins", porque: "ritmo que não dá trégua", cor: "#38252C" },
+      { titulo: "A Empregada", autor: "Freida McFadden", porque: "uma virada atrás da outra", cor: "#C27C8D" },
     ],
     frase: { texto: "We are such stuff as dreams are made on.", autor: "William Shakespeare", obra: "A Tempestade" },
   },
@@ -58,8 +58,8 @@ export const arquetipos: Record<ArquetipoId, Arquetipo> = {
     revela: "Atenção aos detalhes, curiosidade e gosto por desafios.",
     explorar: "Mistérios clássicos e thrillers psicológicos são seu lar, mas um romance lento pode te surpreender.",
     livros: [
-      { titulo: "E não sobrou nenhum", autor: "Agatha Christie", porque: "o clássico que ensinou a desconfiar", cor: "#2B1420" },
-      { titulo: "Garota exemplar", autor: "Gillian Flynn", porque: "ninguém é quem parece", cor: "#4B0D1B" },
+      { titulo: "E não sobrou nenhum", autor: "Agatha Christie", porque: "o clássico que ensinou a desconfiar", cor: "#38252C" },
+      { titulo: "Garota exemplar", autor: "Gillian Flynn", porque: "ninguém é quem parece", cor: "#54202F" },
       { titulo: "A paciente silenciosa", autor: "Alex Michaelides", porque: "um final pra reler o livro todo", cor: "#6B7A5E" },
     ],
     frase: {
@@ -78,9 +78,9 @@ export const arquetipos: Record<ArquetipoId, Arquetipo> = {
     revela: "Empatia, intensidade e uma memória afetiva enorme para histórias.",
     explorar: "Romances e dramas são sua casa, mas uma boa aventura também pode partir seu coração do jeito certo.",
     livros: [
-      { titulo: "Orgulho e preconceito", autor: "Jane Austen", porque: "a tensão que atravessa séculos", cor: "#8E1D3D" },
-      { titulo: "Pessoas normais", autor: "Sally Rooney", porque: "um amor cheio de quase", cor: "#B75A6B" },
-      { titulo: "Como eu era antes de você", autor: "Jojo Moyes", porque: "pra chorar com gosto", cor: "#6B0D24" },
+      { titulo: "Orgulho e preconceito", autor: "Jane Austen", porque: "a tensão que atravessa séculos", cor: "#54202F" },
+      { titulo: "Pessoas normais", autor: "Sally Rooney", porque: "um amor cheio de quase", cor: "#C27C8D" },
+      { titulo: "Como eu era antes de você", autor: "Jojo Moyes", porque: "pra chorar com gosto", cor: "#692536" },
     ],
     frase: {
       texto: "Seja qual for a matéria de que nossas almas são feitas, a dele e a minha são iguais.",
@@ -99,8 +99,8 @@ export const arquetipos: Record<ArquetipoId, Arquetipo> = {
     explorar: "Fantasia é seu passaporte, mas realismo mágico pode ser uma viagem tão boa quanto.",
     livros: [
       { titulo: "O Hobbit", autor: "J. R. R. Tolkien", porque: "a primeira viagem de muitas", cor: "#6B7A5E" },
-      { titulo: "O nome do vento", autor: "Patrick Rothfuss", porque: "um mundo pra morar", cor: "#4B0D1B" },
-      { titulo: "A vida invisível de Addie LaRue", autor: "V. E. Schwab", porque: "trezentos anos de aventura", cor: "#2B1420" },
+      { titulo: "O nome do vento", autor: "Patrick Rothfuss", porque: "um mundo pra morar", cor: "#54202F" },
+      { titulo: "A vida invisível de Addie LaRue", autor: "V. E. Schwab", porque: "trezentos anos de aventura", cor: "#38252C" },
     ],
     frase: { texto: "Nem todos os que vagueiam estão perdidos.", autor: "J. R. R. Tolkien", obra: "O Senhor dos Anéis" },
     rascunho: true,
@@ -114,9 +114,9 @@ export const arquetipos: Record<ArquetipoId, Arquetipo> = {
     revela: "Carinho pelos detalhes, estética apurada e paixão por colecionar histórias.",
     explorar: "Que tal tirar da pilha aquele livro esquecido há mais tempo? Ele está esperando por você.",
     livros: [
-      { titulo: "A sombra do vento", autor: "Carlos Ruiz Zafón", porque: "um cemitério de livros esquecidos", cor: "#4B0D1B" },
-      { titulo: "A biblioteca da meia-noite", autor: "Matt Haig", porque: "cada livro, uma vida possível", cor: "#2B1420" },
-      { titulo: "A livraria mágica de Paris", autor: "Nina George", porque: "livros como remédio", cor: "#B75A6B" },
+      { titulo: "A sombra do vento", autor: "Carlos Ruiz Zafón", porque: "um cemitério de livros esquecidos", cor: "#54202F" },
+      { titulo: "A biblioteca da meia-noite", autor: "Matt Haig", porque: "cada livro, uma vida possível", cor: "#38252C" },
+      { titulo: "A livraria mágica de Paris", autor: "Nina George", porque: "livros como remédio", cor: "#C27C8D" },
     ],
     frase: {
       texto: "Sempre imaginei que o paraíso fosse uma espécie de biblioteca.",
@@ -135,8 +135,8 @@ export const arquetipos: Record<ArquetipoId, Arquetipo> = {
     explorar: "Seu desafio é o oposto: escolher um autor e mergulhar fundo na obra inteira.",
     livros: [
       { titulo: "Torto arado", autor: "Itamar Vieira Junior", porque: "uma voz que fica com você", cor: "#6B7A5E" },
-      { titulo: "10 minutos e 38 segundos", autor: "Elif Shafak", porque: "uma vida inteira em minutos", cor: "#8E1D3D" },
-      { titulo: "Cem anos de solidão", autor: "Gabriel García Márquez", porque: "realismo mágico pra se perder", cor: "#4B0D1B" },
+      { titulo: "10 minutos e 38 segundos", autor: "Elif Shafak", porque: "uma vida inteira em minutos", cor: "#54202F" },
+      { titulo: "Cem anos de solidão", autor: "Gabriel García Márquez", porque: "realismo mágico pra se perder", cor: "#54202F" },
     ],
     frase: { texto: "Sou vasto, contenho multidões.", autor: "Walt Whitman", obra: "Canção de Mim Mesmo" },
     rascunho: true,
@@ -151,8 +151,8 @@ export const arquetipos: Record<ArquetipoId, Arquetipo> = {
     explorar: "Um suspense curto pode trazer um friozinho na barriga sem tirar seu sono.",
     livros: [
       { titulo: "Águas frescas para as flores", autor: "Valérie Perrin", porque: "delicado do começo ao fim", cor: "#6B7A5E" },
-      { titulo: "Anne de Green Gables", autor: "L. M. Montgomery", porque: "um abraço em forma de livro", cor: "#B75A6B" },
-      { titulo: "Mulherzinhas", autor: "Louisa May Alcott", porque: "irmãs, cartas e lareira", cor: "#8E1D3D" },
+      { titulo: "Anne de Green Gables", autor: "L. M. Montgomery", porque: "um abraço em forma de livro", cor: "#C27C8D" },
+      { titulo: "Mulherzinhas", autor: "Louisa May Alcott", porque: "irmãs, cartas e lareira", cor: "#54202F" },
     ],
     frase: {
       texto: "Declaro, afinal, que não há prazer como a leitura!",
@@ -170,8 +170,8 @@ export const arquetipos: Record<ArquetipoId, Arquetipo> = {
     revela: "Sensibilidade, olhar atento e intimidade com as palavras.",
     explorar: "Uma aventura cheia de ação pode ser um ótimo contraste para o seu ritmo contemplativo.",
     livros: [
-      { titulo: "A hora da estrela", autor: "Clarice Lispector", porque: "pequeno e imenso", cor: "#2B1420" },
-      { titulo: "A redoma de vidro", autor: "Sylvia Plath", porque: "pra sublinhar quase tudo", cor: "#6B0D24" },
+      { titulo: "A hora da estrela", autor: "Clarice Lispector", porque: "pequeno e imenso", cor: "#38252C" },
+      { titulo: "A redoma de vidro", autor: "Sylvia Plath", porque: "pra sublinhar quase tudo", cor: "#692536" },
       { titulo: "O ano do pensamento mágico", autor: "Joan Didion", porque: "a beleza no luto", cor: "#6B7A5E" },
     ],
     frase: { texto: "Tenho em mim todos os sonhos do mundo.", autor: "Fernando Pessoa (Álvaro de Campos)", obra: "Tabacaria" },

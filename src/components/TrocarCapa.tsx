@@ -71,7 +71,7 @@ export function TrocarCapa({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-[#2b1420]/70 sm:items-center"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-[#38252c]/70 sm:items-center"
       role="dialog"
       aria-modal="true"
       aria-labelledby="titulo-trocar-capa"

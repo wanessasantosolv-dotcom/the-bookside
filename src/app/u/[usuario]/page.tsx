@@ -298,7 +298,7 @@ function PerfilDela({ usuario }: { usuario: string }) {
 export default function PerfilDeOutraPage() {
   const { usuario } = useParams<{ usuario: string }>();
   return (
-    <AppShell aba="inicio" className="[&_main]:!bg-[var(--papel,#F9F5EE)]">
+    <AppShell aba="inicio" className="[&_main]:!bg-[var(--papel,#F6F0E5)]">
       <ComConta>
         <PerfilDela usuario={decodeURIComponent(usuario)} />
       </ComConta>

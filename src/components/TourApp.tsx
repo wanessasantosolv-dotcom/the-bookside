@@ -215,7 +215,7 @@ export function TourApp() {
           />
         </>
       ) : (
-        <div aria-hidden className="absolute inset-0 bg-[#2b1420]/62" />
+        <div aria-hidden className="absolute inset-0 bg-[#38252c]/62" />
       )}
 
       <div

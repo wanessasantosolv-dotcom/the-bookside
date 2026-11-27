@@ -59,7 +59,7 @@ export const modelos: Modelo[] = [
     meta: 300,
     dias: 3,
     descricao: "300 páginas em 3 dias. café, cobertor e celular longe.",
-    cor: "#6B0D24",
+    cor: "#692536",
   },
   {
     id: "um-por-semana",
@@ -69,7 +69,7 @@ export const modelos: Modelo[] = [
     meta: 4,
     dias: 30,
     descricao: "4 livros em 30 dias — um livro por semana.",
-    cor: "#B75A6B",
+    cor: "#C27C8D",
   },
   {
     id: "zerar-pilha",

@@ -524,7 +524,7 @@ function EscolherCitacao({ onFechar }: { onFechar: () => void }) {
       role="dialog"
       aria-modal="true"
       aria-label="escolher citação"
-      className="fixed inset-0 z-50 flex items-end justify-center bg-[#2b1420]/45 sm:items-center"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-[#38252c]/45 sm:items-center"
       onClick={(e) => {
         if (e.target === e.currentTarget) onFechar();
       }}
@@ -532,7 +532,7 @@ function EscolherCitacao({ onFechar }: { onFechar: () => void }) {
         if (e.key === "Escape") onFechar();
       }}
     >
-      <div className="max-h-[85dvh] w-full max-w-[560px] overflow-y-auto rounded-t-[18px] bg-[var(--papel,#F9F5EE)] px-5 pt-5 pb-8 sm:rounded-[14px]">
+      <div className="max-h-[85dvh] w-full max-w-[560px] overflow-y-auto rounded-t-[18px] bg-[var(--papel,#F6F0E5)] px-5 pt-5 pb-8 sm:rounded-[14px]">
         <div className="flex items-baseline justify-between">
           <p className="font-revista text-[22px] text-[var(--acc)] italic">sua citação favorita</p>
           <button type="button" onClick={onFechar} className="min-h-10 text-[13px] font-semibold text-[var(--suave)]">

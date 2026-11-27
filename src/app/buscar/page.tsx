@@ -90,7 +90,7 @@ function Busca() {
           height="16"
           viewBox="0 0 24 24"
           fill="none"
-          stroke="#7A6A6E"
+          stroke="#715F65"
           strokeWidth="2"
           strokeLinecap="round"
         >

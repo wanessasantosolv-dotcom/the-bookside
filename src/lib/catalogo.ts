@@ -41,12 +41,12 @@ type DocOL = {
 };
 
 const paleta = [
-  "#6B0D24",
-  "#2B1420",
-  "#B75A6B",
+  "#692536",
+  "#38252C",
+  "#C27C8D",
   "#6B7A5E",
-  "#8E1D3D",
-  "#4B0D1B",
+  "#54202F",
+  "#54202F",
 ];
 
 function paraLivro(d: DocOL, i: number): LivroBusca {

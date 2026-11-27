@@ -67,7 +67,7 @@ export function JornadaResumida({ p, nome }: { p: Perfil; nome: string }) {
                   title={`${MESES[m]}: ${q}`}
                   style={{
                     height: Math.max(3, (q / maior) * 46),
-                    background: m > mesAtual ? "transparent" : q ? "var(--acc, #6B0D24)" : "var(--linha, #E7DCD3)",
+                    background: m > mesAtual ? "transparent" : q ? "var(--acc, #692536)" : "var(--linha, #E7DCD3)",
                     opacity: q ? 1 : 0.7,
                   }}
                 />

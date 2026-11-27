@@ -89,7 +89,7 @@ export default function ProntoPage() {
             data-aberto={aberto}
             className="livro3d relative mt-8 h-[318px] w-[212px]"
           >
-            <div className="absolute inset-0 z-[1] flex flex-col items-center justify-center rounded-[4px_10px_10px_4px] bg-creme-quente px-6 text-center shadow-[inset_0_0_0_1px_#E6D5CE,inset_-8px_0_10px_-8px_rgba(43,20,32,.25)]">
+            <div className="absolute inset-0 z-[1] flex flex-col items-center justify-center rounded-[4px_10px_10px_4px] bg-creme-quente px-6 text-center shadow-[inset_0_0_0_1px_#DCCDC8,inset_-8px_0_10px_-8px_rgba(43,20,32,.25)]">
               <span className="revela font-accent text-[26px] leading-none italic text-ouro [transition-delay:1.5s]">
                 ✦
               </span>
@@ -102,7 +102,7 @@ export default function ProntoPage() {
               </p>
             </div>
 
-            <span className="absolute top-[7px] right-[-5px] bottom-[7px] z-[4] w-1.5 rounded-[0_3px_3px_0] bg-[repeating-linear-gradient(180deg,#F5EFE6_0_2px,#E0D2C6_2px_3px)]" />
+            <span className="absolute top-[7px] right-[-5px] bottom-[7px] z-[4] w-1.5 rounded-[0_3px_3px_0] bg-[repeating-linear-gradient(180deg,#EDE1D9_0_2px,#E0D2C6_2px_3px)]" />
             {(["f3", "f2", "f1"] as const).map((f, i) => (
               <div
                 key={f}
@@ -111,8 +111,8 @@ export default function ProntoPage() {
               />
             ))}
 
-            <div className="capa absolute inset-0 z-[5] overflow-hidden rounded-[4px_10px_10px_4px] bg-[linear-gradient(145deg,#8E1D3D,#6B0D24_42%,#4B0D1B)] shadow-[0_24px_30px_-14px_rgba(43,20,32,.6)]">
-              <span className="absolute inset-y-0 left-0 w-4 bg-[linear-gradient(90deg,#4B0D1B,#8E1D3D_58%,#3E0A16)]" />
+            <div className="capa absolute inset-0 z-[5] overflow-hidden rounded-[4px_10px_10px_4px] bg-[linear-gradient(145deg,#54202F,#692536_42%,#54202F)] shadow-[0_24px_30px_-14px_rgba(43,20,32,.6)]">
+              <span className="absolute inset-y-0 left-0 w-4 bg-[linear-gradient(90deg,#54202F,#54202F_58%,#3E0A16)]" />
               <span className="absolute inset-y-0 left-[17px] w-px bg-ouro/65" />
               <span className="absolute top-10 right-6 left-10 h-px bg-ouro/75" />
               <span className="absolute top-[236px] right-6 left-10 h-px bg-ouro/75" />

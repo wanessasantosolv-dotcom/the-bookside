@@ -36,7 +36,7 @@ export function Aparencia() {
       void s;
       document
         .querySelector('meta[name="theme-color"]')
-        ?.setAttribute("content", t ? (escuro ? t.escuro.fundo : t.claro.fundo) : escuro ? "#1a1416" : "#6b0d24");
+        ?.setAttribute("content", t ? (escuro ? t.escuro.fundo : t.claro.fundo) : escuro ? "#21191d" : "#692536");
     };
     aplicar();
     mq.addEventListener("change", aplicar);

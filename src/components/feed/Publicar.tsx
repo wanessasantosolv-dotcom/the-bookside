@@ -139,7 +139,7 @@ function Janela({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-[#2b1420]/40 sm:items-center"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-[#38252c]/40 sm:items-center"
       onClick={(e) => e.target === e.currentTarget && onFechar()}
     >
       <div

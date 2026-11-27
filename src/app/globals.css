@@ -5,22 +5,36 @@
  * Valores de tokens.css (design system "The Bookside").
  */
 @theme {
-  --color-bordo: #6b0d24;
-  --color-bordo-escuro: #4b0d1b;
-  --color-bordo-suave: #8e1d3d;
-  --color-rosa-antigo: #b75a6b;
-  --color-rosa-claro: #e8b4bf;
-  --color-rosa-fundo: #f6e3e7;
-  --color-creme: #f9f5ee;
-  --color-creme-quente: #fff8f3;
-  --color-papel: #f5efe6;
-  --color-bege: #d8c3aa;
-  --color-ameixa: #2b1420;
-  --color-oliva: #6b7a5e;
-  --color-linha: #e6d5ce;
-  --color-cinza: #7a6a6e;
-  --color-ouro: #c9a46a;
-  --color-mesa: #e9e1d3;
+  /*
+   * Essência — a identidade institucional (fixa) do app.
+   * Paleta: bordô #692536 · creme #F6F0E5 · rosa antigo #ECAABB · azul vintage #8297D1
+   * verde cítrico #D5DD76 · amarelo manteiga #F1DFA0 · verde oliva #59634F · marrom vinho #38252C
+   * Os nomes dos tokens continuam os mesmos (todo o app já usa); só os valores mudaram.
+   */
+  --color-bordo: #692536; /* primary: ações principais, identidade, nas entrelinhas */
+  --color-bordo-escuro: #54202f; /* primary-hover */
+  --color-bordo-suave: #54202f; /* hover dos botões preenchidos */
+  --color-rosa-antigo: #c27c8d; /* acento decorativo (não usar em texto pequeno) */
+  --color-rosa-claro: #ecaabb; /* rosa da marca: texto sobre bordô, diário literário, destaques afetivos */
+  --color-rosa-fundo: #edd3dc; /* selected */
+  --color-creme: #f6f0e5; /* background */
+  --color-creme-quente: #fbf7ef; /* surface */
+  --color-papel: #ede1d9; /* surface-secondary */
+  --color-bege: #cdbab3; /* borda mais firme (botões secundários, tracejados) */
+  --color-ameixa: #38252c; /* text-primary */
+  --color-oliva: #59634f; /* success */
+  --color-linha: #dccdc8; /* border */
+  --color-cinza: #715f65; /* text-secondary (ajustado de #79686D para passar AA sobre surface-secondary) */
+  --color-ouro: #8a5a21; /* warning (ajustado de #986326 para AA) e estrelas sobre fundo claro */
+  --color-mesa: #ece4d8; /* atrás da coluna do app */
+
+  /* cores expressivas, só em aplicações pontuais */
+  --color-azul: #8297d1; /* curadorias e descobertas */
+  --color-citrico: #d5dd76; /* metas e conquistas */
+  --color-manteiga: #f1dfa0; /* citações, avaliações e recomendações */
+  --color-erro: #a33d4e;
+  --color-alerta: #8a5a21;
+  --color-sucesso: #59634f;
 
   --font-display: var(--font-playfair), Georgia, serif;
   --font-accent: var(--font-dm-serif), Georgia, serif;
@@ -31,12 +45,12 @@
   --font-revista: var(--font-fraunces), Georgia, serif;
   --font-texto: var(--font-manrope), system-ui, sans-serif;
   --font-mono: var(--font-space-mono), ui-monospace, monospace;
-  --color-tinta: #29252a;
-  --color-tinta-suave: #3c3539;
-  --color-jornal: #fbf8f2;
+  --color-tinta: #38252c;
+  --color-tinta-suave: #56444b;
+  --color-jornal: #f6f0e5;
   --color-vinho: #692536;
-  --color-fio: #e3d9c9;
-  --color-grafite: #71676a;
+  --color-fio: #dccdc8;
+  --color-grafite: #715f65;
 
   --radius-sm: 6px;
   --radius-md: 12px;
@@ -71,56 +85,62 @@ html {
  */
 html[data-modo="escuro"] {
   color-scheme: dark;
-  --color-creme: #1a1416;
-  --color-creme-quente: #241c1f;
-  --color-papel: #2a2124;
-  --color-jornal: #1a1416;
-  --color-mesa: #120e0f;
-  --color-ameixa: #f3e9e6;
-  --color-tinta: #f3e9e6;
-  --color-tinta-suave: #e3d6d2;
-  --color-cinza: #b5a6a9;
-  --color-grafite: #b5a6a9;
-  --color-linha: #3a2f32;
-  --color-fio: #3a2f32;
-  --color-bege: #554549;
-  --color-bordo: #d97a90;
-  --color-bordo-escuro: #e898aa;
-  --color-bordo-suave: #e08aa0;
-  --color-vinho: #d97a90;
-  --color-rosa-antigo: #c9798a;
-  --color-rosa-claro: #7a3a49;
-  --color-rosa-fundo: #3a2028;
-  --color-oliva: #9cb08b;
-  --color-ouro: #d7b57c;
+  --color-creme: #21191d; /* background */
+  --color-creme-quente: #2d2228; /* surface */
+  --color-papel: #392a32; /* surface-secondary */
+  --color-jornal: #21191d;
+  --color-mesa: #181215;
+  --color-ameixa: #f2e4db; /* text-primary */
+  --color-tinta: #f2e4db;
+  --color-tinta-suave: #e0cec8;
+  --color-cinza: #c6adb5; /* text-secondary */
+  --color-grafite: #c6adb5;
+  --color-linha: #523b46; /* border */
+  --color-fio: #523b46;
+  --color-bege: #6b5260;
+  --color-bordo: #ecaabb; /* primary */
+  --color-bordo-escuro: #f3c4d1; /* primary-hover */
+  --color-bordo-suave: #f3c4d1;
+  --color-vinho: #ecaabb;
+  --color-rosa-antigo: #d896a7;
+  --color-rosa-claro: #6e3a4b;
+  --color-rosa-fundo: #52303e; /* selected */
+  --color-oliva: #a8b397; /* success */
+  --color-ouro: #e5c17d; /* warning */
+  --color-azul: #a3b3e0;
+  --color-citrico: #d5dd76;
+  --color-manteiga: #f1dfa0;
+  --color-erro: #ea8c9d;
+  --color-alerta: #e5c17d;
+  --color-sucesso: #a8b397;
 }
 
 /* no modo escuro, os blocos "de destaque" (vinho/ameixa com texto claro) continuam como no claro */
 html[data-modo="escuro"] .inverso {
-  --color-creme: var(--inverso-texto, #f9f5ee);
-  /* com tema, a cor forte do tema (vem de coresDoTema); sem tema, o vinho do app */
-  --color-bordo: var(--inverso-bordo, #6b0d24);
-  --color-bordo-escuro: var(--inverso-bordo-escuro, #4b0d1b);
-  --color-bordo-suave: var(--inverso-bordo-suave, #8e1d3d);
+  --color-creme: var(--inverso-texto, #f6f0e5);
+  /* com tema, a cor forte do tema (vem de coresDoTema); sem tema, o bordô do app */
+  --color-bordo: var(--inverso-bordo, #692536);
+  --color-bordo-escuro: var(--inverso-bordo-escuro, #54202f);
+  --color-bordo-suave: var(--inverso-bordo-suave, #54202f);
   --color-vinho: var(--inverso-bordo, #692536);
-  --color-ameixa: #2b1420;
-  --color-creme-quente: #fff8f3;
-  --color-rosa-claro: var(--inverso-rosa-claro, #e8b4bf);
-  --color-rosa-antigo: var(--inverso-rosa-antigo, #b75a6b);
-  --color-rosa-fundo: var(--inverso-rosa-fundo, #f6e3e7);
+  --color-ameixa: #38252c;
+  --color-creme-quente: #fbf7ef;
+  --color-rosa-claro: var(--inverso-rosa-claro, #ecaabb);
+  --color-rosa-antigo: var(--inverso-rosa-antigo, #c27c8d);
+  --color-rosa-fundo: var(--inverso-rosa-fundo, #edd3dc);
 }
 /* a cor de destaque do tema do perfil; no modo escuro, mais clara para ler sobre o fundo escuro */
 .acc-tema { --acc: var(--acc-base); }
-html[data-modo="escuro"] .acc-tema { --acc: color-mix(in srgb, var(--acc-base) 45%, #f3e9e6); }
+html[data-modo="escuro"] .acc-tema { --acc: color-mix(in srgb, var(--acc-base) 45%, #f2e4db); }
 .acc-web-tema { --acc-web: var(--acc-web-base); }
-html[data-modo="escuro"] .acc-web-tema { --acc-web: color-mix(in srgb, var(--acc-web-base) 45%, #f3e9e6); }
+html[data-modo="escuro"] .acc-web-tema { --acc-web: color-mix(in srgb, var(--acc-web-base) 45%, #f2e4db); }
 
 .jornada-tema {
   --acc: var(--acc-base);
   --acc-fundo: color-mix(in srgb, var(--acc) 6%, transparent);
   --acc-claro: color-mix(in srgb, var(--acc) 18%, transparent);
 }
-html[data-modo="escuro"] .jornada-tema { --acc: color-mix(in srgb, var(--acc-base) 45%, #f3e9e6); }
+html[data-modo="escuro"] .jornada-tema { --acc: color-mix(in srgb, var(--acc-base) 45%, #f2e4db); }
 
 /* o logo bordô fica creme no modo escuro */
 html[data-modo="escuro"] img[src$="wordmark-bordo.png"],
@@ -212,20 +232,20 @@ body {
 
 /* ── gostos: pilha de livros ── */
 .pilha { position: relative; display: flex; flex-direction: column; gap: 4px; padding-left: 12px; }
-.pilha::before { content: ""; position: absolute; left: 0; top: 0; bottom: 14px; width: 12px; border-radius: 3px 0 0 3px; background: linear-gradient(90deg, #e6d5ce, #f5efe6); }
+.pilha::before { content: ""; position: absolute; left: 0; top: 0; bottom: 14px; width: 12px; border-radius: 3px 0 0 3px; background: linear-gradient(90deg, #dccdc8, #ede1d9); }
 .lombada-livro {
   position: relative; display: flex; align-items: center; box-sizing: border-box; width: 100%; height: 30px;
-  padding: 0 14px 0 16px; border-radius: 2px 4px 4px 2px; background: #fff8f3; border: 1px solid #d8c3aa;
+  padding: 0 14px 0 16px; border-radius: 2px 4px 4px 2px; background: #fbf7ef; border: 1px solid #cdbab3;
   box-shadow: inset -4px 0 0 #efe4d8, 0 2px 3px -2px rgba(43, 20, 32, 0.4); cursor: pointer;
   transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), background 0.25s, border-color 0.25s;
 }
 .lombada-livro::before { content: ""; position: absolute; left: 0; top: -1px; bottom: -1px; width: 7px; border-radius: 2px 0 0 2px; background: var(--c); }
-.lombada-livro span { font: 400 13px/1 var(--font-maquina); letter-spacing: 0.02em; color: #2b1420; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color 0.25s; }
+.lombada-livro span { font: 400 13px/1 var(--font-maquina); letter-spacing: 0.02em; color: #38252c; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color 0.25s; }
 .lombada-livro:has(input:checked) { background: var(--c); border-color: var(--c); transform: translateX(-12px); box-shadow: inset -4px 0 0 rgba(0, 0, 0, 0.12), 0 6px 8px -6px rgba(43, 20, 32, 0.5); }
 .lombada-livro:has(input:checked)::before { background: #c9a46a; }
-.lombada-livro:has(input:checked) span { color: #f9f5ee; }
+.lombada-livro:has(input:checked) span { color: #f6f0e5; }
 .lombada-livro:has(input:focus-visible) { outline: 2px solid var(--color-bordo); outline-offset: 2px; }
-.prateleira { height: 8px; margin-top: 6px; border-radius: 3px; background: linear-gradient(#e6d5ce, #d8c3aa); }
+.prateleira { height: 8px; margin-top: 6px; border-radius: 3px; background: linear-gradient(#dccdc8, #cdbab3); }
 
 /* ── perfil pronto: o livro que abre ── */
 .livro3d { perspective: 1200px; transform: rotate(-2deg); }
@@ -282,13 +302,13 @@ body {
 
 /* envelope / carta lacrada */
 .envelope {
-  background: #b75a6b;
+  background: #c27c8d;
   background-image: repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.07) 0 12px, transparent 12px 24px);
 }
 .envelope-aba { background: #a24c5c; clip-path: polygon(0 0, 100% 0, 100% 18%, 50% 100%, 0 18%); }
 .carta-papel { background: #fffdf8; box-shadow: 0 20px 34px -18px rgba(43, 20, 32, 0.6); transform: rotate(0.5deg); }
 .lacre {
-  background: radial-gradient(circle at 34% 30%, #8e1d3d, #5a0b1c); box-shadow: 0 5px 10px -4px rgba(43, 20, 32, 0.65);
+  background: radial-gradient(circle at 34% 30%, #54202f, #5a0b1c); box-shadow: 0 5px 10px -4px rgba(43, 20, 32, 0.65);
   animation: selar 0.6s 0.5s cubic-bezier(0.3, 1.5, 0.6, 1) both;
 }
 @keyframes selar { from { opacity: 0; transform: scale(1.8); } to { opacity: 1; transform: scale(1); } }

@@ -130,7 +130,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#6b0d24",
+  themeColor: "#692536",
   width: "device-width",
   initialScale: 1,
   // usa a tela toda no iPhone (o menu de baixo já respeita a barrinha do home)

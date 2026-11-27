@@ -33,8 +33,8 @@ function Desenho({ tipo, frase }: { tipo: TipoAnimacao; frase?: string }) {
     case "livro":
       return (
         <div className="relative h-[172px] w-[250px] [perspective:1000px]">
-          <div className="absolute inset-x-0 bottom-0 h-[162px] rounded-[5px] bg-[linear-gradient(145deg,#8E1D3D,#6B0D24_45%,#4B0D1B)] shadow-[0_14px_22px_-10px_rgba(43,20,32,.55)]" />
-          <div className="absolute top-[9px] right-[11px] bottom-[11px] left-[11px] rounded-[2px] bg-creme-quente shadow-[inset_0_0_0_1px_#E6D5CE]" />
+          <div className="absolute inset-x-0 bottom-0 h-[162px] rounded-[5px] bg-[linear-gradient(145deg,#54202F,#692536_45%,#54202F)] shadow-[0_14px_22px_-10px_rgba(43,20,32,.55)]" />
+          <div className="absolute top-[9px] right-[11px] bottom-[11px] left-[11px] rounded-[2px] bg-creme-quente shadow-[inset_0_0_0_1px_#DCCDC8]" />
           <div className="absolute top-[9px] bottom-[11px] left-1/2 w-px bg-linha" />
           {[0, 0.7, 1.4].map((d) => (
             <div
@@ -50,8 +50,8 @@ function Desenho({ tipo, frase }: { tipo: TipoAnimacao; frase?: string }) {
         <div className="relative h-[200px] w-[150px]">
           {[
             "linear-gradient(150deg,#6B7A5E,#4F5B45)",
-            "linear-gradient(150deg,#B75A6B,#8E1D3D)",
-            "linear-gradient(150deg,#8E1D3D,#4B0D1B)",
+            "linear-gradient(150deg,#C27C8D,#54202F)",
+            "linear-gradient(150deg,#54202F,#54202F)",
           ].map((fundo, i) => (
             <div
               key={i}
@@ -99,10 +99,10 @@ function Desenho({ tipo, frase }: { tipo: TipoAnimacao; frase?: string }) {
                 />
               ),
             )}
-            <span className="ld-fita absolute -top-2 right-[30px] h-[156px] w-7 bg-[linear-gradient(#8E1D3D,#6B0D24)] shadow-[0_3px_6px_-2px_rgba(43,20,32,.4)]" />
+            <span className="ld-fita absolute -top-2 right-[30px] h-[156px] w-7 bg-[linear-gradient(#54202F,#692536)] shadow-[0_3px_6px_-2px_rgba(43,20,32,.4)]" />
           </div>
           <div className="mt-[26px] h-[7px] w-[210px] overflow-hidden rounded-full bg-linha/70">
-            <i className="ld-trilha block h-full rounded-full bg-[linear-gradient(90deg,#6B0D24,#B75A6B)]" />
+            <i className="ld-trilha block h-full rounded-full bg-[linear-gradient(90deg,#692536,#C27C8D)]" />
           </div>
         </div>
       );

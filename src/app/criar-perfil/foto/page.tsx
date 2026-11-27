@@ -81,7 +81,7 @@ export default function FotoPage() {
         type="button"
         onClick={() => galeria.current?.click()}
         aria-label={foto ? "trocar foto" : "escolher foto da galeria"}
-        className="mx-auto mt-2 flex size-[200px] flex-col items-center justify-center overflow-hidden rounded-full border border-dashed border-rosa-antigo bg-[radial-gradient(circle,#F6E3E7_0%,#F9F5EE_72%)]"
+        className="mx-auto mt-2 flex size-[200px] flex-col items-center justify-center overflow-hidden rounded-full border border-dashed border-rosa-antigo bg-[radial-gradient(circle,#EDD3DC_0%,#F6F0E5_72%)]"
       >
         {foto ? (
           // eslint-disable-next-line @next/next/no-img-element

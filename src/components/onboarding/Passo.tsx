@@ -39,7 +39,7 @@ export function Passo({
   escuro,
   frase,
 }: Props) {
-  const estilo = { "--fundo": fundo ?? "#F9F5EE" } as CSSProperties;
+  const estilo = { "--fundo": fundo ?? "#F6F0E5" } as CSSProperties;
   const cor = escuro
     ? {
         link: "text-[#C9B8A8]",

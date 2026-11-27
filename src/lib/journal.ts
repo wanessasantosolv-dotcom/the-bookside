@@ -439,8 +439,8 @@ export function margensDoMes(todos: LivroSalvo[], edicao: Edicao) {
 
 /** uma paleta aprovada por mês (as mesmas cores dos temas do app) */
 export const PALETAS = [
-  { nome: "vinho", fundo: "#692536", texto: "#F7EEE6", destaque: "#E8B4BF", papel: "#F7EFE8" },
-  { nome: "ameixa", fundo: "#2B1420", texto: "#F5EFE6", destaque: "#C9A46A", papel: "#F5EFE6" },
+  { nome: "vinho", fundo: "#692536", texto: "#F7EEE6", destaque: "#ECAABB", papel: "#F7EFE8" },
+  { nome: "ameixa", fundo: "#38252C", texto: "#EDE1D9", destaque: "#C9A46A", papel: "#EDE1D9" },
   { nome: "oliva", fundo: "#5E6553", texto: "#F3F1E7", destaque: "#D7DCC1", papel: "#F2F1E8" },
   { nome: "terracota", fundo: "#8E3E1E", texto: "#FBEFE6", destaque: "#F1D2C1", papel: "#F9EEE6" },
   { nome: "mar aberto", fundo: "#17524F", texto: "#EEF7F5", destaque: "#CDE6E3", papel: "#EEF5F3" },
@@ -450,7 +450,7 @@ export const PALETAS = [
   { nome: "orelha rosa", fundo: "#9E3A57", texto: "#FDF0F3", destaque: "#F9D9E2", papel: "#FBF0F3" },
   { nome: "kraft", fundo: "#6E4520", texto: "#F8EFE3", destaque: "#D9C3A0", papel: "#F6EEE2" },
   { nome: "floresta", fundo: "#14211B", texto: "#E6EFE8", destaque: "#8FB89A", papel: "#EEF2EE" },
-  { nome: "noite de tinta", fundo: "#29252A", texto: "#F5EFE6", destaque: "#A88B64", papel: "#F4EFE8" },
+  { nome: "noite de tinta", fundo: "#38252C", texto: "#EDE1D9", destaque: "#A88B64", papel: "#F4EFE8" },
 ] as const;
 export type Paleta = (typeof PALETAS)[number];
 

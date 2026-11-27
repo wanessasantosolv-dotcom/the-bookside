@@ -68,12 +68,12 @@ export const TEMAS_APP: TemaApp[] = [
     decoracao: "editorial",
     banner: "linhas",
     claro: {
-      fundo: "#F6F0E5", superficie: "#EDE1D9", primaria: "#692536", secundaria: "#59634F", acento: "#C88E9F",
-      texto: "#38252C", borda: "#D8D0C7", sobrePrimaria: "#F6F0E5", bloco: "#692536", sobreBloco: "#F6F0E5", estante: "#9A6B43",
+      fundo: "#F6F0E5", superficie: "#EDE1D9", primaria: "#692536", secundaria: "#59634F", acento: "#ECAABB",
+      texto: "#38252C", borda: "#DCCDC8", sobrePrimaria: "#F6F0E5", bloco: "#692536", sobreBloco: "#F6F0E5", estante: "#9A6B43",
     },
     escuro: {
-      fundo: "#211C1E", superficie: "#49313A", primaria: "#D4A6B2", secundaria: "#404339", acento: "#85606B",
-      texto: "#EEE2DE", borda: "#464041", sobrePrimaria: "#211C1E", bloco: "#53222F", sobreBloco: "#EEE2DE", estante: "#7A5235",
+      fundo: "#21191D", superficie: "#392A32", primaria: "#ECAABB", secundaria: "#A8B397", acento: "#8297D1",
+      texto: "#F2E4DB", borda: "#523B46", sobrePrimaria: "#21191D", bloco: "#52303E", sobreBloco: "#F2E4DB", estante: "#7A5235",
     },
   },
   {

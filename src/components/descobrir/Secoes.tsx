@@ -115,7 +115,7 @@ export function PorAfinidade() {
             role="tab"
             aria-selected={i === j}
             onClick={() => setI(j)}
-            className={`min-h-9 flex-none rounded-[6px] border px-3 text-[12px] ${i === j ? "border-bordo font-semibold text-bordo" : "border-linha text-tinta-suave"}`}
+            className={`min-h-9 flex-none rounded-[6px] border px-3 text-[12px] ${i === j ? "border-azul bg-azul/15 font-semibold text-ameixa" : "border-linha text-tinta-suave"}`}
           >
             {a}
           </button>
@@ -158,7 +158,7 @@ export function Curadorias() {
             role="tab"
             aria-selected={atual.id === c.id}
             onClick={() => setAtual(c)}
-            className={`min-h-9 flex-none rounded-[6px] border px-3 text-[12px] ${atual.id === c.id ? "border-bordo font-semibold text-bordo" : "border-linha text-tinta-suave"}`}
+            className={`min-h-9 flex-none rounded-[6px] border px-3 text-[12px] ${atual.id === c.id ? "border-azul bg-azul/15 font-semibold text-ameixa" : "border-linha text-tinta-suave"}`}
           >
             {c.nome}
           </button>

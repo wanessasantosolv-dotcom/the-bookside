@@ -7,7 +7,7 @@ import { useState } from "react";
 import { Botao } from "@/components/ui/Botao";
 import { usePerfil } from "@/lib/perfil-store";
 
-const COR_PADRAO = "#6B0D24";
+const COR_PADRAO = "#692536";
 const rotulo =
   "mb-1.5 block text-[10px] leading-[14px] font-semibold tracking-[.12em] text-bordo uppercase";
 

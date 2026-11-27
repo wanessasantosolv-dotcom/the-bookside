@@ -319,7 +319,7 @@ export function Compartilhar({ onFechar, ...p }: Props & { onFechar: () => void 
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-[#2b1420]/50 sm:items-center"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-[#38252c]/50 sm:items-center"
       onClick={(e) => e.target === e.currentTarget && onFechar()}
     >
       <div

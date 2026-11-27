@@ -472,7 +472,7 @@ export function GraficoMeses({ n, alto = 88 }: { n: Numeros; alto?: number }) {
               style={{
                 height: m.livros ? Math.max(8, (m.livros / max) * alto) : 4,
                 background: !m.livros
-                  ? "#E6D5CE"
+                  ? "#DCCDC8"
                   : m === n.maisForte
                     ? "var(--color-bordo)"
                     : "var(--color-rosa-antigo)",

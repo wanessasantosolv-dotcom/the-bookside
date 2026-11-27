@@ -367,7 +367,7 @@ export const StoryClubeMural = forwardRef<HTMLDivElement, Props>(
               key={i}
               style={{
                 width: 128,
-                background: e.fundo === "#F5EFE6" ? "#FFF8F3" : e.fio,
+                background: e.fundo === "#EDE1D9" ? "#FBF7EF" : e.fio,
                 border: `1px solid ${e.fio}`,
                 borderRadius: 3,
                 padding: "9px 10px",

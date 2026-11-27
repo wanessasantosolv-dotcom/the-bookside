@@ -94,7 +94,7 @@ export default function PessoasPage() {
           </Link>
           <div className="mt-4 px-6 lg:px-0">
             <label className="flex h-[52px] items-center gap-3 rounded-pill border border-linha bg-creme-quente px-5 focus-within:border-bordo">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7A6A6E" strokeWidth="1.9" strokeLinecap="round" aria-hidden>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#715F65" strokeWidth="1.9" strokeLinecap="round" aria-hidden>
                 <circle cx="11" cy="11" r="7" />
                 <path d="m20 20-3.5-3.5" />
               </svg>

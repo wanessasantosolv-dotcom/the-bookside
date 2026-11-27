@@ -263,7 +263,7 @@ function Foco() {
                   cy="140"
                   r={raio}
                   fill="none"
-                  stroke={chegou ? "#C9A46A" : "#E8B4BF"}
+                  stroke={chegou ? "#C9A46A" : "#ECAABB"}
                   strokeWidth="6"
                   strokeLinecap="round"
                   strokeDasharray={volta}
@@ -317,7 +317,7 @@ function Foco() {
                 type="checkbox"
                 checked={som}
                 onChange={(e) => setSom(e.target.checked)}
-                className="size-4 accent-[#E8B4BF]"
+                className="size-4 accent-[#ECAABB]"
               />
               som de fundo suave (ruído marrom)
             </label>
