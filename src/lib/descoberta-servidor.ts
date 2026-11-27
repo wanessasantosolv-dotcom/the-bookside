@@ -36,7 +36,7 @@ export type LivroDescoberto = {
 export type ItemDescoberto = { livro: LivroDescoberto; porque?: string; caracteristicas: string[]; fontes: Fonte[]; pesquisaExterna: boolean };
 export type RespostaDescobrir = { versao: string; resultados: ItemDescoberto[]; pesquisaExterna: boolean; avisos: string[]; medidas: Medidas; diagnostico?: Diagnostico | null };
 /** versão do motor: muda a chave do cache e descarta resultados de regras antigas */
-export const VERSAO_DESCOBERTA = "v4";
+export const VERSAO_DESCOBERTA = "v5";
 type Medidas = { candidatos: number; semEdicaoPt: number; naoLiterarios: number; duplicados: number; comFontes: number; semEvidencia: number; metadadosFracos: number; ms: number };
 
 export const SEMANA = 7 * 864e5;
@@ -397,13 +397,19 @@ Responda SÓ com JSON: {"livros":[{"titulo":string,"autor":string,"original":str
   const candidatos = (r?.json.livros ?? [])
     .map((l) => {
       const idx = [...new Set((Array.isArray(l.paginas) ? l.paginas : []).map(Number).filter((n) => Number.isInteger(n) && n >= 0 && n < paginas.length))];
+      // a IA nem sempre aponta as páginas: as que citam o título (ou o original) no texto também valem
+      const alvos = [texto(l.titulo, 160), texto(l.original, 160)].map((t) => norm(t).slice(0, 20)).filter((t) => t.length > 3);
+      paginas.forEach((pg, n) => {
+        const c = norm(`${pg.titulo} ${pg.conteudo}`);
+        if (alvos.some((t) => c.includes(t))) idx.push(n);
+      });
       return {
         titulo: texto(l.titulo, 160),
         autor: texto(l.autor, 120),
         original: texto(l.original, 160) || undefined,
         porque: texto(l.porque, 130),
         caracteristicas: listaDe(l.caracteristicas, 3, 40).filter((x) => ids.has(x)),
-        fontes: idx.map((n) => ({ titulo: paginas[n].titulo, url: paginas[n].url, dominio: paginas[n].dominio, tipo: paginas[n].tipo })),
+        fontes: [...new Set(idx)].map((n) => ({ titulo: paginas[n].titulo, url: paginas[n].url, dominio: paginas[n].dominio, tipo: paginas[n].tipo })),
       };
     })
     .filter((l) => l.titulo && l.autor && l.fontes.length)
@@ -478,8 +484,9 @@ export async function executarDescoberta(corpo: Record<string, unknown>): Promis
       };
       for (let k = 0; k < Math.min(n, fns.length); k++) vai();
     });
-  const resolvidos = await limite(
-    candidatos.map((c, i) => async () => {
+  const resolver = (lista: Candidato[], deslocar = 0) => limite(
+    lista.map((c, i0) => async () => {
+      const i = i0 + deslocar;
       if (fora.has(norm(c.titulo))) return null;
       const r = await edicaoPt(c.titulo, c.autor, c.original);
       if (r.livro && (!r.livro.capa || /desconhecid/.test(r.livro.autor))) {
@@ -494,6 +501,16 @@ export async function executarDescoberta(corpo: Record<string, unknown>): Promis
       return { c, i, livro: r.livro };
     }),
   );
+  let resolvidos = await resolver(candidatos);
+  // poucos resultados confiáveis: completa com a seleção editorial fixa das características (também conferida)
+  if (resolvidos.filter(Boolean).length < 6 && !fixas.length) {
+    const ja = new Set(candidatos.map((c) => norm(c.titulo)));
+    const extra = obrasFixas(idsPedidos).filter((o) => !ja.has(norm(o.titulo))).slice(0, 8).map((o) => ({ ...o, porque: "", caracteristicas: [], fontes: [] }));
+    if (extra.length) {
+      resolvidos = [...resolvidos, ...(await resolver(extra, candidatos.length))];
+      candidatos.push(...extra);
+    }
+  }
   const unicos = resolvidos
     .filter((x): x is NonNullable<typeof x> => !!x)
     .filter((x) => {

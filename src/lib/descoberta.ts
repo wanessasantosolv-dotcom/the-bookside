@@ -48,7 +48,7 @@ const norm = (s: string) =>
 
 const cache = new Map<string, Resposta>();
 /** versão do motor de descoberta (muda a chave do cache local junto com a do servidor) */
-const VERSAO = "v4";
+const VERSAO = "v5";
 
 /** filtros objetivos: só passam livros cujo dado confirma o critério */
 function confirma(l: LivroBusca, criterios: Caracteristica[]) {
