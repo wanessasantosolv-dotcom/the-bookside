@@ -549,6 +549,23 @@ export async function estantesDe(ids: string[]): Promise<Map<string, LivroSalvo[
   return mapa;
 }
 
+/**
+ * Dados da liga dos leitores para cada membro: a estante pública (só se a
+ * pessoa compartilha as métricas pessoais com os clubes) e o arquétipo
+ * publicado de nas entrelinhas (só se ela escolheu mostrar).
+ */
+export async function dadosDaLiga(ids: string[]): Promise<Map<string, { livros: LivroSalvo[] | null; carta: string | null }>> {
+  const mapa = new Map<string, { livros: LivroSalvo[] | null; carta: string | null }>(ids.map((id) => [id, { livros: null, carta: null }]));
+  if (!ids.length) return mapa;
+  const { data, error } = await db().from("perfis_publicos").select("id,livros:dados->livros,carta:dados->cartaLiteraria,liga:dados->ligaPessoal").in("id", ids);
+  if (error) throw error;
+  for (const p of data ?? []) {
+    const x = p as unknown as { id: string; livros?: LivroSalvo[]; carta?: { carta?: string } | null; liga?: boolean | null };
+    mapa.set(x.id, { livros: x.liga === false || !Array.isArray(x.livros) ? null : x.livros, carta: x.carta?.carta ?? null });
+  }
+  return mapa;
+}
+
 export async function amigasComLivro(
   livroId: string,
 ): Promise<{ pessoa: PessoaResumo; livro: LivroSalvo }[]> {

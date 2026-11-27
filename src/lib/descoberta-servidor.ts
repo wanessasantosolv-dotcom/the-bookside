@@ -33,8 +33,10 @@ export type LivroDescoberto = {
   avaliacao?: { media: number; total: number };
 };
 export type ItemDescoberto = { livro: LivroDescoberto; porque?: string; caracteristicas: string[]; fontes: Fonte[]; pesquisaExterna: boolean };
-export type RespostaDescobrir = { resultados: ItemDescoberto[]; pesquisaExterna: boolean; avisos: string[]; medidas: Medidas };
-type Medidas = { candidatos: number; semEdicaoPt: number; naoLiterarios: number; duplicados: number; comFontes: number; ms: number };
+export type RespostaDescobrir = { versao: string; resultados: ItemDescoberto[]; pesquisaExterna: boolean; avisos: string[]; medidas: Medidas; diagnostico?: Diagnostico | null };
+/** versão do motor: muda a chave do cache e descarta resultados de regras antigas */
+export const VERSAO_DESCOBERTA = "v3";
+type Medidas = { candidatos: number; semEdicaoPt: number; naoLiterarios: number; duplicados: number; comFontes: number; semEvidencia: number; metadadosFracos: number; ms: number };
 
 export const SEMANA = 7 * 864e5;
 
@@ -173,20 +175,30 @@ async function edicaoPt(titulo: string, autor: string, original?: string): Promi
 
 /* ───────── pesquisa contextual (Gemini + busca do Google) ───────── */
 
-const SISTEMA = `Você é uma curadora literária brasileira. Use a busca na internet para encontrar recomendações REAIS publicadas por crítica literária, suplementos e revistas culturais (ex.: Quatro Cinco Um, Suplemento Pernambuco, Revista Bula, PublishNews, The Guardian, Literary Hub), prêmios literários, livreiros independentes, bibliotecários, clubes do livro e comunidades de leitores (Goodreads, Skoob, Reddit).
-Regras obrigatórias:
-- Indique só obras que existem e que tenham edição publicada em português (prefira as brasileiras). Use o título oficial da edição em português; se não houver, não indique.
-- Não traduza títulos por conta própria.
-- Não indique dicionários, livros didáticos, guias, resumos, manuais ou materiais de ensino de idiomas, a menos que a pesquisa peça.
-- "Origem literária" é a tradição literária (língua/país da obra), não a ambientação. "Ambientado em X" é a ambientação.
-- Restrições "sem" são obrigatórias.
-- Equilibre obras reconhecidas e descobertas menos conhecidas, sem sacrificar a pertinência. Não repita a mesma autoria mais de duas vezes.
-- Não deduza gênero nem nacionalidade de quem escreve pelo nome.
-- Lista de mais vendidos e descrição comercial de editora não contam como recomendação independente.
-Responda SÓ com JSON, sem comentários:
-{"livros":[{"titulo":string,"autor":string,"original":string,"porque":string,"caracteristicas":[string]}]}
-"titulo": título da edição em português. "original": título original (se diferente). "porque": uma frase concreta (até 110 caracteres) sobre por que ESTE livro responde à pesquisa. "caracteristicas": ids da lista recebida que o livro tem (no máximo 3).
-Indique de 12 a 16 livros.`;
+/*
+ * Duas etapas, para que a seleção venha de evidências e não da memória do modelo:
+ *  A) PESQUISA: Gemini com a ferramenta oficial de busca do Google (grounding)
+ *     escreve um relatório livre com as obras recomendadas que encontrou nas
+ *     páginas; a resposta traz a lista real de páginas consultadas.
+ *  B) EXTRAÇÃO: um segundo pedido (sem internet) só organiza o relatório em JSON,
+ *     ligando cada obra aos números das páginas que a citaram. Obra sem página
+ *     não entra.
+ */
+const PESQUISA = `Você é uma livreira brasileira experiente. Pesquise NA INTERNET recomendações reais para a pesquisa do leitor, em crítica literária, suplementos e revistas culturais (Quatro Cinco Um, Suplemento Pernambuco, Revista Bula, PublishNews, Folha, Estadão, The Guardian, Literary Hub, Book Riot), prêmios literários, livreiros, bibliotecários, clubes do livro e comunidades de leitores (Goodreads, Skoob, Reddit).
+Faça várias buscas diferentes (por exemplo: a pesquisa traduzida para inglês, "melhores", "recomendações", "traduzidos para o português", "edição brasileira").
+Considere só obras LITERÁRIAS pertinentes (romances, contos, poesia, memórias, ensaios), nunca dicionários, revistas, anais, teses, apostilas, guias ou material didático, a menos que a pesquisa peça.
+"Origem literária" é a tradição (língua/país da obra), não a ambientação.
+Escreva um relatório em português listando de 12 a 18 obras, uma por linha, no formato:
+Título da edição em português — Autoria — título original — por que responde à pesquisa (uma frase concreta) — onde foi recomendada.
+Só inclua obras que você viu recomendadas nas páginas pesquisadas e que tenham edição publicada em português. Não traduza títulos por conta própria.`;
+
+const EXTRACAO = `Você recebe um relatório de pesquisa e a lista numerada das páginas consultadas.
+Extraia as obras do relatório (sem acrescentar nenhuma) em JSON:
+{"livros":[{"titulo":string,"autor":string,"original":string,"porque":string,"caracteristicas":[string],"paginas":[number]}]}
+"paginas": números das páginas da lista que citam ou recomendam a obra, segundo o relatório e os títulos das páginas. Se nenhuma, [].
+"porque": a justificativa do relatório, reescrita em até 110 caracteres, concreta e específica da obra.
+"caracteristicas": só ids da lista permitida que a obra tem (no máximo 3).
+Não indique dicionários, revistas, anais, teses ou material didático.`;
 
 const modelos = () => [process.env.GEMINI_MODEL, "gemini-flash-latest", "gemini-2.5-flash"].filter((m, i, a): m is string => !!m && a.indexOf(m) === i);
 
@@ -195,59 +207,62 @@ type Grounding = {
   groundingSupports?: { segment?: { text?: string }; groundingChunkIndices?: number[] }[];
 };
 
-async function pesquisaContextual(pergunta: string, ids: Set<string>): Promise<{ candidatos: Candidato[]; externa: boolean } | null> {
-  const chave = process.env.GEMINI_API_KEY;
-  if (!chave) return null;
+async function gemini(modelo: string, sistema: string, pergunta: string, extra: Record<string, unknown>) {
+  const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent`, {
+    method: "POST",
+    headers: { "content-type": "application/json", "x-goog-api-key": process.env.GEMINI_API_KEY ?? "" },
+    body: JSON.stringify({ systemInstruction: { parts: [{ text: sistema }] }, contents: [{ role: "user", parts: [{ text: pergunta }] }], ...extra }),
+    signal: AbortSignal.timeout(35000),
+  }).catch(() => null);
+  if (!r?.ok) return null;
+  const dados = (await r.json().catch(() => ({}))) as { candidates?: { content?: { parts?: { text?: string }[] }; groundingMetadata?: Grounding }[] };
+  const c = dados.candidates?.[0];
+  return { texto: (c?.content?.parts ?? []).map((p) => p.text ?? "").join(""), g: c?.groundingMetadata };
+}
+
+export type Diagnostico = { etapa: "sem-chave" | "pesquisa-falhou" | "sem-paginas" | "extracao-falhou" | "ok"; paginas: number; modelo?: string };
+
+async function pesquisaContextual(pergunta: string, ids: Set<string>): Promise<{ candidatos: Candidato[]; externa: boolean; diagnostico: Diagnostico }> {
+  if (!process.env.GEMINI_API_KEY) return { candidatos: [], externa: false, diagnostico: { etapa: "sem-chave", paginas: 0 } };
   for (const modelo of modelos()) {
-    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent`, {
-      method: "POST",
-      headers: { "content-type": "application/json", "x-goog-api-key": chave },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: SISTEMA }] },
-        contents: [{ role: "user", parts: [{ text: pergunta }] }],
-        tools: [{ google_search: {} }],
-        generationConfig: { temperature: 0.3 },
-      }),
-    }).catch(() => null);
-    if (!r || !r.ok) continue;
-    const dados = (await r.json().catch(() => ({}))) as { candidates?: { content?: { parts?: { text?: string }[] }; groundingMetadata?: Grounding }[] };
-    const c = dados.candidates?.[0];
-    const bruto = (c?.content?.parts ?? []).map((p) => p.text ?? "").join("");
-    const g = c?.groundingMetadata;
-    let json: { livros?: Record<string, unknown>[] };
-    try {
-      json = JSON.parse(bruto.slice(bruto.indexOf("{"), bruto.lastIndexOf("}") + 1));
-    } catch {
-      continue;
-    }
-    const pedacos = (g?.groundingChunks ?? []).map((ch) => {
-      const dominio = (ch.web?.title ?? "").toLowerCase();
-      return { titulo: ch.web?.title ?? "", url: ch.web?.uri ?? "", dominio, tipo: tipoDaFonte(dominio) };
-    });
-    // as páginas que sustentam cada livro: trechos da resposta que citam o título
-    const fontesDe = (titulo: string): Fonte[] => {
-      const t = norm(titulo).slice(0, 18);
-      const idx = new Set<number>();
-      for (const s of g?.groundingSupports ?? []) if (t && norm(s.segment?.text ?? "").includes(t)) for (const i of s.groundingChunkIndices ?? []) idx.add(i);
-      return [...idx].map((i) => pedacos[i]).filter((f): f is Fonte => !!f?.url && f.tipo !== "comercial");
-    };
-    const candidatos = (json.livros ?? [])
-      .map((l) => {
-        const titulo = texto(l.titulo, 160);
-        return {
-          titulo,
-          autor: texto(l.autor, 120),
-          original: texto(l.original, 160) || undefined,
-          porque: texto(l.porque, 130),
-          caracteristicas: listaDe(l.caracteristicas, 3, 40).filter((x) => ids.has(x)),
-          fontes: fontesDe(titulo),
-        };
+    const a = await gemini(modelo, PESQUISA, pergunta, { tools: [{ google_search: {} }], generationConfig: { temperature: 0.2 } });
+    if (!a?.texto) continue;
+    const paginas = (a.g?.groundingChunks ?? [])
+      .map((ch) => {
+        const dominio = (ch.web?.title ?? "").toLowerCase();
+        return { titulo: ch.web?.title ?? "", url: ch.web?.uri ?? "", dominio, tipo: tipoDaFonte(dominio) };
       })
+      .filter((f) => f.url);
+    if (!paginas.length) return { candidatos: [], externa: false, diagnostico: { etapa: "sem-paginas", paginas: 0, modelo } };
+    // trechos do relatório ligados a cada página (ajudam a extração a atribuir as fontes)
+    const trechos = new Map<number, string[]>();
+    for (const s of a.g?.groundingSupports ?? []) for (const i of s.groundingChunkIndices ?? []) trechos.set(i, [...(trechos.get(i) ?? []), (s.segment?.text ?? "").slice(0, 200)]);
+    const lista = paginas.map((p, i) => `[${i}] ${p.dominio}${trechos.get(i)?.length ? ` — citado em: ${trechos.get(i)!.slice(0, 3).join(" | ")}` : ""}`).join("\n");
+    const b = await gemini(modelo, EXTRACAO, `Ids permitidos: ${[...ids].join(", ")}\n\nPáginas consultadas:\n${lista}\n\nRelatório:\n${a.texto.slice(0, 12000)}`, {
+      generationConfig: { responseMimeType: "application/json", temperature: 0 },
+    });
+    let json: { livros?: Record<string, unknown>[] } = {};
+    try {
+      json = JSON.parse(b?.texto ?? "");
+    } catch {
+      return { candidatos: [], externa: true, diagnostico: { etapa: "extracao-falhou", paginas: paginas.length, modelo } };
+    }
+    const candidatos = (json.livros ?? [])
+      .map((l) => ({
+        titulo: texto(l.titulo, 160),
+        autor: texto(l.autor, 120),
+        original: texto(l.original, 160) || undefined,
+        porque: texto(l.porque, 130),
+        caracteristicas: listaDe(l.caracteristicas, 3, 40).filter((x) => ids.has(x)),
+        fontes: [...new Set((Array.isArray(l.paginas) ? l.paginas : []).map(Number).filter((n) => Number.isInteger(n) && n >= 0 && n < paginas.length))]
+          .map((n) => paginas[n])
+          .filter((f) => f.tipo !== "comercial"),
+      }))
       .filter((l) => l.titulo && l.autor)
-      .slice(0, 16);
-    return { candidatos, externa: pedacos.length > 0 };
+      .slice(0, 18);
+    return { candidatos, externa: true, diagnostico: { etapa: "ok", paginas: paginas.length, modelo } };
   }
-  return null;
+  return { candidatos: [], externa: false, diagnostico: { etapa: "pesquisa-falhou", paginas: 0 } };
 }
 
 /* ───────── rota ───────── */
@@ -264,7 +279,8 @@ export async function executarDescoberta(corpo: Record<string, unknown>): Promis
   const sementes = (Array.isArray(corpo.sementes) ? corpo.sementes : []).slice(0, 20).map((s) => ({ titulo: texto((s as Record<string, unknown>).titulo, 160), autor: texto((s as Record<string, unknown>).autor, 120) })).filter((s) => s.titulo && s.autor);
   const outrosIdiomas = corpo.outrosIdiomas === true;
   const avisos: string[] = [];
-  const medidas: Medidas = { candidatos: 0, semEdicaoPt: 0, naoLiterarios: 0, duplicados: 0, comFontes: 0, ms: 0 };
+  const medidas: Medidas = { candidatos: 0, semEdicaoPt: 0, naoLiterarios: 0, duplicados: 0, comFontes: 0, semEvidencia: 0, metadadosFracos: 0, ms: 0 };
+  let diagnostico: Diagnostico | null = null;
 
   const pergunta = [
     consulta ? `Pesquisa: ${consulta}` : "",
@@ -281,10 +297,13 @@ export async function executarDescoberta(corpo: Record<string, unknown>): Promis
   // curadoria verificada (sementes) + pesquisa contextual na internet
   const contextual = consulta || criterios.length || parecido ? await pesquisaContextual(pergunta, ids) : null;
   const externa = !!contextual?.externa;
-  if (!contextual) avisos.push("A pesquisa em fontes literárias externas não está disponível agora; mostramos só curadorias verificadas.");
+  diagnostico = contextual?.diagnostico ?? null;
+  // elegibilidade: candidato da pesquisa só entra com pelo menos uma página real que o recomende
+  const comEvidencia = (contextual?.candidatos ?? []).filter((c) => c.fontes.length);
+  medidas.semEvidencia = (contextual?.candidatos.length ?? 0) - comEvidencia.length;
   const candidatos: Candidato[] = [
     ...sementes.map((s) => ({ ...s, porque: "", caracteristicas: [], fontes: [] })),
-    ...(contextual?.candidatos ?? []),
+    ...comEvidencia,
   ];
   medidas.candidatos = candidatos.length;
 
@@ -294,6 +313,10 @@ export async function executarDescoberta(corpo: Record<string, unknown>): Promis
     candidatos.map(async (c, i) => {
       if (fora.has(norm(c.titulo))) return null;
       const r = await edicaoPt(c.titulo, c.autor, c.original);
+      if (r.livro && (!r.livro.capa || /desconhecid/.test(r.livro.autor))) {
+        medidas.metadadosFracos++;
+        return null;
+      }
       if (!r.livro) {
         if (r.motivo === "nao-literario") medidas.naoLiterarios++;
         else medidas.semEdicaoPt++;
@@ -337,9 +360,9 @@ export async function executarDescoberta(corpo: Record<string, unknown>): Promis
     pesquisaExterna: x.c.fontes.length > 0,
   }));
   medidas.comFontes = resultados.filter((r) => r.fontes.length).length;
-  if (contextual && !externa) avisos.push("A busca na internet não respondeu desta vez: as indicações vêm do conhecimento da curadoria automática e foram conferidas no catálogo.");
+  if (contextual && !externa && !sementes.length) avisos.push("A pesquisa em fontes literárias não respondeu desta vez.");
   if (outrosIdiomas) avisos.push("Edições em outros idiomas aparecem só na pesquisa direta por título, autor ou ISBN.");
   medidas.ms = Date.now() - inicio;
-  return { resultados, pesquisaExterna: externa, avisos, medidas };
+  return { versao: VERSAO_DESCOBERTA, resultados, pesquisaExterna: externa, avisos, medidas, diagnostico };
 }
 

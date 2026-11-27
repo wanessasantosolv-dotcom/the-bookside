@@ -181,6 +181,8 @@ export type Perfil = {
   } | null;
   /** a carta de nas entrelinhas exibida no perfil (só a carta: respostas e pontos ficam privados) */
   cartaLiteraria: { carta: string; em: string } | null;
+  /** compartilha as métricas pessoais de leitura com a liga dos leitores dos clubes */
+  ligaPessoal: boolean;
   onboardingConcluido: boolean;
   /** já viu o passo a passo mostrando onde fica cada coisa no app */
   tourVisto: boolean;
@@ -249,6 +251,7 @@ export const perfilInicial: Perfil = {
   estantesProprias: [],
   bookside: null,
   cartaLiteraria: null,
+  ligaPessoal: true,
   onboardingConcluido: false,
   tourVisto: false,
   novidadesVistasEm: null,

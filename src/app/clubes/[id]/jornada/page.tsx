@@ -1,5 +1,8 @@
 "use client";
 
+import { Insignia } from "@/components/liga/Pecas";
+import { DISTINCOES, type TipoDistincao } from "@/lib/liga";
+import { historicoDaLiga } from "@/lib/liga-historico";
 import Link from "next/link";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { CapaAuto } from "@/components/CapaAuto";
@@ -175,12 +178,13 @@ function Jornada({
       <Gosto leituras={doPeriodo} />
       <Mundo leituras={doPeriodo} />
       <Turma leituras={doPeriodo} todas={todas} livros={livros} membros={membros} eu={eu} periodo={periodo} />
+      <HistoricoDasGlorias clubeId={clube.id} membros={membros} eu={eu} periodo={periodo} />
       <Secao id="t-yearbook" nome="o anuário do clube.">
         <p className="text-[14px] text-tinta-suave">um ano de livros, encontros e diferentes perspectivas.</p>
         <div className="mt-4 flex flex-wrap gap-2">
           {anos.map((a) => (
             <Link key={a} href={`/clubes/${clube.id}/retrospectiva?ano=${a}`} className="inline-flex min-h-11 items-center rounded-pill border border-bordo/40 px-4 text-[13px] font-semibold text-bordo hover:border-bordo">
-              club rewind {a}
+              retrospectiva {a}
               {a === anoAtual ? " · em andamento" : ""}
             </Link>
           ))}
@@ -794,6 +798,38 @@ function Turma({
         ))}
       </ul>
       <p className="mt-4 text-[11px] text-cinza">conta só as leituras encerradas depois que cada pessoa entrou no clube. a gestão dos membros fica na aba membros.</p>
+    </Secao>
+  );
+}
+
+
+/** pequenas glórias de cada mês encerrado (consolidadas; nunca recalculadas) */
+function HistoricoDasGlorias({ clubeId, membros, eu, periodo }: { clubeId: string; membros: ReturnType<typeof useClube>["membros"]; eu: string | null; periodo: Periodo }) {
+  const consulta = useConsulta(() => historicoDaLiga(clubeId), [clubeId]);
+  const meses = (consulta.dados ?? []).filter((m) => periodo === "tudo" || m.periodo.startsWith(String(periodo)));
+  if (!meses.length) return null;
+  const nome = (id: string) => (id === eu ? "você" : nomeDe(membros.find((m) => m.usuario_id === id)?.pessoa));
+  const cor = (id: string) => DISTINCOES.find((x) => x.id === id)?.cor ?? "meta";
+  return (
+    <Secao id="t-glorias-hist" nome="pequenas glórias de cada mês.">
+      <ol className="divide-y divide-linha">
+        {meses.map((m) => (
+          <li key={m.periodo} className="grid gap-3 py-4 sm:grid-cols-[150px_minmax(0,1fr)]">
+            <p className="font-revista text-[17px] text-ameixa italic">{m.nome}</p>
+            <ul className="flex flex-wrap gap-x-6 gap-y-3">
+              {m.distincoes.map((g) => (
+                <li key={g.id} className="flex items-center gap-2">
+                  <Insignia tipo={g.id as TipoDistincao} tamanho={34} cor={cor(g.id)} />
+                  <span className="text-[13px]">
+                    <span className="block font-semibold text-ameixa">{g.nome}</span>
+                    <span className="block text-[12px] text-tinta-suave">{g.vencedores.map((v) => nome(v.usuario_id)).join(" e ")}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </li>
+        ))}
+      </ol>
     </Secao>
   );
 }

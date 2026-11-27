@@ -234,4 +234,8 @@ export function interpretarBusca(consulta: string): Interpretacao {
 }
 
 /** a pesquisa é convencional (título, autor, ISBN) e não pede descoberta */
-export const ehBuscaDireta = (i: Interpretacao) => !!i.isbn || (!i.criterios.length && !i.sem.length && !i.parecidoCom && !i.avisos.length);
+/** palavras que indicam pedido de recomendação, não um título ou autor */
+const PISTAS_DE_DESCOBERTA = /\b(livros?|literatura|romances?|contos?|poesias?|poemas|historias?|obras?|melhores|recomendad[oa]s?|recomendac[oa]es|classicos?|sobre|parecid[oa]s?|semelhantes?|ambientad[oa]s?|autores|autoras|escritores|escritoras|leituras?|para ler|que fazem|que parecem|premiad[oa]s?|indicac[oa]es)\b/;
+export const ehBuscaDireta = (i: Interpretacao, consulta = "") =>
+  !!i.isbn ||
+  (!i.criterios.length && !i.sem.length && !i.parecidoCom && !i.avisos.length && !PISTAS_DE_DESCOBERTA.test(norm(consulta)));

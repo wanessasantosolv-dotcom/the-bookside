@@ -277,8 +277,18 @@ function Privacidade() {
   const proprias = usePerfil((s) => s.estantesProprias ?? []);
   const usuario = usePerfil((s) => s.usuario);
   const atualizar = usePerfil((s) => s.atualizar);
+  const ligaPessoal = usePerfil((s) => s.ligaPessoal !== false);
   return (
     <div className="space-y-8">
+      <section>
+        <h2 className={tituloSecao}>Clubes</h2>
+        <Interruptor
+          ligado={ligaPessoal}
+          onChange={(v) => atualizar({ ligaPessoal: v })}
+          titulo="Participar da liga dos leitores com minhas leituras pessoais"
+          texto={ligaPessoal ? "livros concluídos, páginas, resenhas, autores e gêneros das suas estantes públicas entram na classificação dos seus clubes" : "nos clubes, só contam as atividades feitas no próprio clube"}
+        />
+      </section>
       <section>
         <h2 className={tituloSecao}>Estantes</h2>
         {proprias.length ? (
