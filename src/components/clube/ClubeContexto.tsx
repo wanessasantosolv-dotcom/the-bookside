@@ -52,7 +52,7 @@ const largura = "lg:mx-auto lg:w-full lg:max-w-[1320px] lg:px-12";
 
 const abas = [
   { id: "", r: "início" },
-  { id: "leitura", r: "leitura atual" },
+  { id: "leitura", r: "leitura" },
   { id: "biblioteca", r: "estante" },
   { id: "jornada", r: "jornada" },
   { id: "agenda", r: "agenda" },
@@ -139,7 +139,7 @@ function Menu({ c, papel }: { c: Clube; papel: Papel | null }) {
 function Abas({ base }: { base: string }) {
   const pathname = usePathname();
   return (
-    <nav aria-label="seções do clube" className="-mx-5 flex gap-6 overflow-x-auto px-5 [scrollbar-width:none] lg:mx-0 lg:gap-8 lg:px-0 [&::-webkit-scrollbar]:hidden">
+    <nav aria-label="seções do clube" className="-mx-4 flex gap-5 overflow-x-auto px-4 [scrollbar-width:none] lg:mx-0 lg:gap-8 lg:px-0 [&::-webkit-scrollbar]:hidden">
       {abas.map((a) => {
         const href = a.id ? `${base}/${a.id}` : base;
         // a leitura de um livro do clube fica dentro da estante; o perfil de um membro, dentro de membros
@@ -153,7 +153,7 @@ function Abas({ base }: { base: string }) {
             key={a.id}
             href={href}
             aria-current={on ? "page" : undefined}
-            className={`flex min-h-12 flex-none items-center border-b-2 text-[14px] whitespace-nowrap transition-colors lg:text-[15px] ${
+            className={`flex min-h-11 flex-none items-center border-b-2 text-[13.5px] whitespace-nowrap transition-colors lg:min-h-12 lg:text-[15px] ${
               on ? "border-bordo font-semibold text-bordo" : "border-transparent text-cinza hover:text-ameixa"
             }`}
           >
@@ -165,16 +165,16 @@ function Abas({ base }: { base: string }) {
   );
 }
 
-function SeloDoClube({ c, tamanho, ident }: { c: Clube; tamanho: "pequeno" | "grande"; ident: Identidade | null }) {
-  const cls = tamanho === "grande" ? "size-20 lg:size-24 border-4 border-creme lg:border-jornal" : "size-10";
+function SeloDoClube({ c, tamanho, ident }: { c: Clube; tamanho: "mini" | "pequeno" | "grande"; ident: Identidade | null }) {
+  const cls = tamanho === "grande" ? "size-20 lg:size-24 border-4 border-creme lg:border-jornal" : tamanho === "mini" ? "size-8" : "size-10";
   // emblema do club studio: no lugar da foto (se pedido) ou quando não há foto
   if (ident && (ident.emblema?.noAvatar || !c.foto))
-    return <Emblema e={emblemaDe(ident, c.nome)} paleta={paletaDe(ident)} tamanho={tamanho === "grande" ? 96 : 42} className="block flex-none drop-shadow-[0_6px_10px_rgba(0,0,0,.12)]" />;
+    return <Emblema e={emblemaDe(ident, c.nome)} paleta={paletaDe(ident)} tamanho={tamanho === "grande" ? 96 : tamanho === "mini" ? 32 : 42} className="block flex-none drop-shadow-[0_6px_10px_rgba(0,0,0,.12)]" />;
   return c.foto ? (
     // eslint-disable-next-line @next/next/no-img-element
     <img src={c.foto} alt="" className={`block flex-none rounded-full object-cover ${cls}`} />
   ) : (
-    <span className={`flex flex-none items-center justify-center rounded-full bg-rosa-fundo font-revista text-bordo italic ${cls} ${tamanho === "grande" ? "text-[34px]" : "text-[18px]"}`}>
+    <span className={`flex flex-none items-center justify-center rounded-full bg-rosa-fundo font-revista text-bordo italic ${cls} ${tamanho === "grande" ? "text-[34px]" : tamanho === "mini" ? "text-[15px]" : "text-[18px]"}`}>
       {c.nome.charAt(0).toLowerCase()}
     </span>
   );
@@ -295,19 +295,25 @@ function Cabecalho({ c, papel, membros, ident }: { c: Clube; papel: Papel | null
           </div>
         </div>
       ) : (
-        <div className={`flex items-center gap-3 px-5 pt-3 pb-1 ${largura}`}>
-          <Voltar padrao="/clubes" rotulo="clubes" className="-ml-2 flex min-h-11 flex-none items-center px-2 text-[13px] font-semibold text-bordo" />
-          <Link href={base} className="flex min-w-0 flex-1 items-center gap-3 border-l border-linha pl-3 lg:border-fio">
-            <SeloDoClube c={c} tamanho="pequeno" ident={ident} />
-            <span className="truncate font-revista text-[19px] leading-tight text-bordo italic lg:text-[22px]">{c.nome}</span>
+        // páginas internas: uma linha só (voltar, selo, nome, menu)
+        <div className={`flex min-h-[52px] items-center gap-2 px-4 pt-1 lg:gap-3 lg:px-5 lg:pt-3 ${largura}`}>
+          <Voltar padrao="/clubes" className="-ml-2 grid size-11 flex-none place-items-center text-bordo">
+            <span className="sr-only">voltar</span>
+            <svg aria-hidden width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15 5l-7 7 7 7" />
+            </svg>
+          </Voltar>
+          <Link href={base} className="flex min-w-0 flex-1 items-center gap-2.5">
+            <SeloDoClube c={c} tamanho="mini" ident={ident} />
+            <span className="min-w-0 truncate font-revista text-[17px] leading-tight text-ameixa lg:text-[20px]">{c.nome}</span>
           </Link>
           <Menu c={c} papel={papel} />
         </div>
       )}
-      {faixa ? <div aria-hidden className={`faixa-clube mt-4 h-3 ${largura}`} /> : null}
+      {faixa && inicio ? <div aria-hidden className={`faixa-clube mt-4 h-3 ${largura}`} /> : null}
       {/* abas: presas no topo enquanto rola, sem cobrir o conteúdo */}
-      <div className="sticky top-0 z-20 mt-3 border-b border-linha bg-creme/95 backdrop-blur-md lg:border-fio lg:bg-jornal/95">
-        <div className={`px-5 ${largura}`}>
+      <div className={`sticky top-0 z-20 border-b border-linha ${inicio ? "mt-3" : "mt-0"} bg-creme/95 backdrop-blur-md lg:border-fio lg:bg-jornal/95`}>
+        <div className={`px-4 lg:px-5 ${largura}`}>
           <Abas base={base} />
         </div>
       </div>
