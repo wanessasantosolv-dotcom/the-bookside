@@ -186,7 +186,7 @@ function Formulario({ inicial }: { inicial: Rascunho }) {
             onChange={async (e) => {
               const f = e.target.files?.[0];
               e.target.value = "";
-              if (f) setCapaParaAjustar(await reduzirImagem(f, 2000, 0.9));
+              if (f) setCapaParaAjustar(await reduzirImagem(f, 3000, 0.92));
             }}
           />
         </div>

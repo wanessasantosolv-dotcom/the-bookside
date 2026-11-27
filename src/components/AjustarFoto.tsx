@@ -26,7 +26,7 @@ type Formato = {
 };
 const FORMATOS: Record<"foto" | "capa" | "clube" | "livro", Formato> = {
   foto: { qw: 260, qh: 260, sw: 400, sh: 400, titulo: "ajuste sua foto", redondo: true, qualidade: 0.85 },
-  capa: { qw: 300, qh: 150, sw: 1200, sh: 600, titulo: "ajuste a capa", redondo: false, qualidade: 0.78, guia: 0.47 },
+  capa: { qw: 300, qh: 150, sw: 2000, sh: 1000, titulo: "ajuste a capa", redondo: false, qualidade: 0.85, guia: 0.47 },
   clube: { qw: 330, qh: 110, sw: 1500, sh: 500, titulo: "ajuste a capa do clube", redondo: false, qualidade: 0.8, guia: 0.6 },
   livro: { qw: 200, qh: 300, sw: 400, sh: 600, titulo: "ajuste a capa do livro", redondo: false, qualidade: 0.85 },
 };

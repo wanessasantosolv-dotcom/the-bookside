@@ -650,16 +650,24 @@ export function PerfilEditorial({
   );
 
   return (
-    <div className="min-h-dvh overflow-x-clip bg-[var(--papel)] pb-12 text-[var(--tinta)]">
-      <div className="mx-auto w-full max-w-[1240px] lg:px-12">
+    <div className="relative min-h-dvh bg-[var(--papel)] pb-12 text-[var(--tinta)]">
+      {geral ? (
+        // no computador a capa ocupa a coluna toda, de ponta a ponta (ao lado do menu)
+        <div
+          aria-hidden
+          className={`absolute inset-x-0 top-0 hidden h-[280px] bg-cover bg-center lg:block ${p.capaImagem ? "" : `pat-${p.capa}`}`}
+          style={p.capaImagem ? { backgroundImage: `url("${p.capaImagem}")`, backgroundPosition: `center ${p.capaPosY ?? 50}%` } : undefined}
+        />
+      ) : null}
+      <div className="relative mx-auto w-full max-w-[1240px] lg:px-12">
         {geral ? (
           <header>
-            {/* a disposição de antes: capa alta, ações sobre a capa, foto saindo da capa; no computador a capa ocupa a largura toda da tela */}
+            {/* a disposição de antes: capa alta, ações sobre a capa, foto saindo da capa */}
             <div
-              className={`relative h-[150px] bg-cover bg-center sm:h-[220px] lg:left-1/2 lg:h-[280px] lg:w-screen lg:-translate-x-1/2 ${p.capaImagem ? "" : `pat-${p.capa}`}`}
+              className={`relative h-[150px] bg-cover bg-center sm:h-[220px] lg:h-[280px] lg:!bg-transparent lg:!bg-none ${p.capaImagem ? "" : `pat-${p.capa}`}`}
               style={p.capaImagem ? { backgroundImage: `url("${p.capaImagem}")`, backgroundPosition: `center ${p.capaPosY ?? 50}%` } : undefined}
             >
-              <div className="absolute right-5 bottom-4 hidden items-center gap-3 sm:flex lg:right-[max(56px,calc(50vw-564px))] lg:bottom-5">
+              <div className="absolute right-5 bottom-4 hidden items-center gap-3 sm:flex lg:right-14 lg:bottom-5">
                 {proprio ? (
                   <>
                     <Link href="/perfil/editar" className={botaoCapa}>
