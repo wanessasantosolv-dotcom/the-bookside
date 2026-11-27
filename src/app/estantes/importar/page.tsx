@@ -14,8 +14,6 @@ import { buscaDoApp, type LivroBusca } from "@/lib/catalogo";
 import { corDoLivro } from "@/lib/cores";
 import {
   acharLivro,
-  lerArquivo,
-  lerLista,
   normalizar,
   type ItemImport,
 } from "@/lib/importar";
@@ -25,7 +23,7 @@ import {
   type LivroSalvo,
   type Reacao,
 } from "@/lib/perfil-store";
-import { lerCsv, lerXlsx, planilhaParaItens } from "@/lib/planilha";
+import { lerComoTexto, lerCsv, lerTextoQualquer, lerXlsx, planilhaParaItens } from "@/lib/planilha";
 import { reacoes } from "@/lib/reacoes";
 import { formatos } from "@/lib/formatos";
 import { semPublicar } from "@/lib/social";
@@ -108,19 +106,18 @@ export default function ImportarPage() {
         return setErro(
           "esse é o excel antigo (.xls). no excel, use “salvar como” .xlsx ou .csv e tente de novo.",
         );
-      const conteudo = await f.text();
+      // zip (xlsx sem a extensão certa, como vem de alguns celulares)
+      const cabeca = new Uint8Array(await f.slice(0, 4).arrayBuffer());
+      if (cabeca[0] === 0x50 && cabeca[1] === 0x4b)
+        return await procurar(planilhaParaItens(await lerXlsx(await f.arrayBuffer())));
+      const conteudo = await lerComoTexto(f);
       if (/\.(csv|tsv)$/.test(nome))
         return await procurar(planilhaParaItens(lerCsv(conteudo)));
-      await procurar(
-        nome.endsWith(".json") ||
-          conteudo.trim().startsWith("[") ||
-          conteudo.trim().startsWith("{")
-          ? lerArquivo(conteudo)
-          : lerLista(conteudo),
-      );
+      // json (do app ou de outros apps), csv sem extensão ou lista
+      await procurar(lerTextoQualquer(conteudo));
     } catch {
       setErro(
-        "não consegui ler esse arquivo. aceito excel (.xlsx), .csv, .json ou .txt.",
+        "não consegui ler esse arquivo. aceito excel (.xlsx), .csv, .json ou .txt, inclusive os exportados do goodreads, storygraph e skoob.",
       );
     }
   }
@@ -288,7 +285,7 @@ export default function ImportarPage() {
             <div className="mt-6 flex flex-wrap gap-2.5">
               <button
                 type="button"
-                onClick={() => procurar(lerLista(texto))}
+                onClick={() => procurar(lerTextoQualquer(texto))}
                 disabled={!texto.trim()}
                 className={`${botaoPrincipal} max-w-[320px]`}
               >

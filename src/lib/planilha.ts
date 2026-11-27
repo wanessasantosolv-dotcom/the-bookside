@@ -6,7 +6,7 @@
  * O .xlsx é um zip com XML dentro: lemos o índice do zip, abrimos as partes
  * com o DecompressionStream do navegador e o XML com o DOMParser.
  */
-import { lerData, type ItemImport } from "@/lib/importar";
+import { lerArquivo, lerData, lerLista, type ItemImport } from "@/lib/importar";
 import type { FormatoLivro, Reacao } from "@/lib/perfil-store";
 
 // ───────── zip mínimo ─────────
@@ -211,18 +211,18 @@ const sem = (t: string) =>
 
 /** nomes de coluna aceitos (em português, inglês, Goodreads e Skoob) */
 const colunas: Record<string, string[]> = {
-  titulo: ["titulo", "title", "livro", "nome", "obra", "book"],
-  autor: ["autor", "autora", "autoria", "author", "autores", "escritor", "escritora"],
-  lidoEm: ["data", "lido em", "terminei", "terminei em", "data de leitura", "date read", "data lido", "data de termino", "fim", "termino", "lido"],
-  iniciadoEm: ["comecei", "comecei em", "inicio", "data de inicio", "date started", "iniciado em"],
-  nota: ["nota", "my rating", "rating", "estrelas", "avaliacao", "minha nota"],
-  paginas: ["paginas", "pages", "number of pages", "n paginas", "num paginas", "qtd paginas"],
-  resenha: ["resenha", "my review", "review", "comentario", "o que achei", "opiniao"],
+  titulo: ["titulo", "title", "livro", "nome", "obra", "book", "book title", "nome do livro", "titulo do livro", "name"],
+  autor: ["autor", "autora", "autoria", "author", "autores", "authors", "escritor", "escritora", "author name", "nome do autor", "creator"],
+  lidoEm: ["data", "lido em", "terminei", "terminei em", "data de leitura", "date read", "data lido", "data de termino", "fim", "termino", "lido", "last date read", "dates read", "data leitura", "dt leitura", "date finished", "finished", "read at", "data fim", "data de conclusao", "concluido em"],
+  iniciadoEm: ["comecei", "comecei em", "inicio", "data de inicio", "date started", "iniciado em", "started", "data inicio", "dt inicio"],
+  nota: ["nota", "my rating", "rating", "estrelas", "avaliacao", "minha nota", "star rating", "stars", "minha avaliacao", "ranking", "score"],
+  paginas: ["paginas", "pages", "number of pages", "n paginas", "num paginas", "qtd paginas", "page count", "num pages", "numero de paginas"],
+  resenha: ["resenha", "my review", "review", "comentario", "o que achei", "opiniao", "notes", "anotacoes"],
   personagem: ["personagem", "personagem favorita", "personagem favorito"],
   citacao: ["citacao", "trecho", "frase", "quote"],
   reacao: ["veredito", "reacao", "tag", "tags", "gostei"],
   formato: ["formato", "como li", "format", "binding", "midia"],
-  estante: ["exclusive shelf", "estante", "status", "situacao"],
+  estante: ["exclusive shelf", "estante", "status", "situacao", "read status", "shelf", "reading status"],
 };
 
 function acharColunas(cabecalho: string[]) {
@@ -308,7 +308,7 @@ export function planilhaParaItens(linhas: string[][]): ItemImport[] {
     if (!titulo || titulo.length < 2) continue;
     // Goodreads/Skoob: só o que foi lido (to-read e "quero ler" ficam de fora)
     const estante = sem(de(l, "estante") ?? "");
-    if (/to read|currently reading|quero ler|lendo|desejad/.test(estante)) continue;
+    if (/to read|currently reading|quero ler|lendo|desejad|want to read|wishlist|tbr|reading now/.test(estante)) continue;
     const paginas = Number(de(l, "paginas")?.replace(/\D/g, ""));
     itens.push({
       titulo: titulo.replace(/\s*\(([^)]*#\d+[^)]*)\)\s*$/, "").slice(0, 200),
@@ -325,4 +325,86 @@ export function planilhaParaItens(linhas: string[][]): ItemImport[] {
     });
   }
   return itens;
+}
+
+// ───────── qualquer arquivo de texto (json de outros apps, csv sem extensão, lista) ─────────
+
+/** a maior lista de objetos dentro de um json (ex.: {"books": [...]}, {"data": {"items": [...]}}) */
+function maiorLista(x: unknown, fundo = 0): Record<string, unknown>[] | null {
+  if (fundo > 5 || !x || typeof x !== "object") return null;
+  if (Array.isArray(x)) {
+    const objs = x.filter((y) => y && typeof y === "object" && !Array.isArray(y)) as Record<string, unknown>[];
+    if (objs.length && objs.length >= x.length / 2) return objs;
+  }
+  let melhor: Record<string, unknown>[] | null = null;
+  for (const v of Object.values(x as Record<string, unknown>)) {
+    const l = maiorLista(v, fundo + 1);
+    if (l && (!melhor || l.length > melhor.length)) melhor = l;
+  }
+  return melhor;
+}
+
+/** achata um objeto: {edicao: {titulo, autor}} → {titulo, autor} (o nome mais próximo ganha) */
+function achatar(o: Record<string, unknown>, saida: Record<string, string> = {}, fundo = 0) {
+  for (const [k, v] of Object.entries(o)) {
+    if (v === null || v === undefined) continue;
+    if (Array.isArray(v)) {
+      // listas de autores: ["Fulana", "Ciclana"] ou [{name: "Fulana"}]
+      const nomes = v.map((y) => (typeof y === "string" ? y : y && typeof y === "object" ? ((y as Record<string, unknown>).name ?? (y as Record<string, unknown>).nome) : null)).filter((y): y is string => typeof y === "string");
+      if (nomes.length && !(k in saida)) saida[k] = nomes.join(", ");
+    } else if (typeof v === "object") {
+      if (fundo < 3) achatar(v as Record<string, unknown>, saida, fundo + 1);
+    } else if (!(k in saida) || fundo === 0) saida[k] = String(v);
+  }
+  return saida;
+}
+
+/** json de outros apps (Skoob, StoryGraph, Goodreads convertido…) → linhas de planilha */
+function jsonParaLinhas(bruto: unknown): string[][] {
+  const lista = maiorLista(bruto);
+  if (!lista) return [];
+  const planos = lista.map((o) => achatar(o));
+  const chaves = [...new Set(planos.flatMap((o) => Object.keys(o)))];
+  return [chaves.map((c) => c.replace(/[_-]+/g, " ")), ...planos.map((o) => chaves.map((c) => o[c] ?? ""))];
+}
+
+/**
+ * Lê qualquer conteúdo de texto: o json do próprio app, json de outros apps,
+ * csv/tsv (mesmo sem extensão) ou a lista "um livro por linha".
+ */
+export function lerTextoQualquer(conteudo: string): ItemImport[] {
+  const t = conteudo.replace(/^\uFEFF/, "").trim();
+  if (t.startsWith("[") || t.startsWith("{")) {
+    let bruto: unknown;
+    try {
+      bruto = JSON.parse(t);
+    } catch {
+      bruto = undefined;
+    }
+    if (bruto !== undefined) {
+      let nossos: ItemImport[] = [];
+      try {
+        nossos = lerArquivo(t);
+      } catch {
+        nossos = [];
+      }
+      return nossos.length ? nossos : planilhaParaItens(jsonParaLinhas(bruto));
+    }
+  }
+  // parece planilha? (cabeçalho com título reconhecido)
+  const linhas = lerCsv(t);
+  if (linhas.length > 1 && linhas.slice(0, 5).some((l) => l.length > 1 && acharColunas(l).titulo !== undefined)) return planilhaParaItens(linhas);
+  return lerLista(t);
+}
+
+/** texto do arquivo em UTF-8; se vier com acentos quebrados (csv do excel no windows), tenta latin-1 */
+export async function lerComoTexto(f: Blob): Promise<string> {
+  const buf = await f.arrayBuffer();
+  const utf = new TextDecoder("utf-8").decode(buf);
+  if (!utf.includes("\uFFFD")) return utf;
+  try {
+    return new TextDecoder("windows-1252").decode(buf);
+  } catch {
+    return utf;
+  }
 }

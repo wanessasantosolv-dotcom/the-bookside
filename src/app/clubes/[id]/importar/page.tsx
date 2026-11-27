@@ -1,5 +1,7 @@
 "use client";
 
+import { lerComoTexto, lerTextoQualquer, lerXlsx, planilhaParaItens } from "@/lib/planilha";
+
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { Animacao } from "@/components/Animacao";
@@ -30,8 +32,6 @@ import { corDoLivro } from "@/lib/cores";
 import { dataDoDia, diaLocal } from "@/lib/datas";
 import {
   acharLivro,
-  lerArquivo,
-  lerLista,
   normalizar,
   type ItemImport,
 } from "@/lib/importar";
@@ -161,9 +161,9 @@ export default function ImportarNoClubePage() {
   async function abrirArquivo(f: File | undefined) {
     if (!f) return;
     try {
-      const conteudo = await f.text();
-      const json = f.name.endsWith(".json") || /^\s*[[{]/.test(conteudo);
-      await procurar(json ? lerArquivo(conteudo) : lerLista(conteudo));
+      const cabeca = new Uint8Array(await f.slice(0, 4).arrayBuffer());
+      if (cabeca[0] === 0x50 && cabeca[1] === 0x4b) return await procurar(planilhaParaItens(await lerXlsx(await f.arrayBuffer())));
+      await procurar(lerTextoQualquer(await lerComoTexto(f)));
     } catch {
       setErro("não foi possível ler esse arquivo.");
     }
@@ -363,7 +363,7 @@ export default function ImportarNoClubePage() {
           <div className="flex flex-wrap gap-2.5">
             <button
               type="button"
-              onClick={() => procurar(lerLista(texto))}
+              onClick={() => procurar(lerTextoQualquer(texto))}
               disabled={!texto.trim()}
               className={`${botaoPrincipal} !w-auto px-6`}
             >
@@ -379,7 +379,7 @@ export default function ImportarNoClubePage() {
             <input
               ref={arquivo}
               type="file"
-              accept=".txt,.json,.csv"
+              accept=".txt,.json,.csv,.tsv,.xlsx,application/json,text/plain,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
               className="sr-only"
               tabIndex={-1}
               onChange={(e) => abrirArquivo(e.target.files?.[0])}
