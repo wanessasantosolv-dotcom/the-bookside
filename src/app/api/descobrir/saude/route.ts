@@ -42,7 +42,17 @@ export async function GET() {
   })();
   const modelo = process.env.GEMINI_MODEL || "gemini-flash-latest";
   const [comBusca, semBusca] = await Promise.all([gemini(modelo, true), gemini(modelo, false)]);
-  const valor = { modelo, geminiComBusca: comBusca, geminiSemBusca: semBusca, googleBooks: livros };
+  const tavily = process.env.TAVILY_API_KEY
+    ? await fetch("https://api.tavily.com/search", { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${process.env.TAVILY_API_KEY}` }, body: JSON.stringify({ query: "melhores livros coreanos traduzidos", max_results: 2 }), signal: AbortSignal.timeout(15000) })
+        .then(async (r) => ({ ok: r.ok, status: r.status, resultados: r.ok ? ((await r.json()) as { results?: unknown[] }).results?.length ?? 0 : 0 }))
+        .catch((e: Error) => ({ ok: false, status: 0, erro: e.message }))
+    : { ok: false, motivo: "sem TAVILY_API_KEY" };
+  const groq = process.env.GROQ_API_KEY
+    ? await fetch("https://api.groq.com/openai/v1/chat/completions", { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${process.env.GROQ_API_KEY}` }, body: JSON.stringify({ model: process.env.GROQ_MODEL || "llama-3.3-70b-versatile", messages: [{ role: "user", content: "Responda só: ok" }], max_tokens: 5 }), signal: AbortSignal.timeout(15000) })
+        .then(async (r) => ({ ok: r.ok, status: r.status, amostra: (await r.text()).slice(0, 120) }))
+        .catch((e: Error) => ({ ok: false, status: 0, erro: e.message }))
+    : { ok: false, motivo: "sem GROQ_API_KEY" };
+  const valor = { modelo, geminiComBusca: comBusca, geminiSemBusca: semBusca, tavily, groq, googleBooks: livros };
   guardado = { em: Date.now(), valor };
   return Response.json(valor);
 }

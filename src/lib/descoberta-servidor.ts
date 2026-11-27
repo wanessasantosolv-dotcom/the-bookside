@@ -279,24 +279,120 @@ async function pesquisaContextual(pergunta: string, ids: Set<string>): Promise<{
       return proprias.length ? proprias : paginas.filter((f) => f.tipo !== "comercial").slice(0, 3);
     }
   }
-  // sem a busca na internet: indicações do conhecimento da curadoria automática,
+  // 2ª via: pesquisa na internet pelo Tavily + organização por uma IA (Groq, ou Gemini se houver cota)
+  const viaTavily = await pesquisaTavily(pergunta, ids);
+  if (viaTavily?.candidatos.length) return viaTavily;
+
+  // 3ª via, sem internet: indicações do conhecimento da curadoria automática,
   // conferidas uma a uma no catálogo (edição em português), e avisadas como tal
-  for (const modelo of modelos()) {
-    const c = await gemini(modelo, PESQUISA.replace("Pesquise NA INTERNET recomendações reais", "Indique, com base em recomendações conhecidas,").replace(/Faça várias buscas[^\n]*\n/, "") + `\nResponda SÓ com JSON: {"livros":[{"titulo":string,"autor":string,"original":string,"porque":string,"caracteristicas":[string]}]} usando só estes ids de características: ${[...ids].join(", ")}.`, pergunta, {
-      generationConfig: { responseMimeType: "application/json", temperature: 0.3 },
-    });
-    try {
-      const json = JSON.parse(c?.texto ?? "") as { livros?: Record<string, unknown>[] };
-      const candidatos = (json.livros ?? [])
-        .map((l) => ({ titulo: texto(l.titulo, 160), autor: texto(l.autor, 120), original: texto(l.original, 160) || undefined, porque: texto(l.porque, 130), caracteristicas: listaDe(l.caracteristicas, 3, 40).filter((x) => ids.has(x)), fontes: [] as Fonte[] }))
-        .filter((l) => l.titulo && l.autor)
-        .slice(0, 16);
-      if (candidatos.length) return { candidatos, externa: false, diagnostico: { etapa: "sem-paginas", paginas: 0, modelo } };
-    } catch {
-      /* tenta o próximo modelo */
+  const memoria = await iaJson(
+    PESQUISA.replace("Pesquise NA INTERNET recomendações reais", "Indique, com base em recomendações conhecidas,").replace(/Faça várias buscas[^\n]*\n/, "") +
+      `\nResponda SÓ com JSON: {"livros":[{"titulo":string,"autor":string,"original":string,"porque":string,"caracteristicas":[string]}]} usando só estes ids de características: ${[...ids].join(", ")}.`,
+    pergunta,
+  );
+  const candidatos = (memoria?.json.livros ?? [])
+    .map((l) => ({ titulo: texto(l.titulo, 160), autor: texto(l.autor, 120), original: texto(l.original, 160) || undefined, porque: texto(l.porque, 130), caracteristicas: listaDe(l.caracteristicas, 3, 40).filter((x) => ids.has(x)), fontes: [] as Fonte[] }))
+    .filter((l) => l.titulo && l.autor)
+    .slice(0, 16);
+  if (candidatos.length) return { candidatos, externa: false, diagnostico: { etapa: "sem-paginas", paginas: 0, modelo: memoria!.modelo } };
+  return { candidatos: [], externa: false, diagnostico: { etapa: "pesquisa-falhou", paginas: 0 } };
+}
+
+/* ───────── Groq (IA gratuita) e Tavily (busca na internet) ───────── */
+
+/** pede JSON a uma IA: Groq primeiro (gratuito), depois Gemini (se houver cota) */
+async function iaJson(sistema: string, pergunta: string): Promise<{ json: { livros?: Record<string, unknown>[] }; modelo: string } | null> {
+  const groq = process.env.GROQ_API_KEY;
+  if (groq) {
+    for (const modelo of [process.env.GROQ_MODEL, "llama-3.3-70b-versatile", "llama-3.1-8b-instant"].filter((m, i, a): m is string => !!m && a.indexOf(m) === i)) {
+      const r = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: { "content-type": "application/json", authorization: `Bearer ${groq}` },
+        body: JSON.stringify({ model: modelo, temperature: 0.2, response_format: { type: "json_object" }, messages: [{ role: "system", content: sistema }, { role: "user", content: pergunta }] }),
+        signal: AbortSignal.timeout(20000),
+      }).catch(() => null);
+      if (!r?.ok) continue;
+      const d = (await r.json().catch(() => ({}))) as { choices?: { message?: { content?: string } }[] };
+      try {
+        return { json: JSON.parse(d.choices?.[0]?.message?.content ?? ""), modelo: `groq:${modelo}` };
+      } catch {
+        continue;
+      }
     }
   }
-  return { candidatos: [], externa: false, diagnostico: { etapa: "pesquisa-falhou", paginas: 0 } };
+  for (const modelo of modelos()) {
+    const c = await gemini(modelo, sistema, pergunta, { generationConfig: { responseMimeType: "application/json", temperature: 0.2 } });
+    try {
+      return { json: JSON.parse(c?.texto ?? ""), modelo };
+    } catch {
+      continue;
+    }
+  }
+  return null;
+}
+
+const dominioDe = (url: string) => {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return "";
+  }
+};
+
+/** busca recomendações reais no Tavily (português e inglês) e deixa a IA só extrair e organizar */
+async function pesquisaTavily(pergunta: string, ids: Set<string>): Promise<{ candidatos: Candidato[]; externa: boolean; diagnostico: Diagnostico } | null> {
+  const chave = process.env.TAVILY_API_KEY;
+  if (!chave || (!process.env.GROQ_API_KEY && !process.env.GEMINI_API_KEY)) return null;
+  const consulta = pergunta.match(/Pesquisa: (.*)/)?.[1] ?? pergunta.split("\n")[0];
+  const parecido = pergunta.match(/Parecidos com: (.*)/)?.[1];
+  const buscas = [
+    `melhores livros ${consulta} recomendações${parecido ? ` parecidos com ${parecido}` : ""} edição brasileira`,
+    `best books ${consulta}${parecido ? ` like ${parecido}` : ""} recommendations goodreads reddit literary`,
+  ];
+  const respostas = await Promise.all(
+    buscas.map((q) =>
+      fetch("https://api.tavily.com/search", {
+        method: "POST",
+        headers: { "content-type": "application/json", authorization: `Bearer ${chave}` },
+        body: JSON.stringify({ query: q, search_depth: "basic", max_results: 6, include_answer: false }),
+        signal: AbortSignal.timeout(15000),
+      })
+        .then((r) => (r.ok ? r.json() : null))
+        .catch(() => null),
+    ),
+  );
+  const paginas = respostas
+    .flatMap((r) => ((r as { results?: { title?: string; url?: string; content?: string }[] } | null)?.results ?? []))
+    .filter((x) => x.url)
+    .filter((x, i, a) => a.findIndex((y) => y.url === x.url) === i)
+    .map((x) => {
+      const dominio = dominioDe(x.url!);
+      return { titulo: x.title || dominio, url: x.url!, dominio, tipo: tipoDaFonte(dominio), conteudo: (x.content ?? "").slice(0, 900) };
+    })
+    .filter((x) => x.tipo !== "comercial");
+  if (!paginas.length) return null;
+  const lista = paginas.map((p, i) => `[${i}] ${p.dominio} — ${p.titulo}\n${p.conteudo}`).join("\n\n");
+  const r = await iaJson(
+    `Você é uma livreira brasileira. Recebe trechos reais de páginas da internet sobre uma pesquisa literária. Extraia SÓ obras literárias que aparecem nesses trechos como recomendadas e que combinem com a pesquisa (nada de dicionários, revistas, teses ou material didático). Use o título como saiu no Brasil quando você tiver certeza; senão, o título original. Não acrescente obras que não estejam nos trechos.
+Responda SÓ com JSON: {"livros":[{"titulo":string,"autor":string,"original":string,"porque":string,"caracteristicas":[string],"paginas":[number]}]}
+"paginas": números das páginas onde a obra aparece. "porque": uma frase concreta (até 110 caracteres). "caracteristicas": só ids desta lista (no máximo 3): ${[...ids].join(", ")}.`,
+    `${pergunta}\n\nPáginas:\n${lista.slice(0, 14000)}`,
+  );
+  const candidatos = (r?.json.livros ?? [])
+    .map((l) => {
+      const idx = [...new Set((Array.isArray(l.paginas) ? l.paginas : []).map(Number).filter((n) => Number.isInteger(n) && n >= 0 && n < paginas.length))];
+      return {
+        titulo: texto(l.titulo, 160),
+        autor: texto(l.autor, 120),
+        original: texto(l.original, 160) || undefined,
+        porque: texto(l.porque, 130),
+        caracteristicas: listaDe(l.caracteristicas, 3, 40).filter((x) => ids.has(x)),
+        fontes: idx.map((n) => ({ titulo: paginas[n].titulo, url: paginas[n].url, dominio: paginas[n].dominio, tipo: paginas[n].tipo })),
+      };
+    })
+    .filter((l) => l.titulo && l.autor && l.fontes.length)
+    .slice(0, 14);
+  return { candidatos, externa: candidatos.length > 0, diagnostico: { etapa: candidatos.length ? "ok" : "extracao-falhou", paginas: paginas.length, modelo: `tavily+${r?.modelo ?? "sem-ia"}` } };
 }
 
 /* ───────── rota ───────── */
