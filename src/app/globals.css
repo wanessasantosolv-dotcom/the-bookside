@@ -14,19 +14,19 @@
   --color-bordo: #692536; /* primary: ações principais, identidade, nas entrelinhas */
   --color-bordo-escuro: #54202f; /* primary-hover */
   --color-bordo-suave: #54202f; /* hover dos botões preenchidos */
-  --color-rosa-antigo: #c27c8d; /* acento decorativo (não usar em texto pequeno) */
+  --color-rosa-antigo: #d8a8b6; /* acento decorativo (não usar em texto pequeno) */
   --color-rosa-claro: #ecaabb; /* rosa da marca: texto sobre bordô, diário literário, destaques afetivos */
   --color-rosa-fundo: #edd3dc; /* selected */
-  --color-creme: #f6f0e5; /* background */
-  --color-creme-quente: #fbf7ef; /* surface */
+  --color-creme: #f8f4ee; /* background */
+  --color-creme-quente: #fcfaf6; /* surface */
   --color-papel: #ede1d9; /* surface-secondary */
   --color-bege: #cdbab3; /* borda mais firme (botões secundários, tracejados) */
   --color-ameixa: #38252c; /* text-primary */
   --color-oliva: #59634f; /* success */
-  --color-linha: #dccdc8; /* border */
+  --color-linha: #e7ddd6; /* border */
   --color-cinza: #715f65; /* text-secondary (ajustado de #79686D para passar AA sobre surface-secondary) */
   --color-ouro: #8a5a21; /* warning (ajustado de #986326 para AA) e estrelas sobre fundo claro */
-  --color-mesa: #ece4d8; /* atrás da coluna do app */
+  --color-mesa: #efe9e2; /* atrás da coluna do app */
 
   /* cores expressivas, só em aplicações pontuais */
   --color-azul: #8297d1; /* curadorias e descobertas */
@@ -35,14 +35,15 @@
   --color-erro: #a33d4e;
   --color-alerta: #8a5a21;
   --color-sucesso: #59634f;
+  --color-rosa-editorial: #e8d2d8; /* destaques editoriais suaves */
 
   /*
    * Tokens contextuais: cada experiência tem a sua cor, para o bordô não ser
    * a resposta padrão de tudo. "-tinta" é a versão para texto (AA sobre as
    * superfícies); "-suave" é para fundos, trilhos e seleção.
    */
-  --color-progresso: #59634f; /* barras e anéis de progresso de leitura */
-  --color-progresso-suave: #e3e6cf;
+  --color-progresso: #667255; /* só progresso e metas */
+  --color-progresso-suave: #e4e6dc;
   --color-meta: #d5dd76; /* metas e conquistas */
   --color-meta-suave: #eef0c9;
   --color-meta-tinta: #565f24;
@@ -75,9 +76,9 @@
   --font-mono: var(--font-space-mono), ui-monospace, monospace;
   --color-tinta: #38252c;
   --color-tinta-suave: #56444b;
-  --color-jornal: #f6f0e5;
+  --color-jornal: #f8f4ee;
   --color-vinho: #692536;
-  --color-fio: #dccdc8;
+  --color-fio: #e7ddd6;
   --color-grafite: #715f65;
 
   --radius-sm: 6px;

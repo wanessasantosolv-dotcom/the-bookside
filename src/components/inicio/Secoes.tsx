@@ -94,8 +94,8 @@ export function QuoteDoDia() {
   }
   const botao = "grid size-10 place-items-center rounded-full text-cinza hover:bg-bordo/5 hover:text-bordo";
   return (
-    <figure className="flex items-start gap-3 rounded-[10px] bg-citacao-suave px-4 py-4 lg:items-center lg:gap-5 lg:px-6">
-      <span aria-hidden className="font-revista text-[40px] leading-[.8] text-citacao-tinta/70 lg:text-[48px]">
+    <figure className="flex items-start gap-3 rounded-[10px] border border-linha bg-creme-quente px-4 py-4 lg:items-center lg:gap-5 lg:px-6">
+      <span aria-hidden className="font-revista text-[40px] leading-[.8] text-rosa-antigo lg:text-[48px]">
         “
       </span>
       <div className="min-w-0 flex-1">
@@ -272,13 +272,13 @@ export function MetaDeLeitura({ faixa }: { faixa?: boolean }) {
         aria-label={`meta de ${ano}: ${lidos} de ${meta} livros. ver jornada`}
       >
         <svg aria-hidden width="38" height="38" viewBox="0 0 38 38" className="flex-none -rotate-90">
-          <circle cx="19" cy="19" r={r} fill="none" stroke="var(--color-meta)" strokeWidth="3.5" />
+          <circle cx="19" cy="19" r={r} fill="none" stroke="var(--color-progresso-suave)" strokeWidth="3.5" />
           <circle
             cx="19"
             cy="19"
             r={r}
             fill="none"
-            stroke="var(--color-meta-tinta)"
+            stroke="var(--color-progresso)"
             strokeWidth="3.5"
             strokeLinecap="round"
             strokeDasharray={`${(Math.min(100, p) / 100) * volta} ${volta}`}
@@ -298,13 +298,13 @@ export function MetaDeLeitura({ faixa }: { faixa?: boolean }) {
     <section aria-labelledby="titulo-meta">
       <Cabecalho id="titulo-meta" titulo="meta de leitura" acao={{ href: "/perfil?aba=jornada", rotulo: "jornada" }} />
       <p className="flex items-baseline gap-2">
-        <span className="font-revista text-[34px] leading-none text-meta-tinta tabular-nums">
+        <span className="font-revista text-[34px] leading-none text-bordo tabular-nums">
           {lidos}/{meta}
         </span>
         <span className="text-[13px] text-tinta-suave">livros · {p}%</span>
       </p>
-      <span className="mt-3 block h-[5px] rounded-full bg-meta-suave" aria-hidden>
-        <span className="block h-full rounded-full bg-meta-tinta" style={{ width: `${Math.max(2, Math.min(100, p))}%` }} />
+      <span className="mt-3 block h-[5px] rounded-full bg-progresso-suave" aria-hidden>
+        <span className="block h-full rounded-full bg-progresso" style={{ width: `${Math.max(2, Math.min(100, p))}%` }} />
       </span>
       <p className="mt-2 text-[12px] text-cinza">{faltam ? `faltam ${faltam} para a meta de ${ano}` : `meta de ${ano} atingida ✦`}</p>
     </section>
@@ -541,17 +541,18 @@ function JournalCartao({ chave }: { chave: string }) {
   const { edicao, textos, estado } = useEdicao(chave);
   const paleta = paletaDoMes(edicao.mes);
   return (
-    <Link href={`/journal/${chave}`} className="group flex items-center gap-4 rounded-[10px] px-4 py-4" style={{ background: paleta.fundo, color: paleta.texto }}>
+    // card neutro: a cor do mês fica só na capinha da edição
+    <Link href={`/journal/${chave}`} className="group flex items-center gap-4 rounded-[10px] border border-linha bg-creme-quente px-4 py-4 text-ameixa hover:border-rosa-antigo">
       <span className="w-[72px] flex-none transition-transform group-hover:-rotate-1">
         <CapaJournal ed={edicao} textos={textos} paleta={paleta} tamanho="mini" previa={estado === "previa"} />
       </span>
       <span className="min-w-0">
-        <span className="block text-[10px] font-semibold tracking-[.18em]">diário literário</span>
-        <span className="mt-0.5 block font-maquina text-[10px] tracking-[.1em]" style={{ color: paleta.destaque }}>
+        <span className="block text-[10px] font-semibold tracking-[.18em] text-bordo uppercase">diário literário</span>
+        <span className="mt-0.5 block font-maquina text-[10px] tracking-[.1em] text-cinza">
           vol. {String(edicao.vol).padStart(2, "0")} · {edicao.nome} {edicao.ano}
           {estado === "previa" ? " · prévia" : ""}
         </span>
-        <span className="mt-2 block text-[13px] font-semibold">abrir edição →</span>
+        <span className="mt-2 block text-[13px] font-semibold text-bordo">abrir edição →</span>
       </span>
     </Link>
   );
