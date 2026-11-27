@@ -166,7 +166,7 @@ export async function buscarDescoberta({ consulta, filtros = [], contexto, exclu
           medidas?: unknown;
         } | null)
       : null;
-    if (dados) console.info("[descobrir]", consulta, dados.diagnostico, dados.medidas);
+    if (dados) console.info(`[descobrir] ${consulta} · ${dados.resultados?.length ?? 0} resultados · ${JSON.stringify(dados.diagnostico)} · ${JSON.stringify(dados.medidas)}`);
     else if (r) console.info("[descobrir] falhou", r.status);
     if (dados?.resultados?.length) {
       pesquisaExterna = !!dados.pesquisaExterna;

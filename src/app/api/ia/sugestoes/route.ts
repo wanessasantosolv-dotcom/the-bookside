@@ -1,3 +1,4 @@
+import { groqJson } from "@/lib/ia-groq";
 /**
  * Indicações por IA (Google Gemini, plano grátis) no "descobrir".
  * A chave fica só na Vercel (GEMINI_API_KEY, sem NEXT_PUBLIC). Vão para o Google
@@ -42,8 +43,8 @@ const modelos = () =>
   ].filter((m, i, a): m is string => !!m && a.indexOf(m) === i);
 
 export async function POST(req: Request) {
-  const chave = process.env.GEMINI_API_KEY;
-  if (!chave) return Response.json({ semIA: true }, { status: 503 });
+  const chave = process.env.GEMINI_API_KEY ?? "";
+  if (!chave && !process.env.GROQ_API_KEY) return Response.json({ semIA: true }, { status: 503 });
   if (!(await contaValida(req)))
     return Response.json({ erro: "entre na sua conta" }, { status: 401 });
   const quem = req.headers.get("authorization")?.slice(-24) ?? "anon";
@@ -87,7 +88,7 @@ export async function POST(req: Request) {
   if (guardado && agora - guardado.em < 6 * 36e5)
     return Response.json(guardado.valor);
 
-  for (const modelo of modelos()) {
+  for (const modelo of chave ? modelos() : []) {
     const r = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent`,
       {
@@ -107,11 +108,7 @@ export async function POST(req: Request) {
       },
     ).catch(() => null);
     if (!r) continue;
-    if (r.status === 429)
-      return Response.json(
-        { erro: "o limite grátis da IA acabou por hoje" },
-        { status: 503 },
-      );
+    if (r.status === 429) break; // sem cota no Gemini: tenta o Groq
     if (!r.ok) continue;
     const dados = (await r.json().catch(() => ({}))) as {
       candidates?: { content?: { parts?: { text?: string }[] } }[];
@@ -138,6 +135,24 @@ export async function POST(req: Request) {
       return Response.json(valor);
     } catch {
       continue;
+    }
+  }
+  // reserva gratuita: Groq
+  const bruto = await groqJson(SISTEMA, pergunta, 0.9);
+  if (bruto) {
+    try {
+      const json = JSON.parse(bruto.slice(bruto.indexOf("{"), bruto.lastIndexOf("}") + 1)) as { livros?: { titulo?: unknown; autor?: unknown; motivo?: unknown }[] };
+      const livros = (json.livros ?? [])
+        .map((l) => ({ titulo: texto(l.titulo, 160), autor: texto(l.autor, 120), motivo: texto(l.motivo, 90) }))
+        .filter((l) => l.titulo && l.autor)
+        .slice(0, 12);
+      if (livros.length) {
+        const valor = { livros };
+        cache.set(chaveCache, { em: agora, valor });
+        return Response.json(valor);
+      }
+    } catch {
+      /* sem resposta válida */
     }
   }
   return Response.json({ erro: "a IA não respondeu agora" }, { status: 502 });

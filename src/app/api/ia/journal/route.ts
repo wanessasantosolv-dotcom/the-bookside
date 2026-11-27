@@ -1,3 +1,4 @@
+import { groqJson } from "@/lib/ia-groq";
 /**
  * Textos editoriais do The Bookside Journal (Google Gemini, como nas indicações).
  * Recebe só números e nomes já calculados pelo app (livros, páginas, gêneros,
@@ -49,8 +50,8 @@ const modelos = () =>
   );
 
 export async function POST(req: Request) {
-  const chave = process.env.GEMINI_API_KEY;
-  if (!chave) return Response.json({ semIA: true }, { status: 503 });
+  const chave = process.env.GEMINI_API_KEY ?? "";
+  if (!chave && !process.env.GROQ_API_KEY) return Response.json({ semIA: true }, { status: 503 });
   if (!(await contaValida(req)))
     return Response.json({ erro: "entre na sua conta" }, { status: 401 });
   const quem = req.headers.get("authorization")?.slice(-24) ?? "anon";
@@ -65,7 +66,7 @@ export async function POST(req: Request) {
   const guardado = cache.get(dados);
   if (guardado && agora - guardado.em < 24 * 36e5) return Response.json(guardado.valor);
 
-  for (const modelo of modelos()) {
+  for (const modelo of chave ? modelos() : []) {
     const r = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent`,
       {
@@ -79,7 +80,7 @@ export async function POST(req: Request) {
       },
     ).catch(() => null);
     if (!r) continue;
-    if (r.status === 429) return Response.json({ erro: "limite da IA" }, { status: 503 });
+    if (r.status === 429) break; // sem cota no Gemini: tenta o Groq
     if (!r.ok) continue;
     const resposta = (await r.json().catch(() => ({}))) as {
       candidates?: { content?: { parts?: { text?: string }[] } }[];
@@ -99,6 +100,20 @@ export async function POST(req: Request) {
       return Response.json(valor);
     } catch {
       continue;
+    }
+  }
+  // reserva gratuita: Groq
+  const bruto = await groqJson(SISTEMA, dados, 0.6);
+  if (bruto) {
+    try {
+      const j = JSON.parse(bruto.slice(bruto.indexOf("{"), bruto.lastIndexOf("}") + 1)) as Record<string, unknown>;
+      const valor = { titulo: texto(j.titulo, 60), introducao: texto(j.introducao, 300), ritmo: texto(j.ritmo, 200), tendencias: texto(j.tendencias, 200), encerramento: texto(j.encerramento, 280) };
+      if (valor.titulo && valor.introducao && valor.encerramento) {
+        cache.set(dados, { em: agora, valor });
+        return Response.json(valor);
+      }
+    } catch {
+      /* sem resposta válida */
     }
   }
   return Response.json({ erro: "a IA não respondeu" }, { status: 502 });
