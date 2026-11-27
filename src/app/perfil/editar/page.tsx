@@ -4,7 +4,9 @@ import { Voltar } from "@/components/Voltar";
 import Link from "next/link";
 import { TelaApp } from "@/components/AppShell";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useModoEscuro } from "@/components/Aparencia";
+import { coresDoTema } from "@/lib/tema";
 import { AjustarFoto } from "@/components/AjustarFoto";
 import { CampoUsuario } from "@/components/CampoUsuario";
 import type { SituacaoUsuario } from "@/lib/usuario";
@@ -75,6 +77,27 @@ function Formulario({ inicial }: { inicial: Rascunho }) {
   const [textoMeta, setTextoMeta] = useState(() =>
     meta !== null && !metas.some((m) => m.valor === meta) ? String(meta) : "",
   );
+  // prévia ao vivo: enquanto escolhe, o app inteiro mostra o tema escolhido.
+  // ao sair (salvando ou não), volta ao tema que estiver salvo.
+  const modoEscuro = useModoEscuro();
+  useEffect(() => {
+    const raiz = document.documentElement;
+    const aplicar = (tema: string | undefined) => {
+      const cores = (tema ? coresDoTema(tema, modoEscuro) : undefined) ?? {};
+      for (const [k, v] of Object.entries(cores)) if (k.startsWith("--")) raiz.style.setProperty(k, String(v));
+      const t = temas.find((x) => x.id === tema);
+      if (t && "escuro" in t && modoEscuro) raiz.dataset.temaEscuro = "1";
+      else delete raiz.dataset.temaEscuro;
+      return Object.keys(cores);
+    };
+    const chaves = aplicar(r.tema);
+    return () => {
+      for (const k of chaves) raiz.style.removeProperty(k);
+      const s = usePerfil.getState();
+      aplicar(s.temaSoNoPerfil ? undefined : s.tema);
+    };
+  }, [r.tema, modoEscuro]);
+
   // a meta escrita à mão (fica marcada enquanto for a escolhida)
   const metaPersonalizada =
     textoMeta !== "" && meta !== null && meta === Number(textoMeta);
@@ -401,7 +424,7 @@ function Formulario({ inicial }: { inicial: Rascunho }) {
               <TituloSecao icone={ICONES.paleta} titulo="cores do perfil" />
             </legend>
             <p className="-mt-1 mb-3 font-accent text-sm italic text-cinza">
-              o tema muda a cor de destaque e o papel do seu perfil.
+              o tema muda a cor de destaque e o papel do seu perfil. a tela já mostra como fica; só vale depois de salvar.
             </p>
             <div className="grid grid-cols-2 gap-2.5 min-[420px]:grid-cols-4">
               {temas.map((t) => {
