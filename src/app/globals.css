@@ -97,13 +97,13 @@ html[data-modo="escuro"] {
 
 /* no modo escuro, os blocos "de destaque" (vinho/ameixa com texto claro) continuam como no claro */
 html[data-modo="escuro"] .inverso {
+  --color-creme: var(--inverso-texto, #f9f5ee);
   /* com tema, a cor forte do tema (vem de coresDoTema); sem tema, o vinho do app */
   --color-bordo: var(--inverso-bordo, #6b0d24);
   --color-bordo-escuro: var(--inverso-bordo-escuro, #4b0d1b);
   --color-bordo-suave: var(--inverso-bordo-suave, #8e1d3d);
   --color-vinho: var(--inverso-bordo, #692536);
   --color-ameixa: #2b1420;
-  --color-creme: #f9f5ee;
   --color-creme-quente: #fff8f3;
   --color-rosa-claro: var(--inverso-rosa-claro, #e8b4bf);
   --color-rosa-antigo: var(--inverso-rosa-antigo, #b75a6b);
@@ -127,10 +127,6 @@ html[data-modo="escuro"] img[src$="logo-bordo.png"],
 html[data-tema-escuro] img[src$="logo-bordo.png"] { filter: brightness(0) invert(1); }
 
 /* os desenhos das capas, com fundo escuro */
-html[data-modo="escuro"] .pat-linhas { background: repeating-linear-gradient(90deg, #5a2a36 0 2px, transparent 2px 12px), #241c1f; }
-html[data-modo="escuro"] .pat-bolinhas { background: radial-gradient(circle, #8a4a5a 1.6px, transparent 2px) 0 0 / 12px 12px, #241c1f; }
-html[data-modo="escuro"] .pat-ondas { background: repeating-radial-gradient(circle at 50% 135%, #4a3f42 0 2px, transparent 2px 11px), #241c1f; }
-html[data-modo="escuro"] .pat-estrelas { background: radial-gradient(circle, #c9798a 1px, transparent 1.6px) 0 0 / 22px 22px, #2a1d22; }
 
 a,
 button,
@@ -169,11 +165,14 @@ body {
   text-transform: uppercase;
 }
 
-/* padrões de capa do perfil */
-.pat-linhas { background: repeating-linear-gradient(90deg, #e8b4bf 0 2px, transparent 2px 12px), #f9f5ee; }
-.pat-bolinhas { background: radial-gradient(circle, #b75a6b 1.6px, transparent 2px) 0 0 / 12px 12px, #f9f5ee; }
-.pat-ondas { background: repeating-radial-gradient(circle at 50% 135%, #d8c3aa 0 2px, transparent 2px 11px), #f9f5ee; }
-.pat-estrelas { background: radial-gradient(circle, #6b0d24 1px, transparent 1.6px) 0 0 / 22px 22px, #f6e3e7; }
+/* padrões de capa do perfil (nas cores do tema) */
+.pat-linhas { background: repeating-linear-gradient(90deg, var(--color-rosa-claro) 0 2px, transparent 2px 12px), var(--color-creme-quente); }
+.pat-bolinhas { background: radial-gradient(circle, var(--color-rosa-antigo) 1.6px, transparent 2px) 0 0 / 12px 12px, var(--color-creme-quente); }
+.pat-ondas { background: repeating-radial-gradient(circle at 50% 135%, var(--color-bege) 0 2px, transparent 2px 11px), var(--color-creme-quente); }
+.pat-estrelas { background: radial-gradient(circle, var(--color-bordo) 1px, transparent 1.6px) 0 0 / 22px 22px, var(--color-rosa-fundo); }
+/* o banner gráfico do tema e a cor sólida */
+.pat-tema { background: var(--tema-banner, repeating-linear-gradient(90deg, var(--color-rosa-claro) 0 2px, transparent 2px 12px), var(--color-creme-quente)); }
+.pat-solida { background: var(--color-bordo); }
 
 .papel-pontilhado {
   background-color: var(--color-creme);
@@ -457,3 +456,29 @@ main {
 }
 /* faixa com o pattern do clube */
 .faixa-clube { background: var(--club-pattern, none); }
+
+
+/* ───────── temas pessoais (lib/temas.ts) ───────── */
+/* títulos: itálico e peso de cada tema (os clubes têm os seus) */
+:is(.font-display, .font-revista).italic { font-style: var(--titulo-estilo, italic); }
+:is(.font-display, .font-revista) { font-weight: var(--peso-titulo, var(--tw-font-weight, inherit)); }
+.clube-tokens { --titulo-estilo: italic; --peso-titulo: initial; }
+/* fine print: cantos retos (avatares e bolinhas continuam redondos) */
+:is(html[data-cantos-app="retos"], [data-cantos="retos"]) :is([class*="rounded-["], [class*="rounded-t-["], [class*="rounded-b-["], .rounded-pill, .rounded-md, .rounded-lg, .rounded-xl, .rounded-2xl):not(.clube-tokens *, .clube-tokens):not([data-cantos="normal"] *) { border-radius: 2px; }
+/* a estante na cor escolhida (o club studio pinta as do clube por cima) */
+:where(.prateleira-madeira)::after {
+  content: ""; position: absolute; inset: 0; background: var(--app-estante, transparent);
+  mix-blend-mode: multiply; opacity: .72;
+  -webkit-mask: url('/estantes/prateleira.svg') 0 0 / 100% 100% no-repeat;
+  mask: url('/estantes/prateleira.svg') 0 0 / 100% 100% no-repeat;
+  pointer-events: none;
+}
+html[data-estante-app="minimalista"] .prateleira-madeira:not(.clube-identidade *) { background: none; height: 10px; }
+html[data-estante-app="minimalista"] .prateleira-madeira:not(.clube-identidade *)::after {
+  -webkit-mask: none; mask: none; mix-blend-mode: normal; opacity: 1; top: auto; bottom: 3px; height: 2px;
+  background: var(--app-estante, var(--color-ameixa));
+}
+html[data-estante-clara] .prateleira-madeira:not(.clube-identidade *)::after { mix-blend-mode: screen; opacity: .55; }
+[data-previa-estante="minimalista"] .prateleira-madeira { background: none; height: 8px; }
+[data-previa-estante="minimalista"] .prateleira-madeira::after { -webkit-mask: none; mask: none; mix-blend-mode: normal; opacity: 1; top: auto; bottom: 2px; height: 2px; background: var(--app-estante, var(--color-ameixa)); }
+[data-previa-estante="clara"] .prateleira-madeira::after { mix-blend-mode: screen; opacity: .55; }

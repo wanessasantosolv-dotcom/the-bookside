@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import { temas, type Tema } from "@/lib/dados";
+import { TEMAS_APP, temaApp, tokensDoTema } from "@/lib/temas";
 
 const mistura = (cor: string, pct: number, com: string) =>
   `color-mix(in srgb, ${cor} ${pct}%, ${com})`;
@@ -41,10 +42,20 @@ export function coresDoTema(
   id: string | null | undefined,
   modoEscuroDoApp?: boolean,
 ): CSSProperties | undefined {
-  const t = temas.find((x) => x.id === id);
-  if (!t || t.id === "biblioteca-classica") return undefined;
-  const escuro = temaEhEscuro(t);
   const modoEscuro = modoEscuroAtual(modoEscuroDoApp);
+  // a coleção nova: tokens completos de cada variante
+  const novo = temaApp(id);
+  if (novo) return tokensDoTema(novo, modoEscuro);
+  const t = temas.find((x) => x.id === id);
+  if (!t) return undefined;
+  // temas antigos: a base é o the original (assim nada herda o tema de outra área) e o tema antigo vai por cima
+  const base = tokensDoTema(TEMAS_APP[0], modoEscuro);
+  const legado = coresLegadas(t, modoEscuro);
+  return { ...base, ...legado } as CSSProperties;
+}
+
+function coresLegadas(t: Tema, modoEscuro: boolean): CSSProperties {
+  const escuro = temaEhEscuro(t);
 
   if (!modoEscuro) {
     // modo claro: papel creme, só o destaque muda
@@ -132,16 +143,32 @@ export function coresDoTema(
  * Segue a mesma regra de `coresDoTema`: o papel escuro do tema só aparece
  * no modo escuro do app; no modo claro, o perfil fica no creme.
  */
-export function estiloDoPerfil(tema: Tema, modoEscuro: boolean): CSSProperties {
+export function estiloDoPerfil(tema: Tema | string | null | undefined, modoEscuro: boolean): CSSProperties {
+  const id = typeof tema === "string" || !tema ? tema : tema.id;
+  const novo = temaApp(id);
+  if (novo) {
+    const v = modoEscuro ? novo.escuro : novo.claro;
+    return {
+      ...tokensDoTema(novo, modoEscuro),
+      "--papel": v.fundo,
+      "--tinta": v.texto,
+      "--acc-base": v.primaria,
+      "--suave": `color-mix(in srgb, ${v.texto} 78%, ${v.fundo})`,
+      "--linha": v.borda,
+    } as CSSProperties;
+  }
+  const t = temas.find((x) => x.id === id) ?? temas[0];
+  return { ...(coresDoTema(t.id, modoEscuro) ?? {}), ...estiloLegado(t, modoEscuro) } as CSSProperties;
+}
+
+function estiloLegado(tema: Tema, modoEscuro: boolean): CSSProperties {
   const escuro = temaEhEscuro(tema);
   const papelEscuro = escuro && modoEscuro;
   const acc = papelEscuro
     ? tema.texto
     : escuro
       ? destaqueClaroDeTemaEscuro(tema)
-      : tema.id === "biblioteca-classica"
-        ? "#6B0D24"
-        : tema.texto;
+      : tema.texto;
   return {
     "--papel": papelEscuro ? tema.papel : "var(--color-creme)",
     "--tinta": papelEscuro ? "#F5EFE6" : "var(--color-ameixa)",
@@ -152,7 +179,10 @@ export function estiloDoPerfil(tema: Tema, modoEscuro: boolean): CSSProperties {
 }
 
 /** destaque do perfil na versão web (papel sempre do app) */
-export function destaqueWebDoTema(tema: Tema) {
-  if (tema.id === "biblioteca-classica") return "#692536";
-  return temaEhEscuro(tema) ? destaqueClaroDeTemaEscuro(tema) : tema.destaque;
+export function destaqueWebDoTema(tema: Tema | string | null | undefined) {
+  const id = typeof tema === "string" || !tema ? tema : tema.id;
+  const novo = temaApp(id);
+  if (novo) return novo.claro.primaria;
+  const t = temas.find((x) => x.id === id) ?? temas[0];
+  return temaEhEscuro(t) ? destaqueClaroDeTemaEscuro(t) : t.destaque;
 }

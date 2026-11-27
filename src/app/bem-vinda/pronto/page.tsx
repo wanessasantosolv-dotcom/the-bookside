@@ -7,6 +7,7 @@ import { PainelLateral, telaAoLado } from "@/components/ui/PainelLateral";
 import { Tela } from "@/components/ui/Tela";
 import { Botao, BotaoLink } from "@/components/ui/Botao";
 import { temas } from "@/lib/dados";
+import { temaApp } from "@/lib/temas";
 import { arquetipos, type ArquetipoId } from "@/lib/teste";
 import { usePerfil } from "@/lib/perfil-store";
 
@@ -16,7 +17,7 @@ export default function ProntoPage() {
   const [aberto, setAberto] = useState(false);
   const selo = bookside
     ? arquetipos[bookside.principal as ArquetipoId]?.nome.replace(/^a /, "")
-    : temas.find((t) => t.id === tema)?.nome;
+    : (temaApp(tema)?.nome ?? temas.find((t) => t.id === tema)?.nome);
   const nomeTema = selo ?? "nova leitora";
 
   useEffect(() => {

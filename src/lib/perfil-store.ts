@@ -9,7 +9,7 @@ import { createJSONStorage, persist } from "zustand/middleware";
  * Quando o Supabase entrar, este store passa a ler e gravar no banco.
  */
 
-export type PadraoCapa = "linhas" | "bolinhas" | "ondas" | "estrelas";
+export type PadraoCapa = "linhas" | "bolinhas" | "ondas" | "estrelas" | "tema" | "solida";
 export type EscolhaEstante = "lendo" | "quero" | "vazia";
 
 export type StatusLivro = "lendo" | "quero" | "lido" | "pausado" | "abandonado";
@@ -163,6 +163,10 @@ export type Perfil = {
   citacaoPerfil?: { texto: string; livro?: string; autor?: string; livroId?: string } | null;
   /** aparência do app: claro, escuro ou igual ao celular/computador */
   aparencia: "claro" | "escuro" | "sistema";
+  /** acabamento das estantes (auto: o do tema) */
+  estiloEstante: "auto" | "clara" | "escura" | "tema" | "minimalista";
+  /** intensidade dos elementos decorativos do tema (null: a recomendada pelo tema) */
+  decoracao: "minimal" | "editorial" | "expressive" | null;
   /** as cores do tema do perfil valem para o app inteiro */
   temaNoApp: boolean;
   /** o tema do perfil fica só no perfil (padrão: vale no app todo) */
@@ -218,6 +222,8 @@ export const perfilInicial: Perfil = {
   passados: [],
   removidos: [],
   aparencia: "claro",
+  estiloEstante: "auto",
+  decoracao: null,
   temaNoApp: false,
   temaSoNoPerfil: false,
   publicarNoFeed: true,

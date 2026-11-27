@@ -2,79 +2,56 @@
 
 import { Passo } from "@/components/onboarding/Passo";
 import { BotaoLink } from "@/components/ui/Botao";
-import { temas } from "@/lib/dados";
+import { TEMAS_APP, temaApp } from "@/lib/temas";
+import { TemaSimbolo } from "@/components/TemaSimbolo";
+import { MiniaturaTema } from "@/components/perfil/PreviaTema";
 import { usePerfil } from "@/lib/perfil-store";
 
 export default function TemaPage() {
   const tema = usePerfil((s) => s.tema);
-  const foto = usePerfil((s) => s.foto);
-  const capa = usePerfil((s) => s.capa);
-  const capaImagem = usePerfil((s) => s.capaImagem);
-  const atual = temas.find((t) => t.id === tema) ?? temas[0];
-  const escuro = "escuro" in atual;
+  const atual = temaApp(tema) ?? TEMAS_APP[0];
   const atualizar = usePerfil((s) => s.atualizar);
 
   return (
     <Passo
       voltar={{ href: "/criar-perfil/meta", rotulo: "meta" }}
       passo={6}
-      fundo={atual.fundo}
-      faixa={atual.destaque}
-      escuro={escuro}
+      fundo={atual.claro.fundo}
+      faixa={atual.claro.primaria}
+      escuro={false}
       eyebrow="a última camada"
       frase="o tema do seu perfil"
       titulo="o tema do seu perfil"
-      descricao="escolha um tema. ele define a cor de destaque e o papel do seu perfil."
+      descricao="cada tema é uma edição do bookside: cores, tipografia e detalhes próprios. dá para trocar depois."
       rodape={<BotaoLink href="/criar-perfil/estante">concluir perfil</BotaoLink>}
     >
       <fieldset className="grid grid-cols-2 gap-3">
         <legend className="sr-only">tema do perfil</legend>
-        {temas.map((t) => {
-          const marcado = t.id === tema;
+        {TEMAS_APP.map((t) => {
+          const marcado = t.id === atual.id;
+          const v = t.claro;
           return (
             <label
               key={t.id}
-              className={`relative block h-[104px] cursor-pointer overflow-hidden rounded-md transition-transform duration-200 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-bordo ${
-                marcado ? "-translate-y-0.5 border-2 shadow-[0_10px_22px_-10px_rgba(105,37,54,.6)]" : "border border-[#D8C4B4]"
-              }`}
-              style={{ background: t.papel, borderColor: marcado ? t.destaque : undefined }}
+              className={`relative flex h-[112px] cursor-pointer flex-col overflow-hidden rounded-[6px] border has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-bordo ${marcado ? "ring-1" : ""}`}
+              style={{ background: v.fundo, color: v.texto, borderColor: marcado ? v.primaria : v.borda, ["--tw-ring-color" as string]: v.primaria }}
             >
-              <input
-                type="radio"
-                name="tema"
-                className="sr-only"
-                checked={marcado}
-                onChange={() => atualizar({ tema: t.id })}
-              />
-              {/* a capa da pessoa, tingida com a cor do tema */}
-              <div
-                className={`absolute inset-x-0 top-0 h-10 bg-cover bg-[center_30%] ${capaImagem ? "" : `pat-${capa}`}`}
-                style={capaImagem ? { backgroundImage: `url("${capaImagem}")` } : undefined}
-              >
-                <div className="absolute inset-0 opacity-[.58]" style={{ background: t.destaque }} />
-              </div>
-              <div className="absolute inset-x-0 top-[30px] bottom-0 rounded-t-[18px]" style={{ background: t.papel }} />
-              <div className="absolute top-5 left-1/2 size-7 -translate-x-1/2 overflow-hidden rounded-full border-2 border-creme-quente bg-[#D8C4B4]">
-                {foto ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={foto} alt="" className="size-full object-cover object-[50%_30%]" />
-                ) : null}
-              </div>
+              <input type="radio" name="tema" className="sr-only" checked={marcado} onChange={() => atualizar({ tema: t.id })} />
+              <MiniaturaTema id={t.id} escuro={false} />
+              <span className="flex flex-1 flex-col justify-between px-2.5 py-2">
+                <span className="flex items-center gap-1.5">
+                  <span style={{ color: v.primaria }}>
+                    <TemaSimbolo simbolo={t.simbolo} tamanho={14} />
+                  </span>
+                  <span className="truncate text-[12px] font-semibold">{t.nome}</span>
+                </span>
+                <span className="text-[11px] opacity-75">{t.descricao}</span>
+              </span>
               {marcado ? (
-                <span
-                  aria-hidden
-                  className="absolute top-2 right-2 z-10 size-4 rounded-full text-center text-[10px] leading-4 font-bold text-[#F5EFE6]"
-                  style={{ background: t.destaque }}
-                >
+                <span aria-hidden className="absolute top-1.5 right-1.5 size-4 rounded-full text-center text-[10px] leading-4 font-bold" style={{ background: v.primaria, color: v.sobrePrimaria }}>
                   ✓
                 </span>
               ) : null}
-              <p
-                className="absolute inset-x-0 bottom-3 text-center font-display text-[13px] leading-none font-semibold italic"
-                style={{ color: t.texto }}
-              >
-                {t.nome}
-              </p>
             </label>
           );
         })}

@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { OrnamentoTema } from "@/components/OrnamentoTema";
+import { temaApp } from "@/lib/temas";
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { CapaAuto } from "@/components/CapaAuto";
 import { CapaDoLivro, PrateleiraMadeira } from "@/components/estantes/Biblioteca";
@@ -710,6 +712,7 @@ export function PerfilEditorial({
               ) : proprio ? (
                 <Convite href="/perfil/editar" texto="escreva um pouco sobre você" />
               ) : null}
+              {temaApp(p.tema) ? <OrnamentoTema tema={temaApp(p.tema)!} nivel={p.decoracao ?? temaApp(p.tema)!.decoracao} className="mx-auto mt-4 max-w-[220px]" /> : null}
               <div className="mt-4 flex justify-center">
                 {arquetipo ? (
                   <Link

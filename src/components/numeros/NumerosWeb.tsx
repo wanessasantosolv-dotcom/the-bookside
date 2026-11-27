@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useState, type CSSProperties } from "react";
 import { CapaLivro } from "@/components/CapaLivro";
-import { temas } from "@/lib/dados";
 import { destaqueWebDoTema } from "@/lib/tema";
 import { linkDaAutoria } from "@/lib/autores";
 import { usePerfil } from "@/lib/perfil-store";
@@ -598,8 +597,7 @@ function Cabecalho({
 
 /** as cores dos cartões vêm do tema do perfil */
 function coresDaJornada(id: string): CSSProperties {
-  const t = temas.find((x) => x.id === id) ?? temas[0];
-  const acc = destaqueWebDoTema(t);
+  const acc = destaqueWebDoTema(id);
   return {
     ["--acc-base" as string]: acc,
   };

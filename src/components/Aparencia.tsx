@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { usePerfil } from "@/lib/perfil-store";
 import { temas } from "@/lib/dados";
 import { coresDoTema } from "@/lib/tema";
+import { atributosDoTema, corDaEstanteApp, estanteClareia, temaApp } from "@/lib/temas";
 
 /** o app está no modo escuro? (a escolha da pessoa ou o sistema, no "automático") */
 export function useModoEscuro() {
@@ -29,9 +30,11 @@ export function Aparencia() {
         aparencia === "escuro" || (aparencia === "sistema" && mq.matches);
       if (escuro) document.documentElement.dataset.modo = "escuro";
       else delete document.documentElement.dataset.modo;
+      const s = usePerfil.getState();
+      const t = s.temaSoNoPerfil ? undefined : temaApp(s.tema);
       document
         .querySelector('meta[name="theme-color"]')
-        ?.setAttribute("content", escuro ? "#1a1416" : "#6b0d24");
+        ?.setAttribute("content", t ? (escuro ? t.escuro.fundo : t.claro.fundo) : escuro ? "#1a1416" : "#6b0d24");
     };
     aplicar();
     mq.addEventListener("change", aplicar);
@@ -41,6 +44,12 @@ export function Aparencia() {
   const tema = usePerfil((s) => s.tema);
   const temaNoApp = usePerfil((s) => !s.temaSoNoPerfil);
   const modoEscuro = useModoEscuro();
+  const estiloEstante = usePerfil((s) => s.estiloEstante ?? "auto");
+  const decoracao = usePerfil((s) => s.decoracao ?? null);
+  // atributos do tema (cantos, decoração, estante) e a cor da estante
+  useEffect(() => {
+    aplicarExtrasDoTema(temaNoApp ? tema : undefined, modoEscuro, estiloEstante, decoracao);
+  }, [tema, temaNoApp, modoEscuro, estiloEstante, decoracao]);
   useEffect(() => {
     const raiz = document.documentElement;
     const t = temas.find((x) => x.id === tema);
@@ -49,6 +58,21 @@ export function Aparencia() {
     else delete raiz.dataset.temaEscuro;
     const cores = (temaNoApp ? coresDoTema(tema, modoEscuro) : undefined) ?? {};
     const nomes = Object.keys(cores);
+    // guarda as duas variantes para o script do <head> pintar o tema certo antes de carregar (sem piscar)
+    try {
+      const variante = (esc: boolean) => {
+        const c = (temaNoApp ? coresDoTema(tema, esc) : undefined) ?? {};
+        const t = temaNoApp ? temaApp(tema) : undefined;
+        const d: Record<string, string> = {};
+        if (t?.reto) d.cantosApp = "retos";
+        return { p: Object.fromEntries(Object.entries(c).filter(([k]) => k.startsWith("--"))), d };
+      };
+      localStorage.setItem("bookside-tema-cache", JSON.stringify({ claro: variante(false), escuro: variante(true) }));
+    } catch {
+      /* sem armazenamento */
+    }
+    // o que o script do <head> pintou e não vale mais sai
+    for (const k of Array.from(raiz.style)) if (k.startsWith("--") && k !== "--app-estante" && !(k in cores)) raiz.style.removeProperty(k);
     for (const [k, v] of Object.entries(cores))
       if (k.startsWith("--")) raiz.style.setProperty(k, String(v));
     return () => {
@@ -57,6 +81,29 @@ export function Aparencia() {
     // aparencia: o papel claro do tema sai/volta quando muda o modo escuro
   }, [tema, temaNoApp, modoEscuro]);
   return null;
+}
+
+/** os atributos do tema no <html> (usado também pela prévia da edição de perfil) */
+export function aplicarExtrasDoTema(
+  tema: string | undefined,
+  modoEscuro: boolean,
+  estiloEstante: "auto" | "clara" | "escura" | "tema" | "minimalista",
+  decoracao: "minimal" | "editorial" | "expressive" | null,
+) {
+  const raiz = document.documentElement;
+  const t = temaApp(tema);
+  for (const [k, v] of Object.entries(atributosDoTema(t))) {
+    const nome = k.replace(/^data-/, "").replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
+    if (v) raiz.dataset[nome] = v;
+    else delete raiz.dataset[nome];
+  }
+  raiz.dataset.decoracao = decoracao ?? t?.decoracao ?? "editorial";
+  raiz.dataset.estanteApp = estiloEstante;
+  const cor = corDaEstanteApp(estiloEstante, t, modoEscuro);
+  if (cor && (estiloEstante !== "auto" || t)) raiz.style.setProperty("--app-estante", cor);
+  else raiz.style.removeProperty("--app-estante");
+  if (estanteClareia(estiloEstante, t, modoEscuro)) raiz.dataset.estanteClara = "1";
+  else delete raiz.dataset.estanteClara;
 }
 
 /**

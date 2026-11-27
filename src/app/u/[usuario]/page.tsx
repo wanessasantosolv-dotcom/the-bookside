@@ -17,8 +17,8 @@ import {
 import { BotaoSeguir, CartaoAtividade } from "@/components/social/Pessoas";
 import { lembrarLivros } from "@/lib/catalogo";
 import { corDoLivro } from "@/lib/cores";
-import { temas } from "@/lib/dados";
 import { estiloDoPerfil } from "@/lib/tema";
+import { temaApp } from "@/lib/temas";
 import { calcularMatch, rotuloDoMatch, type Match } from "@/lib/match";
 import { linkDaAutoria } from "@/lib/autores";
 import { AnelMatch } from "@/components/social/AnelMatch";
@@ -206,7 +206,6 @@ function PerfilDela({ usuario }: { usuario: string }) {
     nome: pessoa.nome ?? "",
     usuario: pessoa.usuario ?? "",
   } as Perfil;
-  const tema = temas.find((t) => t.id === p.tema) ?? temas[0];
   const lidos = p.livros
     .filter((l) => l.status === "lido")
     .sort(porDataDeLeitura);
@@ -235,7 +234,7 @@ function PerfilDela({ usuario }: { usuario: string }) {
     p.gostos ?? [],
   );
 
-  const estilo = estiloDoPerfil(tema, modoEscuro);
+  const estilo = estiloDoPerfil(p.tema, modoEscuro);
 
   const seguidores = (
     <span className="flex gap-3">
@@ -258,7 +257,7 @@ function PerfilDela({ usuario }: { usuario: string }) {
     .sort((a, b) => (b.lidoEm ?? "").localeCompare(a.lidoEm ?? ""));
 
   return (
-    <div style={estilo} className="acc-tema">
+    <div style={estilo} data-cantos={temaApp(p.tema)?.reto ? "retos" : "normal"} className="acc-tema">
       <PerfilEditorial
         p={p}
         proprio={false}

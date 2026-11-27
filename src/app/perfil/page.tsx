@@ -8,7 +8,6 @@ import { EstantesDela } from "@/components/perfil/DaAmiga";
 import { JornadaNoPerfil } from "@/components/perfil/JornadaNoPerfil";
 import { PerfilEditorial, type AbaDoPerfil } from "@/components/perfil/PerfilEditorial";
 import { ResenhasLista } from "@/components/perfil/ResenhasLista";
-import { temas } from "@/lib/dados";
 import { usePerfil } from "@/lib/perfil-store";
 import { contagemSeguidores, useConsulta, useMeuId } from "@/lib/social";
 import { estiloDoPerfil } from "@/lib/tema";
@@ -36,7 +35,6 @@ export default function PerfilPage() {
   const numeros = useConsulta(async () => (eu ? contagemSeguidores(eu) : null), [eu]);
 
   if (!hidratado) return <AppShell aba="perfil">{null}</AppShell>;
-  const tema = temas.find((t) => t.id === p.tema) ?? temas[0];
 
   function mudarAba(a: AbaDoPerfil) {
     setAba(a);
@@ -44,7 +42,7 @@ export default function PerfilPage() {
   }
 
   return (
-    <AppShell aba="perfil" style={estiloDoPerfil(tema, modoEscuro)} className="acc-tema [&_main]:!bg-[var(--papel)] [&_main]:!text-[var(--tinta)]">
+    <AppShell aba="perfil" style={estiloDoPerfil(p.tema, modoEscuro)} className="acc-tema [&_main]:!bg-[var(--papel)] [&_main]:!text-[var(--tinta)]">
       <PerfilEditorial
         p={p}
         proprio
