@@ -12,7 +12,7 @@ import { estrelas, porDataDeLeitura } from "@/lib/estantes";
 import { generoGenerico, traduzirGenero } from "@/lib/generos";
 import type { Match } from "@/lib/match";
 import { usePerfil, type LivroSalvo, type Perfil } from "@/lib/perfil-store";
-import { CartaNoPerfil } from "@/components/entrelinhas/CartaNoPerfil";
+import { CATALOGO, ehCarta, type CartaId } from "@/lib/entrelinhas";
 import { atividadesDe, quandoFoi, useConsulta, verbo } from "@/lib/social";
 
 /*
@@ -663,6 +663,12 @@ export function PerfilEditorial({
                 {nome}
               </h1>
               <p className="mt-1 text-[12px] font-semibold text-[var(--acc)]">@{p.usuario}</p>
+              {/* o arquétipo literário: uma linha discreta, só quando publicado */}
+              {ehCarta(p.cartaLiteraria?.carta) ? (
+                <Link href={proprio ? "/nas-entrelinhas?ver=carta" : `/nas-entrelinhas?carta=${p.cartaLiteraria!.carta}`} className="mt-0.5 inline-block font-revista text-[13.5px] text-[var(--acc)] italic hover:underline">
+                  ✧ {CATALOGO[p.cartaLiteraria!.carta as CartaId].nome}
+                </Link>
+              ) : null}
               <Seguidores numeros={numeros} base={base} />
               </div>
               {/* ações compactas: ao lado do nome no computador, logo abaixo no celular */}
@@ -675,9 +681,6 @@ export function PerfilEditorial({
                 <Convite href="/perfil/editar" texto="escreva um pouco sobre você" />
               ) : null}
               {temaApp(p.tema) ? <OrnamentoTema tema={temaApp(p.tema)!} nivel={p.decoracao ?? temaApp(p.tema)!.decoracao} className="mx-auto mt-4 max-w-[220px]" /> : null}
-              <div className="mt-4 flex justify-center">
-                <CartaNoPerfil carta={p.cartaLiteraria?.carta} proprio={proprio} />
-              </div>
             </div>
           </header>
         ) : (

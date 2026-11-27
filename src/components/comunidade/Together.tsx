@@ -60,8 +60,8 @@ export function EmblemaClubes({ tamanho = 40, cor = COR.oliva }: { tamanho?: num
   );
 }
 
+/** cabeçalho das páginas de detalhe da comunidade (ex.: todas as leituras compartilhadas) */
 export function CabecalhoTogether({ ativo }: { ativo: Experiencia | null }) {
-  const convites = useConvitesPendentes();
   useEffect(() => {
     if (!ativo) return;
     try {
@@ -70,53 +70,13 @@ export function CabecalhoTogether({ ativo }: { ativo: Experiencia | null }) {
       /* sem armazenamento */
     }
   }, [ativo]);
-
   return (
-    <div className="mb-6">
-      <header className="flex items-end justify-between gap-4">
-        <div className="min-w-0">
-          <h1 className="sr-only">comunidade</h1>
-          <span className="lg:hidden">
-            <LetteringTogether tamanho={32} />
-          </span>
-          <span className="hidden lg:inline">
-            <LetteringTogether tamanho={42} />
-          </span>
-          <p className="mt-1 font-revista text-[14px] text-tinta-suave lg:text-[16px]">good books, better company.</p>
-        </div>
-        <Link
-          href="/comunidade/convites"
-          aria-label={convites ? `convites, ${convites} pendentes` : "convites"}
-          className="flex min-h-10 flex-none items-center gap-1.5 px-1 font-texto text-[13px] font-medium text-tinta-suave hover:text-bordo"
-        >
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-            <rect x="3" y="5" width="18" height="14" rx="1.5" />
-            <path d="m3.5 6 8.5 7 8.5-7" />
-          </svg>
-          convites
-          {convites ? <span className="ml-0.5 grid min-w-[18px] place-items-center rounded-full bg-bordo px-1 text-[10px] leading-[18px] text-creme">{convites}</span> : null}
-        </Link>
-      </header>
-
-      {/* clubes · co-read: navegação editorial, não banners */}
-      <nav aria-label="experiências" className="mt-5 flex gap-7 border-b border-linha lg:border-fio">
-        <Link
-          href="/clubes"
-          aria-current={ativo === "clubes" ? "page" : undefined}
-          className={`-mb-px flex min-h-11 items-center gap-2 border-b-2 pb-1 font-texto text-[15px] ${ativo === "clubes" ? "border-oliva font-semibold text-ameixa" : "border-transparent font-medium text-cinza hover:text-ameixa"}`}
-        >
-          <EmblemaClubes tamanho={20} />
-          clubes
-        </Link>
-        <Link
-          href="/co-read"
-          aria-current={ativo === "coread" ? "page" : undefined}
-          className={`-mb-px flex min-h-11 items-center gap-2 border-b-2 pb-1 font-texto text-[15px] ${ativo === "coread" ? "border-bordo font-semibold text-ameixa" : "border-transparent font-medium text-cinza hover:text-ameixa"}`}
-        >
-          <Marcadores tamanho={22} linha={false} />
-          co-read
-        </Link>
-      </nav>
-    </div>
+    <header className="mb-5">
+      <Link href="/comunidade" className="-ml-2 inline-flex min-h-11 items-center px-2 text-[13px] font-semibold text-bordo">
+        ← entre leitores
+      </Link>
+      <h1 className="mt-1 font-revista text-[26px] leading-none text-ameixa">{ativo === "coread" ? "Leituras compartilhadas" : "Comunidade"}</h1>
+      {ativo === "coread" ? <p className="mt-1 text-[13px] text-cinza">Marcadores diferentes, a mesma história.</p> : null}
+    </header>
   );
 }

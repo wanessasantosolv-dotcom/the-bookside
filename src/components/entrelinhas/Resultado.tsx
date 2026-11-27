@@ -64,7 +64,7 @@ function CartaRevelada({ carta, largura, animar }: { carta: CartaId; largura: nu
   );
 }
 
-export function ResultadoCarta({ carta, afinidade, execucaoId, animar, refazer }: { carta: CartaId; afinidade: CartaId | null; execucaoId: string; animar: boolean; refazer: () => void }) {
+export function ResultadoCarta({ carta, afinidade, execucaoId, animar, refazer, consulta = false }: { carta: CartaId; afinidade: CartaId | null; execucaoId: string; animar: boolean; refazer: () => void; consulta?: boolean }) {
   const c = CATALOGO[carta];
   const largo = useLargo();
   const noPerfil = usePerfil((s) => s.cartaLiteraria);
@@ -109,7 +109,7 @@ export function ResultadoCarta({ carta, afinidade, execucaoId, animar, refazer }
       <div className="mx-auto w-full max-w-[980px] px-5 pt-2 pb-16 lg:px-10 lg:pt-6">
         <div className="flex flex-col items-center lg:grid lg:grid-cols-[300px_minmax(0,1fr)] lg:items-start lg:gap-14">
           <div className="lg:sticky lg:top-8">
-            <p className="mb-3 text-center text-[11px] font-semibold tracking-[.18em] text-cinza uppercase lg:text-left">Sua carta literária</p>
+            <p className="mb-3 text-center text-[11px] font-semibold tracking-[.18em] text-cinza uppercase lg:text-left">{consulta ? "Carta literária" : "Sua carta literária"}</p>
             <CartaRevelada carta={carta} largura={largo ? 280 : 210} animar={animar} />
           </div>
 
@@ -133,6 +133,13 @@ export function ResultadoCarta({ carta, afinidade, execucaoId, animar, refazer }
             </div>
 
             {/* ações */}
+            {consulta ? (
+              <div className="mt-7">
+                <Link href="/nas-entrelinhas" className="inline-flex h-12 items-center rounded-[6px] bg-bordo px-5 text-[15px] font-semibold text-creme hover:bg-bordo-suave">
+                  Descobrir minha carta
+                </Link>
+              </div>
+            ) : (
             <div className="mt-7 flex flex-col gap-2 text-left">
               {confirmar ? (
                 <div className="rounded-[8px] border border-linha bg-creme-quente p-4">
@@ -186,10 +193,11 @@ export function ResultadoCarta({ carta, afinidade, execucaoId, animar, refazer }
                 </p>
               ) : null}
             </div>
+            )}
           </section>
         </div>
 
-        <Recomendacoes carta={carta} />
+        {consulta ? null : <Recomendacoes carta={carta} />}
       </div>
     </main>
   );

@@ -1,5 +1,7 @@
 "use client";
 
+import { CATALOGO, ehCarta } from "@/lib/entrelinhas";
+import { useEntrelinhas } from "@/lib/entrelinhas-store";
 import { Voltar } from "@/components/Voltar";
 import Link from "next/link";
 import { AppShell } from "@/components/AppShell";
@@ -36,6 +38,7 @@ type Rascunho = Pick<
   | "capaPosY"
   | "estiloEstante"
   | "decoracao"
+  | "cartaLiteraria"
 >;
 /** atalhos da página única (âncoras, não abas) */
 const SECOES: [string, string][] = [
@@ -381,6 +384,7 @@ function MeuPerfil({
             </span>
           </span>
         </label>
+        <CartaVisivel r={r} mudar={mudar} />
         <p className="text-[12px] text-cinza">
           a citação favorita do perfil você escolhe entre os trechos salvos, na{" "}
           <Link href="/perfil" className="font-semibold text-bordo underline-offset-4 hover:underline">
@@ -583,6 +587,29 @@ function AparenciaSecao({ r, mudar, escuro, onEscuro, abrirPrevia }: { r: Rascun
   );
 }
 
+/** o arquétipo de nas entrelinhas: aparece (ou não) como uma linha discreta abaixo do @ */
+function CartaVisivel({ r, mudar }: { r: Rascunho; mudar: (d: Partial<Rascunho>) => void }) {
+  const resultado = useEntrelinhas((s) => s.resultado);
+  const carta = r.cartaLiteraria?.carta ?? resultado?.carta;
+  if (!ehCarta(carta)) return null;
+  const visivel = !!r.cartaLiteraria;
+  return (
+    <label className="flex cursor-pointer items-start justify-between gap-4 rounded-[6px] border border-linha px-3.5 py-3">
+      <span className="min-w-0">
+        <span className="block text-[14px] font-semibold text-ameixa">Mostrar meu arquétipo literário</span>
+        <span className="mt-0.5 block text-[12px] text-cinza">✧ {CATALOGO[carta].nome}, abaixo do seu @. Respostas e pontos nunca aparecem.</span>
+      </span>
+      <input
+        type="checkbox"
+        role="switch"
+        checked={visivel}
+        onChange={(e) => mudar({ cartaLiteraria: e.target.checked ? { carta, em: new Date().toISOString() } : null })}
+        className="mt-1 size-5 flex-none accent-[var(--color-bordo)]"
+      />
+    </label>
+  );
+}
+
 export default function EditarPerfilPage() {
   const hidratado = useHidratado();
   const p = usePerfil();
@@ -601,6 +628,7 @@ export default function EditarPerfilPage() {
         capaPosY: p.capaPosY ?? 50,
         estiloEstante: p.estiloEstante ?? "auto",
         decoracao: p.decoracao ?? null,
+        cartaLiteraria: p.cartaLiteraria ?? null,
       }}
     />
   );

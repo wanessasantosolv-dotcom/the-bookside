@@ -7,7 +7,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { VersoCarta } from "@/components/entrelinhas/Carta";
 import { ResultadoCarta } from "@/components/entrelinhas/Resultado";
 import { useHidratado } from "@/components/PerfilHidratacao";
-import { DESEMPATE, EDITORIAIS, PERGUNTAS, imagemDaAlternativa, respondidas, type Alternativa, type CartaId } from "@/lib/entrelinhas";
+import { DESEMPATE, EDITORIAIS, ehCarta, PERGUNTAS, imagemDaAlternativa, respondidas, type Alternativa, type CartaId } from "@/lib/entrelinhas";
 import { retomarDaNuvem, useEntrelinhas } from "@/lib/entrelinhas-store";
 
 /** o store só vale depois de ler o aparelho (o HTML do servidor não sabe da execução) */
@@ -40,6 +40,8 @@ export function Oraculo() {
   // a carta que acabou de ser revelada (anima só nesta visita)
   const [revelada, setRevelada] = useState<CartaId | null>(null);
   const verResultado = params.get("ver") === "carta";
+  // a carta de outra pessoa, em modo de consulta (só a carta; nada de respostas ou pontos)
+  const deOutra = params.get("carta");
 
   useEffect(() => {
     if (pronto && perfilPronto) void retomarDaNuvem();
@@ -55,6 +57,10 @@ export function Oraculo() {
   }, [execucao?.fase, execucao?.carta, concluir]);
 
   if (!pronto || !perfilPronto) return <div className="min-h-dvh bg-creme" />;
+
+  if (!revelada && ehCarta(deOutra) && deOutra !== resultado?.carta) {
+    return <ResultadoCarta carta={deOutra} afinidade={null} execucaoId="" animar={false} consulta refazer={() => router.push("/nas-entrelinhas")} />;
+  }
 
   if (revelada || (verResultado && resultado && !execucao)) {
     const carta = revelada ?? resultado!.carta;

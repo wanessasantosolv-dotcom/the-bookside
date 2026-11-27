@@ -50,14 +50,14 @@ export function useClube() {
 /** largura do clube no computador: centralizada como o perfil (a capa continua de ponta a ponta) */
 const largura = "lg:mx-auto lg:w-full lg:max-w-[1320px] lg:px-12";
 
+// quatro áreas: a leitura atual e a agenda vivem na visão geral
 const abas = [
-  { id: "", r: "início" },
-  { id: "leitura", r: "leitura" },
-  { id: "biblioteca", r: "estante" },
-  { id: "jornada", r: "jornada" },
-  { id: "agenda", r: "agenda" },
-  { id: "membros", r: "membros" },
+  { id: "", r: "Visão geral" },
+  { id: "biblioteca", r: "Estante" },
+  { id: "jornada", r: "Jornada" },
+  { id: "membros", r: "Membros" },
 ];
+const POSICOES = "bookside-clube-rolagem";
 
 function Menu({ c, papel }: { c: Clube; papel: Papel | null }) {
   const [aberto, setAberto] = useState(false);
@@ -89,21 +89,15 @@ function Menu({ c, papel }: { c: Clube; papel: Papel | null }) {
     <div ref={caixa} className="relative">
       <button
         type="button"
-        aria-label="opções do clube"
+        aria-label="configurações do clube"
+        title="configurações do clube"
         aria-expanded={aberto}
         onClick={() => setAberto((v) => !v)}
         className="flex size-11 items-center justify-center rounded-full text-bordo hover:bg-rosa-fundo"
       >
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-          aria-hidden
-        >
-          <circle cx="5" cy="12" r="1.8" />
-          <circle cx="12" cy="12" r="1.8" />
-          <circle cx="19" cy="12" r="1.8" />
+        <svg aria-hidden width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="3" />
+          <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" />
         </svg>
       </button>
       {aberto ? (
@@ -114,7 +108,7 @@ function Menu({ c, papel }: { c: Clube; papel: Papel | null }) {
                 editar clube
               </Link>
               <Link href={`/clubes/${c.id}/studio`} className={item}>
-                personalizar clube
+                ateliê do clube
               </Link>
             </>
           ) : null}
@@ -138,22 +132,33 @@ function Menu({ c, papel }: { c: Clube; papel: Papel | null }) {
 
 function Abas({ base }: { base: string }) {
   const pathname = usePathname();
+  // cada aba volta para onde a pessoa estava; na primeira visita, começa do topo
+  function guardar() {
+    try {
+      const m = JSON.parse(sessionStorage.getItem(POSICOES) ?? "{}");
+      m[pathname] = window.scrollY;
+      sessionStorage.setItem(POSICOES, JSON.stringify(m));
+    } catch {
+      /* sem armazenamento */
+    }
+  }
   return (
-    <nav aria-label="seções do clube" className="-mx-4 flex gap-5 overflow-x-auto px-4 [scrollbar-width:none] lg:mx-0 lg:gap-8 lg:px-0 [&::-webkit-scrollbar]:hidden">
+    <nav aria-label="áreas do clube" className="grid grid-cols-4">
       {abas.map((a) => {
         const href = a.id ? `${base}/${a.id}` : base;
-        // a leitura de um livro do clube fica dentro da estante; o perfil de um membro, dentro de membros
         const on =
           pathname === href ||
+          (a.id === "" && [`${base}/feed`, `${base}/leitura`, `${base}/agenda`].includes(pathname)) ||
           (a.id === "biblioteca" && pathname.startsWith(`${base}/livro/`)) ||
-          (a.id === "membros" && (pathname.startsWith(`${base}/membro/`) || pathname.startsWith(`${base}/membros/`))) ||
-          (a.id === "" && pathname === `${base}/feed`);
+          (a.id === "membros" && pathname.startsWith(`${base}/membros/`));
         return (
           <Link
             key={a.id}
             href={href}
+            scroll={false}
+            onClick={guardar}
             aria-current={on ? "page" : undefined}
-            className={`flex min-h-11 flex-none items-center border-b-2 text-[13.5px] whitespace-nowrap transition-colors lg:min-h-12 lg:text-[15px] ${
+            className={`flex min-h-11 items-center justify-center border-b-2 px-1 text-center text-[13.5px] whitespace-nowrap transition-colors lg:min-h-12 lg:text-[15px] ${
               on ? "border-bordo font-semibold text-bordo" : "border-transparent text-cinza hover:text-ameixa"
             }`}
           >
@@ -181,9 +186,10 @@ function SeloDoClube({ c, tamanho, ident }: { c: Clube; tamanho: "mini" | "peque
 }
 
 /**
- * Cabeçalho do clube. No início: capa, selo sobre a capa, nome, descrição,
- * membros e ações. Nas outras abas: barra compacta (selo, nome, voltar).
- * As abas ficam presas no topo enquanto rola.
+ * Cabeçalho do clube, um só para as quatro áreas. Visão geral: banner
+ * proporcional, selo, nome e descrição; ao rolar além dele, fica só a linha
+ * compacta. Estante, Jornada e Membros: só a linha compacta (voltar, selo,
+ * nome, configurações). As abas ficam presas logo abaixo.
  */
 function Cabecalho({ c, papel, membros, ident }: { c: Clube; papel: Papel | null; membros: number; ident: Identidade | null }) {
   const layout = ident ? cabecalhoDe(ident) : "editorial";
@@ -192,128 +198,110 @@ function Cabecalho({ c, papel, membros, ident }: { c: Clube; papel: Papel | null
   const base = `/clubes/${c.id}`;
   const inicio = pathname === base || pathname === `${base}/feed`;
   const tema = c.tema ? (temas.find((t) => t.id === c.tema) ?? null) : null;
-  const acao =
-    "flex min-h-10 items-center rounded-full border border-bordo/40 px-4 text-[13px] font-semibold text-bordo hover:border-bordo hover:bg-rosa-fundo";
+  const fim = useRef<HTMLDivElement>(null);
+  const [passou, setPassou] = useState(false);
+
+  // na visão geral, a linha compacta aparece quando o banner sai da tela
+  useEffect(() => {
+    if (!inicio || !fim.current) return setPassou(false);
+    const ob = new IntersectionObserver(([e]) => setPassou(!e.isIntersecting), { rootMargin: "-1px 0px 0px 0px" });
+    ob.observe(fim.current);
+    return () => ob.disconnect();
+  }, [inicio]);
+
+  // ao trocar de aba: volta para onde estava naquela aba, ou para o topo
+  useEffect(() => {
+    let y = 0;
+    try {
+      y = JSON.parse(sessionStorage.getItem(POSICOES) ?? "{}")[pathname] ?? 0;
+    } catch {
+      /* sem armazenamento */
+    }
+    requestAnimationFrame(() => window.scrollTo({ top: y }));
+  }, [pathname]);
+
+  const compacta = (
+    <div className="flex h-[52px] items-center gap-2 lg:gap-3">
+      <Voltar padrao="/comunidade" className="-ml-2 grid size-11 flex-none place-items-center text-bordo">
+        <span className="sr-only">voltar</span>
+        <svg aria-hidden width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M15 5l-7 7 7 7" />
+        </svg>
+      </Voltar>
+      <Link href={base} scroll={false} className="flex min-w-0 flex-1 items-center gap-2.5">
+        <SeloDoClube c={c} tamanho="mini" ident={ident} />
+        <span className="min-w-0 truncate font-revista text-[17px] leading-tight text-ameixa lg:text-[19px]">{c.nome}</span>
+      </Link>
+      <Menu c={c} papel={papel} />
+    </div>
+  );
+
+  const banner = layout === "compact" ? null : (
+    <div className="relative">
+      <div
+        className={`h-[110px] w-full bg-cover bg-center sm:h-[150px] lg:h-[190px] ${c.capa || tema || c.identidade ? "" : "pat-estrelas"}`}
+        style={
+          c.capa
+            ? { backgroundImage: `url("${c.capa}")` }
+            : lerIdentidade(c.identidade)
+              ? { background: "var(--club-banner)" }
+              : tema
+                ? { background: tema.fundo }
+                : undefined
+        }
+      />
+      <div className={`absolute inset-x-0 top-0 flex items-center justify-between px-4 pt-2 lg:pt-4 ${largura}`}>
+        <Voltar padrao="/comunidade" rotulo="comunidade" className="flex min-h-10 items-center rounded-full bg-creme/90 px-4 text-[13px] font-semibold text-bordo" />
+        <span className="rounded-full bg-creme/85">
+          <Menu c={c} papel={papel} />
+        </span>
+      </div>
+    </div>
+  );
+
   return (
     <>
-      {inicio && layout === "compact" ? (
-        <div className={`flex flex-wrap items-center gap-4 px-5 pt-3 pb-1 ${largura}`}>
-          <Voltar padrao="/clubes" rotulo="clubes" className="-ml-2 flex min-h-11 flex-none items-center px-2 text-[13px] font-semibold text-bordo" />
-          <SeloDoClube c={c} tamanho="pequeno" ident={ident} />
-          <div className="min-w-0 flex-1">
-            <h1 className="truncate font-revista text-[26px] leading-tight text-bordo italic lg:text-[32px]">{c.nome}</h1>
-            <p className="truncate text-[12px] text-tinta-suave">
-              {membros} {membros === 1 ? "membro" : "membros"}
-              {c.descricao ? ` · ${c.descricao}` : ""}
-            </p>
-          </div>
-          <Link href={`${base}/convidar`} className={`${acao} hidden sm:flex`}>
-            convidar membros
-          </Link>
-          <Menu c={c} papel={papel} />
-        </div>
-      ) : inicio && layout === "centered" ? (
-        <div>
-          <div className="relative">
-            <div
-              className="aspect-[4/1] w-full bg-cover bg-center lg:aspect-[7/1]"
-              style={c.capa ? { backgroundImage: `url("${c.capa}")` } : { background: "var(--club-banner)" }}
-            />
-            <div className={`absolute inset-x-0 top-0 flex items-center justify-between px-4 pt-2 lg:pt-4 ${largura}`}>
-              <Voltar padrao="/clubes" rotulo="clubes" className="flex min-h-10 items-center rounded-full bg-creme/90 px-4 text-[13px] font-semibold text-bordo" />
-              <span className="rounded-full bg-creme/85">
-                <Menu c={c} papel={papel} />
-              </span>
+      {inicio ? (
+        layout === "compact" ? (
+          <div className={`flex items-center gap-4 px-4 pt-3 pb-1 ${largura}`}>
+            <Voltar padrao="/comunidade" rotulo="comunidade" className="-ml-2 flex min-h-11 flex-none items-center px-2 text-[13px] font-semibold text-bordo" />
+            <SeloDoClube c={c} tamanho="pequeno" ident={ident} />
+            <div className="min-w-0 flex-1">
+              <h1 className="truncate font-revista text-[24px] leading-tight text-bordo italic lg:text-[30px]">{c.nome}</h1>
+              <p className="truncate text-[12px] text-tinta-suave">
+                {membros} {membros === 1 ? "membro" : "membros"}
+                {c.descricao ? ` · ${c.descricao}` : ""}
+              </p>
             </div>
+            <Menu c={c} papel={papel} />
           </div>
-          <div className={`flex flex-col items-center px-5 text-center ${largura}`}>
-            <span className="relative z-10 -mt-12">
-              <SeloDoClube c={c} tamanho="grande" ident={ident} />
-            </span>
-            <h1 className="mt-3 font-revista text-[32px] leading-[1.05] text-bordo italic lg:text-[44px]">{c.nome}</h1>
-            <p className="mt-1 text-[13px] text-tinta-suave">
-              clube de leitura · {membros} {membros === 1 ? "membro" : "membros"}
-            </p>
-            {c.descricao ? <p className="mt-2 max-w-[56ch] text-[14px] leading-relaxed text-tinta-suave">{c.descricao}</p> : null}
-            <div className="mt-4 flex gap-2">
-              <Link href={`${base}/convidar`} className={acao}>
-                convidar membros
-              </Link>
-              {papel === "moderadora" ? (
-                <Link href={`${base}/editar`} className={acao}>
-                  editar clube
-                </Link>
-              ) : null}
-            </div>
-          </div>
-        </div>
-      ) : inicio ? (
-        <div>
-          <div className="relative">
-            <div
-              className={`aspect-[3/1] w-full bg-cover bg-center lg:aspect-[6/1] ${c.capa || tema || c.identidade ? "" : "pat-estrelas"}`}
-              style={
-                c.capa
-                  ? { backgroundImage: `linear-gradient(rgba(43,20,32,.02),rgba(43,20,32,.14)), url("${c.capa}")` }
-                  : lerIdentidade(c.identidade)
-                    ? { background: "var(--club-banner)" }
-                    : tema
-                    ? { background: tema.fundo }
-                    : undefined
-              }
-            />
-            <div className={`absolute inset-x-0 top-0 flex items-center justify-between px-4 pt-2 lg:pt-4 ${largura}`}>
-              <Voltar padrao="/clubes" rotulo="clubes" className="flex min-h-10 items-center rounded-full bg-creme/90 px-4 text-[13px] font-semibold text-bordo" />
-              <span className="rounded-full bg-creme/85">
-                <Menu c={c} papel={papel} />
-              </span>
-            </div>
-          </div>
-          <div className={`relative px-5 ${largura}`}>
-            <div className="flex flex-wrap items-end gap-x-5 gap-y-3">
-              <span className="-mt-10 lg:-mt-12">
-                <SeloDoClube c={c} tamanho="grande" ident={ident} />
-              </span>
-              <div className="min-w-[min(100%,14rem)] flex-1 pt-3">
-                <h1 className="font-revista text-[30px] leading-[1.05] text-bordo italic lg:text-[40px]">{c.nome}</h1>
-                <p className="mt-1 text-[13px] text-tinta-suave">
-                  clube de leitura · {membros} {membros === 1 ? "membro" : "membros"}
-                </p>
+        ) : (
+          <div>
+            {banner}
+            <div className={`relative px-5 ${largura} ${layout === "centered" ? "flex flex-col items-center text-center" : ""}`}>
+              <div className={layout === "centered" ? "flex flex-col items-center" : "flex items-end gap-4"}>
+                <span className="relative z-10 -mt-9 lg:-mt-11">
+                  <SeloDoClube c={c} tamanho="grande" ident={ident} />
+                </span>
+                <div className="min-w-0 flex-1 pt-2">
+                  <h1 className="font-revista text-[26px] leading-[1.05] text-bordo italic lg:text-[36px]">{c.nome}</h1>
+                  <p className="mt-0.5 text-[12px] text-tinta-suave">
+                    {membros} {membros === 1 ? "membro" : "membros"}
+                  </p>
+                </div>
               </div>
-              <div className="flex w-full gap-2 sm:w-auto">
-                <Link href={`${base}/convidar`} className={acao}>
-                  convidar membros
-                </Link>
-                {papel === "moderadora" ? (
-                  <Link href={`${base}/editar`} className={acao}>
-                    editar clube
-                  </Link>
-                ) : null}
-              </div>
+              {c.descricao ? <p className="mt-2 max-w-[60ch] text-[13px] leading-relaxed text-tinta-suave">{c.descricao}</p> : null}
             </div>
-            {c.descricao ? <p className="mt-3 max-w-[60ch] text-[14px] leading-relaxed text-tinta-suave">{c.descricao}</p> : null}
           </div>
-        </div>
-      ) : (
-        // páginas internas: uma linha só (voltar, selo, nome, menu)
-        <div className={`flex min-h-[52px] items-center gap-2 px-4 pt-1 lg:gap-3 lg:px-5 lg:pt-3 ${largura}`}>
-          <Voltar padrao="/clubes" className="-ml-2 grid size-11 flex-none place-items-center text-bordo">
-            <span className="sr-only">voltar</span>
-            <svg aria-hidden width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M15 5l-7 7 7 7" />
-            </svg>
-          </Voltar>
-          <Link href={base} className="flex min-w-0 flex-1 items-center gap-2.5">
-            <SeloDoClube c={c} tamanho="mini" ident={ident} />
-            <span className="min-w-0 truncate font-revista text-[17px] leading-tight text-ameixa lg:text-[20px]">{c.nome}</span>
-          </Link>
-          <Menu c={c} papel={papel} />
-        </div>
-      )}
-      {faixa && inicio ? <div aria-hidden className={`faixa-clube mt-4 h-3 ${largura}`} /> : null}
-      {/* abas: presas no topo enquanto rola, sem cobrir o conteúdo */}
-      <div className={`sticky top-0 z-20 border-b border-linha ${inicio ? "mt-3" : "mt-0"} bg-creme/95 backdrop-blur-md lg:border-fio lg:bg-jornal/95`}>
+        )
+      ) : null}
+      {faixa && inicio ? <div aria-hidden className={`faixa-clube mt-3 h-2.5 ${largura}`} /> : null}
+      <div ref={fim} aria-hidden className="h-px" />
+      {/* identificação compacta + abas: presas no topo, juntas (cerca de 96px no celular) */}
+      {/* a linha compacta entra por cima ao rolar a visão geral; a margem negativa evita o salto do conteúdo */}
+      <div className={`sticky top-0 z-20 border-b border-linha ${inicio ? "mt-2" : ""} ${inicio && passou ? "-mb-[52px]" : ""} bg-creme/95 backdrop-blur-md lg:border-fio lg:bg-jornal/95`}>
         <div className={`px-4 lg:px-5 ${largura}`}>
+          {!inicio || passou ? compacta : null}
           <Abas base={base} />
         </div>
       </div>

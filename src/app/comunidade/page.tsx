@@ -1,19 +1,8 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
-import { AppShell } from "@/components/AppShell";
-import { ultimaExperiencia } from "@/components/comunidade/Together";
+import { Comunidade } from "@/components/comunidade/Comunidade";
 
-/** /comunidade abre direto a última experiência usada (clubes ou co-read), sem etapa extra */
+/** Comunidade: tudo numa página, sem etapa de escolha entre clubes e leituras compartilhadas */
 export default function ComunidadePage() {
-  const router = useRouter();
-  useEffect(() => {
-    router.replace(ultimaExperiencia() === "coread" ? "/co-read" : "/clubes");
-  }, [router]);
-  return (
-    <AppShell aba="clubes">
-      <div className="flex-1 lg:bg-jornal" />
-    </AppShell>
-  );
+  return <Comunidade />;
 }
