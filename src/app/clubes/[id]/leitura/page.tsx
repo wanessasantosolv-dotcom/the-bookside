@@ -340,26 +340,65 @@ function MinhaLeitura({
   compacta: boolean;
   recarregar: () => void;
 }) {
-  const [marcando, setMarcando] = useState(false);
-  const [unidade, setUnidade] = useState<UnidadeMarca>(progresso?.unidade ?? "pagina");
-  const [numero, setNumero] = useState(progresso?.numero != null ? String(progresso.numero) : "");
+  const editarLivro = usePerfil((s) => s.editarLivro);
   const total = pessoal?.paginas ?? lendo.livro.paginas;
-  const pagina = pessoal?.paginaAtual ?? (progresso?.unidade === "pagina" ? (progresso.numero ?? undefined) : undefined);
-  const pct = status === "terminei" || pessoal?.status === "lido" ? 100 : total && pagina ? Math.min(100, Math.round((pagina / total) * 100)) : 0;
+  const paginaSalva = pessoal?.paginaAtual ?? (progresso?.unidade === "pagina" ? (progresso.numero ?? undefined) : undefined);
+  // tudo responde na hora (otimista) e salva por trás
+  const [estado, setEstado] = useState<StatusLeitura>(status);
+  const [pagina, setPagina] = useState<number>(paginaSalva ?? 0);
+  const [capitulo, setCapitulo] = useState(progresso?.unidade === "capitulo" ? String(progresso.numero ?? "") : "");
+  const [salvando, setSalvando] = useState<"" | "salvando" | "salvo">("");
+  const [porCapitulo, setPorCapitulo] = useState(!total || progresso?.unidade === "capitulo");
+  const pct = estado === "terminei" ? 100 : total && pagina ? Math.min(100, Math.round((pagina / total) * 100)) : 0;
   const ESTADOS: { v: StatusLeitura; r: string }[] = [
     { v: "nao_comecei", r: "não comecei" },
     { v: "lendo", r: "lendo" },
     { v: "terminei", r: "concluí" },
   ];
 
-  async function salvarMarca() {
-    const n = Number(numero);
-    if (!numero || Number.isNaN(n) || n < 0) return;
-    await marcarMarca(lendo.id, unidade, Math.round(n));
-    setMarcando(false);
+  async function mudarEstado(v: StatusLeitura) {
+    setEstado(v);
+    await marcarProgresso(lendo.id, v);
+    if (v === "terminei" && total) setPagina(total);
     recarregar();
   }
 
+  async function salvarPagina(n: number) {
+    const p = Math.max(0, Math.min(total ?? 99999, Math.round(n)));
+    setPagina(p);
+    setSalvando("salvando");
+    try {
+      await marcarMarca(lendo.id, "pagina", p);
+      // a estante pessoal acompanha
+      editarLivro(
+        { id: pessoal?.id ?? lendo.livro.id, titulo: lendo.livro.titulo, autor: lendo.livro.autor, capa: lendo.livro.capa },
+        { paginaAtual: p, paginas: total, ...(estado === "nao_comecei" && p > 0 ? { status: "lendo" as const } : {}) },
+      );
+      if (estado === "nao_comecei" && p > 0) {
+        setEstado("lendo");
+        await marcarProgresso(lendo.id, "lendo");
+      }
+      if (total && p >= total && estado !== "terminei") {
+        setEstado("terminei");
+        await marcarProgresso(lendo.id, "terminei");
+      }
+      setSalvando("salvo");
+      recarregar();
+    } catch {
+      setSalvando("");
+    }
+  }
+
+  async function salvarCapitulo() {
+    const n = Number(capitulo);
+    if (!capitulo || Number.isNaN(n)) return;
+    setSalvando("salvando");
+    await marcarMarca(lendo.id, "capitulo", Math.round(n));
+    setSalvando("salvo");
+    recarregar();
+  }
+
+  const passo = "grid h-10 min-w-11 place-items-center rounded-[6px] border border-linha px-2 text-[13px] font-semibold text-ameixa hover:border-bordo active:scale-95";
   return (
     <section aria-labelledby="t-minha">
       <div className={linhaTitulo}>
@@ -367,23 +406,87 @@ function MinhaLeitura({
           minha leitura
         </h2>
         <Ornamento className="mr-auto" />
-        <span className="text-[12px] tabular-nums text-tinta-suave">
-          {pct === 100 ? "concluída" : total && pagina ? `pág. ${pagina} de ${total} · ${pct}%` : progresso?.numero != null ? `${progresso.unidade === "capitulo" ? "capítulo" : "pág."} ${progresso.numero}` : "ainda não começou"}
+        <span className="text-[12px] tabular-nums text-tinta-suave" aria-live="polite">
+          {salvando === "salvando" ? "salvando…" : salvando === "salvo" ? "salvo ✓" : pct === 100 ? "concluída" : total && pagina ? `${pct}%` : ""}
         </span>
       </div>
-      <Barra pct={pct} cor={cor} alta={compacta ? 4 : 7} />
+
+      {/* a barra é o controle: arraste até a página em que parou */}
+      {total && !porCapitulo ? (
+        <div className="mt-1">
+          <div className="relative h-6">
+            <span className="absolute inset-x-0 top-1/2 h-[7px] -translate-y-1/2 overflow-hidden rounded-full" style={{ background: "var(--club-progress-track, var(--color-linha))" }}>
+              <span className="block h-full rounded-full transition-[width] duration-150" style={{ width: `${pct}%`, background: cor }} />
+            </span>
+            <input
+              type="range"
+              min={0}
+              max={total}
+              value={pagina}
+              onChange={(e) => setPagina(Number(e.target.value))}
+              onPointerUp={(e) => salvarPagina(Number((e.target as HTMLInputElement).value))}
+              onKeyUp={(e) => ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(e.key) && salvarPagina(Number((e.target as HTMLInputElement).value))}
+              aria-label="página em que parei"
+              aria-valuetext={`página ${pagina} de ${total}`}
+              className="absolute inset-0 w-full cursor-pointer opacity-0"
+            />
+            <span aria-hidden className="pointer-events-none absolute top-1/2 size-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-creme shadow" style={{ left: `${pct}%`, background: cor }} />
+          </div>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <button type="button" onClick={() => salvarPagina(pagina - 10)} className={passo} aria-label="menos 10 páginas">
+              −10
+            </button>
+            <label className="flex h-10 items-center gap-1.5 rounded-[6px] border border-linha px-2.5 text-[13px] focus-within:border-bordo" style={{ background: "var(--club-input-bg)" }}>
+              <span className="text-cinza">pág.</span>
+              <input
+                inputMode="numeric"
+                value={pagina || ""}
+                onChange={(e) => setPagina(Number(e.target.value.replace(/\D/g, "")) || 0)}
+                onBlur={() => pagina !== paginaSalva && salvarPagina(pagina)}
+                onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), salvarPagina(pagina))}
+                aria-label="página atual"
+                className="w-12 bg-transparent text-center font-semibold tabular-nums outline-none"
+              />
+              <span className="text-cinza">de {total}</span>
+            </label>
+            <button type="button" onClick={() => salvarPagina(pagina + 10)} className={passo} aria-label="mais 10 páginas">
+              +10
+            </button>
+            <button type="button" onClick={() => setPorCapitulo(true)} className="ml-auto min-h-10 text-[12px] font-semibold text-cinza hover:text-bordo">
+              marcar por capítulo
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <label className="flex h-10 items-center gap-1.5 rounded-[6px] border border-linha px-2.5 text-[13px] focus-within:border-bordo" style={{ background: "var(--club-input-bg)" }}>
+            <span className="text-cinza">capítulo</span>
+            <input inputMode="numeric" value={capitulo} onChange={(e) => setCapitulo(e.target.value.replace(/\D/g, ""))} onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), salvarCapitulo())} aria-label="capítulo atual" className="w-12 bg-transparent text-center font-semibold tabular-nums outline-none" />
+          </label>
+          <button type="button" onClick={() => setCapitulo(String((Number(capitulo) || 0) + 1))} className={passo} aria-label="próximo capítulo">
+            +1
+          </button>
+          <button type="button" onClick={salvarCapitulo} className="h-10 rounded-[6px] bg-bordo px-4 text-[13px] font-semibold text-creme">
+            salvar
+          </button>
+          {total ? (
+            <button type="button" onClick={() => setPorCapitulo(false)} className="ml-auto min-h-10 text-[12px] font-semibold text-cinza hover:text-bordo">
+              marcar por página
+            </button>
+          ) : null}
+        </div>
+      )}
+
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex rounded-pill border border-linha p-0.5" role="group" aria-label="como está a sua leitura">
+        <div className="flex rounded-[8px] border border-linha p-0.5" role="radiogroup" aria-label="como está a sua leitura">
           {ESTADOS.map((e) => (
             <button
               key={e.v}
               type="button"
-              aria-pressed={status === e.v}
-              onClick={async () => {
-                await marcarProgresso(lendo.id, e.v);
-                recarregar();
-              }}
-              className={`min-h-10 rounded-pill px-3.5 text-[12px] font-semibold ${status === e.v ? "bg-bordo text-creme" : "text-tinta-suave hover:text-bordo"}`}
+              role="radio"
+              aria-checked={estado === e.v}
+              onClick={() => mudarEstado(e.v)}
+              className={`min-h-10 rounded-[6px] px-3.5 text-[12px] font-semibold transition-colors ${estado === e.v ? "bg-bordo text-creme" : "text-tinta-suave hover:text-bordo"}`}
             >
               {e.r}
             </button>
@@ -391,47 +494,18 @@ function MinhaLeitura({
         </div>
         <span className="text-[11px] text-cinza">
           {progresso?.atualizado_em ? `último registro ${new Date(progresso.atualizado_em).toLocaleDateString("pt-BR", { day: "numeric", month: "short" }).replace(".", "")}` : ""}
-          {and && and.faltam > 0 && status !== "terminei" ? `${progresso?.atualizado_em ? " · " : ""}${and.faltam} ${and.faltam === 1 ? "dia restante" : "dias restantes"}` : ""}
+          {and && and.faltam > 0 && estado !== "terminei" ? `${progresso?.atualizado_em ? " · " : ""}${and.faltam} ${and.faltam === 1 ? "dia restante" : "dias restantes"}` : ""}
         </span>
       </div>
-      {status !== "terminei" ? (
-        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
-          <Link href={`/livro/${pessoal?.id ?? lendo.livro.id}/progresso`} className={botaoSecundario}>
-            registrar leitura
-          </Link>
-          {!marcando ? (
-            <button type="button" onClick={() => setMarcando(true)} className="min-h-10 text-[12px] font-semibold text-cinza underline-offset-4 hover:text-bordo hover:underline">
-              marcar capítulo no clube
-            </button>
-          ) : (
-            <span className="flex flex-wrap items-center gap-2">
-              <span className="flex rounded-pill border border-linha p-0.5">
-                {(["pagina", "capitulo"] as const).map((u) => (
-                  <button key={u} type="button" onClick={() => setUnidade(u)} className={`rounded-pill px-3 py-1.5 text-[11px] font-semibold ${unidade === u ? "bg-bordo text-creme" : "text-cinza"}`}>
-                    {u === "pagina" ? "página" : "capítulo"}
-                  </button>
-                ))}
-              </span>
-              <input
-                inputMode="numeric"
-                autoFocus
-                value={numero}
-                onChange={(e) => setNumero(e.target.value.replace(/\D/g, "").replace(/^0+(?=\d)/, ""))}
-                placeholder={unidade === "pagina" ? "nº da página" : "nº do capítulo"}
-                aria-label={unidade === "pagina" ? "número da página" : "número do capítulo"}
-                className="h-10 w-28 rounded-[4px] border border-linha px-2.5 text-[13px] outline-none focus:border-bordo"
-                style={{ background: "var(--club-input-bg)" }}
-              />
-              <button type="button" onClick={salvarMarca} className="h-10 rounded-pill bg-bordo px-4 text-[12px] font-semibold text-creme">
-                salvar
-              </button>
-              <button type="button" onClick={() => setMarcando(false)} className="h-10 px-2 text-[12px] text-cinza">
-                cancelar
-              </button>
-            </span>
-          )}
-        </div>
-      ) : null}
+      {estado === "terminei" ? (
+        <Link href={`/clubes/${lendo.clube_id}/ficha/${lendo.id}`} className="mt-3 inline-flex h-10 items-center rounded-[6px] bg-bordo px-4 text-[13px] font-semibold text-creme">
+          escrever minha ficha
+        </Link>
+      ) : (
+        <Link href={`/livro/${pessoal?.id ?? lendo.livro.id}/progresso`} className="mt-3 inline-block min-h-10 py-2 text-[12px] font-semibold text-cinza underline-offset-4 hover:text-bordo hover:underline">
+          registro completo (minutos, notas da sessão) →
+        </Link>
+      )}
     </section>
   );
 }
