@@ -294,12 +294,15 @@ function Cabecalho({ l, eu, recarregar }: { l: Coread; eu: string | null; recarr
 
   const item = "block w-full px-3.5 py-2.5 text-left text-[13px] text-ameixa hover:bg-linha/50";
   return (
-    <header className="relative overflow-hidden rounded-[4px] p-5 sm:p-6 lg:p-8" style={{ background: e.fundo }}>
-      <Marcadores
-        tamanho={150}
-        cores={[e.tinta, e.destaque]}
-        className="pointer-events-none absolute -right-6 -bottom-8 hidden opacity-25 sm:block lg:right-28 lg:bottom-auto lg:-top-2 lg:opacity-40"
-      />
+    // sem overflow-hidden no cabeçalho: o menu de opções não pode ser cortado (a decoração é que fica recortada)
+    <header className="relative rounded-[4px] p-5 sm:p-6 lg:p-8" style={{ background: e.fundo }}>
+      <span aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden rounded-[4px]">
+        <Marcadores
+          tamanho={150}
+          cores={[e.tinta, e.destaque]}
+          className="absolute -right-6 -bottom-8 hidden opacity-25 sm:block lg:right-28 lg:bottom-auto lg:-top-2 lg:opacity-40"
+        />
+      </span>
       <div className="relative grid grid-cols-[88px_minmax(0,1fr)] gap-4 sm:grid-cols-[120px_minmax(0,1fr)] sm:gap-6 lg:grid-cols-[150px_minmax(0,1fr)] lg:gap-8">
         <Link href={`/livro/${l.livro.id}`} className="relative block">
           <CapaLivro titulo={l.livro.titulo} capa={l.livro.capa} cor={corDoLivro(l.livro.id)} className="w-full -rotate-[1.5deg] [&>span:last-child]:hidden" />
@@ -379,12 +382,12 @@ function Cabecalho({ l, eu, recarregar }: { l: Coread; eu: string | null; recarr
                       className={`${item} text-bordo`}
                       onClick={async () => {
                         setMenu(false);
-                        if (!confirm("apagar a leitura compartilhada para todo mundo? a conversa e as reações somem e não dá para desfazer.")) return;
+                        if (!confirm("excluir esta leitura compartilhada para todo mundo? a conversa, o progresso e as reações somem e não dá para desfazer.")) return;
                         await apagarLeitura(l.id);
                         router.push("/co-read");
                       }}
                     >
-                      apagar para todo mundo
+                      excluir leitura compartilhada
                     </button>
                   ) : null}
                 </div>
