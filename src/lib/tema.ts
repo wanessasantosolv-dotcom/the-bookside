@@ -62,6 +62,17 @@ export function coresDoTema(
     } as CSSProperties;
   }
 
+  // blocos de destaque (.inverso) no modo escuro: a cor forte do tema, como no modo claro
+  const forte = escuro ? destaqueClaroDeTemaEscuro(t) : t.texto;
+  const inverso = {
+    "--inverso-bordo": forte,
+    "--inverso-bordo-escuro": mistura(forte, 80, "#000000"),
+    "--inverso-bordo-suave": escuro ? forte : t.destaque,
+    "--inverso-rosa-claro": mistura(escuro ? t.destaque : t.destaque, 40, "#F9F5EE"),
+    "--inverso-rosa-antigo": escuro ? forte : t.destaque,
+    "--inverso-rosa-fundo": mistura(t.destaque, 12, "#F9F5EE"),
+  };
+
   if (!escuro) {
     // tema claro no modo escuro: o destaque clareia para dar leitura
     // e os fundos rosados misturam com o escuro
@@ -85,11 +96,13 @@ export function coresDoTema(
       "--color-grafite": mistura(t.destaque, 10, "#b0abaf"),
       "--color-rosa-fundo": mistura(t.destaque, 18, "#141214"),
       "--color-rosa-claro": mistura(t.destaque, 45, "#141214"),
+      ...inverso,
     } as CSSProperties;
   }
 
   // tema escuro no modo escuro: a página inteira usa o papel do tema
   return {
+    ...inverso,
     "--color-bordo": t.destaque,
     "--color-bordo-escuro": t.destaque,
     "--color-bordo-suave": t.destaque,

@@ -97,16 +97,17 @@ html[data-modo="escuro"] {
 
 /* no modo escuro, os blocos "de destaque" (vinho/ameixa com texto claro) continuam como no claro */
 html[data-modo="escuro"] .inverso {
-  --color-bordo: #6b0d24;
-  --color-bordo-escuro: #4b0d1b;
-  --color-bordo-suave: #8e1d3d;
-  --color-vinho: #692536;
+  /* com tema, a cor forte do tema (vem de coresDoTema); sem tema, o vinho do app */
+  --color-bordo: var(--inverso-bordo, #6b0d24);
+  --color-bordo-escuro: var(--inverso-bordo-escuro, #4b0d1b);
+  --color-bordo-suave: var(--inverso-bordo-suave, #8e1d3d);
+  --color-vinho: var(--inverso-bordo, #692536);
   --color-ameixa: #2b1420;
   --color-creme: #f9f5ee;
   --color-creme-quente: #fff8f3;
-  --color-rosa-claro: #e8b4bf;
-  --color-rosa-antigo: #b75a6b;
-  --color-rosa-fundo: #f6e3e7;
+  --color-rosa-claro: var(--inverso-rosa-claro, #e8b4bf);
+  --color-rosa-antigo: var(--inverso-rosa-antigo, #b75a6b);
+  --color-rosa-fundo: var(--inverso-rosa-fundo, #f6e3e7);
 }
 /* a cor de destaque do tema do perfil; no modo escuro, mais clara para ler sobre o fundo escuro */
 .acc-tema { --acc: var(--acc-base); }
