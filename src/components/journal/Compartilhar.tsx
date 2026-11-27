@@ -17,7 +17,7 @@ type Props = { ed: Edicao; textos: TextosEdicao; paleta: Paleta; previa?: boolea
 function Marca({ ed, paleta }: { ed: Edicao; paleta: Paleta }) {
   return (
     <div className="flex items-end justify-between border-b pb-6" style={{ borderColor: `${paleta.texto}40` }}>
-      <p className="text-[30px] font-semibold tracking-[.22em] uppercase">the bookside journal</p>
+      <p className="text-[30px] font-semibold tracking-[.22em] uppercase">diário literário</p>
       <p className="font-maquina text-[26px] uppercase" style={{ color: paleta.destaque }}>
         vol. {String(ed.vol).padStart(2, "0")} · {ed.nome} {ed.ano}
       </p>

@@ -262,7 +262,7 @@ function JournalDoMes({ chave }: { chave: string }) {
           </div>
         </Link>
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] font-semibold tracking-[.18em] uppercase">the bookside journal</p>
+          <p className="text-[10px] font-semibold tracking-[.18em] uppercase">diário literário</p>
           <p className="mt-0.5 font-maquina text-[10px] tracking-[.1em] uppercase" style={{ color: paleta.destaque }}>
             vol. {String(edicao.vol).padStart(2, "0")} / {edicao.ano}
             {estado === "previa" ? " · prévia" : ""}
@@ -378,7 +378,7 @@ function MesEmRevista({ ano }: { livros?: LivroSalvo[]; ano: number }) {
       className="flex items-center justify-between gap-3 rounded-[14px] border border-linha px-5 py-3.5 hover:border-bordo lg:rounded-[10px] lg:border-fio"
     >
       <span className="min-w-0">
-        <span className="block text-[10px] font-semibold tracking-[.18em] text-cinza uppercase">the bookside journal</span>
+        <span className="block text-[10px] font-semibold tracking-[.18em] text-cinza uppercase">diário literário</span>
         <span className="mt-0.5 block font-display text-[18px] text-ameixa lg:font-revista">suas edições mensais</span>
       </span>
       <span aria-hidden className="text-[18px] text-cinza">›</span>

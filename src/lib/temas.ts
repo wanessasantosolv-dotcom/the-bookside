@@ -59,7 +59,7 @@ export type EstiloEstante = "auto" | "clara" | "escura" | "tema" | "minimalista"
 export const TEMAS_APP: TemaApp[] = [
   {
     id: "the-original",
-    nome: "the original.",
+    nome: "essência.",
     descricao: "editorial clássico",
     simbolo: "livro",
     fonte: "fraunces",
@@ -78,7 +78,7 @@ export const TEMAS_APP: TemaApp[] = [
   },
   {
     id: "plot-twist",
-    nome: "plot twist!",
+    nome: "reviravolta.",
     descricao: "Y2K e Tumblr",
     simbolo: "estrela",
     fonte: "manrope",
@@ -97,7 +97,7 @@ export const TEMAS_APP: TemaApp[] = [
   },
   {
     id: "fine-print",
-    nome: "fine print.",
+    nome: "letras miúdas.",
     descricao: "minimalismo modernista",
     simbolo: "grade",
     fonte: "inter",
@@ -117,7 +117,7 @@ export const TEMAS_APP: TemaApp[] = [
   },
   {
     id: "moon-chapter",
-    nome: "the moon chapter.",
+    nome: "capítulo lunar.",
     descricao: "celestial e mágico",
     simbolo: "lua",
     fonte: "playfair",
@@ -135,7 +135,7 @@ export const TEMAS_APP: TemaApp[] = [
   },
   {
     id: "paperback-72",
-    nome: "paperback '72.",
+    nome: "edição de 72.",
     descricao: "vintage e mid-century",
     simbolo: "arco",
     fonte: "dm-serif",
@@ -153,7 +153,7 @@ export const TEMAS_APP: TemaApp[] = [
   },
   {
     id: "between-the-leaves",
-    nome: "between the leaves.",
+    nome: "entre folhas.",
     descricao: "botânico e natural",
     simbolo: "ramo",
     fonte: "fraunces",
@@ -171,7 +171,7 @@ export const TEMAS_APP: TemaApp[] = [
   },
   {
     id: "daydream",
-    nome: "daydream.",
+    nome: "devaneio.",
     descricao: "lilás e dreamy indie",
     simbolo: "borboleta",
     fonte: "playfair",
@@ -189,7 +189,7 @@ export const TEMAS_APP: TemaApp[] = [
   },
   {
     id: "red-prose",
-    nome: "red prose.",
+    nome: "prosa rubra.",
     descricao: "vinho e dark romantic",
     simbolo: "rosa",
     fonte: "playfair",

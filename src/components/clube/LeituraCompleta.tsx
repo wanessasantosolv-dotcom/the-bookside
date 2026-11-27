@@ -114,7 +114,7 @@ export function LeituraCompleta({ embutida = false }: { embutida?: boolean }) {
     const sugestoes = livros.filter((l) => l.estado === "sugerido");
     return (
       <div className="px-5 pt-6 lg:max-w-[640px] lg:px-0">
-        <h2 className="font-revista text-[28px] text-bordo italic">ready for the next chapter?</h2>
+        <h2 className="font-revista text-[28px] text-bordo italic">qual será o próximo capítulo?</h2>
         {moderadora ? (
           <Vazio
             className="mt-5"
@@ -305,7 +305,7 @@ function CurrentRead({
       <div className="min-w-0">
         <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <span id="t-current" className="font-revista text-[17px] text-bordo italic">
-            the current read.
+            nossa leitura atual.
           </span>
           {vol(lendo.rodada) ? <span className="font-mono text-[11px] tracking-[.16em] text-tinta-suave">{vol(lendo.rodada)}</span> : null}
         </p>
@@ -645,7 +645,7 @@ function ReadingNotes({
     <section aria-labelledby="t-notas">
       <div className={linhaTitulo}>
         <h2 id="t-notas" className={tituloEditorial}>
-          the reading notes.
+          impressões sobre a leitura.
         </h2>
         <Ornamento className="mr-auto" />
         {fichas.length ? (
@@ -658,7 +658,7 @@ function ReadingNotes({
       {/* minha ficha */}
       {minha ? (
         <article className={cartao} style={raio}>
-          <p className="font-mono text-[10px] tracking-[.16em] text-tinta-suave uppercase">your reading notes.</p>
+          <p className="font-mono text-[10px] tracking-[.16em] text-tinta-suave uppercase">suas impressões.</p>
           <div className="mt-2 flex flex-wrap items-baseline gap-3">
             {minha.nota ? <span className="font-revista text-[30px] leading-none text-bordo">{virgula(minha.nota)}</span> : null}
             {minha.nota ? <Estrelas n={minha.nota} /> : null}
@@ -794,7 +794,7 @@ function FinalVerdict({ fichas }: { fichas: Ficha[] }) {
           </h2>
         <Ornamento className="mr-auto" />
         </div>
-        <p className="font-revista text-[19px] text-ameixa italic">the verdict is still out.</p>
+        <p className="font-revista text-[19px] text-ameixa italic">o veredito ainda não saiu.</p>
         <p className="mt-1 text-[13px] text-tinta-suave">as avaliações aparecem aqui conforme forem publicadas.</p>
       </section>
     );
@@ -866,7 +866,7 @@ function DifferentOpinions({ fichas, membros, eu, corDe }: { fichas: Ficha[]; me
     <section aria-labelledby="t-opinioes">
       <div className={linhaTitulo}>
         <h2 id="t-opinioes" className={tituloEditorial}>
-          same book, different opinions.
+          o mesmo livro, opiniões diferentes.
         </h2>
         <Ornamento className="mr-auto" />
       </div>
@@ -916,7 +916,7 @@ function BookDate({ encontro, clubeId }: { encontro: Encontro | null; clubeId: s
     return (
       <section aria-labelledby="t-date" className="border border-dashed border-linha p-5 lg:border-fio" style={raio}>
         <h2 id="t-date" className="font-revista text-[20px] text-bordo italic">
-          it&apos;s time for a book date.
+          é hora do encontro.
         </h2>
         <p className="mt-1 text-[13px] text-tinta-suave">ainda não temos um encontro marcado. escolham uma data para conversar sobre a leitura.</p>
         <Link href={`/clubes/${clubeId}/agenda`} className={`${botaoSecundario} mt-4`}>
@@ -935,7 +935,7 @@ function BookDate({ encontro, clubeId }: { encontro: Encontro | null; clubeId: s
         </span>
         <span className="min-w-0">
           <span id="t-date" className="block font-revista text-[17px] text-bordo italic">
-            book date.
+            próximo encontro.
           </span>
           <span className="mt-1 block text-[14px] font-semibold text-ameixa">{encontro.titulo}</span>
           <span className="mt-0.5 block text-[12px] text-tinta-suave">

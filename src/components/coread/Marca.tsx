@@ -172,7 +172,7 @@ export function Carimbo({ texto, sub, cor = COR.vinho, tamanho = 96, className =
   );
 }
 
-/** etiqueta de identificação (ex.: "currently co-reading") */
+/** etiqueta de identificação (ex.: "lendo junto agora") */
 export function Etiqueta({ children, cor = COR.vinho, fundo = COR.creme, className = "" }: { children: ReactNode; cor?: string; fundo?: string; className?: string }) {
   return (
     <span
@@ -256,7 +256,7 @@ export function SeletorComunidade({ ativo, className = "" }: { ativo: "clubes" |
         clubes
       </Link>
       <Link href="/co-read" aria-current={ativo === "coread" ? "page" : undefined} className={item(ativo === "coread")}>
-        co-read
+        leitura compartilhada
       </Link>
     </nav>
   );

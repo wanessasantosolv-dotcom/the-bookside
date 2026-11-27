@@ -533,7 +533,7 @@ export function Mood({ textos, paleta, style }: { textos: TextosEdicao; paleta: 
         {textos.titulo}
       </h2>
       <p className="mx-auto mt-4 max-w-[52ch] text-[15px] leading-[1.6] opacity-90">{textos.encerramento}</p>
-      <p className="mt-6 text-[10px] tracking-[.2em] uppercase opacity-70">the bookside journal</p>
+      <p className="mt-6 text-[10px] tracking-[.2em] uppercase opacity-70">diário literário</p>
     </section>
   );
 }

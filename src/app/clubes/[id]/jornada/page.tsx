@@ -158,7 +158,7 @@ function Jornada({
       <div className="px-5 pt-8 lg:px-0">
         <Cabecalho periodo={periodo} anos={anos} setPeriodo={setPeriodo} clubeId={clube.id} />
         <div className="mt-8 border-y border-linha py-12 text-center lg:border-fio">
-          <p className="font-revista text-[28px] text-bordo italic">the first chapter.</p>
+          <p className="font-revista text-[28px] text-bordo italic">o primeiro capítulo.</p>
           <p className="mt-1.5 text-[14px] text-tinta-suave">a trajetória do clube começa com a primeira leitura concluída.</p>
         </div>
         <Meta clube={clube} ano={anoAtual} concluidos={0} podeEditar={podeEditar} recarregar={recarregar} />
@@ -175,7 +175,7 @@ function Jornada({
       <Gosto leituras={doPeriodo} />
       <Mundo leituras={doPeriodo} />
       <Turma leituras={doPeriodo} todas={todas} livros={livros} membros={membros} eu={eu} periodo={periodo} />
-      <Secao id="t-yearbook" nome="the club yearbook.">
+      <Secao id="t-yearbook" nome="o anuário do clube.">
         <p className="text-[14px] text-tinta-suave">um ano de livros, encontros e diferentes perspectivas.</p>
         <div className="mt-4 flex flex-wrap gap-2">
           {anos.map((a) => (
@@ -195,8 +195,8 @@ function Cabecalho({ periodo, anos, setPeriodo, clubeId }: { periodo: Periodo; a
   return (
     <header className="flex flex-wrap items-end justify-between gap-4">
       <div>
-        <h1 className="font-revista text-[34px] leading-none text-bordo italic lg:text-[46px]">our reading journey.</h1>
-        <p className="mt-2 font-revista text-[16px] text-tinta-suave italic">a little more than books.</p>
+        <h1 className="font-revista text-[34px] leading-none text-bordo italic lg:text-[46px]">nossa jornada literária.</h1>
+        <p className="mt-2 font-revista text-[16px] text-tinta-suave italic">um pouco mais que livros.</p>
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <div className="flex gap-1 overflow-x-auto rounded-pill border border-linha p-1 [scrollbar-width:none]" role="group" aria-label="período">
@@ -349,7 +349,7 @@ function Numeros({ leituras, encontros, periodo, semData, clube }: { leituras: L
     periodo === "tudo" ? (dias >= 365 ? `${plural(Math.floor(dias / 365), "ano", "anos")} de clube` : plural(dias, "dia", "dias") + " de clube") : null,
   ].filter(Boolean);
   return (
-    <Secao id="t-numeros" nome="the club in numbers.">
+    <Secao id="t-numeros" nome="o clube em números.">
       <dl className="grid grid-cols-2 gap-x-6 gap-y-6 lg:grid-cols-4">
         {principais.map((p, i) => (
           <div key={p.r} className={i === 0 ? "" : ""}>
@@ -390,7 +390,7 @@ function AnoEmLivros({ leituras, todas, periodo, anos }: { leituras: Leitura[]; 
   return (
     <Secao
       id="t-ano"
-      nome="a year in books."
+      nome="um ano em livros."
       extra={
         <div className="flex rounded-pill border border-linha p-0.5" role="group" aria-label="medida">
           {(["livros", "paginas"] as const).map((m) => (
@@ -499,7 +499,7 @@ function Destaques({ leituras, membros, eu, clubeId }: { leituras: Leitura[]; me
   if (!cards.length && !divisivo)
     return (
       <Secao id="t-destaques" nome="the highs & lows.">
-        <p className="font-revista text-[19px] text-ameixa italic">the verdict is still out.</p>
+        <p className="font-revista text-[19px] text-ameixa italic">o veredito ainda não saiu.</p>
         <p className="mt-1 text-[13px] text-tinta-suave">ainda não há leituras e avaliações suficientes para comparar.</p>
       </Secao>
     );
@@ -529,7 +529,7 @@ function Destaques({ leituras, membros, eu, clubeId }: { leituras: Leitura[]; me
 
       <div className="grid gap-12 lg:grid-cols-2 lg:gap-10">
         {divisivo ? (
-          <Secao id="t-divisivo" nome="the most divisive.">
+          <Secao id="t-divisivo" nome="o que mais dividiu.">
             <div className="flex gap-4">
               <Link href={`/clubes/${clubeId}/livro/${divisivo.l.id}`} className="w-[86px] flex-none">
                 <CapaAuto livro={divisivo.l.livro} className="w-full [&>span:last-child]:hidden" />
@@ -555,7 +555,7 @@ function Destaques({ leituras, membros, eu, clubeId }: { leituras: Leitura[]; me
           </Secao>
         ) : null}
         {unanime ? (
-          <Secao id="t-unanime" nome="the unanimous favorite.">
+          <Secao id="t-unanime" nome="o favorito unânime.">
             <div className="flex gap-4">
               <Link href={`/clubes/${clubeId}/livro/${unanime.l.id}`} className="w-[86px] flex-none">
                 <CapaAuto livro={unanime.l.livro} className="w-full [&>span:last-child]:hidden" />
@@ -598,7 +598,7 @@ function Gosto({ leituras }: { leituras: Leitura[] }) {
   if (!leituras.length) return null;
   return (
     <div className="grid gap-12 lg:grid-cols-2 lg:gap-10">
-      <Secao id="t-gosto" nome="our reading taste.">
+      <Secao id="t-gosto" nome="nosso gosto literário.">
         {generos.length ? (
           <>
             <ul className="space-y-3.5">
@@ -639,7 +639,7 @@ function Gosto({ leituras }: { leituras: Leitura[] }) {
           <p className="text-[13px] text-tinta-suave">identificando os gêneros dos livros…</p>
         )}
       </Secao>
-      <Secao id="t-autores" nome="the authors.">
+      <Secao id="t-autores" nome="as autorias.">
         <ul className="space-y-3">
           {(todosAutores ? autores : autores.slice(0, 3)).map(([a, ls]) => {
             const m = media(ls.map((x) => x.media).filter((v): v is number => v !== null));
@@ -772,7 +772,7 @@ function Turma({
   });
   void livros;
   return (
-    <Secao id="t-turma" nome="the reading crew.">
+    <Secao id="t-turma" nome="quem lê com a gente.">
       <ul className="grid gap-x-10 gap-y-5 sm:grid-cols-2">
         {linhas.map((x) => (
           <li key={x.m.usuario_id} className="flex items-center gap-3">

@@ -546,7 +546,7 @@ function JournalCartao({ chave }: { chave: string }) {
         <CapaJournal ed={edicao} textos={textos} paleta={paleta} tamanho="mini" previa={estado === "previa"} />
       </span>
       <span className="min-w-0">
-        <span className="block text-[10px] font-semibold tracking-[.18em]">the bookside journal</span>
+        <span className="block text-[10px] font-semibold tracking-[.18em]">diário literário</span>
         <span className="mt-0.5 block font-maquina text-[10px] tracking-[.1em]" style={{ color: paleta.destaque }}>
           vol. {String(edicao.vol).padStart(2, "0")} · {edicao.nome} {edicao.ano}
           {estado === "previa" ? " · prévia" : ""}

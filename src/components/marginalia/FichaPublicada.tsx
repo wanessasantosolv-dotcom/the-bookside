@@ -50,7 +50,7 @@ export function FichaPublicada({ d }: { d: DadosFicha }) {
     <article className="relative overflow-hidden rounded-[6px] border border-linha bg-creme text-ameixa">
       {/* cabeçalho: marginalia + selo */}
       <header className="flex items-center justify-between border-b border-linha px-5 py-3">
-        <p className="font-revista text-[20px] leading-none text-bordo italic">marginalia.</p>
+        <p className="font-revista text-[20px] leading-none text-bordo italic">entre as margens.</p>
         <span className="flex items-center gap-2 text-bordo">
           {tema ? <TemaSimbolo simbolo={tema.simbolo} tamanho={16} /> : null}
           <span className="text-[10px] font-semibold tracking-[.16em] uppercase">registro literário</span>

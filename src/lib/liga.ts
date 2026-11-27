@@ -18,7 +18,7 @@ export const CATEGORIAS: InfoCategoria[] = [
     nome: "Páginas lidas",
     escopo: "individual",
     unidade: (n) => (n === 1 ? "página" : "páginas"),
-    metodo: "Soma das páginas dos livros que cada pessoa concluiu no período, em todas as leituras (pessoais, de clubes e co-read), contadas uma vez só por livro. Vem da estante pública de cada pessoa; o app ainda não guarda o progresso dia a dia, então só entram livros concluídos.",
+    metodo: "Soma das páginas dos livros que cada pessoa concluiu no período, em todas as leituras (pessoais, de clubes e leituras compartilhadas), contadas uma vez só por livro. Vem da estante pública de cada pessoa; o app ainda não guarda o progresso dia a dia, então só entram livros concluídos.",
   },
   {
     id: "livros",
@@ -248,11 +248,11 @@ export function classificacao(d: Dados, cat: Categoria, p: Periodo): Linha[] {
 
 export type TipoDistincao = "page-turner" | "critic" | "explorer" | "curator" | "constant";
 export const DISTINCOES: { id: TipoDistincao; nome: string; categoria: Categoria; descricao: string }[] = [
-  { id: "page-turner", nome: "the page turner.", categoria: "paginas", descricao: "mais páginas lidas" },
-  { id: "critic", nome: "the critic.", categoria: "resenhas", descricao: "mais resenhas publicadas" },
-  { id: "explorer", nome: "the explorer.", categoria: "autores", descricao: "mais autores diferentes" },
-  { id: "curator", nome: "the curator.", categoria: "indicacoes", descricao: "melhores indicações ao clube" },
-  { id: "constant", nome: "the constant reader.", categoria: "constancia", descricao: "mais meses com leitura" },
+  { id: "page-turner", nome: "Devorador de páginas", categoria: "paginas", descricao: "mais páginas lidas" },
+  { id: "critic", nome: "Olhar crítico", categoria: "resenhas", descricao: "mais resenhas publicadas" },
+  { id: "explorer", nome: "Sem fronteiras", categoria: "autores", descricao: "mais autores diferentes" },
+  { id: "curator", nome: "Faro literário", categoria: "indicacoes", descricao: "melhores indicações ao clube" },
+  { id: "constant", nome: "Entre páginas, sempre", categoria: "constancia", descricao: "mais meses com leitura" },
 ];
 
 /** quem leva cada distinção num período (empate: todas as pessoas; tudo zero ou provisório: ninguém) */

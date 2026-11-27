@@ -41,7 +41,7 @@ export function LigaDoClube() {
   const cabecalho = (
     <div className="mb-3 flex items-baseline justify-between gap-3 border-b border-linha pb-2">
       <h2 id="t-liga" className="flex items-center gap-2 font-revista text-[22px] leading-none text-ameixa">
-        the reading league.
+        liga dos leitores.
         <span className="text-bordo">
           <EmblemaLiga tamanho={18} />
         </span>

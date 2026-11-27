@@ -100,7 +100,7 @@ function Criador() {
       const e = x as { code?: string };
       setErro(
         e?.code === "42P01" || e?.code === "PGRST205"
-          ? "o banco ainda não tem o co-read: rode o arquivo supabase/atualizacao-2026-11-coread.sql no SQL Editor do Supabase."
+          ? "o banco ainda não tem a leitura compartilhada: rode o arquivo supabase/atualizacao-2026-11-coread.sql no SQL Editor do Supabase."
           : "não deu para começar agora. tente de novo.",
       );
       setEnviando(false);
@@ -422,7 +422,7 @@ function Criador() {
           </button>
         ) : (
           <button type="button" disabled={!livro || enviando} onClick={criar} className={botaoPrincipal}>
-            {enviando ? "começando…" : "começar co-read"}
+            {enviando ? "começando…" : "começar leitura compartilhada"}
           </button>
         )}
       </div>
@@ -435,11 +435,11 @@ export default function NovoCoreadPage() {
     <AppShell aba="clubes">
       <div className="flex flex-1 flex-col px-5 pt-2 pb-10 lg:bg-jornal lg:px-12 lg:pt-8">
         <div className="w-full max-w-[900px]">
-          <Voltar padrao="/co-read" rotulo="co-read" className="-ml-2 flex min-h-11 w-fit items-center px-2 text-[13px] font-semibold text-bordo" />
+          <Voltar padrao="/co-read" rotulo="leituras compartilhadas" className="-ml-2 flex min-h-11 w-fit items-center px-2 text-[13px] font-semibold text-bordo" />
           <header className="mt-1 mb-6 flex items-end justify-between gap-4">
             <div>
               <Wordmark tamanho={34} />
-              <p className="mt-2 font-revista text-[16px] text-ameixa italic">novo co-read</p>
+              <p className="mt-2 font-revista text-[16px] text-ameixa italic">nova leitura compartilhada</p>
             </div>
             <Marcadores tamanho={64} className="hidden sm:block" />
           </header>

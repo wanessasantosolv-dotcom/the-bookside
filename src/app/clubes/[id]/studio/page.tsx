@@ -163,7 +163,7 @@ function Previa({
             <div className="flex gap-4">
               {livro ? <CapaAuto livro={livro} className="w-[72px] flex-none [&>span:last-child]:hidden" /> : <span className="h-[108px] w-[72px] flex-none rounded-[3px] bg-rosa-fundo" />}
               <div className="min-w-0">
-                <p className="font-mono text-[10px] tracking-[.14em] text-bordo uppercase">the current read.</p>
+                <p className="font-mono text-[10px] tracking-[.14em] text-bordo uppercase">nossa leitura atual.</p>
                 <p className="mt-1 font-revista text-[19px] leading-tight text-ameixa italic">{livro?.titulo ?? "a próxima leitura"}</p>
                 <p className="text-[12px] text-tinta-suave">{livro?.autor ?? "definam o próximo livro"}</p>
                 <div className="mt-3">
@@ -181,7 +181,7 @@ function Previa({
             <div className={mobile ? "mt-6" : ""}>
               {contexto === "leitura" ? (
                 <div className="cartao-clube p-4">
-                  <p className="font-revista text-[17px] text-bordo italic">the final verdict.</p>
+                  <p className="font-revista text-[17px] text-bordo italic">o veredito final.</p>
                   <p className="mt-1 font-revista text-[34px] leading-none text-bordo">4,2</p>
                   {[["chart-1", 70], ["chart-2", 45], ["chart-3", 25]].map(([c, w]) => (
                     <span key={c} className="mt-1.5 block h-[6px] rounded-full" style={{ background: "var(--club-progress-track)" }}>
@@ -310,7 +310,7 @@ export default function ClubStudioPage() {
         tipo: "erro",
         texto:
           c === "PGRST204" || c === "42703"
-            ? "o banco ainda não tem o club studio: rode o arquivo supabase/atualizacao-2026-11-club-studio.sql no SQL Editor do Supabase."
+            ? "o banco ainda não tem o ateliê do clube: rode o arquivo supabase/atualizacao-2026-11-club-studio.sql no SQL Editor do Supabase."
             : "não foi possível salvar agora. tente de novo.",
       });
     } finally {
@@ -318,7 +318,7 @@ export default function ClubStudioPage() {
     }
   }
   async function voltarAoAntigo() {
-    if (!confirm("voltar ao visual antigo do clube? a identidade do club studio sai e o clube volta a usar só a cor de destaque.")) return;
+    if (!confirm("voltar ao visual antigo do clube? a identidade do ateliê sai e o clube volta a usar só a cor de destaque.")) return;
     setSalvando(true);
     try {
       await editarClube(clube.id, { identidade: null });
@@ -916,7 +916,7 @@ export default function ClubStudioPage() {
             <label className="mt-4 flex min-h-11 cursor-pointer items-start gap-3 text-[14px]">
               <input type="checkbox" checked={!ident.semRanking} onChange={(e) => setIdent({ ...ident, semRanking: e.target.checked ? undefined : true })} className="mt-0.5 size-5 accent-[#692536]" />
               <span>
-                <b className="font-semibold">the reading league</b>
+                <b className="font-semibold">a liga dos leitores</b>
                 <span className="block text-[12px] text-[#7A6A6E]">ranking e distinções em membros. desligado, o clube fica sem classificação.</span>
               </span>
             </label>
@@ -996,8 +996,8 @@ export default function ClubStudioPage() {
           <Link href={`/clubes/${clube.id}`} className="inline-flex min-h-10 items-center text-[13px] font-semibold text-[#692536]">
             ← {clube.nome}
           </Link>
-          <p className="text-[36px] leading-none font-semibold tracking-[-.03em] text-[#692536] italic lg:text-[48px]" style={{ fontFamily: "var(--font-fraunces), Georgia, serif" }}>club studio.</p>
-          <p className="mt-1.5 text-[16px] text-[#2B1420] italic" style={{ fontFamily: "var(--font-fraunces), Georgia, serif" }}>make it yours.</p>
+          <p className="text-[36px] leading-none font-semibold tracking-[-.03em] text-[#692536] italic lg:text-[48px]" style={{ fontFamily: "var(--font-fraunces), Georgia, serif" }}>ateliê do clube.</p>
+          <p className="mt-1.5 text-[16px] text-[#2B1420] italic" style={{ fontFamily: "var(--font-fraunces), Georgia, serif" }}>do seu jeito.</p>
         </div>
         {!publicada ? (
           <p className="max-w-[320px] text-[13px] text-[#5A4A50]">escolha uma identidade que combine com seu clube. nada muda para os membros até você salvar.</p>

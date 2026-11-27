@@ -274,7 +274,7 @@ export default function EdicaoPage() {
               rotulo="jornada"
               className="-ml-2 flex min-h-11 items-center px-2 text-[13px] font-semibold text-bordo"
             />
-            <span className="text-[10px] font-semibold tracking-[.2em] text-ameixa uppercase">the bookside journal</span>
+            <span className="text-[10px] font-semibold tracking-[.2em] text-ameixa uppercase">diário literário</span>
           </header>
           {hidratado ? <Leitura key={chave} chave={chave} /> : null}
         </div>

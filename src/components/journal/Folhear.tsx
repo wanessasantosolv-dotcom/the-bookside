@@ -59,7 +59,7 @@ function Pagina({
       ) : (
         <>
           <p className="flex flex-none justify-between px-7 pt-5 font-maquina text-[9px] tracking-[.14em] text-cinza uppercase">
-            <span>the bookside journal</span>
+            <span>diário literário</span>
             <span>{rotulo}</span>
           </p>
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-7 pt-3 pb-4 [scrollbar-width:thin]">{folha.el}</div>

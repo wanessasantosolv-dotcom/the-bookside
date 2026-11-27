@@ -191,7 +191,7 @@ function Leitura() {
         <p className="mt-4 font-revista text-[22px] text-bordo italic">essa leitura não está disponível.</p>
         <p className="mt-1 text-[14px] text-tinta-suave">ela pode ter sido apagada, ou você não faz parte dela.</p>
         <Link href="/co-read" className={`${botaoSecundario} mt-5`}>
-          voltar ao co-read
+          voltar à leitura compartilhada
         </Link>
       </div>
     );
@@ -308,7 +308,7 @@ function Cabecalho({ l, eu, recarregar }: { l: Coread; eu: string | null; recarr
         <div className="min-w-0">
           <div className="flex items-start justify-between gap-3">
             <Etiqueta cor={e.tinta} fundo="transparent">
-              {juntas ? "we read it together" : fechada ? "encerrada" : "currently co-reading"}
+              {juntas ? "lemos juntas" : fechada ? "encerrada" : "lendo junto agora"}
             </Etiqueta>
             <div className="relative -mt-2 -mr-2">
               <button type="button" aria-label="mais opções" aria-expanded={menu} onClick={() => setMenu((m) => !m)} className="grid size-11 place-items-center rounded-full text-bordo hover:bg-white/50">
@@ -351,12 +351,12 @@ function Cabecalho({ l, eu, recarregar }: { l: Coread; eu: string | null; recarr
                       className={item}
                       onClick={async () => {
                         setMenu(false);
-                        if (!l.encerrada_em && !confirm("encerrar este co-read? o histórico continua guardado em nossas leituras.")) return;
+                        if (!l.encerrada_em && !confirm("encerrar esta leitura compartilhada? o histórico continua guardado em nossas leituras.")) return;
                         await encerrarLeitura(l.id, !l.encerrada_em).catch(() => alert("o banco ainda não tem essa opção: rode o arquivo supabase/atualizacao-2026-11-coread.sql."));
                         recarregar();
                       }}
                     >
-                      {l.encerrada_em ? "reabrir co-read" : "encerrar co-read"}
+                      {l.encerrada_em ? "reabrir leitura" : "encerrar leitura"}
                     </button>
                   ) : null}
                   <button
@@ -365,12 +365,12 @@ function Cabecalho({ l, eu, recarregar }: { l: Coread; eu: string | null; recarr
                     className={item}
                     onClick={async () => {
                       setMenu(false);
-                      if (!confirm("sair deste co-read? suas mensagens continuam na conversa.")) return;
+                      if (!confirm("sair desta leitura compartilhada? suas mensagens continuam na conversa.")) return;
                       await sairDaLeitura(l.id);
                       router.push("/co-read");
                     }}
                   >
-                    sair do co-read
+                    sair da leitura compartilhada
                   </button>
                   {sou ? (
                     <button
@@ -379,7 +379,7 @@ function Cabecalho({ l, eu, recarregar }: { l: Coread; eu: string | null; recarr
                       className={`${item} text-bordo`}
                       onClick={async () => {
                         setMenu(false);
-                        if (!confirm("apagar o co-read para todo mundo? a conversa e as reações somem e não dá para desfazer.")) return;
+                        if (!confirm("apagar a leitura compartilhada para todo mundo? a conversa e as reações somem e não dá para desfazer.")) return;
                         await apagarLeitura(l.id);
                         router.push("/co-read");
                       }}
@@ -421,7 +421,7 @@ function Cabecalho({ l, eu, recarregar }: { l: Coread; eu: string | null; recarr
           </p>
         </div>
       </div>
-      {juntas ? <Carimbo texto="we read it together" sub="juntas" tamanho={92} className="absolute right-4 bottom-3 rotate-[-12deg]" /> : null}
+      {juntas ? <Carimbo texto="lemos juntas" sub="juntas" tamanho={92} className="absolute right-4 bottom-3 rotate-[-12deg]" /> : null}
     </header>
   );
 }
@@ -457,7 +457,7 @@ function MeuProgresso({ l, eu, recarregar, edicao }: { l: Coread; eu: string | n
           : { status: "lendo", paginaAtual: naMinha, paginas: edicao || t || undefined },
       );
       if (terminou)
-        celebrar({ tipo: "livro", titulo: l.livro.titulo, capa: l.livro.capa ?? "", texto: "você terminou o co-read. as outras pessoas continuam no ritmo delas.", livroId: l.livro.id });
+        celebrar({ tipo: "livro", titulo: l.livro.titulo, capa: l.livro.capa ?? "", texto: "você terminou a leitura compartilhada. as outras pessoas continuam no ritmo delas.", livroId: l.livro.id });
       setPagina("");
       recarregar();
     } finally {
@@ -1217,7 +1217,7 @@ export default function CoreadLeituraPage() {
       <div className="flex flex-1 flex-col px-5 pt-2 pb-10 lg:bg-jornal lg:px-12 lg:pt-6">
         <div className="w-full max-w-[1180px]">
           <div className="mb-3 flex items-center justify-between">
-            <Voltar padrao="/co-read" rotulo="co-read" className="-ml-2 flex min-h-11 w-fit items-center px-2 text-[13px] font-semibold text-bordo" />
+            <Voltar padrao="/co-read" rotulo="leituras compartilhadas" className="-ml-2 flex min-h-11 w-fit items-center px-2 text-[13px] font-semibold text-bordo" />
             <Wordmark tamanho={22} assinatura={false} />
           </div>
           <ComConta>

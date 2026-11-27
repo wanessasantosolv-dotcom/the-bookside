@@ -144,7 +144,7 @@ export default function EditarClubePage() {
             className="mt-2 flex items-center justify-between gap-3 rounded-[6px] border border-linha px-4 py-3.5 hover:border-bordo lg:border-fio"
           >
             <span>
-              <span className="block text-[15px] font-semibold text-ameixa">club studio</span>
+              <span className="block text-[15px] font-semibold text-ameixa">ateliê do clube</span>
               <span className="block text-[13px] text-tinta-suave">
                 foto, capa, emblema, tema, cores, fontes, estantes e layout{lerIdentidade(clube.identidade) ? ` · tema ${temaDoId(lerIdentidade(clube.identidade)!.tema).nome}` : ""}
               </span>

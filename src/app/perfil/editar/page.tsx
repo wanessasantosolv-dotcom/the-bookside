@@ -469,7 +469,7 @@ function AparenciaSecao({ r, mudar, escuro, onEscuro, abrirPrevia }: { r: Rascun
     <div className="space-y-8">
       <div className="flex items-end justify-between gap-3">
         <div>
-          <p className="font-revista text-[22px] leading-none text-ameixa italic">make it yours.</p>
+          <p className="font-revista text-[22px] leading-none text-ameixa italic">do seu jeito.</p>
           <p className="mt-1.5 text-[13px] text-cinza">A identidade visual do seu perfil.</p>
         </div>
         <button type="button" onClick={abrirPrevia} className="flex h-10 flex-none items-center rounded-[6px] border border-bege px-3.5 text-[13px] font-semibold text-bordo xl:hidden">

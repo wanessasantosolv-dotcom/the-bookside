@@ -63,7 +63,7 @@ export type TemaClube = {
 export const TEMAS_CLUBE: TemaClube[] = [
   {
     id: "botanical",
-    nome: "botanical.",
+    nome: "herbário.",
     descricao: "orgânico, nostálgico e intimista",
     escuro: false,
     tipografia: "editorial",
@@ -73,7 +73,7 @@ export const TEMAS_CLUBE: TemaClube[] = [
   },
   {
     id: "dark-academia",
-    nome: "dark academia.",
+    nome: "academia à meia-luz.",
     descricao: "clássico, dramático e literário",
     escuro: true,
     tipografia: "classica",
@@ -83,7 +83,7 @@ export const TEMAS_CLUBE: TemaClube[] = [
   },
   {
     id: "cherry-club",
-    nome: "cherry club.",
+    nome: "clube das cerejas.",
     descricao: "retrô, divertido e expressivo",
     escuro: false,
     tipografia: "retro",
@@ -93,7 +93,7 @@ export const TEMAS_CLUBE: TemaClube[] = [
   },
   {
     id: "paperback",
-    nome: "paperback.",
+    nome: "edição de bolso.",
     descricao: "indie, gráfico e contemporâneo",
     escuro: false,
     tipografia: "moderna",
@@ -103,7 +103,7 @@ export const TEMAS_CLUBE: TemaClube[] = [
   },
   {
     id: "after-hours",
-    nome: "after hours.",
+    nome: "depois das horas.",
     descricao: "mid-century, vintage e acolhedor",
     escuro: false,
     tipografia: "retro",
@@ -113,7 +113,7 @@ export const TEMAS_CLUBE: TemaClube[] = [
   },
   {
     id: "the-editor",
-    nome: "the editor.",
+    nome: "edição especial.",
     descricao: "minimalista, atemporal e editorial",
     escuro: false,
     tipografia: "indie",
@@ -168,17 +168,17 @@ export type EstiloCartao = "editorial" | "paper" | "minimal" | "vintage";
 /** módulos da página inicial que existem de verdade (a leitura atual fica sempre no topo) */
 export const MODULOS = ["progresso", "favoritos", "encontro", "atividade", "proximas", "membros", "liga"] as const;
 export type Modulo = (typeof MODULOS)[number];
-export const NOME_MODULO: Record<Modulo, string> = { progresso: "progresso dos leitores", favoritos: "favoritos do clube", encontro: "próximo encontro", atividade: "atividade recente", proximas: "próximas leituras", membros: "membros do clube", liga: "the reading league (resumo)" };
+export const NOME_MODULO: Record<Modulo, string> = { progresso: "progresso dos leitores", favoritos: "favoritos do clube", encontro: "próximo encontro", atividade: "atividade recente", proximas: "próximas leituras", membros: "membros do clube", liga: "liga dos leitores (resumo)" };
 export type ConfigModulos = { ordem: Modulo[]; ocultos: Modulo[] };
 
 /** títulos editoriais que o clube pode trocar (menus, botões e avisos continuam os do app) */
 export const TITULOS = {
   progresso: ["progresso dos leitores", "cada um no seu capítulo", "entre capítulos"],
-  favoritos: ["favoritos do clube", "the club favorites.", "nossos favoritos", "five-star reads."],
+  favoritos: ["favoritos do clube", "os favoritos do clube.", "nossos favoritos", "cinco estrelas."],
   atividade: ["atividade recente", "entre capítulos", "o que rolou"],
-  proximas: ["próximas leituras", "next on our list.", "na fila"],
-  estante: ["nossa estante", "the club shelf.", "estante do clube"],
-  encontro: ["próximo encontro", "book date.", "next book date."],
+  proximas: ["próximas leituras", "as próximas histórias.", "na fila"],
+  estante: ["nossa estante", "a estante do clube.", "estante do clube"],
+  encontro: ["próximo encontro", "o encontro.", "o próximo encontro."],
 } as const;
 export type ChaveTitulo = keyof typeof TITULOS;
 

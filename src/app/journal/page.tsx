@@ -40,7 +40,7 @@ function Colecao() {
     <>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-[10px] font-semibold tracking-[.2em] text-cinza uppercase">the bookside journal</p>
+          <p className="text-[10px] font-semibold tracking-[.2em] text-cinza uppercase">diário literário</p>
           <h1 className="mt-1 font-display text-[34px] leading-[1.05] font-semibold text-bordo lg:font-revista lg:text-[48px] lg:font-normal lg:text-tinta">
             Suas edições
           </h1>

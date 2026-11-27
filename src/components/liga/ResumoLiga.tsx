@@ -32,7 +32,7 @@ export function ResumoLiga() {
     <section aria-labelledby="t-liga">
       <div className="flex items-baseline justify-between gap-3 border-b border-linha pb-2">
         <h2 id="t-liga" className="flex items-center gap-2 font-revista text-[19px] leading-none text-ameixa">
-          the reading league. <span className="text-bordo"><EmblemaLiga tamanho={16} /></span>
+          liga dos leitores. <span className="text-bordo"><EmblemaLiga tamanho={16} /></span>
         </h2>
         <span className="text-[11px] text-cinza">páginas · {ano.nome}</span>
       </div>

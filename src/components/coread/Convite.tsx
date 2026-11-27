@@ -73,7 +73,7 @@ export function CartaoConvite({
         <div className="min-w-0">
           <Wordmark tamanho={compacto ? 22 : 26} assinatura={false} />
           <p className="mt-3 font-revista text-[26px] leading-[1.05] italic sm:text-[30px]" style={{ color: e.tinta }}>
-            wanna co-read?
+            vamos ler juntas?
           </p>
           <p className="mt-2 text-[14px] text-ameixa">
             vamos ler <b className="font-semibold">{l.livro.titulo}</b> juntas?

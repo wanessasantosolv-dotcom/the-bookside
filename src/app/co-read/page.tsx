@@ -92,7 +92,7 @@ function CartaoLeitura({
         <CapaLivro titulo={l.livro.titulo} capa={l.livro.capa} cor={corDoLivro(l.livro.id)} className="w-full -rotate-[1.5deg] [&>span:last-child]:hidden" />
         <div className="relative min-w-0">
           <p className="font-texto text-[11px] font-medium tracking-[.06em] uppercase" style={{ color: e.tinta, opacity: 0.7 }}>
-            {l.nome ? l.nome : "co-read"}
+            {l.nome ? l.nome : "leitura compartilhada"}
           </p>
           <h3 className={`mt-1 font-revista leading-[1.1] ${destaque ? "text-[26px] sm:text-[34px]" : "text-[21px]"}`} style={{ color: e.tinta }}>
             {l.livro.titulo}
@@ -216,7 +216,7 @@ function Acervo({ lista, eu }: { lista: Coread[]; eu: string | null }) {
                     className={`w-full transition-transform duration-300 group-hover:-translate-y-1 motion-reduce:transition-none ${i % 2 ? "rotate-[1.2deg]" : "-rotate-[1.2deg]"} ${juntas ? "" : "saturate-[.55]"} [&>span:last-child]:hidden`}
                   />
                   {juntas ? (
-                    <Carimbo texto="we read it together" sub="juntas" tamanho={70} className="absolute -right-2 -bottom-3 rotate-[-14deg] drop-shadow-[0_1px_0_rgba(248,243,233,.9)]" />
+                    <Carimbo texto="lemos juntas" sub="juntas" tamanho={70} className="absolute -right-2 -bottom-3 rotate-[-14deg] drop-shadow-[0_1px_0_rgba(248,243,233,.9)]" />
                   ) : null}
                 </div>
                 <p className="mt-3 line-clamp-2 font-revista text-[16px] leading-tight text-ameixa italic group-hover:underline">{l.livro.titulo}</p>
@@ -344,7 +344,7 @@ function Conteudo() {
 
   return (
     <>
-      <div role="tablist" aria-label="co-read" className="flex gap-6 overflow-x-auto border-b border-linha [scrollbar-width:none] lg:border-fio">
+      <div role="tablist" aria-label="leituras compartilhadas" className="flex gap-6 overflow-x-auto border-b border-linha [scrollbar-width:none] lg:border-fio">
         {ABAS.map((a) => {
           const n = a.id === "convites" ? recebidos.length : 0;
           return (
@@ -374,7 +374,7 @@ function Conteudo() {
               <button type="button" onClick={() => irPara("convites")} className="flex w-full items-center gap-3 border-y border-dashed border-bordo/40 py-3 text-left">
                 <Envelope tamanho={34} />
                 <span className="text-[14px] text-ameixa">
-                  {recebidos.length === 1 ? "você tem um convite para um co-read" : `você tem ${recebidos.length} convites para co-read`}
+                  {recebidos.length === 1 ? "você tem um convite para ler junto" : `você tem ${recebidos.length} convites para ler junto`}
                 </span>
                 <span className="ml-auto text-[13px] font-semibold text-bordo">ver →</span>
               </button>
@@ -422,7 +422,7 @@ function Conteudo() {
                       <Link href={`/co-read/${l.id}`} className="group block">
                         <span className="relative block">
                           <CapaLivro titulo={l.livro.titulo} capa={l.livro.capa} cor={corDoLivro(l.livro.id)} className={`w-full ${i % 2 ? "rotate-1" : "-rotate-1"} ${concluidaPorTodas(l) ? "" : "saturate-[.55]"} [&>span:last-child]:hidden`} />
-                          {concluidaPorTodas(l) ? <Carimbo texto="we read it together" tamanho={46} className="absolute -right-2 -bottom-2 rotate-[-14deg]" /> : null}
+                          {concluidaPorTodas(l) ? <Carimbo texto="lemos juntas" tamanho={46} className="absolute -right-2 -bottom-2 rotate-[-14deg]" /> : null}
                         </span>
                         <span className="mt-2 line-clamp-2 block text-[12px] leading-tight text-ameixa group-hover:underline">{l.livro.titulo}</span>
                         <span className="block text-[11px] text-cinza">{dataCurta(fimDe(l) ?? l.criado_em)}</span>
