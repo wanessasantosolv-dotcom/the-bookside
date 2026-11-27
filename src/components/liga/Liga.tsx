@@ -7,6 +7,7 @@ import { Avatar } from "@/components/social/Pessoas";
 import { fichasComAntigas, fichasDoClube, livrosDoClube, progressoDoClube, virgula } from "@/lib/clubes";
 import { CATEGORIAS, DISTINCOES, classificacao, distincoes, periodoAno, periodoGeral, periodoMes, periodosComDados, type Categoria, type Dados, type Periodo } from "@/lib/liga";
 import { estantesDe, nomeDe, useConsulta, useMeuId } from "@/lib/social";
+import type { LivroSalvo } from "@/lib/perfil-store";
 
 const num = (n: number) => n.toLocaleString("pt-BR");
 
@@ -30,7 +31,7 @@ export function LigaDoClube() {
     const [reais, progresso, pessoais] = await Promise.all([
       fichasDoClube(ids),
       progressoDoClube(ids).catch(() => []),
-      estantesDe(membros.map((m) => m.usuario_id)).catch(() => new Map()),
+      estantesDe(membros.map((m) => m.usuario_id)).catch(() => new Map<string, LivroSalvo[] | null>()),
     ]);
     return { livros, reais, progresso, pessoais };
   }, [clube.id, membros.length]);

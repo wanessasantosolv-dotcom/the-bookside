@@ -7,6 +7,7 @@ import { Avatar } from "@/components/social/Pessoas";
 import { fichasDoClube, livrosDoClube, progressoDoClube } from "@/lib/clubes";
 import { CATEGORIAS, classificacao, periodoAno } from "@/lib/liga";
 import { estantesDe, nomeDe, useConsulta, useMeuId } from "@/lib/social";
+import type { LivroSalvo } from "@/lib/perfil-store";
 
 /** o resumo da liga no início do clube: até 3 nomes; sem dados, não ocupa espaço */
 export function ResumoLiga() {
@@ -18,7 +19,7 @@ export function ResumoLiga() {
     const [fichas, progresso, pessoais] = await Promise.all([
       fichasDoClube(ids),
       progressoDoClube(ids).catch(() => []),
-      estantesDe(membros.map((m) => m.usuario_id)).catch(() => new Map()),
+      estantesDe(membros.map((m) => m.usuario_id)).catch(() => new Map<string, LivroSalvo[] | null>()),
     ]);
     return { livros, fichas, progresso, pessoais };
   }, [clube.id, membros.length]);
