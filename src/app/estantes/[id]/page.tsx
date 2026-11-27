@@ -8,12 +8,11 @@ import {
   FilaDaPrateleira,
   GradeDeLivros,
   ListaDeLivros,
-  SeletorDeFace,
-  SeletorDeVista,
   useFaceSalva,
   useVistaSalva,
 } from "@/components/estantes/Biblioteca";
 import { useAcoesDoLivro } from "@/components/estantes/AcoesDoLivro";
+import { AlternarFace, BarraCompacta } from "@/components/estantes/BarraCompacta";
 import { AppShell } from "@/components/AppShell";
 import { AvisoRemovido } from "@/components/AvisoRemovido";
 import { useHidratado } from "@/components/PerfilHidratacao";
@@ -142,129 +141,60 @@ export default function EstanteAbertaPage() {
           : estante.propria?.publica
             ? "amigos também veem"
             : "só você vê";
-  const pill = (on: boolean) =>
-    `flex h-11 items-center rounded-pill border px-3 text-[11px] font-semibold whitespace-nowrap lg:h-9 ${on ? "border-bordo bg-bordo text-creme" : "border-bege bg-creme-quente text-ameixa"}`;
 
   return (
     <AppShell aba="estantes">
       <AvisoRemovido />
       <div className="flex flex-1 flex-col lg:bg-jornal lg:px-14 lg:pt-10">
-        <header className="flex items-center justify-between px-6 pt-2 lg:px-0 lg:pt-0">
-          <Voltar
-            padrao="/estantes"
-            rotulo="estantes"
-            className="-ml-2 flex min-h-11 items-center px-2 text-[13px] font-semibold text-bordo"
-          />
+        <header className="flex items-center gap-2 px-4 pt-1 lg:px-0 lg:pt-0">
+          <Voltar padrao="/estantes" className="-ml-2 grid size-11 flex-none place-items-center text-bordo">
+            <span className="sr-only">voltar</span>
+            <svg aria-hidden width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15 5l-7 7 7 7" />
+            </svg>
+          </Voltar>
+          <div className="flex min-w-0 flex-1 items-baseline gap-2.5">
+            <h1 className="truncate font-revista text-[25px] leading-none text-ameixa lg:text-[30px]">{estante.nome}</h1>
+            <span className="flex-none text-[13px] text-cinza">
+              {todos.length} {todos.length === 1 ? "livro" : "livros"}
+            </span>
+          </div>
           <Link
             href={estante.id === "favoritos" ? "/perfil/favoritos" : estante.id === "todos" ? "/buscar" : `/buscar?estante=${estante.id}`}
             aria-label={estante.id === "favoritos" ? "escolher favoritos" : `adicionar livro em ${estante.nome}`}
-            className="flex size-11 items-center justify-center rounded-full bg-bordo text-lg font-semibold text-creme hover:bg-bordo-suave"
+            className="flex h-9 flex-none items-center gap-1 rounded-[6px] bg-bordo px-3 text-[13px] font-semibold text-creme hover:bg-bordo-suave"
           >
-            +
+            <span aria-hidden className="text-[16px] leading-none">+</span>
+            <span className="sm:hidden">{estante.id === "favoritos" ? "escolher" : "livro"}</span>
+            <span className="hidden sm:inline">{estante.id === "favoritos" ? "escolher favoritos" : "adicionar livro"}</span>
           </Link>
         </header>
+        <p className="mt-1 px-4 text-[12px] text-cinza lg:px-0">{subtitulo}</p>
 
-        <div className="animate-subir px-6 pt-2 lg:px-0">
-          <h1 className="font-display text-[32px] leading-[1.1] font-semibold italic text-bordo lg:font-revista lg:text-[44px] lg:font-normal lg:text-tinta">
-            {estante.nome}
-          </h1>
-          <p className="mt-2 font-accent text-sm italic text-cinza lg:font-texto lg:text-[13px] lg:not-italic">
-            {todos.length} {todos.length === 1 ? "livro" : "livros"} ·{" "}
-            {subtitulo}
-          </p>
+        <div className="relative z-30 mt-3 px-4 lg:px-0">
+          <BarraCompacta
+            filtros={[
+              { id: "todos", nome: `Todos · ${todos.length}` },
+              ...anos.map((a) => ({ id: String(a), nome: String(a) })),
+              ...(temSemData && estante.status === "lido" ? [{ id: "sem-data", nome: "Sem data" }] : []),
+              ...(estante.status === "lido" ? [{ id: "4mais", nome: "Nota 4 ou mais" }] : []),
+              ...(todos.some((l) => l.amei) ? [{ id: "amei", nome: "Amei" }] : []),
+            ]}
+            filtro={filtro}
+            onFiltro={(f) => setFiltro(f as Filtro)}
+            busca={busca}
+            onBusca={todos.length > 4 ? setBusca : undefined}
+            placeholder="Buscar nesta estante"
+            modos={[
+              { id: "estante", nome: "Prateleiras", icone: "M3 20h18 M5 20V9h3v11 M10 20V6h3v14 M15 20v-9h3l1 9" },
+              { id: "grade", nome: "Grade", icone: "M4 4h6v6H4z M14 4h6v6h-6z M4 14h6v6H4z M14 14h6v6h-6z" },
+              { id: "lista", nome: "Lista", icone: "M4 6h2 M9 6h11 M4 12h2 M9 12h11 M4 18h2 M9 18h11" },
+            ]}
+            modo={vista}
+            onModo={(v) => setVista(v as typeof vista)}
+            extra={vista === "estante" && lista.length ? <AlternarFace face={face} onChange={setFace} /> : null}
+          />
         </div>
-
-        {todos.length > 4 ? (
-          <label className="mx-6 mt-4 flex h-11 items-center gap-2 rounded-pill border border-bege bg-creme-quente px-4 focus-within:border-bordo lg:mx-0 lg:max-w-[420px]">
-            <svg
-              aria-hidden
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.9"
-              strokeLinecap="round"
-              className="flex-none text-cinza"
-            >
-              <circle cx="11" cy="11" r="7" />
-              <path d="m20 20-3.5-3.5" />
-            </svg>
-            <span className="sr-only">buscar nesta estante</span>
-            <input
-              type="search"
-              value={busca}
-              onChange={(e) => setBusca(e.target.value)}
-              placeholder="buscar nesta estante"
-              className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-cinza"
-            />
-          </label>
-        ) : null}
-
-        <div className="mt-5 flex flex-col gap-3 px-6 lg:flex-row lg:items-center lg:justify-between lg:gap-2 lg:border-b lg:border-fio lg:px-0 lg:pb-6">
-          <div className="flex gap-1.5 overflow-x-auto [scrollbar-width:none]">
-            <button
-              type="button"
-              aria-pressed={filtro === "todos"}
-              onClick={() => setFiltro("todos")}
-              className={pill(filtro === "todos")}
-            >
-              todos
-            </button>
-            {anos.map((a) => (
-              <button
-                key={a}
-                type="button"
-                aria-pressed={filtro === a}
-                onClick={() => setFiltro(a)}
-                className={pill(filtro === a)}
-              >
-                {a}
-              </button>
-            ))}
-            {temSemData && estante.status === "lido" ? (
-              <button
-                type="button"
-                aria-pressed={filtro === "sem-data"}
-                onClick={() => setFiltro("sem-data")}
-                className={pill(filtro === "sem-data")}
-              >
-                sem data
-              </button>
-            ) : null}
-            {estante.status === "lido" ? (
-              <button
-                type="button"
-                aria-pressed={filtro === "4mais"}
-                onClick={() => setFiltro("4mais")}
-                className={pill(filtro === "4mais")}
-              >
-                ★ 4+
-              </button>
-            ) : null}
-            {todos.some((l) => l.amei) ? (
-              <button
-                type="button"
-                aria-pressed={filtro === "amei"}
-                onClick={() => setFiltro("amei")}
-                className={pill(filtro === "amei")}
-              >
-                ♥ amei
-              </button>
-            ) : null}
-          </div>
-          <div className="relative z-30 flex items-center justify-between gap-3 lg:flex-none">
-            {/* no celular, capas/lombadas fica na mesma linha do modo */}
-            <span className="lg:hidden">{vista === "estante" && lista.length ? <SeletorDeFace face={face} onChange={setFace} /> : null}</span>
-            <SeletorDeVista vista={vista} onChange={setVista} />
-          </div>
-        </div>
-
-        {vista === "estante" && lista.length ? (
-          <div className="relative z-30 mt-4 hidden lg:block">
-            <SeletorDeFace face={face} onChange={setFace} />
-          </div>
-        ) : null}
         <div className="flex-1 px-6 pt-4 pb-8 lg:px-0 lg:pt-8">
           {lista.length === 0 ? (
             <div className="pt-8 text-center">
