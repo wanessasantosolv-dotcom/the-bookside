@@ -143,9 +143,9 @@ export type Emblema = {
   noAvatar: boolean;
 };
 
-export const PADROES = ["nenhum", "xadrez", "listras", "floral", "estrelas", "pontilhado", "geometrico", "ondas", "papel", "organico"] as const;
+export const PADROES = ["nenhum", "xadrez", "vichy", "listras", "diagonal", "grade", "losangos", "zigue", "floral", "estrelas", "pontilhado", "bolas", "geometrico", "ondas", "papel", "organico"] as const;
 export type Padrao = (typeof PADROES)[number];
-export const NOME_PADRAO: Record<Padrao, string> = { nenhum: "sem pattern", xadrez: "xadrez", listras: "listras", floral: "floral", estrelas: "estrelas", pontilhado: "pontilhado", geometrico: "geométrico", ondas: "ondas", papel: "papel editorial", organico: "formas orgânicas" };
+export const NOME_PADRAO: Record<Padrao, string> = { nenhum: "sem pattern", xadrez: "xadrez", vichy: "vichy", listras: "listras", diagonal: "listras diagonais", grade: "grade", losangos: "losangos", zigue: "zigue-zague", bolas: "bolinhas grandes", floral: "floral", estrelas: "estrelas", pontilhado: "pontilhado", geometrico: "geométrico", ondas: "ondas", papel: "papel editorial", organico: "formas orgânicas" };
 export const LUGARES_PADRAO = ["banner", "faixa", "vazios", "cartoes"] as const;
 export type LugarPadrao = (typeof LUGARES_PADRAO)[number];
 export const NOME_LUGAR: Record<LugarPadrao, string> = { banner: "banner", faixa: "faixa sob o cabeçalho", vazios: "estados vazios", cartoes: "cards comemorativos" };
@@ -370,6 +370,18 @@ export function padraoCss(tipo: Padrao, cor: string, escala: 1 | 2 | 3, intensid
       return `repeating-conic-gradient(${c} 0 25%, transparent 0 50%) 0 0 / ${s * 2}px ${s * 2}px`;
     case "listras":
       return `repeating-linear-gradient(90deg, ${c} 0 ${s / 2}px, transparent ${s / 2}px ${s}px)`;
+    case "vichy":
+      return `repeating-linear-gradient(0deg, ${c} 0 ${s / 2}px, transparent ${s / 2}px ${s}px), repeating-linear-gradient(90deg, ${c} 0 ${s / 2}px, transparent ${s / 2}px ${s}px)`;
+    case "diagonal":
+      return `repeating-linear-gradient(45deg, ${c} 0 ${s / 3}px, transparent ${s / 3}px ${s}px)`;
+    case "grade":
+      return `linear-gradient(${c} 1px, transparent 1px) 0 0 / ${s}px ${s}px, linear-gradient(90deg, ${c} 1px, transparent 1px) 0 0 / ${s}px ${s}px`;
+    case "losangos":
+      return `linear-gradient(135deg, ${c} 25%, transparent 25%) ${-s / 2}px 0 / ${s}px ${s}px, linear-gradient(225deg, ${c} 25%, transparent 25%) ${-s / 2}px 0 / ${s}px ${s}px, linear-gradient(315deg, ${c} 25%, transparent 25%) 0 0 / ${s}px ${s}px, linear-gradient(45deg, ${c} 25%, transparent 25%) 0 0 / ${s}px ${s}px`;
+    case "zigue":
+      return `linear-gradient(135deg, ${c} 25%, transparent 25%) ${-s / 2}px 0 / ${s}px ${s / 2}px, linear-gradient(225deg, ${c} 25%, transparent 25%) ${-s / 2}px 0 / ${s}px ${s / 2}px, linear-gradient(315deg, ${c} 25%, transparent 25%) 0 0 / ${s}px ${s / 2}px, linear-gradient(45deg, ${c} 25%, transparent 25%) 0 0 / ${s}px ${s / 2}px`;
+    case "bolas":
+      return `radial-gradient(circle, ${c} 0 ${s / 3.2}px, transparent ${s / 3.2 + 0.5}px) 0 0 / ${s * 1.4}px ${s * 1.4}px`;
     case "floral":
       return `radial-gradient(circle at 50% 30%, ${c} 0 ${s / 7}px, transparent ${s / 7 + 0.5}px), radial-gradient(circle at 30% 50%, ${c} 0 ${s / 7}px, transparent ${s / 7 + 0.5}px), radial-gradient(circle at 70% 50%, ${c} 0 ${s / 7}px, transparent ${s / 7 + 0.5}px), radial-gradient(circle at 50% 70%, ${c} 0 ${s / 7}px, transparent ${s / 7 + 0.5}px) 0 0 / ${s * 1.6}px ${s * 1.6}px`;
     case "estrelas":

@@ -35,6 +35,7 @@ import {
   emblemaDe,
   familiaDe,
   modulosDe,
+  misturar,
   padraoCss,
   padraoDe,
   tituloDe,
@@ -565,7 +566,33 @@ export default function ClubStudioPage() {
           <div className="rounded-[6px] border border-[#E6D5CE] bg-white/60 p-4">
             <CampoCapa valor={capa} onMudar={setCapa} />
           </div>
-          <label className="flex items-center gap-3 text-[14px]">
+          <fieldset>
+            <legend className="mb-2 text-[12px] font-semibold text-[#5A4A50]">pattern do banner gráfico</legend>
+            <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
+              {PADROES.map((pt) => {
+                const on = (pt === "nenhum" ? !ident.padrao || !padrao.onde.includes("banner") : !!ident.padrao && padrao.onde.includes("banner") && padrao.tipo === pt);
+                return (
+                  <button
+                    key={pt}
+                    type="button"
+                    aria-pressed={on}
+                    title={NOME_PADRAO[pt]}
+                    onClick={() =>
+                      pt === "nenhum"
+                        ? mudarPadrao({ onde: padrao.onde.filter((x) => x !== "banner") })
+                        : mudarPadrao({ tipo: pt, onde: [...new Set([...padrao.onde, "banner" as const])] })
+                    }
+                    className={`overflow-hidden rounded-[6px] border-2 text-left text-[10px] ${on ? "border-[#692536]" : "border-transparent"}`}
+                  >
+                    <span className="block h-10" style={{ background: `${padraoCss(pt, paleta[padrao.cor], padrao.escala, Math.max(0.3, padrao.intensidade)) ?? "none"}, ${misturar(paleta.complementar, paleta.fundo, 0.35)}` }} />
+                    <span className="block truncate bg-white px-1.5 py-1">{NOME_PADRAO[pt]}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <p className="mt-2 text-[12px] text-[#7A6A6E]">cor, escala e intensidade ficam em patterns.</p>
+          </fieldset>
+          <label className="hidden">
             <input
               type="checkbox"
               checked={padrao.onde.includes("banner") && !!ident.padrao}
