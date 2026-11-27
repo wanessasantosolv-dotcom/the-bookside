@@ -24,8 +24,11 @@ const TROCA = "bookside-entre-palavras";
 
 export function EntrePalavras() {
   const eu = useMeuId();
-  const favoritos = usePerfil((s) => s.livros.filter((l) => l.amei).map((l) => l.autor ?? ""));
-  const guardadas = usePerfil((s) => s.palavrasGuardadas ?? []);
+  // seletores estáveis: derivar listas fora do seletor (senão a tela re-renderiza sem parar)
+  const livros = usePerfil((s) => s.livros);
+  const favoritos = useMemo(() => livros.filter((l) => l.amei).map((l) => l.autor ?? ""), [livros]);
+  const guardadasBruto = usePerfil((s) => s.palavrasGuardadas);
+  const guardadas = useMemo(() => guardadasBruto ?? [], [guardadasBruto]);
   const atualizar = usePerfil((s) => s.atualizar);
   const dia = diaLocal();
   const ordem = useMemo(() => ordemDaPessoa(eu ?? "anonimo", favoritos), [eu, favoritos.join("|")]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -395,7 +398,8 @@ export function DesafiosNaJornada() {
 }
 
 export function PalavrasGuardadas() {
-  const guardadas = usePerfil((s) => s.palavrasGuardadas ?? []);
+  const guardadasBruto = usePerfil((s) => s.palavrasGuardadas);
+  const guardadas = guardadasBruto ?? [];
   if (!guardadas.length) return null;
   return (
     <section aria-labelledby="t-palavras" className="border-t border-linha pt-6">
