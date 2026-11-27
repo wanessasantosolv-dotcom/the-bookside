@@ -113,6 +113,14 @@ export async function buscarDescoberta({ consulta, filtros = [], contexto, exclu
     return resposta;
   }
 
+  // um título que parece pesquisa ("O Pequeno Príncipe", "Cem anos de solidão"): a obra exata vem primeiro
+  const exatos =
+    consulta.trim() && consulta.trim().split(/\s+/).length <= 7
+      ? buscarLivros(consulta.trim(), signal)
+          .then((r) => r.filter((l) => norm(l.titulo) === norm(consulta) || norm(l.titulo).startsWith(`${norm(consulta)} `)).slice(0, 3))
+          .catch(() => [] as LivroBusca[])
+      : Promise.resolve([] as LivroBusca[]);
+
   // 2. descoberta: candidatos da IA, conferidos no catálogo
   const tk = await token();
   let resultados: Resultado[] = [];
@@ -165,8 +173,9 @@ export async function buscarDescoberta({ consulta, filtros = [], contexto, exclu
     if (subjetivos.length || interpretacao.parecidoCom) avisos.push("A busca por sensações e temas não está disponível agora. Mostramos resultados por palavras-chave, que podem não corresponder a todos os critérios.");
   }
 
+  const primeiros = (await exatos).map((livro) => ({ livro, caracteristicas: [] as Caracteristica[] }));
   resultados = semRepetir(
-    resultados.filter((r) => confirma(r.livro, criterios)),
+    [...primeiros, ...resultados.filter((r) => confirma(r.livro, criterios))],
     fora,
   );
   const resposta: Resposta = { interpretacao, criterios, resultados, fonte, avisos };

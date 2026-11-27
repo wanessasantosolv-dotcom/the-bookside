@@ -3,6 +3,7 @@
 import { useState, type ReactNode } from "react";
 import { NOME_STATUS, statusDe, type AcaoDoMenu } from "@/components/estantes/Biblioteca";
 import { todasAsEstantes } from "@/lib/estantes";
+import { adicionarNaLista, tirarDaLista } from "@/lib/listas";
 import { usePerfil, type LivroSalvo, type StatusLivro } from "@/lib/perfil-store";
 
 const ORDEM_STATUS: StatusLivro[] = ["lendo", "lido", "quero", "pausado", "abandonado"];
@@ -42,6 +43,7 @@ export function useAcoesDoLivro() {
   const [removendo, setRemovendo] = useState<LivroSalvo | null>(null);
   const minhas = todasAsEstantes(proprias ?? []).filter((e) => e.propria);
 
+  const noLista = (l: LivroSalvo, e: { id: string; propria?: { livros?: { id: string }[] } }) => !!l.estantes?.includes(e.id) || !!e.propria?.livros?.some((x) => x.id === l.id);
   const base = (l: LivroSalvo) => ({ id: l.id, titulo: l.titulo, autor: l.autor, capa: l.capa, genero: l.genero });
   const mudarStatus = (l: LivroSalvo, s: StatusLivro) =>
     editarLivro(base(l), {
@@ -56,19 +58,20 @@ export function useAcoesDoLivro() {
     const fav = favs.includes(l.id);
     return [
       { tipo: "link", nome: "abrir ficha", href: `/livro/${l.id}` },
-      ...(statusDe(l) === "lendo" ? [{ tipo: "link" as const, nome: "atualizar progresso", href: `/livro/${l.id}/progresso` }] : []),
+      ...(statusDe(l) === "lendo" && !l.soNaLista ? [{ tipo: "link" as const, nome: "atualizar progresso", href: `/livro/${l.id}/progresso` }] : []),
       ...(statusDe(l) === "lido" ? [{ tipo: "link" as const, nome: "avaliar", href: `/livro/${l.id}/avaliar` }] : []),
-      ...ORDEM_STATUS.filter((s) => s !== statusDe(l)).map((s) => ({
+      ...ORDEM_STATUS.filter((s) => l.soNaLista || s !== statusDe(l)).map((s) => ({
         tipo: "botao" as const,
         nome: `mover para ${s === "lido" ? "lidos" : NOME_STATUS[s]}`,
         onClick: () => mudarStatus(l, s),
       })),
       ...minhas.map((e) => ({
         tipo: "botao" as const,
-        nome: `${l.estantes?.includes(e.id) ? "tirar de" : "pôr em"} “${e.nome}”`,
+        nome: `${noLista(l, e) ? "tirar de" : "pôr em"} “${e.nome}”`,
         onClick: () => {
-          const atuais = l.estantes ?? [];
-          editarLivro(base(l), { estantes: atuais.includes(e.id) ? atuais.filter((x) => x !== e.id) : [...atuais, e.id] });
+          if (noLista(l, e)) return tirarDaLista(e.id, l);
+          if (l.soNaLista) return adicionarNaLista(e.id, [l]);
+          editarLivro(base(l), { estantes: [...(l.estantes ?? []), e.id] });
         },
       })),
       ...(fav || favs.length < LIMITE_FAVORITOS

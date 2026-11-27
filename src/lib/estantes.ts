@@ -67,9 +67,19 @@ export function statusDoLivro(l: LivroSalvo): StatusLivro {
 
 /** Livros de uma estante, do mais recente ao mais antigo. */
 export function livrosDaEstante(estante: EstanteInfo, livros: LivroSalvo[]) {
-  const lista = estante.status
+  let lista = estante.status
     ? livros.filter((l) => statusDoLivro(l) === estante.status)
     : livros.filter((l) => l.estantes?.includes(estante.id));
+  // livros que estão só na lista (sem entrar na estante pessoal)
+  if (!estante.status && estante.propria?.livros?.length) {
+    const porId = new Map(livros.map((l) => [l.id, l]));
+    const ja = new Set(lista.map((l) => l.id));
+    for (const x of estante.propria.livros) {
+      if (ja.has(x.id)) continue;
+      ja.add(x.id);
+      lista = [...lista, porId.get(x.id) ?? { ...x, soNaLista: true }];
+    }
+  }
   const data = (l: LivroSalvo) =>
     l.lidoEm ?? l.iniciadoEm ?? l.adicionadoEm ?? "";
   return [...lista].sort((a, b) => data(b).localeCompare(data(a)));

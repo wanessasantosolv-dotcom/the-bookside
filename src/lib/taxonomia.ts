@@ -157,6 +157,24 @@ const norm = (s: string) =>
     .replace(/\s+/g, " ")
     .trim();
 
+/** gênero e número em português: "sombrio" também casa "sombria", "sombrios", "sombrias" */
+function flexoes(s: string): string[] {
+  const p = s.split(" ");
+  const ultima = p[p.length - 1];
+  const base = p.slice(0, -1).join(" ");
+  const junta = (w: string) => (base ? `${base} ${w}` : w);
+  const formas = new Set([s]);
+  if (/[oa]$/.test(ultima)) for (const f of ["o", "a", "os", "as"]) formas.add(junta(ultima.slice(0, -1) + f));
+  else if (/(or|ista|ante|ente|al|vel)$/.test(ultima)) {
+    if (ultima.endsWith("or")) ["ora", "ores", "oras"].forEach((f) => formas.add(junta(ultima.slice(0, -2) + f)));
+    if (ultima.endsWith("ista")) formas.add(junta(`${ultima}s`));
+    if (/(ante|ente)$/.test(ultima)) formas.add(junta(`${ultima}s`));
+    if (ultima.endsWith("al")) formas.add(junta(`${ultima.slice(0, -2)}ais`));
+    if (ultima.endsWith("vel")) formas.add(junta(`${ultima.slice(0, -3)}veis`));
+  }
+  return [...formas];
+}
+
 export type Interpretacao = {
   criterios: Caracteristica[];
   /** "sem romance", "sem terror": restrições que pedem ausência */
@@ -190,7 +208,7 @@ export function interpretarBusca(consulta: string): Interpretacao {
   const sem: Caracteristica[] = [];
   const achados: Caracteristica[] = [];
   // sinônimos mais longos primeiro ("realismo magico" antes de "magico")
-  const pares = CARACTERISTICAS.flatMap((x) => [norm(x.nome), ...x.sinonimos.map(norm)].map((s) => ({ s, x }))).sort((a, b) => b.s.length - a.s.length);
+  const pares = CARACTERISTICAS.flatMap((x) => [...new Set([norm(x.nome), ...x.sinonimos.map(norm)].flatMap(flexoes))].map((s) => ({ s, x }))).sort((a, b) => b.s.length - a.s.length);
   for (const { s, x } of pares) {
     if (!s) continue;
     const rSem = new RegExp(` (?:sem|nada de|zero) ${s.replace(/[-]/g, "\\-")} `);

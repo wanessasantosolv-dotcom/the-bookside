@@ -149,7 +149,7 @@ function Detalhes({ l }: { l: LivroSalvo }) {
       <span className="block line-clamp-2 text-[13px] leading-tight font-semibold text-ameixa">{l.titulo}</span>
       <span className="mt-0.5 block truncate text-[11px] text-cinza">{l.autor}</span>
       <span className="mt-1.5 flex items-center gap-2 text-[11px] text-tinta-suave">
-        <span>{NOME_STATUS[statusDe(l)]}</span>
+        <span>{l.soNaLista ? "só na lista" : NOME_STATUS[statusDe(l)]}</span>
         {l.nota ? <span className="text-bordo" aria-label={`nota ${l.nota}`}>{estrelas(l.nota)}</span> : null}
       </span>
       {statusDe(l) === "lendo" && p !== null ? (
@@ -536,13 +536,13 @@ export function ListaDeLivros({
               </Link>
               <span className="block truncate text-[12px] text-cinza">{l.autor}</span>
               <span className="mt-0.5 block truncate text-[11px] text-cinza sm:hidden">
-                {NOME_STATUS[statusDe(l)]}
+                {l.soNaLista ? "só na lista" : NOME_STATUS[statusDe(l)]}
                 {l.nota ? ` · ${estrelas(l.nota)}` : ""}
                 {statusDe(l) === "lendo" && p !== null ? ` · ${Math.round(p * 100)}%` : ""}
               </span>
               {extras.length ? <span className="mt-0.5 hidden truncate text-[11px] text-cinza sm:block">em {extras.join(", ")}</span> : null}
             </div>
-            <span className="hidden text-[12px] text-tinta-suave sm:block">{NOME_STATUS[statusDe(l)]}</span>
+            <span className="hidden text-[12px] text-tinta-suave sm:block">{l.soNaLista ? "só na lista" : NOME_STATUS[statusDe(l)]}</span>
             <span className="hidden text-[12px] text-bordo sm:block" aria-label={l.nota ? `nota ${l.nota}` : "sem nota"}>
               {l.nota ? estrelas(l.nota) : <span className="text-cinza">—</span>}
             </span>

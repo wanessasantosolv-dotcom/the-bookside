@@ -1,11 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { CapaLivro } from "@/components/CapaLivro";
-import { Curadorias, EntreLeitores, PorAfinidade } from "@/components/descobrir/Secoes";
+import { EntreLeitores } from "@/components/descobrir/Secoes";
+import { AdicionarALista } from "@/components/descoberta/AdicionarALista";
+import { AlemDosFavoritos } from "@/components/descoberta/AlemDosFavoritos";
+import { Busca, type BuscaControle } from "@/components/descoberta/Busca";
+import { PequenasCuradorias } from "@/components/descoberta/Curadorias";
+import { SUGESTOES_INICIAIS } from "@/lib/descoberta";
 import { ChamadaEntrelinhas } from "@/components/entrelinhas/Chamada";
 import { useHidratado } from "@/components/PerfilHidratacao";
 import {
@@ -42,57 +47,49 @@ export default function DescobrirPage() {
     return () => clearInterval(t);
   }, []);
 
+  const controle = useRef<BuscaControle | null>(null);
+  const [buscando, setBuscando] = useState(false);
+  const definirControle = useCallback((c: BuscaControle) => {
+    controle.current = c;
+  }, []);
+  const explorar = useCallback((q: string) => {
+    controle.current?.pesquisar(q);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
+  // quatro a seis sugestões por visita, variando (sempre com "me surpreenda")
+  const [sugestoes] = useState(() => [...SUGESTOES_INICIAIS].sort(() => Math.random() - 0.5).slice(0, 5).concat("Me surpreenda"));
+
   return (
     <AppShell aba="descobrir">
       <div className="flex flex-1 flex-col pb-10 lg:bg-jornal lg:px-12 lg:py-8">
-        <header className="px-6 pt-3 lg:px-0 lg:pt-0">
-          <h1 className="font-revista text-[24px] leading-none text-ameixa lg:text-[28px]">descobrir</h1>
-          <BuscaRapida />
-        </header>
+        <div className="mx-auto w-full max-w-[880px]">
+          <header className="px-6 pt-3 lg:px-0 lg:pt-0">
+            <h1 className="font-revista text-[26px] leading-none text-ameixa italic lg:text-[30px]">descobrir.</h1>
+            <p className="mt-1 text-[13px] text-cinza">Sempre há outra história.</p>
+          </header>
 
-        {hidratado ? (
-          <>
-            <UmaPorVez />
-            {/* uma página só: o resto aparece em seções compactas logo abaixo */}
-            <div className="mt-10 space-y-10 px-6 lg:px-0">
-              <ChamadaEntrelinhas />
-              <PorAfinidade />
-              <EntreLeitores />
-              <Curadorias />
-            </div>
-          </>
-        ) : null}
+          {hidratado ? (
+            <>
+              <div className="mt-4 px-6 lg:px-0">
+                <Busca modo={{ tipo: "descobrir" }} chaveSessao="bookside-busca-descobrir" sugestoes={sugestoes} onAtiva={setBuscando} controle={definirControle} />
+              </div>
+              {/* com uma pesquisa ativa, os resultados tomam o lugar dos módulos editoriais */}
+              {!buscando ? (
+                <>
+                  <UmaPorVez />
+                  <div className="mt-10 space-y-10 px-6 lg:px-0">
+                    <PequenasCuradorias explorar={explorar} />
+                    <AlemDosFavoritos explorar={explorar} />
+                    <EntreLeitores />
+                    <ChamadaEntrelinhas />
+                  </div>
+                </>
+              ) : null}
+            </>
+          ) : null}
+        </div>
       </div>
     </AppShell>
-  );
-}
-
-/** a busca fica na própria página; os resultados abrem na página de busca */
-function BuscaRapida() {
-  const router = useRouter();
-  const [q, setQ] = useState("");
-  return (
-    <form
-      role="search"
-      onSubmit={(e) => {
-        e.preventDefault();
-        router.push(q.trim() ? `/buscar?q=${encodeURIComponent(q.trim())}` : "/buscar");
-      }}
-      className="mt-3 flex h-11 items-center gap-2 rounded-[8px] border border-linha bg-papel/60 px-3 focus-within:border-bordo"
-    >
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" aria-hidden className="flex-none text-cinza">
-        <circle cx="11" cy="11" r="7" />
-        <path d="m20 20-3.5-3.5" />
-      </svg>
-      <input
-        type="search"
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-        placeholder="Buscar livros, autores ou ISBN"
-        aria-label="Buscar livros, autores ou ISBN"
-        className="min-w-0 flex-1 bg-transparent text-[16px] text-ameixa outline-none placeholder:text-cinza sm:text-[14px]"
-      />
-    </form>
   );
 }
 
@@ -289,10 +286,10 @@ function UmaPorVez() {
   );
 
   return (
-    <section className="mx-6 mt-5 rounded-xl border border-linha bg-creme-quente p-5 lg:mx-0 lg:rounded-[6px] lg:border-fio lg:p-8">
+    <section className="mx-6 mt-8 rounded-[8px] border border-linha bg-creme-quente p-4 lg:mx-0 lg:p-6">
       <div className="flex items-baseline justify-between gap-3">
         <h2 className="text-[11px] font-semibold tracking-[.16em] text-bordo uppercase">
-          sua próxima leitura
+          Uma escolha para você
         </h2>
         {queroLer ? (
           <Link
@@ -324,14 +321,14 @@ function UmaPorVez() {
               titulo={livro.titulo}
               capa={livro.capa}
               cor={livro.cor}
-              className="w-[160px] rotate-[1.5deg] shadow-[0_16px_28px_-12px_rgba(43,20,32,.5)] lg:w-[260px] [&>span:last-child]:text-sm"
+              className="w-[120px] rotate-[1.5deg] shadow-[0_16px_28px_-12px_rgba(43,20,32,.5)] lg:w-[180px] [&>span:last-child]:text-sm"
             />
           </Link>
           <div className="flex min-w-0 flex-1 flex-col text-center sm:text-left">
             <p className="text-[10px] font-semibold tracking-[.14em] text-bordo uppercase">
               {livro.motivo}
             </p>
-            <p className="mt-1.5 font-display text-[23px] leading-[1.15] font-semibold italic text-ameixa lg:font-revista lg:text-[32px] lg:font-normal lg:text-tinta">
+            <p className="mt-1.5 font-revista text-[22px] leading-[1.15] text-ameixa lg:text-[26px]">
               {livro.titulo}
             </p>
             <p className="mt-1 text-[11px] font-semibold tracking-[.1em] text-cinza uppercase">
@@ -359,7 +356,7 @@ function UmaPorVez() {
             <OQueAcharam livro={livro} />
             {sinopse ? (
               <>
-                <p className={`mt-3 text-[13px] leading-normal text-tinta-suave lg:text-[15px] lg:leading-[1.6] ${sinopseAberta ? "" : "line-clamp-6 lg:line-clamp-[9]"}`}>
+                <p className={`mt-3 text-[13px] leading-normal text-tinta-suave lg:text-[15px] lg:leading-[1.6] ${sinopseAberta ? "" : "line-clamp-4 lg:line-clamp-6"}`}>
                   {sinopse}
                 </p>
                 {sinopse.length > 280 ? (
@@ -367,11 +364,14 @@ function UmaPorVez() {
                     {sinopseAberta ? "ver menos" : "ver mais"}
                   </button>
                 ) : null}
-                <Link href={`/livro/${livro.id}`} className="self-center text-[12px] font-semibold text-cinza underline underline-offset-4 sm:self-start">
-                  ver a página do livro
-                </Link>
               </>
             ) : null}
+            <div className="mt-1 flex items-center justify-center gap-3 sm:justify-start">
+              <Link href={`/livro/${livro.id}`} className="text-[12px] font-semibold text-cinza underline underline-offset-4">
+                ver a página do livro
+              </Link>
+              <AdicionarALista livro={livro} />
+            </div>
             <div className="mt-5 flex justify-center gap-7 sm:justify-start">
               <button
                 type="button"

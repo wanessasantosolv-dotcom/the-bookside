@@ -61,6 +61,14 @@ export default function EstanteAbertaPage() {
   const { porAndar, alturaCapa } = usePorAndar(face);
   const [filtro, setFiltro] = useState<Filtro>("todos");
   const [busca, setBusca] = useState("");
+  const [adicionados, setAdicionados] = useState(0);
+  useEffect(() => {
+    const n = Number(new URLSearchParams(window.location.search).get("adicionados"));
+    if (n > 0) {
+      setAdicionados(n);
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+  }, []);
 
   if (!hidratado) return <AppShell aba="estantes">{null}</AppShell>;
   // além das estantes, "todos os livros" e "meus favoritos" também abrem aqui
@@ -160,7 +168,7 @@ export default function EstanteAbertaPage() {
             </span>
           </div>
           <Link
-            href={estante.id === "favoritos" ? "/perfil/favoritos" : estante.id === "todos" ? "/buscar" : `/buscar?estante=${estante.id}`}
+            href={estante.id === "favoritos" ? "/perfil/favoritos" : estante.id === "todos" ? "/buscar" : estante.propria ? `/estantes/${estante.id}/adicionar` : `/buscar?estante=${estante.id}`}
             aria-label={estante.id === "favoritos" ? "escolher favoritos" : `adicionar livro em ${estante.nome}`}
             className="flex h-9 flex-none items-center gap-1 rounded-[6px] bg-bordo px-3 text-[13px] font-semibold text-creme hover:bg-bordo-suave"
           >
@@ -172,6 +180,11 @@ export default function EstanteAbertaPage() {
         <p className="mt-1 px-4 text-[12px] text-cinza lg:px-0">{subtitulo}</p>
 
         <div className="relative z-30 mt-3 px-4 lg:px-0">
+          {adicionados ? (
+            <p role="status" className="mb-2 text-[13px] text-oliva">
+              {adicionados === 1 ? "Livro adicionado à sua lista." : "Livros adicionados à sua lista."}
+            </p>
+          ) : null}
           <BarraCompacta
             filtros={[
               { id: "todos", nome: `Todos · ${todos.length}` },
@@ -208,7 +221,7 @@ export default function EstanteAbertaPage() {
               </h2>
               {!todos.length ? (
                 <BotaoLink
-                  href={`/buscar?estante=${estante.id}`}
+                  href={estante.propria ? `/estantes/${estante.id}/adicionar` : `/buscar?estante=${estante.id}`}
                   className="mx-auto mt-5 !h-11 max-w-[220px] !text-sm"
                 >
                   buscar um livro

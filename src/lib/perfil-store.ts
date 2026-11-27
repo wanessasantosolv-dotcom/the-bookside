@@ -94,6 +94,8 @@ export type LivroSalvo = {
   releituras?: { iniciadoEm?: string; lidoEm?: string; nota?: number; formato?: FormatoLivro }[];
   /** ids das estantes criadas pela pessoa onde o livro está */
   estantes?: string[];
+  /** só na lista: aparece numa estante própria sem estar na estante pessoal (nunca é salvo em livros) */
+  soNaLista?: boolean;
 };
 
 /** um livro como ficou guardado numa edição do journal (só o que a revista usa) */
