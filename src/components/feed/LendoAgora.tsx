@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useState } from "react";
 import { CapaLivro } from "@/components/CapaLivro";
 import { dadosDoTermino, PerguntaTermino } from "@/components/PerguntaTermino";
-import { celebrarTermino } from "@/lib/celebrar";
 import { corDoLivro } from "@/lib/cores";
 import { minhasLeiturasJuntas } from "@/lib/lerjunto";
 import { usePerfil, type LivroSalvo } from "@/lib/perfil-store";
@@ -291,6 +290,9 @@ function Linha({
       {perguntarTermino ? (
         <PerguntaTermino
           titulo={l.titulo}
+          autor={l.autor}
+          capa={l.capa}
+          anterior={usePerfil.getState().livros.find((x) => x.id === l.id)}
           inicial={l.lidoEm}
           onCancelar={() => setPerguntarTermino(false)}
           notaInicial={l.nota}
@@ -302,7 +304,7 @@ function Linha({
               ...dadosDoTermino(t),
               paginaAtual: l.paginas,
             });
-            celebrarTermino(l, usePerfil.getState());
+            // a celebração vem da própria estante (perfil-store)
           }}
         />
       ) : null}

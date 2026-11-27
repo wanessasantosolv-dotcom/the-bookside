@@ -113,6 +113,8 @@ export function Recomendacoes({ carta }: { carta: CartaId }) {
       {terminando ? (
         <PerguntaTermino
           titulo={terminando.titulo}
+          autor={terminando.autor}
+          capa={terminando.capa}
           onCancelar={() => setTerminando(null)}
           onConfirmar={(t) => {
             marcar(terminando, "lido", dadosDoTermino(t));

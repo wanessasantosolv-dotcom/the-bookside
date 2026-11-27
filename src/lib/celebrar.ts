@@ -2,15 +2,31 @@
 
 import { create } from "zustand";
 
-/** as celebrações do app: um momento especial vira uma animação por cima da tela */
+/*
+ * As celebrações do app, num mecanismo só (o componente <Celebracao/> fica no
+ * layout raiz). Concluir um livro — em qualquer tela — passa por
+ * celebrarTermino, chamado pela própria estante (perfil-store) quando um livro
+ * vira "lido" por ação da pessoa. Sincronização da nuvem não passa por aqui.
+ */
+
+export type Conquista = { tipo: "meta" | "desafio" | "clube"; titulo: string; detalhe?: string };
+
 export type Celebracao = {
   id: number;
-  tipo: "livro" | "meta" | "desafio" | "amei" | "favorito";
+  tipo: "livro" | "meta" | "desafio" | "amei" | "favorito" | "lote";
   titulo: string;
   texto?: string;
   capa?: string;
-  /** id do livro, para oferecer "compartilhar no story" quando for um término de leitura */
+  autor?: string;
+  /** id do livro (avaliar e compartilhar usam o registro já salvo) */
   livroId?: string;
+  /** frase editorial principal, conforme o evento */
+  chamada?: string;
+  /** progresso da meta do ano vigente, calculado depois de salvar */
+  meta?: { lidos: number; meta: number; ano: number } | null;
+  conquistas?: Conquista[];
+  /** "lote": quantos livros entraram de uma vez */
+  quantos?: number;
 };
 
 type Estado = {
@@ -25,35 +41,56 @@ export const useCelebracao = create<Estado>((set) => ({
   fechar: () => set({ atual: null }),
 }));
 
-export const celebrar = (c: Omit<Celebracao, "id">) =>
+// o mesmo evento nunca abre duas celebrações (ex.: duas telas reagindo à mesma conclusão)
+const recentes = new Map<string, number>();
+export const celebrar = (c: Omit<Celebracao, "id">) => {
+  const chave = `${c.tipo}|${c.livroId ?? c.titulo}`;
+  const agora = Date.now();
+  if (agora - (recentes.get(chave) ?? 0) < 8000) return;
+  recentes.set(chave, agora);
   useCelebracao.getState().celebrar(c);
+};
+
+type LivroLido = { id: string; titulo: string; autor?: string; capa?: string; lidoEm?: string; lidoSoAno?: boolean };
+type EstadoEstante = { livros: { status?: string; lidoEm?: string }[]; meta: number | null };
+
+// conclusões que chegam juntas (importação, cadastro em lote) viram uma celebração coletiva
+let fila: { livro: LivroLido; estado: EstadoEstante; releitura: boolean }[] = [];
+let espera: ReturnType<typeof setTimeout> | undefined;
 
 /**
- * Terminei um livro: comemora; se ele fechou a meta do ano, a comemoração é da meta.
- * (chamar depois de salvar o livro como lido)
+ * Terminei um livro. Chamar DEPOIS de salvar. A meta só aparece quando a
+ * leitura tem data no ano vigente (sem data ou de outro ano não conta).
  */
-export function celebrarTermino(
-  livro: { id: string; titulo: string; capa?: string },
-  estado: { livros: { status?: string; lidoEm?: string }[]; meta: number | null },
-) {
-  const ano = String(new Date().getFullYear());
-  const lidosNoAno = estado.livros.filter(
-    (l) => l.status === "lido" && l.lidoEm?.startsWith(ano),
-  ).length;
-  if (estado.meta && lidosNoAno === estado.meta)
-    return celebrar({
-      tipo: "meta",
-      titulo: `${estado.meta} livros em ${ano}!`,
-      texto: "você bateu a sua meta do ano. tudo agora é bônus ✦",
-      livroId: livro.id,
-    });
-  celebrar({
-    tipo: "livro",
-    titulo: livro.titulo,
-    capa: livro.capa ?? "",
-    texto: estado.meta
-      ? `livro nº ${lidosNoAno} de ${estado.meta} em ${ano}`
-      : `livro nº ${lidosNoAno} em ${ano}`,
-    livroId: livro.id,
-  });
+export function celebrarTermino(livro: LivroLido, estado: EstadoEstante, opcoes: { releitura?: boolean } = {}) {
+  fila.push({ livro, estado, releitura: !!opcoes.releitura });
+  clearTimeout(espera);
+  espera = setTimeout(() => {
+    const itens = fila;
+    fila = [];
+    if (itens.length > 2) {
+      celebrar({ tipo: "lote", titulo: `${itens.length} livros na estante`, chamada: "mais histórias na estante.", quantos: itens.length, texto: "registrados como lidos, com as datas que você informou." });
+      return;
+    }
+    for (const { livro: l, estado: e, releitura } of itens) {
+      const ano = new Date().getFullYear();
+      const desteAno = !!l.lidoEm && l.lidoEm.startsWith(String(ano));
+      const lidosNoAno = e.livros.filter((x) => x.status === "lido" && x.lidoEm?.startsWith(String(ano))).length;
+      const totalLidos = e.livros.filter((x) => x.status === "lido").length;
+      const meta = desteAno && e.meta ? { lidos: lidosNoAno, meta: e.meta, ano } : null;
+      const bateu = !!meta && meta.lidos === meta.meta;
+      const chamada = bateu ? "entre tantas histórias." : releitura ? "de volta às páginas." : totalLidos === 1 ? "era uma vez." : "mais uma última página.";
+      celebrar({
+        tipo: bateu ? "meta" : "livro",
+        titulo: l.titulo,
+        autor: l.autor,
+        capa: l.capa ?? "",
+        livroId: l.id,
+        chamada,
+        meta,
+        conquistas: bateu ? [{ tipo: "meta", titulo: `Meta de ${ano} alcançada`, detalhe: `${meta!.meta} livros` }] : [],
+        texto: !l.lidoEm ? "registrado nos lidos, sem data" : !desteAno ? `lido em ${l.lidoEm.slice(0, 4)}` : undefined,
+      });
+    }
+  }, 350);
 }

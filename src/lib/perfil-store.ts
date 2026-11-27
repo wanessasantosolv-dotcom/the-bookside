@@ -1,5 +1,6 @@
 "use client";
 
+import { celebrarTermino } from "@/lib/celebrar";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
@@ -45,6 +46,8 @@ export type LivroSalvo = {
   lidoEm?: string;
   /** a pessoa sabe só o ano em que leu (lidoEm fica em 1º de janeiro, sem valer como dia nem mês) */
   lidoSoAno?: boolean;
+  /** a pessoa sabe o mês e o ano, não o dia (lidoEm fica no dia 1, sem valer como dia) */
+  lidoSoMes?: boolean;
   /** 0,5 a 5 */
   nota?: number;
   /** sessões do modo foco: quando começou, quantos minutos e quantas páginas */
@@ -235,6 +238,21 @@ type Acoes = {
   sair: () => void;
 };
 
+/**
+ * O livro acabou de virar "lido" (ou ganhou uma nova conclusão de releitura)
+ * por uma ação da pessoa: depois de salvo, a celebração global aparece.
+ * A sincronização da nuvem grava com set() direto e não passa por aqui.
+ */
+function avisarTermino(antigo: LivroSalvo | undefined, novo: LivroSalvo, get: () => Perfil & Acoes) {
+  if (novo.status !== "lido") return;
+  const releitura = (novo.releituras?.length ?? 0) > (antigo?.releituras?.length ?? 0) || (antigo?.status === "lido" && !!novo.lidoEm && novo.lidoEm !== antigo.lidoEm && !!novo.releituras?.length);
+  if (antigo?.status === "lido" && !releitura) return;
+  queueMicrotask(() => {
+    const estado = get();
+    celebrarTermino({ id: novo.id, titulo: novo.titulo, autor: novo.autor, capa: novo.capa, lidoEm: novo.lidoEm, lidoSoAno: novo.lidoSoAno }, { livros: estado.livros, meta: estado.meta }, { releitura });
+  });
+}
+
 export const perfilInicial: Perfil = {
   email: null,
   nome: "",
@@ -275,7 +293,7 @@ export const perfilInicial: Perfil = {
 
 export const usePerfil = create<Perfil & Acoes>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       ...perfilInicial,
       atualizar: (dados) => set(dados),
       alternarGosto: (gosto) =>
@@ -303,6 +321,7 @@ export const usePerfil = create<Perfil & Acoes>()(
       guardarLivro: (livro) =>
         set((s) => {
           const antigo = s.livros.find((l) => l.id === livro.id);
+          avisarTermino(antigo, { ...antigo, ...livro } as LivroSalvo, get);
           return {
             livros: [
               ...s.livros.filter((l) => l.id !== livro.id),
@@ -326,6 +345,7 @@ export const usePerfil = create<Perfil & Acoes>()(
             ...dados,
             atualizadoEm: new Date().toISOString(),
           };
+          avisarTermino(antigo, novo, get);
           return {
             livros: antigo
               ? s.livros.map((l) => (l.id === base.id ? novo : l))

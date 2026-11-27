@@ -459,6 +459,8 @@ function UmaPorVez() {
       {perguntarTermino && livro ? (
         <PerguntaTermino
           titulo={livro.titulo}
+          autor={livro.autor}
+          capa={livro.capa}
           onCancelar={() => setPerguntarTermino(false)}
           onConfirmar={(t) => {
             setPerguntarTermino(false);

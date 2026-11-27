@@ -351,6 +351,8 @@ function Escolha({ inicial }: { inicial: string[] }) {
       {deFora ? (
         <PerguntaTermino
           titulo={deFora.titulo}
+          autor={deFora.autor}
+          capa={deFora.capa}
           onCancelar={() => setDeFora(null)}
           onConfirmar={(t) => adicionarLido(deFora, t)}
         />

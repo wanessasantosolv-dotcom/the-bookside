@@ -1,6 +1,5 @@
 "use client";
 
-import { celebrarTermino } from "@/lib/celebrar";
 
 import { Voltar } from "@/components/Voltar";
 import { TelaApp } from "@/components/AppShell";
@@ -63,8 +62,8 @@ function Progresso({ livro }: { livro: LivroSalvo }) {
     void sincronizarProgressoNosCoreads({ ...livro, paginas: paginas || undefined }, terminou ? paginas || atual : atual, terminou);
     // terminando, a celebração mesmo oferece "fazer a ficha"; sem terminar,
     // volta pra página do livro normalmente
-    if (terminou) celebrarTermino(livro, usePerfil.getState());
-    else router.push(`/livro/${livro.id}`);
+    // terminou: a celebração vem da própria estante (perfil-store)
+    if (!terminou) router.push(`/livro/${livro.id}`);
   }
 
   return (
@@ -200,6 +199,9 @@ function Progresso({ livro }: { livro: LivroSalvo }) {
       {perguntarTermino ? (
         <PerguntaTermino
           titulo={livro.titulo}
+          autor={livro.autor}
+          capa={livro.capa}
+          anterior={usePerfil.getState().livros.find((x) => x.id === livro.id)}
           inicial={livro.lidoEm}
           onCancelar={() => setPerguntarTermino(false)}
           notaInicial={livro.nota}

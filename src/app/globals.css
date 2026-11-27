@@ -436,9 +436,17 @@ body {
   100% { transform: scale(1); }
 }
 .pulo-coracao { animation: pulo-coracao .45s ease-out; }
+@keyframes celebra-fundo { from { opacity: 0; } to { opacity: 1; } }
+.celebra-fundo { animation: celebra-fundo .25s ease-out both; }
+@keyframes celebra-capa { from { transform: translateY(14px) rotate(-6deg); opacity: 0; } to { transform: rotate(-2deg); opacity: 1; } }
+.celebra-capa { animation: celebra-capa .7s .1s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes celebra-brilho { 0% { transform: scale(0) rotate(-30deg); opacity: 0; } 60% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+.celebra-brilho { animation: celebra-brilho .6s .35s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes celebra-barra { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.celebra-barra { transform-origin: left; animation: celebra-barra .9s .4s cubic-bezier(.2,.8,.2,1) both; }
 @media (prefers-reduced-motion: reduce) {
   .celebra-cai, .celebra-estouro { display: none; }
-  .celebra-cartao, .pulo-coracao { animation: none; }
+  .celebra-cartao, .pulo-coracao, .celebra-fundo, .celebra-capa, .celebra-brilho, .celebra-barra { animation: none; }
 }
 
 /* o lugar aceso no passeio pelo app */

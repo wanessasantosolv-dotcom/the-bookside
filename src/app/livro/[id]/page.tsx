@@ -5,7 +5,7 @@ import { ComSpoiler } from "@/components/marginalia/ComSpoiler";
 import { Voltar } from "@/components/Voltar";
 import Link from "next/link";
 import { traduzirGenero } from "@/lib/generos";
-import { celebrar, celebrarTermino } from "@/lib/celebrar";
+import { celebrar } from "@/lib/celebrar";
 import { notFound, useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
@@ -403,7 +403,7 @@ export default function LivroPage() {
     // terminou agora (não era lido antes): comemora — a própria celebração
     // oferece "fazer a ficha" e "compartilhar", sem brigar com a animação
     if (s === "lido" && livro!.status !== "lido") {
-      celebrarTermino(livro!, usePerfil.getState());
+      // a celebração vem da própria estante (perfil-store), em qualquer tela
     }
   }
 
@@ -645,6 +645,9 @@ export default function LivroPage() {
       {perguntarTermino ? (
         <PerguntaTermino
           titulo={livro.titulo}
+          autor={livro.autor}
+          capa={livro.capa}
+          anterior={usePerfil.getState().livros.find((x) => x.id === livro.id)}
           inicial={livro.lidoEm}
           notaInicial={livro.nota}
           formatoInicial={livro.formato}
