@@ -4,7 +4,7 @@ const raiz = path.join(__dirname, ".."); const tmp = fs.mkdtempSync(path.join(os
 fs.copyFileSync(path.join(raiz, "src/data/nas-entrelinhas-v2.json"), path.join(tmp, "nas-entrelinhas-v2.json"));
 const src = fs.readFileSync(path.join(raiz, "src/lib/entrelinhas.ts"), "utf8").replace("../data/nas-entrelinhas-v2.json", "./nas-entrelinhas-v2.json");
 fs.writeFileSync(path.join(tmp, "e.cjs"), ts.transpileModule(src, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020, esModuleInterop: true } }).outputText);
-const E = require(path.join(tmp, "e.cjs"));
+const E = require(path.join(tmp, "e.cjs")); const assert = require("assert");
 let ok=0; const t=(n,f)=>{f();ok++;console.log("ok -",n)};
 t("10 perguntas, 4 alternativas, 2 cartas cada, 8 cartas por pergunta",()=>{
   assert.equal(E.PERGUNTAS.length,10);
