@@ -37,11 +37,10 @@ type Rascunho = Pick<
   | "estiloEstante"
   | "decoracao"
 >;
-type Categoria = "perfil" | "identidade";
-
-const CATEGORIAS: [Categoria, string][] = [
-  ["perfil", "Informações"],
-  ["identidade", "Identidade visual"],
+/** atalhos da página única (âncoras, não abas) */
+const SECOES: [string, string][] = [
+  ["sec-informacoes", "Foto e informações"],
+  ["sec-identidade", "Identidade visual"],
 ];
 
 /** o modo escuro que vale para uma escolha de aparência (sistema: o do aparelho) */
@@ -63,11 +62,11 @@ function Formulario({ inicial }: { inicial: Rascunho }) {
   const livros = usePerfil((s) => s.livros);
   const favoritosIds = usePerfil((s) => s.favoritos);
   const [r, setR] = useState<Rascunho>(inicial);
-  const [categoria, setCategoria] = useState<Categoria>(() => {
-    if (typeof window === "undefined") return "perfil";
+  // links antigos (?aba=identidade) descem direto para a identidade visual
+  useEffect(() => {
     const c = new URLSearchParams(window.location.search).get("aba");
-    return c === "identidade" || c === "aparencia" ? "identidade" : "perfil";
-  });
+    if (c === "identidade" || c === "aparencia") requestAnimationFrame(() => document.getElementById("sec-identidade")?.scrollIntoView());
+  }, []);
   const [previaAberta, setPreviaAberta] = useState(false);
   const fotoRef = useRef<HTMLInputElement>(null);
   const capaRef = useRef<HTMLInputElement>(null);
@@ -101,10 +100,6 @@ function Formulario({ inicial }: { inicial: Rascunho }) {
     mudar({ tema: "the-original", estiloEstante: "auto", decoracao: null });
   }
 
-  function trocarCategoria(c: Categoria) {
-    setCategoria(c);
-    window.history.replaceState(null, "", c === "perfil" ? "/perfil/editar" : `/perfil/editar?aba=${c}`);
-  }
 
   const favoritos = favoritosIds.map((id) => livros.find((l) => l.id === id)).filter((l) => l !== undefined).slice(0, 4);
   const lendo = livros.find((l) => !l.status || l.status === "lendo");
@@ -138,41 +133,21 @@ function Formulario({ inicial }: { inicial: Rascunho }) {
         </header>
         <h1 className="mt-2 hidden font-revista text-[32px] leading-none text-ameixa lg:block">editar perfil</h1>
 
-        {/* categorias: abas compactas no celular, coluna discreta no computador */}
-        <nav aria-label="categorias" className="mt-3 grid grid-cols-3 rounded-[8px] border border-linha p-1 lg:hidden">
-          {CATEGORIAS.map(([id, nome]) => (
-            <button
-              key={id}
-              type="button"
-              aria-current={categoria === id ? "page" : undefined}
-              onClick={() => trocarCategoria(id)}
-              className={`min-h-11 rounded-[6px] text-[13px] font-semibold ${categoria === id ? "bg-bordo text-creme" : "text-tinta-suave"}`}
-            >
-              {nome}
-            </button>
-          ))}
-        </nav>
-
         <div className="mt-5 lg:mt-8 lg:grid lg:grid-cols-[150px_minmax(0,1fr)] lg:gap-10 xl:grid-cols-[150px_minmax(0,1fr)_330px]">
-          <nav aria-label="categorias" className="hidden lg:block">
+          <nav aria-label="seções" className="hidden lg:block">
             <ul className="sticky top-8 space-y-1 border-l border-linha">
-              {CATEGORIAS.map(([id, nome]) => (
+              {SECOES.map(([id, nome]) => (
                 <li key={id}>
-                  <button
-                    type="button"
-                    aria-current={categoria === id ? "page" : undefined}
-                    onClick={() => trocarCategoria(id)}
-                    className={`-ml-px block min-h-9 border-l-2 pl-4 text-left text-[14px] ${categoria === id ? "border-bordo font-semibold text-bordo" : "border-transparent text-tinta-suave hover:text-ameixa"}`}
-                  >
+                  <a href={`#${id}`} className="-ml-px block min-h-9 border-l-2 border-transparent py-1.5 pl-4 text-[14px] text-tinta-suave hover:border-bordo hover:text-ameixa">
                     {nome}
-                  </button>
+                  </a>
                 </li>
               ))}
             </ul>
           </nav>
 
           <div className="min-w-0 max-w-[680px]">
-            {categoria === "perfil" ? (
+            <div id="sec-informacoes" className="scroll-mt-6">
               <MeuPerfil
                 r={r}
                 mudar={mudar}
@@ -183,8 +158,10 @@ function Formulario({ inicial }: { inicial: Rascunho }) {
                 abrirCapa={() => capaRef.current?.click()}
                 ajustarCapa={() => setCapaParaAjustar(r.capaImagem)}
               />
-            ) : null}
-            {categoria === "identidade" ? <AparenciaSecao r={r} mudar={mudar} escuro={escuro} onEscuro={setEscuroPrevia} abrirPrevia={() => setPreviaAberta(true)} /> : null}
+            </div>
+            <div id="sec-identidade" className="mt-12 scroll-mt-6 border-t border-linha pt-8">
+              <AparenciaSecao r={r} mudar={mudar} escuro={escuro} onEscuro={setEscuroPrevia} abrirPrevia={() => setPreviaAberta(true)} />
+            </div>
 
             {/* ações */}
             <div className="fixed inset-x-0 bottom-0 z-30 flex items-center gap-2 border-t border-linha bg-creme/95 px-4 py-3 backdrop-blur-sm lg:static lg:mt-10 lg:border-t lg:bg-transparent lg:px-0 lg:pt-6 lg:backdrop-blur-none">
@@ -199,11 +176,9 @@ function Formulario({ inicial }: { inicial: Rascunho }) {
               <Link href="/perfil" className="flex h-10 items-center rounded-[6px] border border-bege px-4 text-[14px] font-semibold text-ameixa">
                 cancelar
               </Link>
-              {categoria === "identidade" ? (
-                <button type="button" onClick={restaurarAparencia} className="ml-auto hidden h-10 px-2 text-[13px] font-semibold text-tinta-suave underline-offset-4 hover:underline sm:block">
-                  restaurar padrão
-                </button>
-              ) : null}
+              <button type="button" onClick={restaurarAparencia} className="ml-auto hidden h-10 px-2 text-[13px] font-semibold text-tinta-suave underline-offset-4 hover:underline sm:block">
+                restaurar visual padrão
+              </button>
             </div>
           </div>
 
@@ -490,7 +465,7 @@ function AparenciaSecao({ r, mudar, escuro, onEscuro, abrirPrevia }: { r: Rascun
     <div className="space-y-8">
       <div className="flex items-end justify-between gap-3">
         <div>
-          <p className="font-revista text-[30px] leading-none text-ameixa italic lg:text-[34px]">make it yours.</p>
+          <p className="font-revista text-[22px] leading-none text-ameixa italic">make it yours.</p>
           <p className="mt-1.5 text-[13px] text-cinza">A identidade visual do seu perfil.</p>
         </div>
         <button type="button" onClick={abrirPrevia} className="flex h-10 flex-none items-center rounded-[6px] border border-bege px-3.5 text-[13px] font-semibold text-bordo xl:hidden">

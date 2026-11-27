@@ -11,16 +11,14 @@ import { sairDaConta, useNuvem } from "@/lib/nuvem";
 import { usePerfil } from "@/lib/perfil-store";
 import { apagarMinhasAtividades } from "@/lib/social";
 import { supabase } from "@/lib/supabase";
-import { temaApp } from "@/lib/temas";
 import { useTeste } from "@/lib/teste-store";
 
-export type Secao = "aparencia" | "app" | "conta" | "privacidade" | "dados";
+export type Secao = "app" | "conta" | "privacidade" | "dados";
 
 const GRUPOS: { nome: string; itens: { id: Secao; nome: string; sub: string; icone: string }[] }[] = [
   {
     nome: "Preferências",
     itens: [
-      { id: "aparencia", nome: "Aparência", sub: "modo claro, escuro ou do sistema", icone: "M12 3a9 9 0 1 0 9 9c0-.5-.5-.8-1-.6A6 6 0 0 1 12.6 4c.2-.5-.1-1-.6-1z" },
       { id: "app", nome: "App no celular", sub: "instalar o app e rever o passeio", icone: "M8 2h8a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z M11 18h2" },
     ],
   },
@@ -28,7 +26,7 @@ const GRUPOS: { nome: string; itens: { id: Secao; nome: string; sub: string; ico
     nome: "Conta",
     itens: [
       { id: "conta", nome: "Dados da conta e segurança", sub: "e-mail, usuário e senha", icone: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M4 21c.8-4 4-6 8-6s7.2 2 8 6" },
-      { id: "privacidade", nome: "Privacidade", sub: "feed e estantes visíveis", icone: "M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z" },
+      { id: "privacidade", nome: "Estantes visíveis", sub: "quais estantes aparecem no seu perfil", icone: "M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z" },
       { id: "dados", nome: "Seus dados", sub: "baixar uma cópia ou esvaziar a estante", icone: "M12 4v11 M7 10l5 5 5-5 M5 20h14" },
     ],
   },
@@ -73,6 +71,9 @@ export function Configuracoes({ secao }: { secao?: Secao }) {
       {GRUPOS.map((g) => (
         <div key={g.nome}>
           <p className="mb-1 text-[11px] font-semibold tracking-[.14em] text-cinza uppercase">{g.nome}</p>
+          {/* controles simples ficam aqui mesmo, sem abrir outra página */}
+          {g.nome === "Preferências" ? <ModoDireto /> : null}
+          {g.nome === "Conta" ? <FeedDireto /> : null}
           <ul className="border-t border-linha">
             {g.itens.map((i) => (
               <li key={i.id}>
@@ -110,30 +111,24 @@ export function Configuracoes({ secao }: { secao?: Secao }) {
               <path d="M15 5l-7 7 7 7" />
             </svg>
           </Voltar>
-          <h1 className="font-revista text-[26px] leading-none text-ameixa lg:text-[30px]">
-            <span className={secao ? "hidden lg:inline" : ""}>Configurações</span>
-            {secao ? <span className="lg:hidden">{GRUPOS.flatMap((g) => g.itens).find((i) => i.id === secao)?.nome}</span> : null}
+          <h1 className="font-revista text-[24px] leading-none text-ameixa">
+            {secao ? GRUPOS.flatMap((g) => g.itens).find((i) => i.id === secao)?.nome : "Configurações"}
           </h1>
         </header>
 
-        <div className="mt-6 lg:grid lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-12">
-          {/* a lista: sozinha no celular (sem seção aberta); sempre ao lado no computador */}
-          <div className={secao ? "hidden lg:block" : ""}>
-            {lista}
-            {sairBotao}
-          </div>
+        <div className="mt-6 max-w-[640px]">
           {secao ? (
-            <div className="min-w-0 max-w-[640px]">
-              {secao === "aparencia" ? <Aparencia /> : null}
+            <>
               {secao === "app" ? <AppCelular /> : null}
               {secao === "conta" ? <Conta /> : null}
               {secao === "privacidade" ? <Privacidade /> : null}
               {secao === "dados" ? <Dados /> : null}
-            </div>
+            </>
           ) : (
-            <div className="hidden lg:block">
-              <Aparencia />
-            </div>
+            <>
+              {lista}
+              {sairBotao}
+            </>
           )}
         </div>
       </div>
@@ -141,43 +136,51 @@ export function Configuracoes({ secao }: { secao?: Secao }) {
   );
 }
 
-/* ───────── aparência do aplicativo ───────── */
-function Aparencia() {
+/* ───────── aparência: direto na lista ───────── */
+function ModoDireto() {
   const aparencia = usePerfil((s) => s.aparencia ?? "claro");
-  const tema = usePerfil((s) => s.tema);
   const atualizar = usePerfil((s) => s.atualizar);
   const segmento = (on: boolean) =>
-    `flex min-h-10 flex-1 items-center justify-center rounded-[5px] text-[13px] font-semibold ${on ? "bg-creme text-ameixa shadow-[0_1px_3px_rgba(0,0,0,.12)]" : "text-tinta-suave hover:text-ameixa"}`;
+    `flex min-h-9 flex-1 items-center justify-center rounded-[5px] text-[13px] font-semibold ${on ? "bg-creme text-ameixa shadow-[0_1px_3px_rgba(0,0,0,.12)]" : "text-tinta-suave hover:text-ameixa"}`;
   return (
-    <div className="space-y-8">
-      <section aria-labelledby="c-modo">
-        <h2 id="c-modo" className={tituloSecao}>
-          Modo de aparência
-        </h2>
-        <div role="radiogroup" aria-labelledby="c-modo" className="mt-3 flex max-w-[380px] gap-1 rounded-[7px] bg-papel p-1">
-          {(
-            [
-              ["claro", "Claro"],
-              ["escuro", "Escuro"],
-              ["sistema", "Sistema"],
-            ] as const
-          ).map(([id, nome]) => (
-            <button key={id} type="button" role="radio" aria-checked={aparencia === id} onClick={() => atualizar({ aparencia: id })} className={segmento(aparencia === id)}>
-              {nome}
-            </button>
-          ))}
-        </div>
-        <p className="mt-2 text-[12px] text-cinza">sistema acompanha o celular ou o computador. vale para o app e para os perfis que você visita.</p>
-      </section>
-      <section className="border-t border-linha pt-4">
-        <p className="text-[13px] text-tinta-suave">
-          O app usa a identidade do the bookside. O tema que você escolhe vale no seu perfil
-          {temaApp(tema) ? ` (${temaApp(tema)!.nome})` : ""}.
-        </p>
-        <Link href="/perfil/editar?aba=identidade" className="mt-1 inline-block min-h-10 py-2 text-[13px] font-semibold text-bordo">
-          Editar identidade do perfil →
-        </Link>
-      </section>
+    <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-linha py-3">
+      <span>
+        <span id="c-modo" className="block text-[14px] font-semibold text-ameixa">Aparência</span>
+        <span className="block text-[12px] text-cinza">
+          o tema do seu perfil fica em{" "}
+          <Link href="/perfil/editar?aba=identidade" className="text-bordo hover:underline">
+            editar perfil
+          </Link>
+        </span>
+      </span>
+      <div role="radiogroup" aria-labelledby="c-modo" className="flex w-full max-w-[280px] gap-1 rounded-[7px] bg-papel p-1">
+        {(
+          [
+            ["claro", "Claro"],
+            ["escuro", "Escuro"],
+            ["sistema", "Sistema"],
+          ] as const
+        ).map(([id, nome]) => (
+          <button key={id} type="button" role="radio" aria-checked={aparencia === id} onClick={() => atualizar({ aparencia: id })} className={segmento(aparencia === id)}>
+            {nome}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function FeedDireto() {
+  const publicarNoFeed = usePerfil((s) => s.publicarNoFeed ?? true);
+  const atualizar = usePerfil((s) => s.atualizar);
+  return (
+    <div className="border-t border-linha">
+      <Interruptor
+        ligado={publicarNoFeed}
+        onChange={(v) => atualizar({ publicarNoFeed: v })}
+        titulo="Mostrar minhas leituras no feed"
+        texto="quem te segue vê quando você começa, termina ou avalia um livro."
+      />
     </div>
   );
 }
@@ -271,21 +274,11 @@ function Linha({ t, d }: { t: string; d: ReactNode }) {
 
 /* ───────── privacidade ───────── */
 function Privacidade() {
-  const publicarNoFeed = usePerfil((s) => s.publicarNoFeed ?? true);
   const proprias = usePerfil((s) => s.estantesProprias ?? []);
   const usuario = usePerfil((s) => s.usuario);
   const atualizar = usePerfil((s) => s.atualizar);
   return (
     <div className="space-y-8">
-      <section>
-        <h2 className={tituloSecao}>Atividades de leitura</h2>
-        <Interruptor
-          ligado={publicarNoFeed}
-          onChange={(v) => atualizar({ publicarNoFeed: v })}
-          titulo="Mostrar minhas leituras no feed"
-          texto="quando você começa, termina ou avalia um livro, quem te segue vê. desligado, só aparece o que você publicar. os clubes continuam vendo o que acontece neles."
-        />
-      </section>
       <section>
         <h2 className={tituloSecao}>Estantes</h2>
         {proprias.length ? (
