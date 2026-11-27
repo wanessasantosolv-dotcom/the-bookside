@@ -1,5 +1,6 @@
 "use client";
 
+import { ArteCarta } from "@/components/entrelinhas/Carta";
 import Link from "next/link";
 import { OrnamentoTema } from "@/components/OrnamentoTema";
 import { temaApp } from "@/lib/temas";
@@ -155,6 +156,37 @@ function Foto({ p, tamanho }: { p: Perfil; tamanho: number }) {
 }
 
 /** a linha discreta embaixo do @usuário, como era antes: "12 seguidores · 8 seguindo" */
+/** os números de leitura no perfil: total de livros e páginas, e o ano corrente */
+function NumerosDeLeitura({ livros }: { livros: LivroSalvo[] }) {
+  const lidos = livros.filter((l) => l.status === "lido");
+  if (!lidos.length) return null;
+  const ano = new Date().getFullYear();
+  const doAno = lidos.filter((l) => l.lidoEm?.startsWith(String(ano)));
+  const pags = (ls: LivroSalvo[]) => ls.reduce((t, l) => t + (l.paginas ?? 0), 0);
+  const n = (x: number) => x.toLocaleString("pt-BR");
+  const b = "font-semibold text-[var(--tinta)] tabular-nums";
+  return (
+    <p className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[12.5px] text-[var(--suave)]">
+      <span>
+        <b className={b}>{n(lidos.length)}</b> {lidos.length === 1 ? "livro lido" : "livros lidos"}
+      </span>
+      {pags(lidos) ? (
+        <span>
+          <b className={b}>{n(pags(lidos))}</b> páginas
+        </span>
+      ) : null}
+      <span>
+        em {ano}: <b className={b}>{n(doAno.length)}</b> {doAno.length === 1 ? "livro" : "livros"}
+        {pags(doAno) ? (
+          <>
+            {" "}· <b className={b}>{n(pags(doAno))}</b> págs.
+          </>
+        ) : null}
+      </span>
+    </p>
+  );
+}
+
 function Seguidores({ numeros, base }: { numeros: { seguidores: number; seguindo: number } | null; base: string }) {
   if (!numeros) return null;
   return (
@@ -663,16 +695,25 @@ export function PerfilEditorial({
                 {nome}
               </h1>
               <p className="mt-1 text-[12px] font-semibold text-[var(--acc)]">@{p.usuario}</p>
-              {/* o arquétipo literário: uma linha discreta, só quando publicado */}
-              {ehCarta(p.cartaLiteraria?.carta) ? (
-                <Link href={proprio ? "/nas-entrelinhas?ver=carta" : `/nas-entrelinhas?carta=${p.cartaLiteraria!.carta}`} className="mt-0.5 inline-block font-revista text-[13.5px] text-[var(--acc)] italic hover:underline">
-                  ✧ {CATALOGO[p.cartaLiteraria!.carta as CartaId].nome}
-                </Link>
-              ) : null}
               <Seguidores numeros={numeros} base={base} />
+              <NumerosDeLeitura livros={p.livros ?? []} />
               </div>
-              {/* ações compactas: ao lado do nome no computador, logo abaixo no celular */}
-              <div className="flex-none">{acoes}</div>
+              {/* à direita: a cartinha do arquétipo (quando publicada) e as ações compactas */}
+              <div className="flex flex-none items-end gap-4">
+                {ehCarta(p.cartaLiteraria?.carta) ? (
+                  <Link
+                    href={proprio ? "/nas-entrelinhas?ver=carta" : `/nas-entrelinhas?carta=${p.cartaLiteraria!.carta}`}
+                    title={CATALOGO[p.cartaLiteraria!.carta as CartaId].nome}
+                    className="group order-last flex items-end gap-2 lg:order-first"
+                  >
+                    <span className="block rotate-[-4deg] transition-transform group-hover:rotate-0">
+                      <ArteCarta carta={p.cartaLiteraria!.carta as CartaId} largura={42} />
+                    </span>
+                    <span className="max-w-[110px] pb-0.5 font-revista text-[12.5px] leading-tight text-[var(--acc)] italic group-hover:underline">{CATALOGO[p.cartaLiteraria!.carta as CartaId].nome}</span>
+                  </Link>
+                ) : null}
+                <div className="flex-none">{acoes}</div>
+              </div>
             </div>
             <div className="mt-5 px-5 text-center lg:mt-6">
               {p.frase ? (
