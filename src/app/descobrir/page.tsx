@@ -1,5 +1,6 @@
 "use client";
 
+import { Voltar } from "@/components/Voltar";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -68,6 +69,13 @@ export default function DescobrirPage() {
               {/* coluna principal */}
               <div className="min-w-0">
                 <header className="px-6 pt-3 lg:px-0 lg:pt-0">
+                  {buscando ? (
+                    <button type="button" onClick={() => controle.current?.limpar()} className="-ml-2 mb-1 flex min-h-11 items-center gap-1 px-2 text-[13px] font-semibold text-bordo">
+                      ← voltar ao descobrir
+                    </button>
+                  ) : (
+                    <Voltar padrao="/" rotulo="início" className="-ml-2 mb-1 flex min-h-11 items-center px-2 text-[13px] font-semibold text-bordo lg:hidden" />
+                  )}
                   <h1 className="font-revista text-[36px] leading-none text-bordo italic lg:text-[56px]">descobrir.</h1>
                   <p className="mt-1.5 text-[13px] text-cinza lg:text-[14px]">Sempre há outra história.</p>
                 </header>

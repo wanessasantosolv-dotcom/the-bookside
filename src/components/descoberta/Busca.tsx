@@ -25,7 +25,7 @@ type Modo =
 const GRUPOS: Categoria[] = ["atmosfera", "ritmo", "genero", "tematica", "ambientacao", "origem", "idioma", "extensao", "periodo"];
 const ABERTOS_PRIMEIRO: Categoria[] = ["atmosfera", "ritmo", "genero"];
 
-export type BuscaControle = { pesquisar: (q: string) => void };
+export type BuscaControle = { pesquisar: (q: string) => void; limpar: () => void };
 
 export function Busca({
   modo,
@@ -134,7 +134,8 @@ export function Busca({
     setConsulta(final);
     setIgnorados([]);
   }, []);
-  useEffect(() => controle?.({ pesquisar }), [controle, pesquisar]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => controle?.({ pesquisar, limpar }), [controle, pesquisar]);
 
   function limpar() {
     setTexto("");
