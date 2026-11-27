@@ -45,9 +45,9 @@ export function PaginaRevista({
           )}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/brand/logo-bordo.png"
-            alt="the bookside"
-            className="hidden w-[92px] lg:block"
+            src="/brand/wordmark-bordo.png"
+            alt="bookside"
+            className="hidden h-auto w-[100px] lg:block"
           />
           <span className="text-[9px] font-bold tracking-[.18em] text-tinta uppercase lg:flex lg:items-center lg:justify-end lg:gap-3">
             {barra !== undefined ? (

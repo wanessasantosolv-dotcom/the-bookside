@@ -29,10 +29,9 @@ export function ContaShell({
           />
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/brand/logo-base.png"
-            alt="the bookside"
-            className="absolute top-11 left-1/2 w-[118px] -translate-x-1/2"
-            style={{ filter: "brightness(0) invert(1)" }}
+            src="/brand/wordmark-creme.png"
+            alt="bookside"
+            className="absolute top-[52px] left-1/2 h-auto w-[132px] -translate-x-1/2"
           />
           <p className="absolute inset-x-0 top-[110px] text-center font-accent text-[13px] italic text-rosa-claro">
             a estante ao lado da cama

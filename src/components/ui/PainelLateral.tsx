@@ -13,7 +13,7 @@ export function PainelLateral({ eyebrow, frase, passo }: { eyebrow: string; fras
     >
       <span className="pointer-events-none absolute inset-0 bg-[repeating-linear-gradient(115deg,transparent,transparent_38px,rgba(255,255,255,.035)_38px,rgba(255,255,255,.035)_76px)]" />
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/brand/logo-bordo.png" alt="" className="relative w-[96px]" style={{ filter: "brightness(0) invert(1)" }} />
+      <img src="/brand/wordmark-creme.png" alt="" className="relative h-auto w-[120px]" />
 
       {passo ? (
         <div className="relative">

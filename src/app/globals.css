@@ -123,8 +123,8 @@ html[data-modo="escuro"] .acc-web-tema { --acc-web: color-mix(in srgb, var(--acc
 html[data-modo="escuro"] .jornada-tema { --acc: color-mix(in srgb, var(--acc-base) 45%, #f3e9e6); }
 
 /* o logo bordô fica creme no modo escuro */
-html[data-modo="escuro"] img[src$="logo-bordo.png"],
-html[data-tema-escuro] img[src$="logo-bordo.png"] { filter: brightness(0) invert(1); }
+html[data-modo="escuro"] img[src$="wordmark-bordo.png"],
+html[data-tema-escuro] img[src$="wordmark-bordo.png"] { content: url("/brand/wordmark-creme.png"); }
 
 /* os desenhos das capas, com fundo escuro */
 

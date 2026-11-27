@@ -40,7 +40,7 @@ export function AppShell({
       <aside className="hidden lg:sticky lg:top-0 lg:block lg:h-dvh lg:w-[236px] lg:flex-none lg:border-r lg:border-fio lg:px-7 lg:py-8">
         <Link href="/inicio" aria-label="the bookside · início" className="mb-10 block">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/brand/logo-bordo.png" alt="" className="w-[160px]" />
+          <img src="/brand/wordmark-bordo.png" alt="" width={150} height={34} className="h-auto w-[150px]" />
         </Link>
         <nav aria-label="Principal" className="flex flex-col">
           {abas.map((a) => {

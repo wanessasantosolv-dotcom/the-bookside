@@ -11,54 +11,20 @@ import { mensagemDeErro, supabase } from "@/lib/supabase";
 import { carregarPerfil } from "@/lib/nuvem";
 import { usuarioValido } from "@/lib/usuario";
 
-const estrelas = [
-  { src: "/brand/logo-estrela-1.png", origem: "10.07% 14.07%", atraso: "0s" },
-  { src: "/brand/logo-estrela-2.png", origem: "91.5% 20.1%", atraso: ".9s" },
-  { src: "/brand/logo-estrela-3.png", origem: "45.55% 86.6%", atraso: "1.6s" },
-  { src: "/brand/logo-estrela-4.png", origem: "64.2% 86.6%", atraso: "2.3s" },
-];
-
-const branco = { filter: "brightness(0) invert(1)" };
-
+/** o logotipo com a estrela do i piscando devagar */
 function LogoAnimada() {
   return (
-    <div className="login-logo relative w-[200px]">
+    <div className="login-logo relative w-[210px]">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/brand/wordmark-creme-base.png" alt="bookside" width={210} height={48} className="block h-auto w-[210px]" />
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/brand/logo-base.png"
-        alt="the bookside"
-        width={200}
-        height={104}
-        className="block h-auto w-[200px]"
-        style={branco}
-      />
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src="/brand/logo-arco.png"
+        src="/brand/wordmark-creme-estrela.png"
         alt=""
         aria-hidden
-        className="absolute inset-0 h-auto w-[200px] opacity-55"
-        style={branco}
+        className="login-estrela absolute inset-0 h-auto w-[210px]"
+        style={{ transformOrigin: "70.9% 14.4%" }}
       />
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src="/brand/logo-arco.png"
-        alt=""
-        aria-hidden
-        className="login-arco-luz absolute inset-0 h-auto w-[200px]"
-        style={branco}
-      />
-      {estrelas.map((e) => (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          key={e.src}
-          src={e.src}
-          alt=""
-          aria-hidden
-          className="login-estrela absolute inset-0 h-auto w-[200px]"
-          style={{ ...branco, transformOrigin: e.origem, animationDelay: e.atraso }}
-        />
-      ))}
     </div>
   );
 }
@@ -131,7 +97,7 @@ export default function EntrarPage() {
 
         <section className="login-folha rounded-t-[36px] bg-creme px-8 pt-[34px] pb-[max(28px,env(safe-area-inset-bottom))] lg:w-full lg:max-w-[460px] lg:rounded-none lg:bg-transparent lg:py-12">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/brand/logo-bordo.png" alt="" className="mb-7 hidden w-[110px] lg:block" />
+          <img src="/brand/wordmark-bordo.png" alt="" className="mb-7 hidden h-auto w-[130px] lg:block" />
           <h1 className="font-display text-[28px] leading-8 font-semibold italic text-bordo lg:font-revista lg:text-[34px] lg:font-normal lg:text-tinta">
             <span className="lg:hidden">hi, reader</span>
             <span className="hidden lg:inline">entrar</span>
