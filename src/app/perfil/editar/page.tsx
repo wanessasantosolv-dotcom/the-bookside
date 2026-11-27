@@ -16,10 +16,9 @@ import { reduzirImagem } from "@/lib/imagem";
 import { TemaSimbolo } from "@/components/TemaSimbolo";
 import { MiniaturaTema, PreviaTema } from "@/components/perfil/PreviaTema";
 import { TEMAS_APP, corDaEstanteApp, ehTemaLegado, temaApp, type Decoracao, type EstiloEstante } from "@/lib/temas";
-import { usePerfil, type PadraoCapa, type Perfil } from "@/lib/perfil-store";
+import { usePerfil, type Perfil } from "@/lib/perfil-store";
 
 const LIMITE_FRASE = 120;
-const padroes: PadraoCapa[] = ["linhas", "bolinhas", "ondas", "estrelas"];
 const rotulo = "mb-1.5 block text-[11px] leading-[14px] font-semibold tracking-[.12em] text-bordo uppercase";
 const caixa =
   "h-11 w-full rounded-[6px] border border-bege bg-creme-quente px-3.5 text-[15px] text-ameixa outline-none focus:border-bordo focus:ring-1 focus:ring-bordo";
@@ -329,9 +328,6 @@ function MeuPerfil({
   const meta = typeof r.meta === "number" ? r.meta : null;
   const [textoMeta, setTextoMeta] = useState(() => (meta !== null && !metas.some((m) => m.valor === meta) ? String(meta) : ""));
   const metaPersonalizada = textoMeta !== "" && meta !== null && meta === Number(textoMeta);
-  const modoBanner = r.capaImagem ? "foto" : r.capa === "tema" ? "tema" : r.capa === "solida" ? "solida" : "pattern";
-  const chip = (on: boolean) =>
-    `inline-flex min-h-9 items-center gap-1.5 rounded-[6px] border px-3 text-[13px] font-semibold ${on ? "border-bordo bg-rosa-fundo text-bordo" : "border-linha text-tinta-suave hover:border-bege"}`;
 
   return (
     <div className="space-y-8">
@@ -372,43 +368,22 @@ function MeuPerfil({
           </div>
         </div>
 
-        <p className={`${rotulo} mt-4`}>banner</p>
-        <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="tipo de banner">
-          <button type="button" role="radio" aria-checked={modoBanner === "foto"} onClick={r.capaImagem ? ajustarCapa : abrirCapa} className={chip(modoBanner === "foto")}>
-            {r.capaImagem ? "foto · ajustar" : "imagem própria"}
+        <div className="mt-3 flex flex-wrap gap-x-5 text-[13px] font-semibold">
+          <button type="button" onClick={abrirCapa} className="min-h-11 text-bordo">
+            {r.capaImagem ? "trocar capa" : "colocar foto de capa"}
           </button>
-          <button type="button" role="radio" aria-checked={modoBanner === "tema"} onClick={() => mudar({ capa: "tema", capaImagem: null })} className={chip(modoBanner === "tema")}>
-            banner do tema
-          </button>
-          <button
-            type="button"
-            role="radio"
-            aria-checked={modoBanner === "pattern"}
-            onClick={() => {
-              const i = padroes.indexOf(r.capa);
-              mudar({ capa: modoBanner === "pattern" ? padroes[(i + 1) % padroes.length] : padroes[Math.max(0, i)], capaImagem: null });
-            }}
-            className={chip(modoBanner === "pattern")}
-          >
-            pattern{modoBanner === "pattern" ? " · outro" : ""}
-          </button>
-          <button type="button" role="radio" aria-checked={modoBanner === "solida"} onClick={() => mudar({ capa: "solida", capaImagem: null })} className={chip(modoBanner === "solida")}>
-            cor sólida
-          </button>
-        </div>
-        <div className="mt-2 flex flex-wrap gap-x-4 text-[12px]">
           {r.capaImagem ? (
             <>
-              <button type="button" onClick={abrirCapa} className="min-h-9 font-semibold text-bordo">
-                trocar imagem
+              <button type="button" onClick={ajustarCapa} className="min-h-11 text-bordo">
+                ajustar enquadramento
               </button>
-              <button type="button" onClick={() => mudar({ capaImagem: null })} className="min-h-9 font-semibold text-tinta-suave">
-                tirar a imagem
+              <button type="button" onClick={() => mudar({ capaImagem: null, capa: "tema" })} className="min-h-11 text-tinta-suave">
+                remover capa
               </button>
             </>
           ) : null}
-          <span className="flex min-h-9 items-center text-cinza">a imagem própria fica mesmo se você trocar de tema.</span>
         </div>
+        {!r.capaImagem ? <p className="text-[12px] text-cinza">sem foto, a capa usa o pattern do seu tema.</p> : null}
       </section>
 
       {/* informações */}

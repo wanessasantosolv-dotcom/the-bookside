@@ -13,4 +13,13 @@ export const dataDoDia = (dia: string) =>
 export const diaDaData = (iso?: string) =>
   iso ? diaLocal(new Date(iso)) : undefined;
 
+/** dias de leitura entre o início e a conclusão, contando os dois dias (a mesma regra da jornada) */
+export function diasEntre(inicio?: string, fim?: string) {
+  if (!inicio || !fim) return null;
+  const a = new Date(`${inicio}T12:00:00`).getTime();
+  const b = new Date(`${fim}T12:00:00`).getTime();
+  if (!(b >= a)) return null;
+  return Math.round((b - a) / 864e5) + 1;
+}
+
 export const ontem = () => diaLocal(new Date(Date.now() - 864e5));

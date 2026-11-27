@@ -145,6 +145,13 @@ export const fichaApagada = {
   citacao: undefined,
   resenha: undefined,
   anotacao: undefined,
+  sensacoes: undefined,
+  recomendaria: undefined,
+  releria: undefined,
+  resenhaSpoiler: undefined,
+  naoAplica: undefined,
+  fichaEm: undefined,
+  fichaEditadaEm: undefined,
 } satisfies Partial<LivroSalvo>;
 
 /** lidos em um ano (pela data em que terminou; sem data não entra) */

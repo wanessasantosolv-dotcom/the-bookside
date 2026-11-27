@@ -59,6 +59,19 @@ export type LivroSalvo = {
   anotacao?: string;
   /** personagem favorita (das fichas) */
   personagem?: string;
+  /** marginalia: como foi a experiência (atmosfera, ritmo, impressão), só o que a pessoa escolheu */
+  sensacoes?: string[];
+  /** recomendaria esta obra? */
+  recomendaria?: "sim" | "ressalvas" | "nao";
+  /** consideraria uma releitura? (não cria leitura nova) */
+  releria?: "sim" | "talvez" | "nao";
+  /** a resenha tem spoilers (esconde até a pessoa tocar) */
+  resenhaSpoiler?: boolean;
+  /** critérios que não se aplicam a esta obra (ex.: poesia sem personagens) */
+  naoAplica?: (keyof NotasDetalhe)[];
+  /** quando a ficha foi salva pela primeira vez e a última edição (ISO) */
+  fichaEm?: string;
+  fichaEditadaEm?: string;
   /** trecho favorito */
   citacao?: string;
   /** quando este livro foi mudado pela última vez (para juntar celular e computador) */
@@ -70,6 +83,12 @@ export type LivroSalvo = {
     origem?: "kindle" | "app";
     /** página do trecho, quando a pessoa anotou */
     pagina?: number;
+    capitulo?: string;
+    /** nota pessoal sobre o trecho */
+    nota?: string;
+    spoiler?: boolean;
+    /** está na ficha ("entre as páginas"); tirar da ficha não apaga o trecho */
+    naFicha?: boolean;
   }[];
   /** leituras anteriores (quando a pessoa começa uma releitura) */
   releituras?: { iniciadoEm?: string; lidoEm?: string; nota?: number; formato?: FormatoLivro }[];
