@@ -82,7 +82,7 @@ export default function MembroPage() {
         className={`relative h-[150px] bg-cover bg-center lg:mx-0 lg:h-[180px] lg:rounded-[4px] ${p.capaImagem ? "" : `pat-${p.capa ?? "linhas"}`}`}
         style={
           p.capaImagem
-            ? { backgroundImage: `url("${p.capaImagem}")` }
+            ? { backgroundImage: `url("${p.capaImagem}")`, backgroundPosition: `center ${p.capaPosY ?? 50}%` }
             : undefined
         }
       >

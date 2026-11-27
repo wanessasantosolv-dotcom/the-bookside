@@ -158,7 +158,7 @@ export function PerfilWeb({
         className={`relative flex h-[280px] items-end bg-cover bg-center px-14 ${p.capaImagem ? "" : `pat-${p.capa ?? "linhas"}`}`}
         style={
           p.capaImagem
-            ? { backgroundImage: `url("${p.capaImagem}")` } // a foto com as cores originais, sem camada por cima
+            ? { backgroundImage: `url("${p.capaImagem}")`, backgroundPosition: `center ${p.capaPosY ?? 50}%` } // a foto com as cores originais, sem camada por cima
             : undefined
         }
       >

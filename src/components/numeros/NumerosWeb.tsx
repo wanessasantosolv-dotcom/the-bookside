@@ -573,7 +573,7 @@ function Cabecalho({
         className={`h-[170px] bg-cover bg-center ${p.capaImagem ? "" : `pat-${p.capa}`}`}
         style={
           p.capaImagem
-            ? { backgroundImage: `url("${p.capaImagem}")` }
+            ? { backgroundImage: `url("${p.capaImagem}")`, backgroundPosition: `center ${p.capaPosY ?? 50}%` }
             : undefined
         }
       />

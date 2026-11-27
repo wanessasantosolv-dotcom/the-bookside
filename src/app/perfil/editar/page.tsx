@@ -36,6 +36,7 @@ type Rascunho = Pick<
   | "foto"
   | "capa"
   | "capaImagem"
+  | "capaPosY"
 >;
 
 function Formulario({ inicial }: { inicial: Rascunho }) {
@@ -129,7 +130,7 @@ function Formulario({ inicial }: { inicial: Rascunho }) {
           className={`relative mt-2 h-[120px] bg-cover bg-center sm:mx-6 sm:h-[150px] sm:rounded-[12px] sm:overflow-hidden lg:mx-0 lg:rounded-[4px] ${r.capaImagem ? "" : `pat-${r.capa}`}`}
           style={
             r.capaImagem
-              ? { backgroundImage: `url("${r.capaImagem}")` }
+              ? { backgroundImage: `url("${r.capaImagem}")`, backgroundPosition: `center ${r.capaPosY ?? 50}%` }
               : undefined
           }
         >
@@ -193,9 +194,10 @@ function Formulario({ inicial }: { inicial: Rascunho }) {
           <AjustarFoto
             src={capaParaAjustar}
             formato="capa"
+            posY={capaParaAjustar === r.capaImagem ? (r.capaPosY ?? 50) : 50}
             onCancelar={() => setCapaParaAjustar(null)}
-            onPronto={(dataUrl) => {
-              mudar({ capaImagem: dataUrl });
+            onPronto={(dataUrl, posY) => {
+              mudar({ capaImagem: dataUrl, capaPosY: posY ?? 50 });
               setCapaParaAjustar(null);
             }}
           />
@@ -583,6 +585,7 @@ export default function EditarPerfilPage() {
         foto: p.foto,
         capa: p.capa,
         capaImagem: p.capaImagem,
+        capaPosY: p.capaPosY ?? 50,
       }}
     />
   );

@@ -132,7 +132,7 @@ function Banner({ p }: { p: Perfil }) {
   return (
     <div
       className={`h-[120px] w-full bg-cover bg-center lg:h-[200px] lg:rounded-b-[4px] ${p.capaImagem ? "" : `pat-${p.capa}`}`}
-      style={p.capaImagem ? { backgroundImage: `url("${p.capaImagem}")` } : undefined}
+      style={p.capaImagem ? { backgroundImage: `url("${p.capaImagem}")`, backgroundPosition: `center ${p.capaPosY ?? 50}%` } : undefined}
     />
   );
 }
@@ -657,7 +657,7 @@ export function PerfilEditorial({
             {/* a disposição de antes: capa alta, ações sobre a capa, foto saindo da capa; no computador a capa ocupa a largura toda da tela */}
             <div
               className={`relative h-[150px] bg-cover bg-center sm:h-[220px] lg:left-1/2 lg:h-[280px] lg:w-screen lg:-translate-x-1/2 ${p.capaImagem ? "" : `pat-${p.capa}`}`}
-              style={p.capaImagem ? { backgroundImage: `url("${p.capaImagem}")` } : undefined}
+              style={p.capaImagem ? { backgroundImage: `url("${p.capaImagem}")`, backgroundPosition: `center ${p.capaPosY ?? 50}%` } : undefined}
             >
               <div className="absolute right-5 bottom-4 hidden items-center gap-3 sm:flex lg:right-[max(56px,calc(50vw-564px))] lg:bottom-5">
                 {proprio ? (

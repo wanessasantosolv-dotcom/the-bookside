@@ -130,6 +130,8 @@ export type Perfil = {
   foto: string | null; // data URL reduzida
   capa: PadraoCapa;
   capaImagem: string | null; // data URL da galeria
+  /** que altura da foto da capa aparece quando a capa é mais baixa (0 topo, 50 meio, 100 base) */
+  capaPosY: number;
   frase: string;
   meta: number | null; // null = sem meta
   tema: string;
@@ -197,6 +199,7 @@ export const perfilInicial: Perfil = {
   foto: null,
   capa: "linhas",
   capaImagem: null,
+  capaPosY: 50,
   frase: "gosto de finais que doem",
   meta: 40,
   tema: "biblioteca-classica",

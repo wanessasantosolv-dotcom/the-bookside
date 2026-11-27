@@ -36,14 +36,16 @@ type Props = {
   src: string;
   formato?: keyof typeof FORMATOS;
   onCancelar: () => void;
-  onPronto: (dataUrl: string) => void;
+  /** capa: onde fica a faixa do computador (0 = topo da foto, 100 = base) */
+  posY?: number;
+  onPronto: (dataUrl: string, posY?: number) => void;
 };
 
 /**
  * Janela para ajustar a foto de perfil: arrastar para posicionar,
  * zoom pela barra, pelo gesto de pinça ou pela rodinha do mouse.
  */
-export function AjustarFoto({ src, formato = "foto", onCancelar, onPronto }: Props) {
+export function AjustarFoto({ src, formato = "foto", posY = 50, onCancelar, onPronto }: Props) {
   const { qw: QW0, qh: QH0, sw: SW, sh: SH, titulo: textoTitulo, redondo, qualidade, guia } = FORMATOS[formato];
   // o quadro cabe na tela (no celular fica menor, na mesma proporção)
   const [QW] = useState(() => (typeof window === "undefined" ? QW0 : Math.min(QW0, window.innerWidth - 48)));
@@ -51,6 +53,9 @@ export function AjustarFoto({ src, formato = "foto", onCancelar, onPronto }: Pro
   const [img, setImg] = useState<HTMLImageElement | null>(null);
   const [zoom, setZoom] = useState(1);
   const [pos, setPos] = useState({ x: 0, y: 0 });
+  // centro da faixa "no computador", em fração da altura do quadro
+  const [faixa, setFaixa] = useState(() => (guia ? (posY / 100) * (1 - guia) + guia / 2 : 0.5));
+  const moverFaixa = (d: number) => guia && setFaixa((c) => Math.min(1 - guia / 2, Math.max(guia / 2, c + d)));
   const toques = useRef(new Map<number, { x: number; y: number }>());
   const pinca = useRef<{ dist: number; zoom: number } | null>(null);
   const titulo = useRef<HTMLHeadingElement>(null);
@@ -105,7 +110,12 @@ export function AjustarFoto({ src, formato = "foto", onCancelar, onPronto }: Pro
       const [a, b] = [...toques.current.values()];
       mudarZoom((pinca.current.zoom * Math.hypot(a.x - b.x, a.y - b.y)) / pinca.current.dist);
     } else if (toques.current.size === 1) {
-      setPos((p) => limitar({ x: p.x + e.clientX - antes.x, y: p.y + e.clientY - antes.y }));
+      const dy = e.clientY - antes.y;
+      const novo = limitar({ x: pos.x + e.clientX - antes.x, y: pos.y + dy });
+      setPos(novo);
+      // a foto não sobe/desce mais: quem anda é a faixa do computador
+      const sobra = pos.y + dy - novo.y;
+      if (guia && sobra) moverFaixa(-sobra / QH);
     }
   }
 
@@ -119,7 +129,10 @@ export function AjustarFoto({ src, formato = "foto", onCancelar, onPronto }: Pro
     const d = { ArrowLeft: [passo, 0], ArrowRight: [-passo, 0], ArrowUp: [0, passo], ArrowDown: [0, -passo] }[e.key];
     if (d) {
       e.preventDefault();
-      setPos((p) => limitar({ x: p.x + d[0], y: p.y + d[1] }));
+      const novo = limitar({ x: pos.x + d[0], y: pos.y + d[1] });
+      setPos(novo);
+      const sobra = pos.y + d[1] - novo.y;
+      if (guia && sobra) moverFaixa(-sobra / QH);
     } else if (e.key === "+" || e.key === "=") mudarZoom(zoom + 0.1);
     else if (e.key === "-") mudarZoom(zoom - 0.1);
   }
@@ -139,7 +152,7 @@ export function AjustarFoto({ src, formato = "foto", onCancelar, onPronto }: Pro
     const ctx = canvas.getContext("2d")!;
     ctx.imageSmoothingQuality = "high";
     ctx.drawImage(img, -esquerda / k, -topo / k, QW / k, QH / k, 0, 0, SW, SH);
-    onPronto(canvas.toDataURL("image/jpeg", qualidade));
+    onPronto(canvas.toDataURL("image/jpeg", qualidade), guia ? Math.round(((faixa - guia / 2) / (1 - guia)) * 100) : undefined);
   }
 
   return (
@@ -161,7 +174,7 @@ export function AjustarFoto({ src, formato = "foto", onCancelar, onPronto }: Pro
         </h2>
         <p className="mt-1 text-[13px] text-cinza">
           arraste para cima, para baixo e para os lados, e use o zoom para aproximar.
-          {guia ? " no celular aparece o quadro todo; no computador, só a faixa marcada." : ""}
+          {guia ? " no celular aparece o quadro todo; no computador, só a faixa marcada, que sobe e desce junto quando você arrasta." : ""}
         </p>
 
         <div
@@ -203,7 +216,7 @@ export function AjustarFoto({ src, formato = "foto", onCancelar, onPronto }: Pro
             <span
               aria-hidden
               className="pointer-events-none absolute inset-x-0 border-y-2 border-dashed border-creme/90 shadow-[0_0_0_999px_rgba(43,20,32,.28)]"
-              style={{ top: `${((1 - guia) / 2) * 100}%`, bottom: `${((1 - guia) / 2) * 100}%` }}
+              style={{ top: `${(faixa - guia / 2) * 100}%`, height: `${guia * 100}%` }}
             >
               <span className="absolute top-1 right-1.5 rounded-pill bg-ameixa/70 px-2 py-0.5 text-[9px] font-semibold tracking-[.08em] text-creme">
                 no computador
