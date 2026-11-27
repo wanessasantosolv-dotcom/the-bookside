@@ -205,7 +205,7 @@ function Conteudo() {
         ref={ref}
         e={est}
         usuario={usuario}
-        livros={lendo}
+        livros={[...lendo.filter((l) => l.id === livroId), ...lendo.filter((l) => l.id !== livroId)]}
         mostrar={mostrar}
       />
     ) : (

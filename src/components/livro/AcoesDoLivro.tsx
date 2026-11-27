@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { EstanteInfo } from "@/lib/estantes";
@@ -137,7 +138,13 @@ export function AcoesDoLivro({
 }) {
   const [copiado, setCopiado] = useState(false);
 
+  const router = useRouter();
   async function compartilhar() {
+    // lendo ou lido: compartilhar é criar o story deste livro (lendo agora / terminei)
+    if (status === "lido" || status === "lendo") {
+      router.push(`/story?tipo=${status === "lido" ? "terminei" : "lendo"}&livro=${encodeURIComponent(id)}`);
+      return;
+    }
     const url = `${window.location.origin}/livro/${encodeURIComponent(id)}`;
     try {
       if (navigator.share) await navigator.share({ title: `${titulo} · the bookside`, url });
@@ -247,7 +254,7 @@ export function AcoesDoLivro({
       <button
         type="button"
         onClick={compartilhar}
-        aria-label={copiado ? "link copiado" : "compartilhar o livro"}
+        aria-label={copiado ? "link copiado" : status === "lido" || status === "lendo" ? "compartilhar como story" : "compartilhar o livro"}
         className={redondo}
       >
         <Icone d={ICONE.compartilhar} />
