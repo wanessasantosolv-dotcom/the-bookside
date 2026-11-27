@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { CapaLivro } from "@/components/CapaLivro";
+import { Curadorias, EntreLeitores, PorAfinidade } from "@/components/descobrir/Secoes";
 import { useHidratado } from "@/components/PerfilHidratacao";
 import {
   dadosDoTermino,
@@ -43,44 +44,53 @@ export default function DescobrirPage() {
   return (
     <AppShell aba="descobrir">
       <div className="flex flex-1 flex-col pb-10 lg:bg-jornal lg:px-12 lg:py-8">
-        <header className="flex items-end justify-between gap-4 px-6 pt-4 lg:px-0 lg:pt-0">
-          <div>
-            <h1 className="font-display text-[32px] leading-[1.1] font-semibold italic text-bordo lg:font-revista lg:text-[40px] lg:font-normal lg:text-tinta">
-              descobrir livros
-            </h1>
-            <p className="mt-1.5 font-accent text-sm italic text-cinza">
-              uma indicação por vez: passe, guarde ou marque como lido ✦
-            </p>
-          </div>
-          <Link
-            href="/buscar"
-            className="flex min-h-11 flex-none items-center gap-1.5 rounded-pill border border-bordo px-4 text-xs font-semibold text-bordo hover:bg-bordo/5"
-          >
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.9"
-              strokeLinecap="round"
-              aria-hidden
-            >
-              <circle cx="11" cy="11" r="7" />
-              <path d="m20 20-3.5-3.5" />
-            </svg>
-            <span className="hidden sm:inline">buscar um livro</span>
-            <span className="sm:hidden">buscar</span>
-          </Link>
+        <header className="px-6 pt-3 lg:px-0 lg:pt-0">
+          <h1 className="font-revista text-[24px] leading-none text-ameixa lg:text-[28px]">descobrir</h1>
+          <BuscaRapida />
         </header>
 
         {hidratado ? (
           <>
             <UmaPorVez />
+            {/* uma página só: o resto aparece em seções compactas logo abaixo */}
+            <div className="mt-10 space-y-10 px-6 lg:px-0">
+              <PorAfinidade />
+              <EntreLeitores />
+              <Curadorias />
+            </div>
           </>
         ) : null}
       </div>
     </AppShell>
+  );
+}
+
+/** a busca fica na própria página; os resultados abrem na página de busca */
+function BuscaRapida() {
+  const router = useRouter();
+  const [q, setQ] = useState("");
+  return (
+    <form
+      role="search"
+      onSubmit={(e) => {
+        e.preventDefault();
+        router.push(q.trim() ? `/buscar?q=${encodeURIComponent(q.trim())}` : "/buscar");
+      }}
+      className="mt-3 flex h-11 items-center gap-2 rounded-[8px] border border-linha bg-papel/60 px-3 focus-within:border-bordo"
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" aria-hidden className="flex-none text-cinza">
+        <circle cx="11" cy="11" r="7" />
+        <path d="m20 20-3.5-3.5" />
+      </svg>
+      <input
+        type="search"
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+        placeholder="Buscar livros, autores ou ISBN"
+        aria-label="Buscar livros, autores ou ISBN"
+        className="min-w-0 flex-1 bg-transparent text-[16px] text-ameixa outline-none placeholder:text-cinza sm:text-[14px]"
+      />
+    </form>
   );
 }
 
@@ -277,10 +287,10 @@ function UmaPorVez() {
   );
 
   return (
-    <section className="mx-6 mt-6 rounded-xl border border-linha bg-creme-quente p-5 lg:mx-0 lg:rounded-[6px] lg:border-fio lg:p-8">
+    <section className="mx-6 mt-5 rounded-xl border border-linha bg-creme-quente p-5 lg:mx-0 lg:rounded-[6px] lg:border-fio lg:p-8">
       <div className="flex items-baseline justify-between gap-3">
         <h2 className="text-[11px] font-semibold tracking-[.16em] text-bordo uppercase">
-          uma por vez ✦
+          sua próxima leitura
         </h2>
         {queroLer ? (
           <Link

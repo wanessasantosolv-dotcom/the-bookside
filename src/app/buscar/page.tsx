@@ -18,7 +18,7 @@ function Busca() {
   const livros = usePerfil((s) => s.livros);
   const proprias = usePerfil((s) => s.estantesProprias);
   const editarLivro = usePerfil((s) => s.editarLivro);
-  const [busca, setBusca] = useState("");
+  const [busca, setBusca] = useState(() => params.get("q") ?? "");
 
   const estante =
     todasAsEstantes(proprias ?? []).find(
