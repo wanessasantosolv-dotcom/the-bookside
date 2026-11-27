@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useClube } from "@/components/clube/ClubeContexto";
-import { AbasMembros } from "@/components/liga/Pecas";
+import { LigaDoClube } from "@/components/liga/Liga";
 import { Carregando, ErroOuFalta } from "@/components/social/Estados";
 import { Avatar } from "@/components/social/Pessoas";
 import {
@@ -87,16 +87,13 @@ export default function MembrosPage() {
 
   return (
     <>
-    <div className="px-4 pt-4 lg:px-0 lg:pt-6">
-      <AbasMembros base={`/clubes/${clube.id}`} />
-    </div>
     <div className="grid gap-10 px-5 pt-6 lg:grid-cols-[minmax(0,1.9fr)_minmax(300px,1fr)] lg:gap-14 lg:px-0 lg:pt-8">
       <div className="min-w-0 space-y-10">
         {/* participantes e números dentro do clube */}
         <section aria-labelledby="t-participantes">
           <div className={secao}>
             <h2 id="t-participantes" className={titulo}>
-              membros do clube
+              participantes
             </h2>
             <span className="text-[12px] text-cinza">
               {membros.length} {membros.length === 1 ? "membro" : "membros"}
@@ -159,6 +156,9 @@ export default function MembrosPage() {
             ))}
           </ul>
         </section>
+
+        {/* the reading league + destaques, na mesma página */}
+        <LigaDoClube />
       </div>
 
       <aside className="min-w-0 space-y-10">

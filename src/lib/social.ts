@@ -536,6 +536,19 @@ export async function estantesDasAmigas(): Promise<{ pessoa: PessoaResumo; livro
   }));
 }
 
+/** as estantes públicas de uma lista de pessoas (ex.: membros de um clube, para o ranking) */
+export async function estantesDe(ids: string[]): Promise<Map<string, LivroSalvo[] | null>> {
+  const mapa = new Map<string, LivroSalvo[] | null>(ids.map((id) => [id, null]));
+  if (!ids.length) return mapa;
+  const { data, error } = await db().from("perfis_publicos").select("id,livros:dados->livros").in("id", ids);
+  if (error) throw error;
+  for (const p of data ?? []) {
+    const livros = (p as unknown as { livros?: LivroSalvo[] }).livros;
+    mapa.set((p as { id: string }).id, Array.isArray(livros) ? livros : null);
+  }
+  return mapa;
+}
+
 export async function amigasComLivro(
   livroId: string,
 ): Promise<{ pessoa: PessoaResumo; livro: LivroSalvo }[]> {

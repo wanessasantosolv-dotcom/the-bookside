@@ -6,58 +6,81 @@
  * cada membro e data de entrada. Nada é estimado nem inventado.
  */
 import type { Ficha, LivroDoClube, Membro, Progresso } from "@/lib/clubes";
+import type { LivroSalvo } from "@/lib/perfil-store";
 
 export type Periodo = { id: string; nome: string; ini: string; fim: string; encerrado: boolean };
-export type Categoria = "paginas" | "livros" | "fichas" | "indicacoes" | "prazo" | "constancia";
+export type Categoria = "paginas" | "livros" | "resenhas" | "autores" | "generos" | "constancia" | "indicacoes" | "coletivas" | "prazo";
 
-export const CATEGORIAS: { id: Categoria; nome: string; unidade: (n: number) => string; metodo: string }[] = [
+export type InfoCategoria = { id: Categoria; nome: string; escopo: "individual" | "clube"; unidade: (n: number) => string; metodo: string };
+export const CATEGORIAS: InfoCategoria[] = [
   {
     id: "paginas",
-    nome: "Páginas de livros concluídos",
+    nome: "Páginas lidas",
+    escopo: "individual",
     unidade: (n) => (n === 1 ? "página" : "páginas"),
-    metodo:
-      "Soma as páginas de cada leitura do clube que a pessoa concluiu no período. O app ainda não guarda o histórico de progresso dia a dia, então só entram livros concluídos (sem estimar páginas lidas por mês).",
+    metodo: "Soma das páginas dos livros que cada pessoa concluiu no período, em todas as leituras (pessoais, de clubes e co-read), contadas uma vez só por livro. Vem da estante pública de cada pessoa; o app ainda não guarda o progresso dia a dia, então só entram livros concluídos.",
   },
   {
     id: "livros",
     nome: "Livros concluídos",
+    escopo: "individual",
     unidade: (n) => (n === 1 ? "livro" : "livros"),
-    metodo:
-      "Cada membro tem a própria conclusão: marcou \"concluí\" na leitura ou publicou a ficha. A leitura ser encerrada pela moderação não conta como conclusão de ninguém. A data é a do registro da pessoa (ou o encerramento da leitura, nos livros do histórico).",
+    metodo: "Livros que cada pessoa marcou como lidos no período, em todas as leituras, cada livro uma vez. Leituras com só o ano entram no ano e no histórico, não nos meses.",
   },
   {
-    id: "fichas",
-    nome: "Fichas publicadas",
-    unidade: (n) => (n === 1 ? "ficha" : "fichas"),
-    metodo: "Uma ficha por pessoa e por leitura do clube, pela data de publicação. Editar a ficha não conta de novo; fichas excluídas saem.",
+    id: "resenhas",
+    nome: "Resenhas publicadas",
+    escopo: "individual",
+    unidade: (n) => (n === 1 ? "resenha" : "resenhas"),
+    metodo: "Livros com resenha escrita na ficha, pela data da ficha (ou da leitura). Resenhas de estantes privadas não contam.",
+  },
+  {
+    id: "autores",
+    nome: "Autores explorados",
+    escopo: "individual",
+    unidade: (n) => (n === 1 ? "autor" : "autores diferentes"),
+    metodo: "Quantos autores diferentes cada pessoa leu no período (livros concluídos). É a métrica do the explorer.",
+  },
+  {
+    id: "generos",
+    nome: "Gêneros explorados",
+    escopo: "individual",
+    unidade: (n) => (n === 1 ? "gênero" : "gêneros diferentes"),
+    metodo: "Quantos gêneros diferentes aparecem nos livros concluídos no período (só livros com gênero informado).",
+  },
+  {
+    id: "constancia",
+    nome: "Constância de leitura",
+    escopo: "individual",
+    unidade: (n) => (n === 1 ? "mês" : "meses"),
+    metodo: "Meses do período com pelo menos um livro concluído. No histórico, a maior sequência de meses seguidos. Não depende de abrir o app todo dia.",
   },
   {
     id: "indicacoes",
-    nome: "Indicações mais bem avaliadas",
+    nome: "Melhores indicações",
+    escopo: "clube",
     unidade: () => "de média",
-    metodo:
-      "A nota de cada livro é a média das fichas do clube (só livros com pelo menos 2 notas). A média de quem indicou é a média dessas notas, cada livro com o mesmo peso. Para a classificação oficial são precisas pelo menos 2 indicações avaliadas; abaixo disso o resultado aparece como provisório. Livros vindos do histórico, sem registro de quem indicou, não entram. O período segue a data de encerramento da leitura.",
+    metodo: "Só neste clube. A nota de cada livro é a média das fichas do clube (livros com pelo menos 2 notas); a média de quem indicou dá o mesmo peso a cada livro. Com menos de 2 indicações avaliadas, o resultado é provisório. Livros do histórico sem registro de quem indicou não entram. O período segue o encerramento da leitura.",
+  },
+  {
+    id: "coletivas",
+    nome: "Leituras coletivas concluídas",
+    escopo: "clube",
+    unidade: (n) => (n === 1 ? "leitura" : "leituras"),
+    metodo: "Só neste clube. Cada membro tem a própria conclusão (marcou \"concluí\" ou publicou a ficha); a leitura ser encerrada pela moderação não conta como conclusão de ninguém.",
   },
   {
     id: "prazo",
     nome: "Leituras concluídas no prazo",
+    escopo: "clube",
     unidade: (n) => (n === 1 ? "leitura" : "leituras"),
-    metodo:
-      "Entram só leituras com prazo definido, encerradas depois que a pessoa entrou no clube (ou que ela concluiu). Conta quantas a pessoa concluiu até o fim do dia do prazo. Leituras de antes da entrada não contam contra ninguém.",
-  },
-  {
-    id: "constancia",
-    nome: "Constância",
-    unidade: (n) => (n === 1 ? "leitura seguida" : "leituras seguidas"),
-    metodo:
-      "Maior sequência de leituras do clube concluídas uma atrás da outra, na ordem oficial (VOL.). Leituras de antes da entrada da pessoa não interrompem a sequência. Não depende de abrir o app todo dia.",
+    metodo: "Só neste clube e só leituras com prazo, encerradas depois que a pessoa entrou (ou que ela concluiu). Conta as concluídas até o fim do dia do prazo.",
   },
 ];
 
 export type Linha = { m: Membro; valor: number | null; detalhe?: string; provisorio?: boolean; posicao: number };
 
 const fimDoDia = (dia: string) => `${dia.slice(0, 10)}T23:59:59.999Z`;
-const naoAntiga = (f: Ficha) => !f.autor.startsWith("antiga:");
 const ordemOficial = (a: LivroDoClube, b: LivroDoClube) =>
   (a.rodada ?? 1e9) - (b.rodada ?? 1e9) || (a.encerrado_em ?? a.criado_em).localeCompare(b.encerrado_em ?? b.criado_em);
 
@@ -93,7 +116,8 @@ const dentro = (d: string | null | undefined, p: Periodo) => !!d && d >= p.ini &
 
 // ───────── conclusões ─────────
 
-export type Dados = { membros: Membro[]; livros: LivroDoClube[]; fichas: Ficha[]; progresso: Progresso[] };
+/** pessoais: a estante pública de cada membro (null = indisponível ou privada) */
+export type Dados = { membros: Membro[]; livros: LivroDoClube[]; fichas: Ficha[]; progresso: Progresso[]; pessoais?: Map<string, LivroSalvo[] | null> };
 
 /** a conclusão de cada membro em cada leitura do clube (com a data da própria pessoa) */
 export function conclusoes(d: Dados) {
@@ -136,21 +160,54 @@ export function notaColetiva(d: Dados, livroId: string) {
   return { media: ns.reduce((t, n) => t + n, 0) / ns.length, n: ns.length, notas: ns };
 }
 
+const mensal = (p: Periodo) => p.id.length === 7;
+
+/** os livros concluídos de uma pessoa no período (só-ano não entra nos meses), sem repetir o mesmo livro */
+function concluidosPessoais(ls: LivroSalvo[], p: Periodo) {
+  const vistos = new Set<string>();
+  return ls.filter((l) => {
+    if (l.status !== "lido" || !dentro(l.lidoEm, p) || (l.lidoSoAno && mensal(p))) return false;
+    const k = `${l.titulo.toLowerCase().trim()}|${(l.autor ?? "").toLowerCase().trim()}`;
+    if (vistos.has(k)) return false;
+    vistos.add(k);
+    return true;
+  });
+}
+
 export function classificacao(d: Dados, cat: Categoria, p: Periodo): Linha[] {
   const conc = conclusoes(d);
-  const livro = (id: string) => d.livros.find((l) => l.id === id);
-  if (cat === "paginas" || cat === "livros") {
+  const info = CATEGORIAS.find((c) => c.id === cat)!;
+  if (info.escopo === "individual") {
     return classificar(
       d.membros.map((m) => {
-        const minhas = [...(conc.get(m.usuario_id) ?? new Map()).entries()].filter(([, data]) => dentro(data, p));
-        const valor = cat === "livros" ? minhas.length : minhas.reduce((t, [id]) => t + (livro(id)?.livro.paginas ?? 0), 0);
-        return { m, valor };
+        const ls = d.pessoais?.get(m.usuario_id);
+        if (!ls) return { m, valor: null, detalhe: "estante indisponível" };
+        const lidos = concluidosPessoais(ls, p);
+        if (cat === "paginas") return { m, valor: lidos.reduce((t, l) => t + (l.paginas ?? 0), 0) };
+        if (cat === "livros") return { m, valor: lidos.length };
+        if (cat === "resenhas") return { m, valor: ls.filter((l) => l.resenha?.trim() && dentro(l.fichaEm ?? l.lidoEm, p)).length };
+        if (cat === "autores") return { m, valor: new Set(lidos.map((l) => (l.autor ?? "").toLowerCase().trim()).filter(Boolean)).size };
+        if (cat === "generos") return { m, valor: new Set(lidos.map((l) => (l as { genero?: string }).genero?.toLowerCase().trim()).filter(Boolean)).size };
+        // constância: meses com leitura concluída; no histórico, a maior sequência de meses seguidos
+        const meses = [...new Set(lidos.filter((l) => !l.lidoSoAno).map((l) => l.lidoEm!.slice(0, 7)))].sort();
+        if (p.id !== "geral") return { m, valor: meses.length };
+        let melhor = 0;
+        let atual = 0;
+        let antes = "";
+        for (const mm of meses) {
+          const [a, b] = antes.split("-").map(Number);
+          const seguido = antes && (Number(mm.slice(0, 4)) * 12 + Number(mm.slice(5, 7))) - (a * 12 + b) === 1;
+          atual = seguido ? atual + 1 : 1;
+          melhor = Math.max(melhor, atual);
+          antes = mm;
+        }
+        return { m, valor: melhor, detalhe: meses.length ? `${meses.length} meses com leitura no total` : undefined };
       }),
     );
   }
-  if (cat === "fichas") {
+  if (cat === "coletivas") {
     return classificar(
-      d.membros.map((m) => ({ m, valor: d.fichas.filter((f) => naoAntiga(f) && f.autor === m.usuario_id && dentro(f.criado_em, p)).length })),
+      d.membros.map((m) => ({ m, valor: [...(conc.get(m.usuario_id) ?? new Map()).values()].filter((data) => dentro(data, p)).length })),
     );
   }
   if (cat === "indicacoes") {
@@ -184,41 +241,25 @@ export function classificacao(d: Dados, cat: Categoria, p: Periodo): Linha[] {
       }),
     );
   }
-  // constância: maior sequência na ordem oficial (dentro do período)
-  const ordem = d.livros.filter((l) => l.estado === "lido" && dentro(l.encerrado_em, p)).sort(ordemOficial);
-  return classificar(
-    d.membros.map((m) => {
-      const minhas = conc.get(m.usuario_id) ?? new Map<string, string>();
-      let atual = 0;
-      let melhor = 0;
-      let elegiveis = 0;
-      for (const l of ordem) {
-        const antesDeEntrar = (l.encerrado_em ?? "") < m.entrou_em && !minhas.has(l.id);
-        if (antesDeEntrar) continue;
-        elegiveis++;
-        if (minhas.has(l.id)) melhor = Math.max(melhor, ++atual);
-        else atual = 0;
-      }
-      return { m, valor: elegiveis ? melhor : null, detalhe: elegiveis ? `sequência atual: ${atual}` : undefined };
-    }),
-  );
+  return [];
 }
 
 // ───────── distinções ─────────
 
-export type TipoDistincao = "page-turner" | "critic" | "curator" | "constant";
+export type TipoDistincao = "page-turner" | "critic" | "explorer" | "curator" | "constant";
 export const DISTINCOES: { id: TipoDistincao; nome: string; categoria: Categoria; descricao: string }[] = [
-  { id: "page-turner", nome: "the page turner.", categoria: "paginas", descricao: "mais páginas de livros concluídos" },
-  { id: "critic", nome: "the critic.", categoria: "fichas", descricao: "mais fichas publicadas" },
-  { id: "curator", nome: "the curator.", categoria: "indicacoes", descricao: "indicações mais bem avaliadas" },
-  { id: "constant", nome: "the constant reader.", categoria: "constancia", descricao: "maior sequência de leituras" },
+  { id: "page-turner", nome: "the page turner.", categoria: "paginas", descricao: "mais páginas lidas" },
+  { id: "critic", nome: "the critic.", categoria: "resenhas", descricao: "mais resenhas publicadas" },
+  { id: "explorer", nome: "the explorer.", categoria: "autores", descricao: "mais autores diferentes" },
+  { id: "curator", nome: "the curator.", categoria: "indicacoes", descricao: "melhores indicações ao clube" },
+  { id: "constant", nome: "the constant reader.", categoria: "constancia", descricao: "mais meses com leitura" },
 ];
 
 /** quem leva cada distinção num período (empate: todas as pessoas; tudo zero ou provisório: ninguém) */
 export function distincoes(d: Dados, p: Periodo) {
   return DISTINCOES.map((x) => {
     const linhas = classificacao(d, x.categoria, p).filter((l) => l.posicao === 1 && !l.provisorio && (l.valor ?? 0) > 0);
-    // constância só vale a partir de 2 leituras seguidas
+    // constância só vale a partir de 2 meses
     const validas = x.id === "constant" ? linhas.filter((l) => (l.valor ?? 0) >= 2) : linhas;
     return { ...x, vencedores: validas };
   }).filter((x) => x.vencedores.length);

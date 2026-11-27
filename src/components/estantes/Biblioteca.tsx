@@ -491,13 +491,17 @@ export function GradeDeLivros({ livros }: { livros: LivroSalvo[] }) {
     <ul className="grid grid-cols-3 gap-x-3 gap-y-6 sm:grid-cols-[repeat(auto-fill,minmax(128px,1fr))] sm:gap-x-4 sm:gap-y-7">
       {livros.map((l) => (
         <li key={l.id}>
-          <Link href={`/livro/${l.id}`} className="group block">
+          <Link href={`/livro/${l.id}`} title={`${l.titulo} · ${l.autor}`} className="group block">
             <span className="flex h-[150px] items-end justify-center sm:h-[200px]">
               <CapaDoLivro livro={l} altura={200} className="!h-[150px] !max-w-full !min-w-0 transition-transform group-hover:-translate-y-1 motion-reduce:transition-none sm:!h-[200px]" />
             </span>
-            <span className="mt-2.5 block">
-              <Detalhes l={l} />
-            </span>
+            {/* só a capa; a leitura em andamento ganha a barrinha de progresso */}
+            {statusDe(l) === "lendo" && progressoDe(l) !== null ? (
+              <span aria-label={`${Math.round((progressoDe(l) ?? 0) * 100)}% lido`} className="mx-auto mt-2 block h-[3px] w-3/4 rounded-full bg-linha">
+                <span className="block h-full rounded-full bg-bordo" style={{ width: `${Math.round((progressoDe(l) ?? 0) * 100)}%` }} />
+              </span>
+            ) : null}
+            <span className="sr-only">{l.titulo}, {l.autor}</span>
           </Link>
         </li>
       ))}

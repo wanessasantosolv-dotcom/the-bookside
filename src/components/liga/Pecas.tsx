@@ -1,25 +1,7 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import type { TipoDistincao } from "@/lib/liga";
 
-/** Participantes / Ranking, dentro de membros */
-export function AbasMembros({ base }: { base: string }) {
-  const pathname = usePathname();
-  const ranking = pathname.endsWith("/membros/ranking");
-  const aba = (on: boolean) => `flex min-h-10 items-center rounded-[5px] px-3.5 text-[13px] font-semibold ${on ? "bg-creme text-ameixa shadow-[0_1px_2px_rgba(0,0,0,.1)]" : "text-tinta-suave hover:text-ameixa"}`;
-  return (
-    <nav aria-label="membros" className="inline-flex rounded-[7px] bg-papel p-1">
-      <Link href={`${base}/membros`} aria-current={!ranking ? "page" : undefined} className={aba(!ranking)}>
-        Participantes
-      </Link>
-      <Link href={`${base}/membros/ranking`} aria-current={ranking ? "page" : undefined} className={aba(ranking)}>
-        Ranking
-      </Link>
-    </nav>
-  );
-}
 
 /** o emblema da liga: livro com ramos de louro */
 export function EmblemaLiga({ tamanho = 22 }: { tamanho?: number }) {
@@ -56,6 +38,14 @@ const DESENHOS: Record<TipoDistincao, React.ReactNode> = {
       <path d="M15 31V18h3v13M19 31V16h3.4v15M23.6 31l3-13.6 3 .7-3 13.4" />
       <path d="M14 31h18" />
       <path d="M20.7 12.4l.6 1.3 1.4.2-1 1 .2 1.4-1.2-.7-1.3.7.3-1.4-1-1 1.4-.2z" fill="currentColor" />
+    </>
+  ),
+  // bússola e rosa dos ventos
+  explorer: (
+    <>
+      <circle cx="24" cy="24" r="9" />
+      <path d="M24 16.5l2.4 7.5-2.4 7.5-2.4-7.5z" fill="currentColor" />
+      <path d="M24 12v2M24 34v2M12 24h2M34 24h2" />
     </>
   ),
   // marcador com linhas contínuas

@@ -6,7 +6,7 @@ import { EmblemaLiga, posicaoTexto } from "@/components/liga/Pecas";
 import { Avatar } from "@/components/social/Pessoas";
 import { fichasDoClube, livrosDoClube, progressoDoClube } from "@/lib/clubes";
 import { CATEGORIAS, classificacao, periodoAno } from "@/lib/liga";
-import { nomeDe, useConsulta, useMeuId } from "@/lib/social";
+import { estantesDe, nomeDe, useConsulta, useMeuId } from "@/lib/social";
 
 /** o resumo da liga no início do clube: até 3 nomes; sem dados, não ocupa espaço */
 export function ResumoLiga() {
@@ -15,8 +15,12 @@ export function ResumoLiga() {
   const consulta = useConsulta(async () => {
     const livros = await livrosDoClube(clube.id);
     const ids = livros.filter((l) => l.estado !== "sugerido").map((l) => l.id);
-    const [fichas, progresso] = await Promise.all([fichasDoClube(ids), progressoDoClube(ids).catch(() => [])]);
-    return { livros, fichas, progresso };
+    const [fichas, progresso, pessoais] = await Promise.all([
+      fichasDoClube(ids),
+      progressoDoClube(ids).catch(() => []),
+      estantesDe(membros.map((m) => m.usuario_id)).catch(() => new Map()),
+    ]);
+    return { livros, fichas, progresso, pessoais };
   }, [clube.id, membros.length]);
   if (identidade?.semRanking || !consulta.dados) return null;
   const ano = periodoAno(new Date().getFullYear());
@@ -41,7 +45,7 @@ export function ResumoLiga() {
           </li>
         ))}
       </ol>
-      <Link href={`/clubes/${clube.id}/membros/ranking`} className="mt-1 inline-block min-h-9 py-2 text-[12px] font-semibold text-bordo">
+      <Link href={`/clubes/${clube.id}/membros#t-liga`} className="mt-1 inline-block min-h-9 py-2 text-[12px] font-semibold text-bordo">
         Ver classificação completa →
       </Link>
       <span className="sr-only">{info.nome}</span>
