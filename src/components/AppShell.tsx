@@ -37,10 +37,11 @@ export function AppShell({
       <TourApp />
       <VigiaNovidades />
       <VigiaGeneros />
-      <aside className="hidden lg:sticky lg:top-0 lg:block lg:h-dvh lg:w-[236px] lg:flex-none lg:border-r lg:border-fio lg:px-7 lg:py-8">
+      {/* menu lateral global: bordô da marca em todas as páginas (fixo, não muda com temas) */}
+      <aside className="hidden lg:sticky lg:top-0 lg:block lg:h-dvh lg:w-[236px] lg:flex-none lg:bg-[#692536] lg:px-7 lg:py-8">
         <Link href="/inicio" aria-label="the bookside · início" className="mb-10 block">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/brand/wordmark-bordo.png" alt="" width={150} height={34} className="h-auto w-[150px]" />
+          <img src="/brand/wordmark-creme.png" alt="" width={150} height={34} className="h-auto w-[150px]" />
         </Link>
         <nav aria-label="Principal" className="flex flex-col">
           {abas.map((a) => {
@@ -51,9 +52,10 @@ export function AppShell({
                 href={a.href}
                 data-tour={`aba-${a.id}`}
                 aria-current={on ? "page" : undefined}
-                className={`flex min-h-11 items-center gap-2.5 font-texto text-[13px] font-semibold ${on ? "text-vinho" : "text-grafite hover:text-tinta"}`}
+                className={`relative flex min-h-11 items-center gap-2.5 font-texto text-[14px] ${on ? "font-semibold text-[#FCFAF6]" : "text-[#E8D2D8]/75 hover:text-[#FCFAF6]"}`}
               >
-                <span aria-hidden className="size-1.5 rounded-full bg-current opacity-50" />
+                {/* indicador discreto da página ativa */}
+                <span aria-hidden className={`h-[14px] w-[2px] rounded-full ${on ? "bg-[#ECAABB]" : "bg-transparent"}`} />
                 <span className="relative">
                   {a.rotulo}
                   {a.id === "inicio" ? <PontoNovidades className="-top-0.5 -right-3" /> : null}

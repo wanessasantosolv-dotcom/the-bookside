@@ -9,7 +9,7 @@ import { EntreLeitores } from "@/components/descobrir/Secoes";
 import { AdicionarALista } from "@/components/descoberta/AdicionarALista";
 import { AlemDosFavoritos } from "@/components/descoberta/AlemDosFavoritos";
 import { Busca, type BuscaControle } from "@/components/descoberta/Busca";
-import { PequenasCuradorias } from "@/components/descoberta/Curadorias";
+import { SelecaoDoMomento, SelecoesEditoriais } from "@/components/descoberta/Selecoes";
 import { SUGESTOES_INICIAIS } from "@/lib/descoberta";
 import { ChamadaEntrelinhas } from "@/components/entrelinhas/Chamada";
 import { useHidratado } from "@/components/PerfilHidratacao";
@@ -57,35 +57,52 @@ export default function DescobrirPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
   // quatro a seis sugestões por visita, variando (sempre com "me surpreenda")
-  const [sugestoes] = useState(() => [...SUGESTOES_INICIAIS].sort(() => Math.random() - 0.5).slice(0, 5).concat("Me surpreenda"));
+  const [sugestoes] = useState(() => [...SUGESTOES_INICIAIS].sort(() => Math.random() - 0.5).slice(0, 3).concat("Me surpreenda"));
 
   return (
     <AppShell aba="descobrir">
-      <div className="flex flex-1 flex-col pb-10 lg:bg-jornal lg:px-12 lg:py-8">
-        <div className="mx-auto w-full max-w-[880px]">
-          <header className="px-6 pt-3 lg:px-0 lg:pt-0">
-            <h1 className="font-revista text-[26px] leading-none text-ameixa italic lg:text-[30px]">descobrir.</h1>
-            <p className="mt-1 text-[13px] text-cinza">Sempre há outra história.</p>
-          </header>
-
+      <div className="flex flex-1 flex-col pb-10 lg:px-12 lg:py-10">
+        <div className="mx-auto w-full max-w-[1140px]">
           {hidratado ? (
-            <>
-              <div className="mt-4 px-6 lg:px-0">
-                <Busca modo={{ tipo: "descobrir" }} chaveSessao="bookside-busca-descobrir" sugestoes={sugestoes} onAtiva={setBuscando} controle={definirControle} />
+            <div className="lg:grid lg:grid-cols-[minmax(0,3fr)_minmax(280px,2fr)] lg:gap-14">
+              {/* coluna principal */}
+              <div className="min-w-0">
+                <header className="px-6 pt-3 lg:px-0 lg:pt-0">
+                  <h1 className="font-revista text-[36px] leading-none text-bordo italic lg:text-[56px]">descobrir.</h1>
+                  <p className="mt-1.5 text-[13px] text-cinza lg:text-[14px]">Sempre há outra história.</p>
+                </header>
+                <div className="mt-5 px-6 lg:px-0">
+                  <Busca
+                    modo={{ tipo: "descobrir" }}
+                    chaveSessao="bookside-busca-descobrir"
+                    placeholder="Livros, autores, temas ou sensações"
+                    sugestoes={sugestoes}
+                    sugestoesEmLinks
+                    onAtiva={setBuscando}
+                    controle={definirControle}
+                  />
+                </div>
+                {/* com uma pesquisa ativa, os resultados tomam o lugar da composição editorial */}
+                {!buscando ? (
+                  <>
+                    <UmaPorVez />
+                    <div className="mt-8">
+                      <SelecaoDoMomento explorar={explorar} />
+                    </div>
+                  </>
+                ) : null}
               </div>
-              {/* com uma pesquisa ativa, os resultados tomam o lugar dos módulos editoriais */}
+
+              {/* coluna complementar (no celular, vem depois, na mesma ordem) */}
               {!buscando ? (
-                <>
-                  <UmaPorVez />
-                  <div className="mt-10 space-y-10 px-6 lg:px-0">
-                    <PequenasCuradorias explorar={explorar} />
-                    <AlemDosFavoritos explorar={explorar} />
-                    <EntreLeitores />
-                    <ChamadaEntrelinhas />
-                  </div>
-                </>
+                <aside className="mt-10 min-w-0 space-y-10 px-6 lg:mt-[118px] lg:px-0">
+                  <SelecoesEditoriais explorar={explorar} />
+                  <AlemDosFavoritos explorar={explorar} />
+                  <EntreLeitores />
+                  <ChamadaEntrelinhas />
+                </aside>
               ) : null}
-            </>
+            </div>
           ) : null}
         </div>
       </div>
@@ -286,9 +303,11 @@ function UmaPorVez() {
   );
 
   return (
-    <section className="mx-6 mt-8 rounded-[8px] border border-linha bg-creme-quente p-4 lg:mx-0 lg:p-6">
+    <section className="grao relative mx-6 mt-8 overflow-hidden rounded-[4px] bg-citacao-suave p-5 lg:mx-0 lg:p-7">
+      {/* um recorte de papel no canto: só decoração, longe dos controles */}
+      <span aria-hidden className="pointer-events-none absolute -top-3 -right-6 h-16 w-28 rotate-[8deg] bg-rosa-editorial/80 [clip-path:polygon(0_12%,8%_0,20%_10%,34%_2%,48%_12%,62%_0,76%_9%,90%_1%,100%_10%,100%_100%,0_100%)]" />
       <div className="flex items-baseline justify-between gap-3">
-        <h2 className="text-[11px] font-semibold tracking-[.16em] text-bordo uppercase">
+        <h2 className="relative font-revista text-[20px] text-ameixa italic lg:text-[24px]">
           Uma escolha para você
         </h2>
         {queroLer ? (
@@ -372,7 +391,7 @@ function UmaPorVez() {
               </Link>
               <AdicionarALista livro={livro} />
             </div>
-            <div className="mt-5 flex justify-center gap-7 sm:justify-start">
+            <div className="mt-5 flex items-center justify-center gap-6 sm:justify-start">
               <button
                 type="button"
                 className={botao}
@@ -381,18 +400,12 @@ function UmaPorVez() {
                 <span className={selo}>{icone("M6 6l12 12M18 6L6 18")}</span>
                 passar
               </button>
-              <button
-                type="button"
-                className={`${botao} !text-bordo`}
-                onClick={() => responder("quero")}
-              >
-                <span className={`${selo} !border-bordo`}>
-                  {icone(
-                    "M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.5-7 10-7 10z",
-                    "var(--color-bordo)",
-                  )}
-                </span>
-                quero ler
+              {/* quero ler é a ação principal */}
+              <button type="button" onClick={() => responder("quero")} className="inline-flex h-11 items-center gap-2 self-center rounded-[6px] bg-bordo px-5 text-[14px] font-semibold text-creme hover:bg-bordo-suave">
+                <svg aria-hidden width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.5-7 10-7 10z" />
+                </svg>
+                Quero ler
               </button>
               <button
                 type="button"

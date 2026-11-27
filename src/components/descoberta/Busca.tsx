@@ -36,6 +36,7 @@ export function Busca({
   onAtiva,
   controle,
   vazio,
+  sugestoesEmLinks = false,
 }: {
   modo: Modo;
   contexto?: Contexto;
@@ -48,6 +49,8 @@ export function Busca({
   controle?: (c: BuscaControle) => void;
   /** o que aparece sem pesquisa (ex.: sugestões da lista) */
   vazio?: React.ReactNode;
+  /** sugestões como links de texto (Descobrir), em vez de botões */
+  sugestoesEmLinks?: boolean;
 }) {
   const [texto, setTexto] = useState("");
   const [consulta, setConsulta] = useState("");
@@ -225,6 +228,16 @@ export function Busca({
 
       {!ativa ? (
         <>
+          {sugestoesEmLinks ? (
+            <p className="mt-3 flex flex-wrap items-baseline gap-x-4 gap-y-1 text-[13px]">
+              <span className="text-cinza">Por onde começar?</span>
+              {sugestoes.map((s) => (
+                <button key={s} type="button" onClick={() => pesquisar(s)} className="min-h-9 font-semibold text-ameixa underline decoration-rosa-antigo decoration-2 underline-offset-[5px] hover:text-bordo">
+                  {s}
+                </button>
+              ))}
+            </p>
+          ) : (
           <div className="mt-5">
             <p className="text-[11px] font-semibold tracking-[.14em] text-cinza uppercase">Por onde começar?</p>
             <div className="mt-2 flex flex-wrap gap-1.5">
@@ -235,6 +248,7 @@ export function Busca({
               ))}
             </div>
           </div>
+          )}
           {vazio}
         </>
       ) : (
