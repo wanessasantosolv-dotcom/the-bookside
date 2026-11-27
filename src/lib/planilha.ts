@@ -233,18 +233,69 @@ function acharColunas(cabecalho: string[]) {
       if (idx[campo] === undefined && nomes.includes(n)) idx[campo] = i;
   });
   // o Goodreads tem "Author" e "Author l-f": "author" exato já pegou o certo
+  // sem nome exato para a data de leitura, aceita um parecido ("data em que terminei", "finished on"…)
+  if (idx.lidoEm === undefined) {
+    const i = cabecalho.findIndex((h, k) => {
+      const n = sem(h);
+      return !Object.values(idx).includes(k) && /\b(data|date|termin|lido|lida|read|finish|conclu|fim)\b|termin|conclu/.test(n) && !/inicio|start|comec|added|adicion|public|lancamento|nasc|criad|edic/.test(n);
+    });
+    if (i >= 0) idx.lidoEm = i;
+  }
   return idx;
 }
+
+/** sem coluna de data reconhecida: usa a coluna em que quase todos os valores são datas */
+function colunaDeDatas(corpo: string[][], usadas: number[]) {
+  const amostra = corpo.slice(0, 40);
+  if (!amostra.length) return undefined;
+  const largura = Math.max(...amostra.map((l) => l.length));
+  let melhor: { i: number; n: number } | undefined;
+  for (let i = 0; i < largura; i++) {
+    if (usadas.includes(i)) continue;
+    const vals = amostra.map((l) => l[i]?.trim()).filter(Boolean);
+    if (vals.length < Math.max(1, amostra.length * 0.3)) continue;
+    const n = vals.filter((v) => /\d/.test(v!) && lerDataSolta(v) && !/^\d{1,4}$/.test(v!)).length;
+    if (n >= vals.length * 0.7 && (!melhor || n > melhor.n)) melhor = { i, n };
+  }
+  return melhor?.i;
+}
+
+const MESES_NOME: Record<string, number> = {
+  jan: 1, janeiro: 1, january: 1, fev: 2, fevereiro: 2, feb: 2, february: 2, mar: 3, marco: 3, march: 3,
+  abr: 4, abril: 4, apr: 4, april: 4, mai: 5, maio: 5, may: 5, jun: 6, junho: 6, june: 6, jul: 7, julho: 7, july: 7,
+  ago: 8, agosto: 8, aug: 8, august: 8, set: 9, setembro: 9, sep: 9, sept: 9, september: 9, out: 10, outubro: 10, oct: 10, october: 10,
+  nov: 11, novembro: 11, november: 11, dez: 12, dezembro: 12, dec: 12, december: 12,
+};
 
 /** datas escritas de vários jeitos → AAAA-MM-DD */
 export function lerDataSolta(v: string | undefined): string | undefined {
   if (!v) return undefined;
-  const t = v.trim();
-  let m = t.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/);
+  // "2024/03/01-2024/03/20" (intervalo do storygraph): fica com a última data
+  const iso = v.match(/\d{4}[-/.]\d{1,2}[-/.]\d{1,2}/g);
+  const partes = iso && iso.length > 1 ? iso : v.split(/\s+[-–]\s+/);
+  const t = partes[partes.length - 1].trim().replace(/[T\s]\d{1,2}:\d{2}.*$/, "");
+  let m = t.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/);
+  if (m) return lerData(m[3], m[2], m[1]);
+  m = t.match(/^(\d{4})(\d{2})(\d{2})$/);
   if (m) return lerData(m[3], m[2], m[1]);
   m = t.match(/^(\d{1,2})[-/.](\d{1,2})(?:[-/.](\d{2,4}))?$/);
-  if (m) return lerData(m[1], m[2], m[3]);
+  if (m) {
+    // 05/14/2024 (formato americano): o "mês" passa de 12, então troca
+    if (Number(m[2]) > 12 && Number(m[1]) <= 12) return lerData(m[2], m[1], m[3]);
+    return lerData(m[1], m[2], m[3]);
+  }
   if (/^\d{5}(\.\d+)?$/.test(t)) return dataDoExcel(Number(t));
+  // "14 de maio de 2024", "14 mai 2024", "May 14, 2024", "maio de 2024"
+  const n = sem(t);
+  m = n.match(/^(\d{1,2}) (?:de )?([a-z]+)(?: (?:de )?(\d{2,4}))?$/);
+  if (m && MESES_NOME[m[2]]) return lerData(m[1], String(MESES_NOME[m[2]]), m[3]);
+  m = n.match(/^([a-z]+) (\d{1,2}) (\d{4})$/);
+  if (m && MESES_NOME[m[1]]) return lerData(m[2], String(MESES_NOME[m[1]]), m[3]);
+  m = n.match(/^([a-z]+) (?:de )?(\d{4})$/);
+  if (m && MESES_NOME[m[1]]) return lerData("1", String(MESES_NOME[m[1]]), m[2]);
+  // último recurso: o próprio navegador entende (ex.: "Tue May 14 2024")
+  const d = new Date(v);
+  if (!Number.isNaN(+d) && d.getFullYear() > 1900 && d.getFullYear() < 2200) return d.toISOString().slice(0, 10);
   return undefined;
 }
 
@@ -299,6 +350,10 @@ export function planilhaParaItens(linhas: string[][]): ItemImport[] {
       ? acharColunas(linhas[iCab])
       : { titulo: 0, autor: 1, lidoEm: 2, nota: 3 };
   const corpo = iCab >= 0 ? linhas.slice(iCab + 1) : linhas;
+  if (iCab >= 0 && idx.lidoEm === undefined) {
+    const i = colunaDeDatas(corpo, Object.values(idx) as number[]);
+    if (i !== undefined) idx.lidoEm = i;
+  }
   const de = (l: string[], c: keyof typeof colunas) =>
     idx[c] !== undefined ? l[idx[c]!]?.trim() || undefined : undefined;
 
