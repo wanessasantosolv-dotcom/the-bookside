@@ -7,7 +7,10 @@ import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import {
   FilaDaPrateleira,
+  GradeDeLivros,
   ListaDeLivros,
+  SeletorDeFace,
+  useFaceSalva,
   SeletorDeVista,
   useVistaSalva,
 } from "@/components/estantes/Biblioteca";
@@ -21,6 +24,7 @@ import { perfilPorUsuario, useConsulta } from "@/lib/social";
 /** a estante de outra leitora, só para ver: estante (capas ou lombadas) ou grade */
 function EstanteDela({ usuario, id }: { usuario: string; id: string }) {
   const [vista, setVista] = useVistaSalva();
+  const [face, setFace] = useFaceSalva();
   const [extra, setExtra] = useState<{ ordem: string; autor?: string; notaMin?: number }>({ ordem: "padrao" });
   const [filtrosAbertos, setFiltrosAbertos] = useState(false);
   const [largura, setLargura] = useState(1200);
@@ -54,7 +58,7 @@ function EstanteDela({ usuario, id }: { usuario: string; id: string }) {
   const ativos = [extra.autor, extra.notaMin, extra.ordem !== "padrao" ? extra.ordem : null].filter(Boolean).length;
   const util = largura >= 1024 ? largura - 380 : largura - 48;
   const modo = vista;
-  const lombadas = modo === "pe";
+  const lombadas = face === "lombadas";
   const porAndar = Math.max(3, Math.floor(util / (lombadas ? 38 : 118)));
 
   return (
@@ -65,16 +69,21 @@ function EstanteDela({ usuario, id }: { usuario: string; id: string }) {
         {estante.livros.length} {estante.livros.length === 1 ? "livro" : "livros"}
       </p>
       <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-b border-linha pb-4 lg:border-fio">
-        {estante.livros.length > 1 ? <BotaoFiltros ativos={ativos} onAbrir={() => setFiltrosAbertos(true)} /> : <span />}
+        <span className="flex items-center gap-2">
+          {modo === "estante" ? <SeletorDeFace face={face} onChange={setFace} /> : null}
+          {estante.livros.length > 1 ? <BotaoFiltros ativos={ativos} onAbrir={() => setFiltrosAbertos(true)} /> : null}
+        </span>
         <SeletorDeVista vista={modo} onChange={setVista} />
       </div>
       <div className="pt-8">
-        {modo === "estante" || modo === "pe" ? (
+        {modo === "estante" ? (
           <div className="space-y-10">
             {Array.from({ length: Math.ceil(livros.length / porAndar) }, (_, k) => (
               <FilaDaPrateleira key={k} livros={livros.slice(k * porAndar, (k + 1) * porAndar)} altura={150} face={lombadas ? "lombadas" : "capas"} />
             ))}
           </div>
+        ) : modo === "grade" ? (
+          <GradeDeLivros livros={livros} />
         ) : modo === "leque" ? (
           <PilhaDeCapas livros={livros.map((l) => ({ id: l.id, titulo: l.titulo, autor: l.autor, capa: l.capa, paginas: l.paginas }))} />
         ) : (

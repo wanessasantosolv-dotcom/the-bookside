@@ -119,20 +119,26 @@ export function EstantesDela({ p, base, nome, propria }: { p: Perfil; base: stri
       <h2 id="estantes-dela" className="sr-only">
         {propria ? "suas estantes" : `estantes de ${nome}`}
       </h2>
-      <ul className="grid gap-x-8 gap-y-6 sm:grid-cols-2">
+      <ul className="space-y-9">
         {lista.map((e) => (
           <li key={e.id} className="group">
             <Link href={`${base}/estantes/${e.id}`} className="block">
               <span className="mb-2 flex items-baseline justify-between gap-2 px-1">
-                <span className="truncate font-revista text-[18px] italic group-hover:underline">{e.nome}</span>
+                <span className="truncate font-revista text-[22px] italic group-hover:underline lg:text-[24px]">{e.nome}</span>
                 <span className="flex-none text-[12px] opacity-70">
                   {e.livros.length} {e.livros.length === 1 ? "livro" : "livros"}
                 </span>
               </span>
-              <div className="flex h-[86px] items-end gap-1.5 overflow-hidden px-2">
-                {e.livros.slice(0, 6).map((l) => (
+              {/* uma estante por linha, capas em tamanho de estante de verdade (as que não cabem ficam para a página da estante) */}
+              <div className="flex h-[124px] items-end gap-2.5 overflow-hidden px-2 sm:h-[160px] sm:gap-3">
+                {e.livros.slice(0, 14).map((l) => (
                   <span key={l.id} className="flex-none transition-transform duration-300 group-hover:-translate-y-1 motion-reduce:transition-none">
-                    <CapaDoLivro livro={l} altura={80} />
+                    <span className="sm:hidden">
+                      <CapaDoLivro livro={l} altura={118} />
+                    </span>
+                    <span className="hidden sm:block">
+                      <CapaDoLivro livro={l} altura={152} />
+                    </span>
                   </span>
                 ))}
               </div>

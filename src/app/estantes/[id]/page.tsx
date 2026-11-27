@@ -6,12 +6,14 @@ import { notFound, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   FilaDaPrateleira,
+  GradeDeLivros,
   MODOS_ESTANTE,
+  useFaceSalva,
   ListaDeLivros,
   useVistaSalva,
 } from "@/components/estantes/Biblioteca";
 import { useAcoesDoLivro } from "@/components/estantes/AcoesDoLivro";
-import { BarraCompacta } from "@/components/estantes/BarraCompacta";
+import { AlternarFace, BarraCompacta } from "@/components/estantes/BarraCompacta";
 import { PilhaDeCapas } from "@/components/estantes/Vitrine";
 import { BotaoFiltros, PainelFiltros } from "@/components/estantes/PainelFiltros";
 import { AppShell } from "@/components/AppShell";
@@ -57,10 +59,11 @@ export default function EstanteAbertaPage() {
   const proprias = usePerfil((s) => s.estantesProprias);
   const idsFavoritos = usePerfil((s) => s.favoritos);
   const [vista, setVista] = useVistaSalva();
+  const [face, setFace] = useFaceSalva();
   const [extra, setExtra] = useState<{ ordem: string; autor?: string; notaMin?: number }>({ ordem: "padrao" });
   const [filtrosAbertos, setFiltrosAbertos] = useState(false);
   const { acoesDoLivro, estantesDoLivro, janela } = useAcoesDoLivro();
-  const { porAndar, alturaCapa } = usePorAndar(vista === "pe" ? "lombadas" : "capas");
+  const { porAndar, alturaCapa } = usePorAndar(face);
   const [filtro, setFiltro] = useState<Filtro>("todos");
   const [busca, setBusca] = useState("");
   const [adicionados, setAdicionados] = useState(0);
@@ -221,7 +224,12 @@ export default function EstanteAbertaPage() {
             modos={MODOS_ESTANTE}
             modo={vista}
             onModo={(v) => setVista(v as typeof vista)}
-            extra={todos.length > 1 ? <BotaoFiltros ativos={extrasAtivos} onAbrir={() => setFiltrosAbertos(true)} /> : null}
+            extra={
+              <>
+                {vista === "estante" && lista.length ? <AlternarFace face={face} onChange={setFace} /> : null}
+                {todos.length > 1 ? <BotaoFiltros ativos={extrasAtivos} onAbrir={() => setFiltrosAbertos(true)} /> : null}
+              </>
+            }
           />
         </div>
         <div className="flex-1 px-6 pt-4 pb-8 lg:px-0 lg:pt-8">
@@ -244,12 +252,14 @@ export default function EstanteAbertaPage() {
                 </BotaoLink>
               ) : null}
             </div>
-          ) : vista === "estante" || vista === "pe" ? (
+          ) : vista === "estante" ? (
             <div className="space-y-10">
               {Array.from({ length: Math.ceil(lista.length / porAndar) }, (_, k) => (
-                <FilaDaPrateleira key={k} livros={lista.slice(k * porAndar, (k + 1) * porAndar)} altura={alturaCapa} face={vista === "pe" ? "lombadas" : "capas"} />
+                <FilaDaPrateleira key={k} livros={lista.slice(k * porAndar, (k + 1) * porAndar)} altura={alturaCapa} face={face} />
               ))}
             </div>
+          ) : vista === "grade" ? (
+            <GradeDeLivros livros={lista} />
           ) : vista === "leque" ? (
             <PilhaDeCapas livros={lista.map((l) => ({ id: l.id, titulo: l.titulo, autor: l.autor, capa: l.capa, paginas: l.paginas }))} />
           ) : (

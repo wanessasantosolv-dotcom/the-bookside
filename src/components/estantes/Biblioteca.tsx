@@ -9,13 +9,13 @@ import type { LivroSalvo, StatusLivro } from "@/lib/perfil-store";
 
 // ───────── tipos e utilidades ─────────
 
-/** as quatro formas de ver qualquer estante (pessoal, de outra pessoa ou do clube) */
-export type Vista = "estante" | "leque" | "pe" | "lista";
+/** as formas de ver qualquer estante (pessoal, de outra pessoa ou do clube); capas/lombadas é um controle à parte */
+export type Vista = "estante" | "leque" | "grade" | "lista";
 export const MODOS_ESTANTE: { id: Vista; nome: string; icone: string }[] = [
   { id: "estante", nome: "Prateleiras", icone: "M3 20h18 M5 20V9h3v11 M10 20V6h3v14 M15 20v-9h3l1 9" },
-  { id: "leque", nome: "Leque de capas", icone: "M12 20L5 8l4-2 3 14 M12 20l3-14 4 2-7 12" },
-  { id: "pe", nome: "Estante de pé", icone: "M5 3h14v18H5z M5 9h14 M5 15h14" },
-  { id: "lista", nome: "Catálogo", icone: "M4 6h2 M9 6h11 M4 12h2 M9 12h11 M4 18h2 M9 18h11" },
+  { id: "leque", nome: "Pilha de capas", icone: "M12 20L5 8l4-2 3 14 M12 20l3-14 4 2-7 12" },
+  { id: "grade", nome: "Grade", icone: "M4 4h6v6H4z M14 4h6v6h-6z M4 14h6v6H4z M14 14h6v6h-6z" },
+  { id: "lista", nome: "Lista", icone: "M4 6h2 M9 6h11 M4 12h2 M9 12h11 M4 18h2 M9 18h11" },
 ];
 /** na estante: as capas de frente ou as lombadas, como numa estante de verdade */
 export type Face = "capas" | "lombadas";
@@ -247,11 +247,14 @@ export function LivroNaPrateleira({
   altura,
   face = "capas",
   ordem = 0,
+  href,
 }: {
   livro: LivroSalvo;
   altura: number;
   face?: Face;
   ordem?: number;
+  /** para onde o livro leva (padrão: a página do livro) */
+  href?: string;
 }) {
   const larguraCapa = Math.round(altura * 0.66);
   const abre = face === "lombadas" ? Math.max(0, larguraCapa - medidasDaLombada(livro, altura).w) : 0;
@@ -261,7 +264,7 @@ export function LivroNaPrateleira({
       style={{ animationDelay: `${Math.min(ordem, 12) * 45}ms`, ["--abre" as string]: `${abre}px` } as CSSProperties}
     >
       <Link
-        href={`/livro/${livro.id}`}
+        href={href ?? `/livro/${livro.id}`}
         aria-label={`${livro.titulo}, de ${livro.autor} · ${NOME_STATUS[statusDe(livro)]}${livro.nota ? ` · nota ${livro.nota}` : ""}`}
         className={`block origin-bottom rounded-[2px] transition-[transform,filter] duration-300 ease-out group-hover:-translate-y-2 group-hover:drop-shadow-[0_10px_10px_rgba(59,37,27,.25)] focus-visible:-translate-y-2 motion-reduce:transition-none motion-reduce:group-hover:translate-y-0 ${
           face === "lombadas" ? "" : "group-hover:rotate-[-1.5deg]"
@@ -316,11 +319,13 @@ export function FilaDaPrateleira({
   link,
   altura,
   face = "capas",
+  hrefDe,
 }: {
   livros: LivroSalvo[];
   link?: string;
   altura: number;
   face?: Face;
+  hrefDe?: (l: LivroSalvo) => string;
 }) {
   const trilho = useRef<HTMLUListElement>(null);
   const [setas, setSetas] = useState({ esq: false, dir: false });
@@ -355,7 +360,7 @@ export function FilaDaPrateleira({
         className={`pointer-events-none flex snap-x snap-proximity items-end overflow-x-auto [&>li]:pointer-events-auto ${face === "lombadas" ? "gap-[3px] sm:gap-1" : "gap-3 sm:gap-4"} overscroll-x-contain px-3 pt-24 -mt-20 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden`}
       >
         {visiveis.map((l, i) => (
-          <LivroNaPrateleira key={l.id} livro={l} altura={altura} face={face} ordem={i} />
+          <LivroNaPrateleira key={l.id} livro={l} altura={altura} face={face} ordem={i} href={hrefDe?.(l)} />
         ))}
         {resto > 0 && link ? (
           <li className="flex-none snap-start">
@@ -505,12 +510,12 @@ export function MenuDeAcoes({
 
 // ───────── grade (BookGrid) ─────────
 
-export function GradeDeLivros({ livros }: { livros: LivroSalvo[] }) {
+export function GradeDeLivros({ livros, hrefDe }: { livros: LivroSalvo[]; hrefDe?: (l: LivroSalvo) => string }) {
   return (
     <ul className="grid grid-cols-3 gap-x-3 gap-y-6 sm:grid-cols-[repeat(auto-fill,minmax(128px,1fr))] sm:gap-x-4 sm:gap-y-7">
       {livros.map((l) => (
         <li key={l.id}>
-          <Link href={`/livro/${l.id}`} title={`${l.titulo} · ${l.autor}`} className="group block">
+          <Link href={hrefDe?.(l) ?? `/livro/${l.id}`} title={`${l.titulo} · ${l.autor}`} className="group block">
             <span className="flex h-[150px] items-end justify-center sm:h-[200px]">
               <CapaDoLivro livro={l} altura={200} className="!h-[150px] !max-w-full !min-w-0 transition-transform group-hover:-translate-y-1 motion-reduce:transition-none sm:!h-[200px]" />
             </span>
@@ -760,8 +765,8 @@ export function useVistaSalva(): [Vista, (v: Vista) => void] {
   useEffect(() => {
     try {
       const v = localStorage.getItem("bookside-estantes-vista");
-      if (v === "estante" || v === "leque" || v === "pe" || v === "lista") setVista(v);
-      else if (v === "grade") setVista("estante");
+      if (v === "estante" || v === "leque" || v === "grade" || v === "lista") setVista(v);
+      else if (v === "pe") setVista("estante");
     } catch {
       /* sem armazenamento: fica a estante */
     }

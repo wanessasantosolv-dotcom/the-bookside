@@ -170,7 +170,8 @@ export function LequeLinhaWeb({ livros }: { livros: ItemVitrine[] }) {
 export function PilhaDeCapas({ livros, largura = 104 }: { livros: ItemVitrine[]; largura?: number }) {
   if (!livros.length) return <p className="font-accent text-sm italic text-cinza">ainda sem livros ✦</p>;
   return (
-    <ul className="flex flex-wrap items-start justify-center px-3 pt-4 pb-6 sm:justify-start" style={{ rowGap: 4 }}>
+    // o recuo à esquerda guarda espaço para o encaixe negativo de quem abre cada linha, então nenhuma capa some
+    <ul className="flex flex-wrap items-start justify-center pt-4 pr-3 pb-8 sm:justify-start" style={{ rowGap: 6, paddingLeft: 40 }}>
       {livros.map((l, i) => {
         const h = hashLombada(l.id, 3);
         const giro = ((h % 25) - 12) * 0.9; // -11° a 11°

@@ -1,6 +1,6 @@
 "use client";
 
-import { BarraCompacta } from "@/components/estantes/BarraCompacta";
+import { AlternarFace, BarraCompacta } from "@/components/estantes/BarraCompacta";
 import { BotaoFiltros, PainelFiltros } from "@/components/estantes/PainelFiltros";
 import Link from "next/link";
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
@@ -8,15 +8,16 @@ import { CapaAuto } from "@/components/CapaAuto";
 import { Animacao } from "@/components/Animacao";
 import { tituloDe } from "@/lib/identidade";
 import { useClube } from "@/components/clube/ClubeContexto";
-import { PrateleiraMadeira } from "@/components/estantes/Biblioteca";
-import { EstanteDeVerdadeFila, PilhaDeCapas, type ItemVitrine } from "@/components/estantes/Vitrine";
+import { FilaDaPrateleira, GradeDeLivros, MODOS_ESTANTE, PrateleiraMadeira, useFaceSalva, type Vista } from "@/components/estantes/Biblioteca";
+import type { LivroSalvo } from "@/lib/perfil-store";
+import { PilhaDeCapas, type ItemVitrine } from "@/components/estantes/Vitrine";
 import { ErroOuFalta, Vazio } from "@/components/social/Estados";
 import { apagarLivroDoClube, fichasDoClube, livrosDoClube, modoDe, quemTrouxe, type LivroDoClube, organiza } from "@/lib/clubes";
 import { useConsulta, useMeuId } from "@/lib/social";
 
 type Ordem = "leitura" | "recentes" | "antigos" | "titulo" | "autor" | "avaliacao";
 type Status = "todos" | "lendo" | "lidos" | "proximas";
-type Vis = "prateleira" | "leque" | "estante" | "catalogo";
+type Vis = Vista;
 type Filtros = { ano?: string; autor?: string; por?: string; notaMin?: number };
 
 const ORDENS: { id: Ordem; nome: string }[] = [
@@ -27,12 +28,7 @@ const ORDENS: { id: Ordem; nome: string }[] = [
   { id: "autor", nome: "Autor" },
   { id: "avaliacao", nome: "Avaliação" },
 ];
-const MODOS: { id: Vis; nome: string; icone: string }[] = [
-  { id: "prateleira", nome: "Prateleiras", icone: "M3 20h18 M5 20V9h3v11 M10 20V6h3v14 M15 20v-9h3l1 9" },
-  { id: "leque", nome: "Leque de capas", icone: "M12 20L5 8l4-2 3 14 M12 20l3-14 4 2-7 12" },
-  { id: "estante", nome: "Estante de pé", icone: "M5 3h14v18H5z M5 9h14 M5 15h14" },
-  { id: "catalogo", nome: "Catálogo", icone: "M4 6h2 M9 6h11 M4 12h2 M9 12h11 M4 18h2 M9 18h11" },
-];
+const MODOS = MODOS_ESTANTE;
 const PREF = "bookside-estante-clube";
 const sem = (t: string) => t.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 
@@ -70,7 +66,8 @@ export default function BibliotecaPage() {
   const { clube, membros, papel, identidade } = useClube();
   const eu = useMeuId();
   const [status, setStatus] = useState<Status>("todos");
-  const [vis, setVis] = useState<Vis>("prateleira");
+  const [vis, setVis] = useState<Vis>("estante");
+  const [face, setFace] = useFaceSalva();
   const [ordem, setOrdem] = useState<Ordem>("leitura");
   const [busca, setBusca] = useState("");
   const [buscaAberta, setBuscaAberta] = useState(false);
@@ -83,8 +80,9 @@ export default function BibliotecaPage() {
   // a preferência de visualização e de ordem fica guardada no aparelho
   useEffect(() => {
     try {
-      const p = JSON.parse(localStorage.getItem(PREF) ?? "{}") as { vis?: Vis; ordem?: Ordem };
-      if (p.vis && MODOS.some((m) => m.id === p.vis)) setVis(p.vis);
+      const p = JSON.parse(localStorage.getItem(PREF) ?? "{}") as { vis?: string; ordem?: Ordem };
+      if (p.vis && MODOS.some((m) => m.id === p.vis)) setVis(p.vis as Vis);
+      else if (p.vis === "catalogo") setVis("lista");
       if (p.ordem && ORDENS.some((o) => o.id === p.ordem)) setOrdem(p.ordem);
     } catch {
       /* sem armazenamento */
@@ -188,6 +186,19 @@ export default function BibliotecaPage() {
       segurar: moderadora ? () => excluir(l) : undefined,
     }));
 
+  const porAndarLombada = Math.max(6, Math.floor((largura - 24) / 40));
+  const hrefPorId = new Map(ordenados.map((l) => [l.id, hrefDe(l)]));
+  // o livro do clube no formato das estantes do app (estado do clube vira status; lido/lendo/próxima)
+  const comoSalvos = (ls: LivroDoClube[]): LivroSalvo[] =>
+    ls.map((l) => ({
+      id: l.id,
+      titulo: l.livro.titulo,
+      autor: l.livro.autor,
+      capa: l.livro.capa,
+      paginas: l.livro.paginas,
+      status: l.estado === "lido" ? "lido" : l.estado === "lendo" ? "lendo" : "quero",
+    }));
+
   // quantas capas por prateleira, pela largura real (capas do mesmo tamanho em todas as linhas)
   const vao = largura < 640 ? 10 : 14;
   const minimo = largura < 640 ? 88 : 104;
@@ -200,8 +211,7 @@ export default function BibliotecaPage() {
   const modo = MODOS.find((m) => m.id === vis) ?? MODOS[0];
 
   return (
-    // a estante do clube usa a mesma cara de todas as estantes do app (a identidade do clube fica no cabeçalho)
-    <div className="tokens-app px-4 pt-4 pb-6 lg:px-0 lg:pt-6">
+    <div className="px-4 pt-4 pb-6 lg:px-0 lg:pt-6">
       {/* título, contagem e adicionar */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-baseline gap-2.5">
@@ -262,7 +272,12 @@ export default function BibliotecaPage() {
             modos={MODOS}
             modo={vis}
             onModo={(v) => setVis(v as Vis)}
-            extra={<BotaoFiltros ativos={filtrosAtivos} onAbrir={() => setPainel("filtros")} />}
+            extra={
+              <>
+                {vis === "estante" ? <AlternarFace face={face} onChange={setFace} /> : null}
+                <BotaoFiltros ativos={filtrosAtivos} onAbrir={() => setPainel("filtros")} />
+              </>
+            }
           />
         </div>
       ) : null}
@@ -278,7 +293,7 @@ export default function BibliotecaPage() {
               limpar filtros
             </button>
           </div>
-        ) : vis === "catalogo" ? (
+        ) : vis === "lista" ? (
           <ul className="divide-y divide-linha border-y border-linha">
             {ordenados.map((l) => {
               const nota = notaDe(l.id);
@@ -304,10 +319,13 @@ export default function BibliotecaPage() {
           </ul>
         ) : vis === "leque" ? (
           <PilhaDeCapas livros={itens(ordenados)} largura={largura < 640 ? 92 : 112} />
-        ) : vis === "estante" ? (
-          <div className="flex flex-col gap-8">
-            {Array.from({ length: Math.ceil(ordenados.length / (colunas * 2)) }, (_, i) => (
-              <EstanteDeVerdadeFila key={i} livros={itens(ordenados.slice(i * colunas * 2, (i + 1) * colunas * 2))} alturaBase={largura < 640 ? 120 : 150} />
+        ) : vis === "grade" ? (
+          <GradeDeLivros livros={comoSalvos(ordenados)} hrefDe={(l) => hrefPorId.get(l.id) ?? base} />
+        ) : face === "lombadas" ? (
+          // as mesmas lombadas de todas as estantes do app
+          <div className="space-y-10">
+            {Array.from({ length: Math.ceil(ordenados.length / porAndarLombada) }, (_, k) => (
+              <FilaDaPrateleira key={k} livros={comoSalvos(ordenados.slice(k * porAndarLombada, (k + 1) * porAndarLombada))} altura={largura < 640 ? 130 : 150} face="lombadas" hrefDe={(l) => hrefPorId.get(l.id) ?? base} />
             ))}
           </div>
         ) : (

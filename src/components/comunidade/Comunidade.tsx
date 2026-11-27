@@ -9,7 +9,8 @@ import { Emblema } from "@/components/clube/Emblema";
 import { Avatares } from "@/components/clube/Pecas";
 import { ComConta, ErroOuFalta } from "@/components/social/Estados";
 import { andamento, encontrosDe, marcarMarca, marcarProgresso, meusClubes, modoDe, progressoDoClube, type Encontro, type Progresso, type ResumoClube } from "@/lib/clubes";
-import { emblemaDe, lerIdentidade, paletaDe } from "@/lib/identidade";
+import { temas } from "@/lib/dados";
+import { emblemaDe, estiloDaIdentidade, lerIdentidade, paletaDe } from "@/lib/identidade";
 import { aceitarConvite, minhasLeiturasJuntas, recusarConvite, sincronizarProgressoNosCoreads, type LeituraJunta, type PessoaNaLeitura } from "@/lib/lerjunto";
 import { usePerfil } from "@/lib/perfil-store";
 import { nomeDe, pessoasPorId, useConsulta, useMeuId } from "@/lib/social";
@@ -144,6 +145,46 @@ function Conteudo() {
           .map((e): ItemSemana => ({ chave: `e-${e.id}`, quando: new Date(e.quando), tipo: "encontro", titulo: e.titulo, linha: `${e.clube.nome}${e.local ? ` · ${e.local}` : ""}`, href: `/clubes/${e.clube_id}/agenda`, hora: hora(e.quando) })),
       ].sort((a, b) => +a.quando - +b.quando)
     : [];
+  // atualizações da semana: o que as outras pessoas fizeram nos seus clubes e leituras a dois
+  const novidades: ItemSemana[] = d
+    ? [
+        ...d.clubes.flatMap((c): ItemSemana[] => {
+          const lendo = c.lendo;
+          if (!lendo) return [];
+          return d.progresso
+            .filter((p) => p.clube_livro_id === lendo.id && p.usuario_id !== eu && +new Date(p.atualizado_em) >= +semana.ini)
+            .map((p) => {
+              const quem = d.pessoas.get(p.usuario_id);
+              const nome = quem ? nomeDe(quem) : "Alguém";
+              return {
+                chave: `n-${c.id}-${p.usuario_id}`,
+                quando: new Date(p.atualizado_em),
+                tipo: "novidade" as const,
+                titulo: p.status === "terminei" ? `${nome} terminou ${lendo.livro.titulo}` : `${nome} avançou na leitura${p.numero ? ` (${p.unidade === "pagina" ? "pág. " : ""}${p.numero})` : ""}`,
+                linha: c.nome,
+                href: `/clubes/${c.id}`,
+              };
+            });
+        }),
+        ...leiturasAtivas.flatMap((l): ItemSemana[] =>
+          l.pessoas
+            .filter((p) => p.usuario_id !== eu && p.estado !== "convidada" && +new Date(p.atualizado_em) >= +semana.ini)
+            .map((p) => ({
+              chave: `n-${l.id}-${p.usuario_id}`,
+              quando: new Date(p.terminou_em && p.terminou ? p.terminou_em : p.atualizado_em),
+              tipo: "novidade" as const,
+              titulo: p.terminou ? `${nomeDe(p.pessoa)} terminou ${l.livro.titulo}` : `${nomeDe(p.pessoa)} está na página ${p.pagina}`,
+              linha: `leitura a dois · ${l.nome || l.livro.titulo}`,
+              href: `/co-read/${l.id}`,
+            })),
+        ),
+        ...d.clubes
+          .filter((c) => !c.lendo && c.sugestoes && modoDe(c) === "votacao")
+          .map((c): ItemSemana => ({ chave: `v-${c.id}`, quando: new Date(), tipo: "novidade", titulo: "Votação aberta para a próxima leitura", linha: `${c.nome} · ${c.sugestoes} ${c.sugestoes === 1 ? "livro sugerido" : "livros sugeridos"}`, href: `/clubes/${c.id}/escolher` })),
+      ]
+        .sort((x, y) => +y.quando - +x.quando)
+        .slice(0, 6)
+    : [];
   const depois = d ? d.encontros.filter((e) => +new Date(e.quando) > +semana.fim).slice(0, 3) : [];
 
   return (
@@ -199,19 +240,20 @@ function Conteudo() {
             )}
           </section>
 
-          <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:gap-14">
+          <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:gap-14">
+            <SeusClubes clubes={d.clubes} dados={d} eu={eu} />
             {/* C · a semana entre leitores */}
             <section aria-labelledby="c-semana" className="min-w-0">
               <h2 id="c-semana" className="mb-3 font-revista text-[22px] leading-none text-ameixa">
                 Esta semana
               </h2>
-              {daSemana.length ? (
+              {daSemana.length || novidades.length ? (
                 <ol className="relative border-l border-linha pl-5">
-                  {daSemana.map((i) => (
+                  {[...daSemana, ...novidades].sort((x, y) => (x.tipo === "novidade" ? 1 : 0) - (y.tipo === "novidade" ? 1 : 0) || (x.tipo === "novidade" ? +y.quando - +x.quando : +x.quando - +y.quando)).map((i) => (
                     <li key={i.chave} className="relative pb-5 last:pb-0">
-                      <span aria-hidden className={`absolute top-1.5 -left-[25px] size-[9px] rounded-full ring-4 ring-creme lg:ring-jornal ${i.tipo === "encontro" ? "bg-descoberta-tinta" : "bg-bordo"}`} />
+                      <span aria-hidden className={`absolute top-1.5 -left-[25px] size-[9px] rounded-full ring-4 ring-creme lg:ring-jornal ${i.tipo === "encontro" ? "bg-descoberta-tinta" : i.tipo === "novidade" ? "bg-rosa-antigo" : "bg-bordo"}`} />
                       <p className="text-[11px] font-semibold tracking-[.06em] text-cinza uppercase">
-                        {ehHoje(i.quando) ? "hoje" : quando(i.quando.toISOString())}
+                        {i.tipo === "novidade" ? (ehHoje(i.quando) ? "hoje · atualização" : `${quando(i.quando.toISOString())} · atualização`) : ehHoje(i.quando) ? "hoje" : quando(i.quando.toISOString())}
                         {i.hora ? ` · ${i.hora}` : ""}
                       </p>
                       <Link href={i.href} className="mt-0.5 block text-[14px] font-semibold text-ameixa hover:text-bordo">
@@ -222,7 +264,7 @@ function Conteudo() {
                   ))}
                 </ol>
               ) : (
-                <p className="text-[13px] text-tinta-suave">Nenhum prazo ou encontro até domingo.</p>
+                <p className="text-[13px] text-tinta-suave">Nada por aqui nesta semana: sem prazos, encontros ou atualizações.</p>
               )}
               {depois.length ? (
                 <div className="mt-6">
@@ -243,10 +285,9 @@ function Conteudo() {
               ) : null}
             </section>
 
-            <div className="min-w-0 space-y-10">
-              <SeusClubes clubes={d.clubes} dados={d} eu={eu} />
-              <ResumoLeituras total={(d.leituras ?? []).length} ativas={leiturasAtivas.length} />
-            </div>
+          </div>
+          <div className="mt-10">
+            <ResumoLeituras total={(d.leituras ?? []).length} ativas={leiturasAtivas.length} />
           </div>
         </>
       ) : null}
@@ -268,7 +309,7 @@ type LendoJunto = {
   outras?: { nome: string; pct: number }[];
   clubeLivroId?: string;
 };
-type ItemSemana = { chave: string; quando: Date; tipo: "prazo" | "encontro"; titulo: string; linha: string; href: string; hora?: string };
+type ItemSemana = { chave: string; quando: Date; tipo: "prazo" | "encontro" | "novidade"; titulo: string; linha: string; href: string; hora?: string };
 
 /* ───────── convites: faixa no topo, responde ali mesmo ───────── */
 
@@ -366,7 +407,7 @@ function Barra({ rotulo, pct, texto, suave }: { rotulo: string; pct: number; tex
 
 function SeusClubes({ clubes, dados, eu }: { clubes: ResumoClube[]; dados: Dados; eu: string | null }) {
   return (
-    <section aria-labelledby="c-clubes">
+    <section aria-labelledby="c-clubes" className="min-w-0">
       <div className="mb-3 flex items-baseline justify-between gap-3">
         <h2 id="c-clubes" className="font-revista text-[22px] leading-none text-ameixa">
           Seus clubes
@@ -376,9 +417,9 @@ function SeusClubes({ clubes, dados, eu }: { clubes: ResumoClube[]; dados: Dados
         </Link>
       </div>
       {clubes.length ? (
-        <ul className="divide-y divide-linha border-y border-linha">
+        <ul className="grid gap-3 sm:grid-cols-2">
           {clubes.map((c) => (
-            <LinhaClube key={c.id} c={c} dados={dados} eu={eu} />
+            <CartaoClube key={c.id} c={c} dados={dados} eu={eu} />
           ))}
         </ul>
       ) : (
@@ -393,58 +434,72 @@ function SeusClubes({ clubes, dados, eu }: { clubes: ResumoClube[]; dados: Dados
   );
 }
 
-function LinhaClube({ c, dados, eu }: { c: ResumoClube; dados: Dados; eu: string | null }) {
+function CartaoClube({ c, dados, eu }: { c: ResumoClube; dados: Dados; eu: string | null }) {
   const ident = lerIdentidade(c.identidade);
+  const tema = temas.find((t) => t.id === c.tema);
   const usaEmblema = ident && (ident.emblema?.noAvatar || !c.foto);
   const pessoas = c.membros.map((id) => dados.pessoas.get(id)!).filter(Boolean);
   const base = `/clubes/${c.id}`;
   const lendo = c.lendo;
   const prog = lendo ? dados.progresso.filter((p) => p.clube_livro_id === lendo.id) : [];
   const terminei = prog.find((p) => p.usuario_id === eu)?.status === "terminei";
+  const concluiram = prog.filter((p) => p.status === "terminei").length;
   const encontro = dados.encontros.find((e) => e.clube_id === c.id) ?? null;
   const encontroPerto = encontro && +new Date(encontro.quando) - Date.now() < 3 * 864e5;
   const votacao = !lendo && c.sugestoes && modoDe(c) === "votacao";
   const acao = encontroPerto
-    ? { rotulo: "Encontro", href: `${base}/agenda` }
+    ? { rotulo: "Ver encontro", href: `${base}/agenda` }
     : votacao
       ? { rotulo: "Votar", href: `${base}/escolher` }
       : lendo && terminei
-        ? { rotulo: "Impressões", href: `${base}/ficha/${lendo.id}` }
-        : null;
-  const status = lendo
-    ? `lendo ${lendo.livro.titulo}`
-    : c.sugestoes
-      ? `${votacao ? "votação aberta · " : ""}${c.sugestoes} ${c.sugestoes === 1 ? "livro sugerido" : "livros sugeridos"}`
-      : "sem próxima leitura";
+        ? { rotulo: "Registrar impressões", href: `${base}/ficha/${lendo.id}` }
+        : { rotulo: "Abrir clube", href: base };
+  const banner = c.capa ? `center / cover no-repeat url("${c.capa}")` : ident ? (estiloDaIdentidade(ident) as Record<string, string>)["--club-banner"] : tema?.fundo;
   return (
-    <li className="flex items-center gap-3 py-3">
-      <Link href={base} className="flex min-w-0 flex-1 items-center gap-3">
-        {usaEmblema ? (
-          <Emblema e={emblemaDe(ident!, c.nome)} paleta={paletaDe(ident!)} tamanho={40} className="flex-none" />
-        ) : c.foto ? (
-          <img src={c.foto} alt="" className="size-10 flex-none rounded-full object-cover" />
-        ) : (
-          <span className="grid size-10 flex-none place-items-center rounded-full bg-rosa-fundo font-revista text-[17px] text-bordo">{c.nome.charAt(0).toLowerCase()}</span>
-        )}
-        <span className="min-w-0">
-          <span className="block truncate text-[14px] font-semibold text-ameixa">{c.nome}</span>
-          <span className="flex items-center gap-1.5 text-[12px] text-cinza">
-            <Avatares pessoas={pessoas.slice(0, 3)} tamanho={14} />
-            <span className="truncate">
-              {c.membros.length} · {status}
+    <li className="min-w-0">
+      <div className="flex h-full flex-col overflow-hidden rounded-[8px] border border-linha bg-creme-quente">
+        <Link href={base} aria-label={`Abrir ${c.nome}`} className={`block h-16 ${banner ? "" : "pat-estrelas bg-rosa-fundo"}`} style={banner ? { background: banner } : undefined} />
+        <div className="flex flex-1 flex-col px-3.5 pb-3.5">
+          <div className="-mt-6 flex items-end justify-between gap-2">
+            {usaEmblema ? (
+              <Emblema e={emblemaDe(ident!, c.nome)} paleta={paletaDe(ident!)} tamanho={48} className="flex-none drop-shadow-[0_3px_6px_rgba(0,0,0,.18)]" />
+            ) : c.foto ? (
+              <img src={c.foto} alt="" className="size-12 flex-none rounded-full border-[3px] border-creme-quente object-cover" />
+            ) : (
+              <span className="grid size-12 flex-none place-items-center rounded-full border-[3px] border-creme-quente bg-rosa-fundo font-revista text-[19px] text-bordo">{c.nome.charAt(0).toLowerCase()}</span>
+            )}
+            <span className="mb-0.5 flex items-center gap-1.5">
+              <Avatares pessoas={pessoas.slice(0, 4)} tamanho={18} />
+              <span className="text-[11px] text-tinta-suave">{c.membros.length}</span>
             </span>
-          </span>
-        </span>
-      </Link>
-      {acao ? (
-        <Link href={acao.href} className="inline-flex h-8 flex-none items-center rounded-[6px] bg-bordo px-3 text-[12px] font-semibold text-creme hover:bg-bordo-suave">
-          {acao.rotulo}
-        </Link>
-      ) : (
-        <Link href={base} aria-label={`Abrir ${c.nome}`} className="grid size-8 flex-none place-items-center text-tinta-suave hover:text-bordo">
-          →
-        </Link>
-      )}
+          </div>
+          <Link href={base} className="mt-2 line-clamp-1 font-revista text-[19px] leading-tight text-ameixa hover:text-bordo">
+            {c.nome}
+          </Link>
+          {lendo ? (
+            <div className="mt-2.5 flex gap-3">
+              <CapaAuto livro={lendo.livro} className="w-[40px] flex-none [&>span:last-child]:hidden" />
+              <div className="min-w-0">
+                <p className="text-[11px] text-cinza">lendo agora</p>
+                <p className="truncate text-[13px] font-semibold text-ameixa">{lendo.livro.titulo}</p>
+                <p className="text-[11px] text-cinza">
+                  {concluiram} de {c.membros.length} concluíram
+                </p>
+              </div>
+            </div>
+          ) : (
+            <p className="mt-2 text-[13px] text-tinta-suave">
+              {c.sugestoes ? `${votacao ? "Votação aberta · " : ""}${c.sugestoes} ${c.sugestoes === 1 ? "livro sugerido" : "livros sugeridos"}` : "Ainda sem próxima leitura."}
+            </p>
+          )}
+          {encontro ? <p className="mt-2 text-[11px] text-tinta-suave">Próximo encontro: {quando(encontro.quando)}, {hora(encontro.quando)}</p> : null}
+          <div className="mt-auto pt-3">
+            <Link href={acao.href} className={`inline-flex h-9 items-center rounded-[6px] px-3 text-[13px] font-semibold ${acao.href === base ? "border border-bege text-ameixa hover:border-bordo" : "bg-bordo text-creme hover:bg-bordo-suave"}`}>
+              {acao.rotulo}
+            </Link>
+          </div>
+        </div>
+      </div>
     </li>
   );
 }
@@ -463,7 +518,7 @@ function ResumoLeituras({ total, ativas }: { total: number; ativas: number }) {
         ) : null}
       </div>
       <p className="text-[13px] text-tinta-suave">
-        {ativas ? `${ativas} em andamento — elas aparecem em “lendo agora”, lá em cima.` : "Nenhuma em andamento."}{" "}
+        {ativas ? `${ativas} em andamento, lá em cima em “lendo agora”.` : "Nenhuma em andamento."}{" "}
         <Link href="/co-read/novo" className="font-semibold text-bordo">
           Ler com alguém
         </Link>
