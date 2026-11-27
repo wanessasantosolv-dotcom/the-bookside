@@ -621,8 +621,7 @@ export function PerfilEditorial({
   }
 
   const botao = "inline-flex min-h-11 items-center rounded-full px-5 text-[14px] font-semibold";
-  const botaoCapa =
-    "flex min-h-10 items-center rounded-full bg-[#F9F5EE]/90 px-4 text-[13px] font-semibold text-[#6B0D24] shadow-sm backdrop-blur-sm hover:bg-[#F9F5EE]";
+  const iconeCapa = "grid size-8 place-items-center rounded-full transition-colors hover:bg-[#6B0D24]/10";
   const acoes = proprio ? (
     <div className="flex items-center gap-2">
       <Link href="/perfil/editar" className={`${botao} bg-[var(--acc)] text-[var(--papel)]`}>
@@ -667,28 +666,25 @@ export function PerfilEditorial({
               className={`relative h-[150px] bg-cover bg-center sm:h-[220px] lg:h-[280px] lg:!bg-transparent lg:!bg-none ${p.capaImagem ? "" : `pat-${p.capa}`}`}
               style={p.capaImagem ? { backgroundImage: `url("${p.capaImagem}")`, backgroundPosition: `center ${p.capaPosY ?? 50}%` } : undefined}
             >
-              <div className="absolute right-5 bottom-4 hidden items-center gap-3 sm:flex lg:right-14 lg:bottom-5">
+              {/* ações discretas: uma pílula de ícones no canto da capa, longe da foto */}
+              <div className="absolute top-3 right-3 hidden items-center rounded-full bg-[#F9F5EE]/80 p-1 text-[#6B0D24] shadow-sm backdrop-blur-md sm:flex lg:top-4 lg:right-14">
                 {proprio ? (
                   <>
-                    <Link href="/perfil/editar" className={botaoCapa}>
-                      editar perfil
+                    <Link href="/perfil/editar" aria-label="editar perfil" title="editar perfil" className={iconeCapa}>
+                      <svg aria-hidden width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 20h4L19 9l-4-4L4 16v4zM14 6l4 4" /></svg>
                     </Link>
-                    <Link href="/perfil/configuracoes" className={botaoCapa}>
-                      configurações
+                    <span aria-hidden className="h-4 w-px bg-[#6B0D24]/20" />
+                    <Link href="/perfil/configuracoes" aria-label="configurações" title="configurações" className={iconeCapa}>
+                      <svg aria-hidden width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" /></svg>
                     </Link>
-                    <button type="button" onClick={compartilhar} className={botaoCapa}>
-                      compartilhar perfil
-                    </button>
+                    <span aria-hidden className="h-4 w-px bg-[#6B0D24]/20" />
                   </>
-                ) : (
-                  <>
-                    {acoesDela}
-                    <button type="button" onClick={compartilhar} className={botaoCapa}>
-                      compartilhar perfil
-                    </button>
-                  </>
-                )}
+                ) : null}
+                <button type="button" onClick={compartilhar} aria-label="compartilhar perfil" title="compartilhar perfil" className={iconeCapa}>
+                  <svg aria-hidden width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 2v14" /></svg>
+                </button>
               </div>
+              {!proprio ? <div className="absolute right-5 bottom-4 hidden items-center gap-3 sm:flex lg:right-14 lg:bottom-5">{acoesDela}</div> : null}
               <div className="absolute bottom-0 left-5 translate-y-1/2 lg:left-14">
                 <span className="lg:hidden">
                   <Foto p={p} tamanho={96} />
