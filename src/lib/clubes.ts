@@ -614,6 +614,17 @@ export async function progressoDe(livroId: string): Promise<Progresso[]> {
   return (data ?? []) as Progresso[];
 }
 
+/** o progresso de todo mundo em várias leituras do clube (para o ranking e a matriz) */
+export async function progressoDoClube(livroIds: string[]): Promise<Progresso[]> {
+  if (!livroIds.length) return [];
+  const { data, error } = await db()
+    .from("progresso_leitura")
+    .select("clube_livro_id,usuario_id,status,unidade,numero,atualizado_em")
+    .in("clube_livro_id", livroIds);
+  if (error) throw error;
+  return (data ?? []) as Progresso[];
+}
+
 export async function marcarProgresso(livroId: string, status: StatusLeitura) {
   const eu = meuId();
   if (!eu) return;

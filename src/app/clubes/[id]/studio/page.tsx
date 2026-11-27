@@ -913,6 +913,13 @@ export default function ClubStudioPage() {
             <button type="button" onClick={() => setIdent({ ...ident, modulos: undefined })} className="mt-2 min-h-10 text-[12px] font-semibold text-[#5A4A50] hover:text-[#692536]">
               restaurar organização padrão
             </button>
+            <label className="mt-4 flex min-h-11 cursor-pointer items-start gap-3 text-[14px]">
+              <input type="checkbox" checked={!ident.semRanking} onChange={(e) => setIdent({ ...ident, semRanking: e.target.checked ? undefined : true })} className="mt-0.5 size-5 accent-[#692536]" />
+              <span>
+                <b className="font-semibold">the reading league</b>
+                <span className="block text-[12px] text-[#7A6A6E]">ranking e distinções em membros. desligado, o clube fica sem classificação.</span>
+              </span>
+            </label>
             <p className="mt-1 text-[12px] text-[#7A6A6E]">no computador, os módulos de encontro, membros e próximas leituras ficam na coluna lateral.</p>
           </fieldset>
         </section>

@@ -166,9 +166,9 @@ export type Cabecalho = "editorial" | "centered" | "compact";
 export type EstiloCartao = "editorial" | "paper" | "minimal" | "vintage";
 
 /** módulos da página inicial que existem de verdade (a leitura atual fica sempre no topo) */
-export const MODULOS = ["progresso", "favoritos", "encontro", "atividade", "proximas", "membros"] as const;
+export const MODULOS = ["progresso", "favoritos", "encontro", "atividade", "proximas", "membros", "liga"] as const;
 export type Modulo = (typeof MODULOS)[number];
-export const NOME_MODULO: Record<Modulo, string> = { progresso: "progresso dos leitores", favoritos: "favoritos do clube", encontro: "próximo encontro", atividade: "atividade recente", proximas: "próximas leituras", membros: "membros do clube" };
+export const NOME_MODULO: Record<Modulo, string> = { progresso: "progresso dos leitores", favoritos: "favoritos do clube", encontro: "próximo encontro", atividade: "atividade recente", proximas: "próximas leituras", membros: "membros do clube", liga: "the reading league (resumo)" };
 export type ConfigModulos = { ordem: Modulo[]; ocultos: Modulo[] };
 
 /** títulos editoriais que o clube pode trocar (menus, botões e avisos continuam os do app) */
@@ -198,6 +198,8 @@ export type Identidade = {
   cabecalho?: Cabecalho;
   cartoes?: EstiloCartao;
   modulos?: ConfigModulos;
+  /** the reading league desligada (clube prefere não ter ranking) */
+  semRanking?: boolean;
   titulos?: Partial<Record<ChaveTitulo, string>>;
 };
 
@@ -327,6 +329,7 @@ export function lerIdentidade(x: unknown): Identidade | null {
     cabecalho: um(["editorial", "centered", "compact"] as const, o.cabecalho),
     cartoes: um(["editorial", "paper", "minimal", "vintage"] as const, o.cartoes),
     modulos,
+    semRanking: o.semRanking === true ? true : undefined,
     titulos,
   };
 }

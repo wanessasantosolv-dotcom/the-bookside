@@ -146,7 +146,7 @@ function Abas({ base }: { base: string }) {
         const on =
           pathname === href ||
           (a.id === "biblioteca" && pathname.startsWith(`${base}/livro/`)) ||
-          (a.id === "membros" && pathname.startsWith(`${base}/membro/`)) ||
+          (a.id === "membros" && (pathname.startsWith(`${base}/membro/`) || pathname.startsWith(`${base}/membros/`))) ||
           (a.id === "" && pathname === `${base}/feed`);
         return (
           <Link
@@ -382,7 +382,8 @@ export function ClubeProvedor({
       pathname,
     ) ||
     pathname.startsWith(`${base}/livro/`) ||
-    pathname.startsWith(`${base}/membro/`);
+    pathname.startsWith(`${base}/membro/`) ||
+    pathname.startsWith(`${base}/membros/`);
 
   return (
     <Contexto.Provider

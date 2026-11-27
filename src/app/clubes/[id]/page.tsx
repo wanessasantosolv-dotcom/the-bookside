@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Fragment, useState, type ReactNode } from "react";
 import { Ornamento } from "@/components/clube/Ornamento";
+import { ResumoLiga } from "@/components/liga/ResumoLiga";
 import { modulosDe, tituloDe, type ChaveTitulo, type Modulo } from "@/lib/identidade";
 import { useClube } from "@/components/clube/ClubeContexto";
 import { Carregando, ErroOuFalta } from "@/components/social/Estados";
@@ -393,6 +394,7 @@ export default function ClubeInicioPage() {
     ),
     encontro: proximo ? <ProximoEncontro encontro={proximo} clubeId={clube.id} /> : null,
     membros: quemEsta,
+    liga: <ResumoLiga />,
     proximas: <SugerirRapido clubeId={clube.id} votacao={modoDe(clube) === "votacao"} fila={sugestoes} membros={membros} eu={eu} />,
   };
   const principais: Modulo[] = ["progresso", "favoritos", "atividade"];

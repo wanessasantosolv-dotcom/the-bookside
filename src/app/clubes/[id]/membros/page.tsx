@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 import { useClube } from "@/components/clube/ClubeContexto";
+import { AbasMembros } from "@/components/liga/Pecas";
 import { Carregando, ErroOuFalta } from "@/components/social/Estados";
 import { Avatar } from "@/components/social/Pessoas";
 import {
@@ -42,7 +42,6 @@ export default function MembrosPage() {
   const { clube, membros, papel } = useClube();
   const eu = useMeuId();
   const router = useRouter();
-  const [criterio, setCriterio] = useState<"paginas" | "livros">("livros");
   const consulta = useConsulta(async () => {
     const livros = await livrosDoClube(clube.id);
     const reais = await fichasDoClube(livros.filter((l) => l.estado !== "sugerido").map((l) => l.id));
@@ -76,13 +75,6 @@ export default function MembrosPage() {
     };
   });
 
-  // ranking com empates: mesmo valor, mesma posição
-  const valor = (x: Numeros) => (criterio === "paginas" ? x.paginas : x.livros);
-  const ranking = [...numeros].sort((a, b) => valor(b) - valor(a));
-  const posicoes = ranking.map((x, i) => (i > 0 && valor(x) === valor(ranking[i - 1]) ? null : i + 1));
-  let ultimaPosicao = 1;
-  const posicaoDe = posicoes.map((p) => (p === null ? ultimaPosicao : (ultimaPosicao = p)));
-
   const totalPendentes = numeros.reduce((t, x) => t + x.pendentes, 0);
   const emDia = numeros.filter((x) => !x.pendentes).length;
   const nomeCargo = (p: string) => cargos.find((c) => c.id === p)?.nome ?? p;
@@ -94,6 +86,10 @@ export default function MembrosPage() {
   }
 
   return (
+    <>
+    <div className="px-4 pt-4 lg:px-0 lg:pt-6">
+      <AbasMembros base={`/clubes/${clube.id}`} />
+    </div>
     <div className="grid gap-10 px-5 pt-6 lg:grid-cols-[minmax(0,1.9fr)_minmax(300px,1fr)] lg:gap-14 lg:px-0 lg:pt-8">
       <div className="min-w-0 space-y-10">
         {/* participantes e números dentro do clube */}
@@ -166,40 +162,7 @@ export default function MembrosPage() {
       </div>
 
       <aside className="min-w-0 space-y-10">
-        {/* ranking: só leituras do clube */}
-        <section aria-labelledby="t-ranking">
-          <div className={secao}>
-            <h2 id="t-ranking" className={titulo}>
-              ranking de leitura
-            </h2>
-            <div role="group" aria-label="critério do ranking" className="flex gap-3 text-[13px]">
-              {(["livros", "paginas"] as const).map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  aria-pressed={criterio === c}
-                  onClick={() => setCriterio(c)}
-                  className={`min-h-9 border-b-2 ${criterio === c ? "border-bordo font-semibold text-bordo" : "border-transparent text-cinza hover:text-ameixa"}`}
-                >
-                  {c === "paginas" ? "páginas" : "livros"}
-                </button>
-              ))}
-            </div>
-          </div>
-          <p className="mb-3 text-[12px] text-cinza">considera apenas os livros do clube com ficha de leitura publicada.</p>
-          <ol>
-            {ranking.map((x, i) => (
-              <li key={x.m.usuario_id} className="flex items-center gap-3 border-b border-linha py-2.5 last:border-b-0 lg:border-fio">
-                <span className="w-6 text-right font-revista text-[18px] text-bordo tabular-nums">{posicaoDe[i]}</span>
-                <Avatar pessoa={x.m.pessoa} tamanho={30} />
-                <span className="min-w-0 flex-1 truncate text-[14px] text-ameixa">{x.m.usuario_id === eu ? "você" : nomeDe(x.m.pessoa)}</span>
-                <span className="text-[13px] font-semibold text-ameixa tabular-nums">
-                  {criterio === "paginas" ? `${num(x.paginas)} págs.` : `${x.livros} ${x.livros === 1 ? "livro" : "livros"}`}
-                </span>
-              </li>
-            ))}
-          </ol>
-        </section>
+
 
         {/* participação nas fichas */}
         {lidos.length ? (
@@ -251,5 +214,6 @@ export default function MembrosPage() {
         </section>
       </aside>
     </div>
+    </>
   );
 }
