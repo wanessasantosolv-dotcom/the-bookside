@@ -1,0 +1,615 @@
+{
+  "versao": 2,
+  "arquetipos": {
+    "D": "A Tecelã de Sonhos",
+    "X": "A Decifradora",
+    "R": "A Alquimista dos Afetos",
+    "S": "A Guardiã do Saber",
+    "W": "A Cartógrafa",
+    "N": "A Gata da Meia-Noite",
+    "C": "A Curadora do Tempo",
+    "E": "A Viajante de Mundos"
+  },
+  "perguntas": [
+    {
+      "id": "q01",
+      "titulo": "Um encontro na livraria",
+      "enunciado": "Você entra em uma livraria sem nenhum livro específico em mente. O que desperta sua curiosidade primeiro?",
+      "formato": "textual",
+      "alternativas": [
+        {
+          "id": "q01-1",
+          "texto": "Uma capa que me faz parar por alguns segundos.",
+          "pontos": {
+            "C": 1,
+            "D": 1
+          }
+        },
+        {
+          "id": "q01-2",
+          "texto": "Um título cujo significado não consigo compreender imediatamente.",
+          "pontos": {
+            "N": 1,
+            "X": 1
+          }
+        },
+        {
+          "id": "q01-3",
+          "texto": "Um livro que já vi alguém comentar com muito entusiasmo.",
+          "pontos": {
+            "R": 1,
+            "S": 1
+          }
+        },
+        {
+          "id": "q01-4",
+          "texto": "Uma obra completamente diferente das minhas últimas leituras.",
+          "pontos": {
+            "E": 1,
+            "W": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "q02",
+      "titulo": "Só mais um capítulo",
+      "enunciado": "O que faz você continuar lendo mesmo quando já deveria ter parado?",
+      "formato": "textual",
+      "alternativas": [
+        {
+          "id": "q02-1",
+          "texto": "Acabei de imaginar uma explicação para algo que parecia impossível.",
+          "pontos": {
+            "D": 1,
+            "X": 1
+          }
+        },
+        {
+          "id": "q02-2",
+          "texto": "A história me apresentou uma ideia e preciso ver até onde ela vai.",
+          "pontos": {
+            "E": 1,
+            "S": 1
+          }
+        },
+        {
+          "id": "q02-3",
+          "texto": "A escrita criou uma atmosfera que quero prolongar um pouco mais.",
+          "pontos": {
+            "C": 1,
+            "N": 1
+          }
+        },
+        {
+          "id": "q02-4",
+          "texto": "Um personagem está prestes a fazer uma escolha que eu nunca faria.",
+          "pontos": {
+            "R": 1,
+            "W": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "q03",
+      "titulo": "Um lugar entre páginas",
+      "enunciado": "Se pudesse passar algumas horas lendo em um desses lugares, qual escolheria?",
+      "formato": "ilustrada",
+      "alternativas": [
+        {
+          "id": "q03-1",
+          "texto": "Um café numa tarde chuvosa.",
+          "pontos": {
+            "C": 1,
+            "R": 1
+          },
+          "imagem": "perguntas/lugar-cafe.png"
+        },
+        {
+          "id": "q03-2",
+          "texto": "Um trem durante uma longa viagem.",
+          "pontos": {
+            "E": 1,
+            "W": 1
+          },
+          "imagem": "perguntas/lugar-trem.png"
+        },
+        {
+          "id": "q03-3",
+          "texto": "Um jardim numa tarde de sol.",
+          "pontos": {
+            "D": 1,
+            "S": 1
+          },
+          "imagem": "perguntas/lugar-jardim.png"
+        },
+        {
+          "id": "q03-4",
+          "texto": "Um quarto iluminado por um abajur.",
+          "pontos": {
+            "N": 1,
+            "X": 1
+          },
+          "imagem": "perguntas/lugar-quarto.png"
+        }
+      ]
+    },
+    {
+      "id": "q04",
+      "titulo": "A correspondência",
+      "enunciado": "Você encontra um envelope sem remetente entre as páginas de um livro antigo. O que espera encontrar dentro dele?",
+      "formato": "textual",
+      "alternativas": [
+        {
+          "id": "q04-1",
+          "texto": "Uma fotografia de um lugar que já não existe.",
+          "pontos": {
+            "C": 1,
+            "W": 1
+          }
+        },
+        {
+          "id": "q04-2",
+          "texto": "Uma sequência de anotações aparentemente desconexas.",
+          "pontos": {
+            "S": 1,
+            "X": 1
+          }
+        },
+        {
+          "id": "q04-3",
+          "texto": "Uma carta que nunca chegou ao destinatário.",
+          "pontos": {
+            "N": 1,
+            "R": 1
+          }
+        },
+        {
+          "id": "q04-4",
+          "texto": "Uma chave sem nenhuma explicação.",
+          "pontos": {
+            "D": 1,
+            "E": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "q05",
+      "titulo": "Entre as margens",
+      "enunciado": "Você encontra uma passagem que chamou muito a sua atenção. O que costuma fazer?",
+      "formato": "textual",
+      "alternativas": [
+        {
+          "id": "q05-1",
+          "texto": "Releio algumas vezes para apreciar a maneira como foi escrita.",
+          "pontos": {
+            "D": 1,
+            "N": 1
+          }
+        },
+        {
+          "id": "q05-2",
+          "texto": "Guardo a passagem para revisitar em outro momento.",
+          "pontos": {
+            "C": 1,
+            "E": 1
+          }
+        },
+        {
+          "id": "q05-3",
+          "texto": "Fico pensando em como ela se relaciona com o restante da história.",
+          "pontos": {
+            "W": 1,
+            "X": 1
+          }
+        },
+        {
+          "id": "q05-4",
+          "texto": "Imagino alguém com quem gostaria de compartilhar aquelas palavras.",
+          "pontos": {
+            "R": 1,
+            "S": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "q06",
+      "titulo": "Objetos extraordinários",
+      "enunciado": "Uma pequena loja vende quatro objetos com propriedades impossíveis. Qual você levaria?",
+      "formato": "ilustrada",
+      "alternativas": [
+        {
+          "id": "q06-1",
+          "texto": "Um espelho que mostra versões diferentes da mesma lembrança.",
+          "pontos": {
+            "R": 1,
+            "X": 1
+          },
+          "imagem": "perguntas/objeto-espelho.png"
+        },
+        {
+          "id": "q06-2",
+          "texto": "Um caderno cujas páginas nunca acabam.",
+          "pontos": {
+            "C": 1,
+            "S": 1
+          },
+          "imagem": "perguntas/objeto-caderno.png"
+        },
+        {
+          "id": "q06-3",
+          "texto": "Uma bússola que aponta para lugares que ainda não existem.",
+          "pontos": {
+            "D": 1,
+            "W": 1
+          },
+          "imagem": "perguntas/objeto-bussola.png"
+        },
+        {
+          "id": "q06-4",
+          "texto": "Um relógio que permite observar um instante sem interferir nele.",
+          "pontos": {
+            "E": 1,
+            "N": 1
+          },
+          "imagem": "perguntas/objeto-relogio.png"
+        }
+      ]
+    },
+    {
+      "id": "q07",
+      "titulo": "A primeira frase",
+      "enunciado": "Quatro livros desconhecidos estão sobre uma mesa. Você só pode ler a primeira frase de cada um. Qual deles levaria?",
+      "formato": "editorial",
+      "alternativas": [
+        {
+          "id": "q07-1",
+          "texto": "Naquela manhã, todos os relógios da cidade atrasaram exatamente sete minutos.",
+          "pontos": {
+            "E": 1,
+            "X": 1
+          }
+        },
+        {
+          "id": "q07-2",
+          "texto": "Durante vinte anos, ninguém voltou a ocupar aquela cadeira.",
+          "pontos": {
+            "D": 1,
+            "R": 1
+          }
+        },
+        {
+          "id": "q07-3",
+          "texto": "A última pessoa que morou naquela casa deixou todas as janelas abertas.",
+          "pontos": {
+            "N": 1,
+            "W": 1
+          }
+        },
+        {
+          "id": "q07-4",
+          "texto": "O nome escrito na dedicatória não era o meu.",
+          "pontos": {
+            "C": 1,
+            "S": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "q08",
+      "titulo": "Sua biblioteca imaginária",
+      "enunciado": "Se pudesse ter uma biblioteca sem nenhuma limitação de espaço, qual detalhe faria questão de incluir?",
+      "formato": "ilustrada",
+      "alternativas": [
+        {
+          "id": "q08-1",
+          "texto": "Objetos e lembranças misturados aos livros.",
+          "pontos": {
+            "C": 1,
+            "R": 1
+          },
+          "imagem": "perguntas/biblioteca-lembrancas.png"
+        },
+        {
+          "id": "q08-2",
+          "texto": "Uma grande janela com vista para o mundo lá fora.",
+          "pontos": {
+            "D": 1,
+            "W": 1
+          },
+          "imagem": "perguntas/biblioteca-janela.png"
+        },
+        {
+          "id": "q08-3",
+          "texto": "Um pequeno arquivo de descobertas e referências.",
+          "pontos": {
+            "S": 1,
+            "X": 1
+          },
+          "imagem": "perguntas/biblioteca-arquivo.png"
+        },
+        {
+          "id": "q08-4",
+          "texto": "Um canto escondido que só eu conhecesse.",
+          "pontos": {
+            "E": 1,
+            "N": 1
+          },
+          "imagem": "perguntas/biblioteca-esconderijo.png"
+        }
+      ]
+    },
+    {
+      "id": "q09",
+      "titulo": "Entre leitores",
+      "enunciado": "Quando alguém termina de ler o mesmo livro que você, o que mais gosta de conversar sobre?",
+      "formato": "textual",
+      "alternativas": [
+        {
+          "id": "q09-1",
+          "texto": "As interpretações diferentes que tivemos da mesma história.",
+          "pontos": {
+            "N": 1,
+            "S": 1
+          }
+        },
+        {
+          "id": "q09-2",
+          "texto": "As cenas que gostaríamos de ter vivido pessoalmente.",
+          "pontos": {
+            "D": 1,
+            "E": 1
+          }
+        },
+        {
+          "id": "q09-3",
+          "texto": "As decisões dos personagens e o que faríamos em seus lugares.",
+          "pontos": {
+            "R": 1,
+            "W": 1
+          }
+        },
+        {
+          "id": "q09-4",
+          "texto": "Os detalhes que poderiam ter passado despercebidos durante a leitura.",
+          "pontos": {
+            "C": 1,
+            "X": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "q10",
+      "titulo": "Uma leitura às cegas",
+      "enunciado": "Você recebe quatro recomendações sem título, capa ou gênero. Qual comentário faria você escolher o livro?",
+      "formato": "textual",
+      "alternativas": [
+        {
+          "id": "q10-1",
+          "texto": "Fiquei tão perto dos personagens que senti saudade quando acabou.",
+          "pontos": {
+            "E": 1,
+            "R": 1
+          }
+        },
+        {
+          "id": "q10-2",
+          "texto": "Nunca tinha pensado que alguém pudesse enxergar o mundo daquela maneira.",
+          "pontos": {
+            "S": 1,
+            "W": 1
+          }
+        },
+        {
+          "id": "q10-3",
+          "texto": "Só entendi por que aquele livro era especial muito tempo depois de terminar.",
+          "pontos": {
+            "C": 1,
+            "N": 1
+          }
+        },
+        {
+          "id": "q10-4",
+          "texto": "Passei a leitura inteira imaginando como as peças daquela história poderiam se encaixar.",
+          "pontos": {
+            "D": 1,
+            "X": 1
+          }
+        }
+      ]
+    }
+  ],
+  "validacao": {
+    "old": [
+      [
+        "CD",
+        "NX",
+        "RS",
+        "EW"
+      ],
+      [
+        "SX",
+        "ER",
+        "CN",
+        "DW"
+      ],
+      [
+        "CR",
+        "EW",
+        "DS",
+        "NX"
+      ],
+      [
+        "CW",
+        "SX",
+        "NR",
+        "DE"
+      ],
+      [
+        "DN",
+        "CE",
+        "WX",
+        "RS"
+      ],
+      [
+        "RX",
+        "CS",
+        "DW",
+        "EN"
+      ],
+      [
+        "EX",
+        "NR",
+        "DW",
+        "CS"
+      ],
+      [
+        "CR",
+        "DW",
+        "SX",
+        "EN"
+      ],
+      [
+        "NS",
+        "DE",
+        "RW",
+        "CX"
+      ],
+      [
+        "RW",
+        "SX",
+        "CN",
+        "DE"
+      ]
+    ],
+    "new": [
+      [
+        "CD",
+        "NX",
+        "RS",
+        "EW"
+      ],
+      [
+        "DX",
+        "ES",
+        "CN",
+        "RW"
+      ],
+      [
+        "CR",
+        "EW",
+        "DS",
+        "NX"
+      ],
+      [
+        "CW",
+        "SX",
+        "NR",
+        "DE"
+      ],
+      [
+        "DN",
+        "CE",
+        "WX",
+        "RS"
+      ],
+      [
+        "RX",
+        "CS",
+        "DW",
+        "EN"
+      ],
+      [
+        "EX",
+        "DR",
+        "NW",
+        "CS"
+      ],
+      [
+        "CR",
+        "DW",
+        "SX",
+        "EN"
+      ],
+      [
+        "NS",
+        "DE",
+        "RW",
+        "CX"
+      ],
+      [
+        "ER",
+        "SW",
+        "CN",
+        "DX"
+      ]
+    ],
+    "old_stats": {
+      "ties": 363692,
+      "unique": 684884,
+      "shares": {
+        "D": 0.12360916137687837,
+        "X": 0.12451333999626725,
+        "R": 0.12585690816237755,
+        "S": 0.12409059206638348,
+        "W": 0.12406853040054243,
+        "N": 0.12592047055556346,
+        "C": 0.12640616099033178,
+        "E": 0.1255348364511602
+      },
+      "unique_by": {
+        "D": 83601,
+        "X": 84919,
+        "R": 86837,
+        "S": 84303,
+        "W": 84218,
+        "N": 86924,
+        "C": 87659,
+        "E": 86423
+      }
+    },
+    "new_stats": {
+      "ties": 357203,
+      "unique": 691373,
+      "shares": {
+        "D": 0.12500445048006878,
+        "X": 0.12499548594150106,
+        "R": 0.12500111261997818,
+        "S": 0.1250010331471181,
+        "W": 0.12500705718988678,
+        "N": 0.12498534520460626,
+        "C": 0.12500948905937373,
+        "E": 0.12499602635696057
+      },
+      "unique_by": {
+        "D": 86420,
+        "X": 86421,
+        "R": 86412,
+        "S": 86423,
+        "W": 86427,
+        "N": 86408,
+        "C": 86436,
+        "E": 86426
+      }
+    }
+  },
+  "desempate": {
+    "pergunta": "Qual destas sensações você gostaria de encontrar na sua próxima leitura?",
+    "alternativas": {
+      "D": "Imaginar possibilidades que antes não existiam.",
+      "X": "Encontrar um novo significado para pequenos detalhes.",
+      "R": "Compreender um sentimento difícil de expressar.",
+      "S": "Enxergar uma questão de uma perspectiva diferente.",
+      "W": "Conhecer algo distante da minha realidade.",
+      "N": "Encontrar um espaço para os meus próprios pensamentos.",
+      "C": "Guardar algo que eu gostaria de revisitar.",
+      "E": "Experimentar por alguns instantes outra existência."
+    },
+    "regra": "Exibir somente os empatados, em ordem embaralhada; escolha determina a carta."
+  }
+}
