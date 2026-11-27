@@ -7,7 +7,8 @@ import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { CapaLivro } from "@/components/CapaLivro";
 import { PerfilEditorial, type AbaDoPerfil } from "@/components/perfil/PerfilEditorial";
-import { EstantesDela, JornadaResumida } from "@/components/perfil/DaAmiga";
+import { EstantesDela } from "@/components/perfil/DaAmiga";
+import { JornadaNoPerfil } from "@/components/perfil/JornadaNoPerfil";
 import {
   Carregando,
   ComConta,
@@ -264,7 +265,7 @@ function PerfilDela({ usuario }: { usuario: string }) {
         aba={aba}
         onAba={mudarAba}
         conteudoAba={{
-          jornada: <JornadaResumida p={p} nome={nomeCurto} />,
+          jornada: <JornadaNoPerfil de={{ livros: p.livros ?? [], meta: p.meta || null, nome: nomeCurto }} />,
           resenhas: resenhasDela.length ? (
             <ul className="border-t border-[var(--linha)]">
               {resenhasDela.map((l) => (

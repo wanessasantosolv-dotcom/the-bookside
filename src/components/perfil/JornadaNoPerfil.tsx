@@ -91,10 +91,13 @@ function Cabecalho({
   anos,
   ano,
   onAno,
+  dela,
 }: {
   anos: number[];
   ano: number;
   onAno: (a: number) => void;
+  /** no perfil de outra pessoa: o nome dela */
+  dela?: string;
 }) {
   return (
     <header className="flex items-start justify-between gap-4">
@@ -106,7 +109,7 @@ function Cabecalho({
           Um ano entre páginas.
         </h2>
         <p className="mt-1 font-accent text-[14px] italic text-cinza">
-          sua trajetória, hábitos e descobertas literárias em um só lugar.
+          {dela ? `a trajetória, os hábitos e as descobertas de ${dela}.` : "sua trajetória, hábitos e descobertas literárias em um só lugar."}
         </p>
       </div>
       <label className="relative flex-none">
@@ -138,7 +141,7 @@ function Cabecalho({
 
 // ───────── seu ano em números ─────────
 
-function AnoEmNumeros({ n, atual, dias }: { n: Numeros; atual: boolean; dias: number }) {
+function AnoEmNumeros({ n, atual, dias, alheia }: { n: Numeros; atual: boolean; dias: number; alheia?: boolean }) {
   // a meta é do ano corrente; nos anos passados, só o total
   const meta = atual ? n.meta : null;
   const pct = meta ? Math.min(100, (n.total / meta) * 100) : 0;
@@ -174,7 +177,7 @@ function AnoEmNumeros({ n, atual, dias }: { n: Numeros; atual: boolean; dias: nu
           <p className="text-[10px] font-semibold tracking-[.18em] text-rosa-claro uppercase">
             {meta ? "meta de leitura" : `lidos em ${n.ano}`}
           </p>
-          {atual ? (
+          {atual && !alheia ? (
             <Link
               href="/perfil/editar"
               className="text-[11px] font-semibold text-rosa-claro/90 underline-offset-4 hover:underline"
@@ -1464,9 +1467,16 @@ function RetratoLiterario({ n }: { n: Numeros }) {
   );
 }
 
-export function JornadaNoPerfil() {
-  const livros = usePerfil((s) => s.livros);
-  const meta = usePerfil((s) => s.meta);
+/**
+ * A jornada do ano. Sem props, a sua; com `de`, a de outra pessoa (só o que a
+ * estante pública dela mostra: nada de diário, desafios, calendário ou citações guardadas).
+ */
+export function JornadaNoPerfil({ de }: { de?: { livros: LivroSalvo[]; meta: number | null; nome: string } } = {}) {
+  const meus = usePerfil((s) => s.livros);
+  const minhaMeta = usePerfil((s) => s.meta);
+  const livros = de ? de.livros : meus;
+  const meta = de ? de.meta : minhaMeta;
+  const alheia = !!de;
   const anoAtual = new Date().getFullYear();
   const anos = useMemo(() => anosComLeitura(livros), [livros]);
   const [ano, setAno] = useState(anoAtual);
@@ -1477,17 +1487,17 @@ export function JornadaNoPerfil() {
 
   return (
     <div className="space-y-6 pb-6 lg:space-y-8">
-      <Cabecalho anos={anos} ano={ano} onAno={setAno} />
+      <Cabecalho anos={anos} ano={ano} onAno={setAno} dela={de?.nome} />
 
       <div className="space-y-3 lg:space-y-4">
-        <AnoEmNumeros n={n} atual={atual} dias={diasNoAno} />
-        <MesEmRevista livros={livros} ano={ano} />
-        <WrappedClassico livros={livros} ano={ano} />
+        <AnoEmNumeros n={n} atual={atual} dias={diasNoAno} alheia={alheia} />
+        {alheia ? null : <MesEmRevista livros={livros} ano={ano} />}
+        {alheia ? null : <WrappedClassico livros={livros} ano={ano} />}
       </div>
 
-      {atual ? <DiasEntrePaginas livros={livros} /> : null}
+      {atual && !alheia ? <DiasEntrePaginas livros={livros} /> : null}
 
-      {atual ? <DesafiosNaJornada /> : null}
+      {atual && !alheia ? <DesafiosNaJornada /> : null}
 
       {n.total ? (
         <>
@@ -1499,13 +1509,13 @@ export function JornadaNoPerfil() {
       ) : (
         <div className="border-t border-linha pt-8 text-center lg:border-fio">
           <p className="font-display text-[22px] font-semibold italic text-ameixa lg:font-revista lg:font-normal">
-            {atual ? "a jornada deste ano começa no primeiro livro" : `nenhum livro terminado em ${ano}`}
+            {alheia ? `${de!.nome} ainda não terminou nenhum livro em ${ano}` : atual ? "a jornada deste ano começa no primeiro livro" : `nenhum livro terminado em ${ano}`}
           </p>
           <p className="mx-auto mt-2 max-w-[420px] text-[13px] text-cinza">
             quando você marca um livro como lido, com a data, ele entra aqui: ritmo,
             destaques, formatos e de onde vêm as autoras.
           </p>
-          {atual ? (
+          {atual && !alheia ? (
             <Link
               href="/buscar"
               className="mt-5 inline-flex h-11 items-center rounded-pill bg-bordo px-6 text-[13px] font-semibold text-creme"
@@ -1516,9 +1526,9 @@ export function JornadaNoPerfil() {
         </div>
       )}
 
-      {atual ? <PalavrasGuardadas /> : null}
+      {atual && !alheia ? <PalavrasGuardadas /> : null}
 
-      {semData ? (
+      {semData && !alheia ? (
         <p className="border-t border-linha pt-4 text-[11px] text-cinza lg:border-fio">
           {plural(semData, "livro lido está", "livros lidos estão")} sem data e
           não entra{semData === 1 ? "" : "m"} nos números por ano.{" "}
