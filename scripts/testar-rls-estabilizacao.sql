@@ -12,7 +12,6 @@ grant usage on schema auth to authenticated;
 \ir ../supabase/schema.sql
 \ir ../supabase/atualizacao-2026-11-descoberta.sql
 grant select, insert, update on public.descoberta_cache to authenticated;
-grant select, insert, update on public.perfis to authenticated;
 insert into auth.users values ('00000000-0000-0000-0000-000000000001'), ('00000000-0000-0000-0000-000000000002');
 insert into public.perfis(id, dados)
 select id, '{
@@ -37,6 +36,8 @@ begin
   if not exists (select 1 from public.perfis where id = auth.uid()) then
     raise exception 'a conta perdeu acesso ao próprio perfil';
   end if;
+  update public.perfis set nome = 'perfil de teste' where id = auth.uid();
+  if not found then raise exception 'atualização do próprio perfil indisponível'; end if;
   update public.perfis set dados = '{}' where id <> auth.uid();
   if found then raise exception 'atualização de outro perfil permitida'; end if;
   if (select count(*) from public.perfis_publicos) <> 2 then
