@@ -27,7 +27,7 @@ export function paginasDoLivro(l: LivroSalvo) {
 
 /** dias entre o começo e o fim da leitura (contando os dois), se as datas existem */
 export function diasDeLeitura(l: LivroSalvo): number | null {
-  if (!l.iniciadoEm || !l.lidoEm) return null;
+  if (!l.iniciadoEm || !l.lidoEm || l.lidoSoAno || l.lidoSoMes) return null;
   const dia = (iso: string) => {
     const [a, m, d] = iso.slice(0, 10).split("-").map(Number);
     return Date.UTC(a, m - 1, d);
