@@ -46,14 +46,16 @@ export default function CriarContaPage() {
       return router.push("/confirmar-email");
     }
     atualizar({ email, onboardingConcluido: false });
-    router.push("/confirmar-email");
+    router.push("/criar-perfil/nome");
   }
 
   return (
     <ContaShell
       voltar={{ href: "/entrar", rotulo: "entrar" }}
       titulo="crie sua conta"
-      descricao="é rápido — só precisamos do seu e-mail e de uma senha."
+      descricao={supabase
+        ? "é rápido — só precisamos do seu e-mail e de uma senha."
+        : "o Supabase está indisponível. neste modo, o perfil fica salvo apenas neste navegador."}
     >
       <form onSubmit={criar} noValidate>
         <label className="mt-[22px] block">

@@ -59,6 +59,13 @@ const base = `http://127.0.0.1:${process.env.BOOKSIDE_TEST_PORT ?? 4317}`;
     assert.equal(livros[0].releituras.length, 2);
     assert.equal(livros[0].releituras[0].lidoSoMes, true);
     console.log("OK releitura registrada, celebração global e histórico preservado");
+    const cadastro = await browser.newPage();
+    await cadastro.goto(`${base}/confirmar-email`);
+    await cadastro.getByRole("heading", { name: "seu perfil local" }).waitFor();
+    assert.equal(await cadastro.getByRole("button", { name: "reenviar código" }).count(), 0);
+    await cadastro.getByRole("button", { name: "continuar", exact: true }).click();
+    await cadastro.waitForURL("**/criar-perfil/nome");
+    console.log("OK confirmação local explica a falta de Supabase e continua sem código");
     assert.deepEqual(erros,[]);
   } finally { await browser.close(); }
 })().catch(e=>{console.error(e);process.exitCode=1});
