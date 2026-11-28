@@ -1,3 +1,4 @@
+import { concluidasNoAno } from "@/lib/leituras";
 import { sugestoesDeLivros } from "@/lib/dados";
 import { formatos } from "@/lib/formatos";
 import type { LivroSalvo } from "@/lib/perfil-store";
@@ -27,7 +28,7 @@ export function paginasDoLivro(l: LivroSalvo) {
 
 /** dias entre o começo e o fim da leitura (contando os dois), se as datas existem */
 export function diasDeLeitura(l: LivroSalvo): number | null {
-  if (!l.iniciadoEm || !l.lidoEm) return null;
+  if (!l.iniciadoEm || !l.lidoEm || l.lidoSoAno || l.lidoSoMes) return null;
   const dia = (iso: string) => {
     const [a, m, d] = iso.slice(0, 10).split("-").map(Number);
     return Date.UTC(a, m - 1, d);
@@ -84,9 +85,7 @@ export function calcularNumeros(
   ano = new Date().getFullYear(),
   hoje = new Date(),
 ) {
-  const lidos = livros.filter(
-    (l) => l.status === "lido" && l.lidoEm?.startsWith(String(ano)),
-  );
+  const lidos = concluidasNoAno(livros, ano);
   const comPaginas = lidos.map(paginasDoLivro).filter((p): p is number => !!p);
   const paginas = comPaginas.reduce((t, p) => t + p, 0);
   const notas = lidos.map((l) => l.nota).filter((n): n is number => !!n);

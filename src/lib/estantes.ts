@@ -1,3 +1,4 @@
+import { concluidasNoAno } from "@/lib/leituras";
 import { sugestoesDeLivros, type LivroCatalogo } from "@/lib/dados";
 import type {
   EstantePropria,
@@ -119,6 +120,12 @@ export function soAno(l: { lidoEm?: string; lidoSoAno?: boolean }) {
   return l.lidoSoAno && l.lidoEm ? `em ${new Date(l.lidoEm).getFullYear()}` : null;
 }
 
+export function dataParcial(l: { lidoEm?: string; lidoSoAno?: boolean; lidoSoMes?: boolean }) {
+  return soAno(l) ?? (l.lidoSoMes && l.lidoEm
+    ? new Date(l.lidoEm).toLocaleDateString("pt-BR", { month: "long", year: "numeric" })
+    : null);
+}
+
 export function dataCurta(iso?: string) {
   if (!iso) return "";
   return new Date(iso)
@@ -166,10 +173,7 @@ export const fichaApagada = {
 
 /** lidos em um ano (pela data em que terminou; sem data não entra) */
 export function lidosNoAno(livros: LivroSalvo[], ano = new Date().getFullYear()) {
-  return livros.filter(
-    // mesma regra dos "seus números" (calcularNumeros)
-    (l) => l.status === "lido" && !!l.lidoEm?.startsWith(String(ano)),
-  ).length;
+  return concluidasNoAno(livros, ano).length;
 }
 
 /**

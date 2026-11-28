@@ -3,6 +3,7 @@
  * os destaques com empate, a faixa de dias recentes do calendário, os meses
  * com livros e os formatos com porcentagem.
  */
+import { leiturasConcluidas, registrosUnicos } from "@/lib/leituras";
 import {
   diasDeLeitura,
   generoDoLivro,
@@ -30,8 +31,8 @@ export const MESES = [
 /** os anos em que a pessoa terminou algum livro (e o ano atual), do mais recente ao mais antigo */
 export function anosComLeitura(livros: LivroSalvo[], hoje = new Date()) {
   const anos = new Set<number>([hoje.getFullYear()]);
-  for (const l of livros)
-    if (l.status === "lido" && l.lidoEm) {
+  for (const l of leiturasConcluidas(livros))
+    if (l.lidoEm) {
       const a = Number(l.lidoEm.slice(0, 4));
       if (a > 1900 && a <= hoje.getFullYear()) anos.add(a);
     }
@@ -120,8 +121,8 @@ export type DiaDeLeitura = {
  * (mesma regra do calendário: do dia em que começou até o dia em que terminou).
  */
 export function diasDoMes(livros: LivroSalvo[], hoje = new Date()) {
-  const intervalos = livros
-    .filter((l) => l.status === "lido" || l.status === "lendo")
+  const intervalos = [...leiturasConcluidas(livros), ...registrosUnicos(livros).filter((l) => l.status === "lendo")]
+    .filter((l) => l.status === "lendo" || (l.status === "lido" && !l.lidoSoAno && !l.lidoSoMes))
     .map((l) => {
       const fim = l.status === "lido" ? diaDe(l.lidoEm) : chaveDia(hoje);
       const inicio = diaDe(l.iniciadoEm) ?? fim;
@@ -144,7 +145,7 @@ export function diasDoMes(livros: LivroSalvo[], hoje = new Date()) {
     lista.push({
       data,
       chave,
-      livros: [...terminados, ...lendo].map((x) => x.l),
+      livros: registrosUnicos([...lendo, ...terminados].map((x) => x.l)),
       terminou: terminados.length > 0,
     });
   }
@@ -392,8 +393,8 @@ export function diasDeLeituraNoAno(livros: LivroSalvo[], ano: number, hoje = new
   const inicioAno = new Date(ano, 0, 1);
   const fimAno = ano === hoje.getFullYear() ? hoje : new Date(ano, 11, 31);
   const dias = new Set<string>();
-  for (const l of livros) {
-    if (l.status !== "lido" && l.status !== "lendo") continue;
+  for (const l of [...leiturasConcluidas(livros), ...registrosUnicos(livros).filter((l) => l.status === "lendo")]) {
+    if (l.status === "lido" && (l.lidoSoAno || l.lidoSoMes)) continue;
     const fim = l.status === "lido" ? (l.lidoEm ? new Date(l.lidoEm) : null) : hoje;
     if (!fim) continue;
     const ini = l.iniciadoEm ? new Date(l.iniciadoEm) : fim;

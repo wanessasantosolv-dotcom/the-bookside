@@ -1,5 +1,6 @@
 "use client";
 
+import { conclusaoNoPeriodo, leiturasConcluidas, registrosUnicos } from "@/lib/leituras";
 import { diasDeLeitura } from "@/lib/numeros";
 import type { LivroSalvo } from "@/lib/perfil-store";
 import { supabase } from "@/lib/supabase";
@@ -165,9 +166,9 @@ export const casasDoBingo: Regra[] = [
     vale: (l, todos, inicio) =>
       !todos.some(
         (o) =>
-          o.id !== l.id &&
+          o !== l &&
           o.status === "lido" &&
-          (o.lidoEm ?? "") < inicio &&
+          !!o.lidoEm && o.lidoEm.slice(0, 10) < inicio &&
           o.autor.toLowerCase() === l.autor.toLowerCase(),
       ),
   },
@@ -190,10 +191,11 @@ export function calcularProgresso(
   d: Pick<Desafio, "tipo" | "inicio" | "fim" | "meta">,
   livros: LivroSalvo[],
 ): { progresso: number; bingo?: string[] } {
-  const lidos = livros.filter(
-    (l) => l.status === "lido" && noPeriodo(l.lidoEm, d),
-  );
-  const sessoes = livros.flatMap((l) =>
+  const concluiuNoPeriodo = (l: LivroSalvo) => conclusaoNoPeriodo(l, d.inicio, d.fim);
+  const leituras = leiturasConcluidas(livros);
+  const lidos = leituras.filter(concluiuNoPeriodo);
+  const registros = registrosUnicos(livros);
+  const sessoes = registros.flatMap((l) =>
     (l.sessoes ?? []).filter((s) => noPeriodo(s.em, d)),
   );
   switch (d.tipo) {
@@ -204,8 +206,8 @@ export function calcularProgresso(
         progresso:
           lidos.reduce((t, l) => t + (l.paginas ?? 0), 0) +
           // páginas lidas no modo foco em livros que ainda não terminaram
-          livros
-            .filter((l) => l.status !== "lido" || !noPeriodo(l.lidoEm, d))
+          registros
+            .filter((l) => !concluiuNoPeriodo(l))
             .flatMap((l) => (l.sessoes ?? []).filter((s) => noPeriodo(s.em, d)))
             .reduce((t, s) => t + (s.paginas ?? 0), 0),
       };
@@ -221,7 +223,7 @@ export function calcularProgresso(
       };
     case "bingo": {
       const marcadas = casasDoBingo
-        .filter((c) => lidos.some((l) => c.vale(l, livros, d.inicio)))
+        .filter((c) => lidos.some((l) => c.vale(l, leituras, d.inicio)))
         .map((c) => c.id);
       return { progresso: marcadas.length, bingo: marcadas };
     }

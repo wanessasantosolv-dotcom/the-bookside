@@ -29,6 +29,7 @@ function dadosDoStore(): Partial<Perfil> {
 }
 
 let carregado = false;
+let revisaoCarga = 0;
 /** o app está aplicando o perfil que veio da nuvem (não é mudança da pessoa) */
 let aplicandoNuvem = false;
 
@@ -38,6 +39,25 @@ let aplicandoNuvem = false;
  * nada de lá é atropelado: os dois são juntados (ver mesclar.ts).
  */
 const PENDENTE = "bookside-perfil-pendente";
+const DONO = "bookside-perfil-dono";
+
+function donoLocal() {
+  try {
+    return localStorage.getItem(DONO) ?? pendente()?.usuario ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function vincularPerfil(id: string) {
+  try {
+    localStorage.setItem(DONO, id);
+  } catch {
+    /* armazenamento indisponível */
+  }
+}
+
+const contaAtual = (id: string) => useNuvem.getState().usuario?.id === id;
 type Pendente = { usuario: string | null; em: string; campos: string[] };
 function pendente(): Pendente | null {
   try {
@@ -81,8 +101,11 @@ export function nuvemPronta() {
 
 function aplicar(dados: Partial<Perfil>) {
   aplicandoNuvem = true;
-  usePerfil.setState(dados);
-  aplicandoNuvem = false;
+  try {
+    usePerfil.setState(dados);
+  } finally {
+    aplicandoNuvem = false;
+  }
 }
 
 /** junta a versão da nuvem com as mudanças daqui (se outro aparelho salvou no meio tempo) */
@@ -98,16 +121,22 @@ export async function salvarPerfil(id: string) {
   if (!supabase) return;
   // um salvamento de cada vez
   while (salvando) await salvando;
+  if (!contaAtual(id) || (donoLocal() && donoLocal() !== id)) return;
   let fim!: () => void;
   salvando = new Promise((ok) => (fim = ok));
   try {
     useNuvem.setState({ estado: "salvando" });
     const marcado = pendente()?.em;
-    const { data: atual } = await supabase
+    const { data: atual, error: erroLeitura } = await supabase
       .from("perfis")
       .select("dados,atualizado_em")
       .eq("id", id)
       .maybeSingle();
+    if (!contaAtual(id)) return;
+    if (erroLeitura) {
+      useNuvem.setState({ estado: "erro", erro: "não conseguimos conferir a versão na nuvem." });
+      return;
+    }
     if (
       atual?.dados &&
       Object.keys(atual.dados).length &&
@@ -116,13 +145,22 @@ export async function salvarPerfil(id: string) {
       juntarCom(atual.dados as Partial<Perfil>);
     const s = usePerfil.getState();
     const agora = new Date().toISOString();
-    const { error } = await supabase.from("perfis").upsert({
+    const perfil = {
       id,
       usuario: s.usuario || null,
       nome: s.nome || null,
       dados: dadosDoStore(),
       atualizado_em: agora,
-    });
+    };
+    const tabela = supabase.from("perfis");
+    const { data: gravado, error } = atual
+      ? await tabela.update(perfil).eq("id", id).eq("atualizado_em", atual.atualizado_em).select("id").maybeSingle()
+      : await tabela.insert(perfil).select("id").maybeSingle();
+    if (!contaAtual(id)) return;
+    if (!error && !gravado) {
+      useNuvem.setState({ estado: "erro", erro: "o perfil mudou em outro aparelho. vamos tentar sincronizar novamente." });
+      return;
+    }
     if (error) {
       const msg =
         error.code === "23505"
@@ -152,8 +190,10 @@ export async function buscarDaNuvem() {
     .select("dados,atualizado_em")
     .eq("id", usuario.id)
     .maybeSingle();
+  if (!contaAtual(usuario.id) || salvando) return;
+  const local = pendente();
+  if (local && (local.usuario === usuario.id || local.usuario === null)) return salvarPerfil(usuario.id);
   if (!data?.dados || data.atualizado_em === ultimaVersao) return;
-  if (pendente()) return salvarPerfil(usuario.id);
   aplicar(mesclarPerfis(data.dados as Partial<Perfil>, dadosDoStore(), new Set(), CAMPOS));
   ultimaVersao = data.atualizado_em;
 }
@@ -164,16 +204,47 @@ export async function buscarDaNuvem() {
  */
 export async function carregarPerfil(user: User): Promise<Perfil> {
   if (!supabase) return usePerfil.getState();
-  useNuvem.setState({ estado: "carregando", usuario: user });
+  const revisao = ++revisaoCarga;
+  carregado = false;
+  ultimaVersao = null;
+  useNuvem.setState({ estado: "carregando", usuario: user, erro: null });
+  const dono = donoLocal();
+  if (dono && dono !== user.id) {
+    try {
+      const local = pendente();
+      if (local) localStorage.setItem(`bookside-perfil-anterior-${dono}`, JSON.stringify({
+        dados: dadosDoStore(), pendente: local,
+      }));
+      localStorage.removeItem(PENDENTE);
+    } catch {
+      useNuvem.setState({ estado: "erro", erro: "não conseguimos preservar o perfil anterior neste navegador." });
+      return usePerfil.getState();
+    }
+    aplicar({ ...perfilInicial });
+  }
+  vincularPerfil(user.id);
+  try {
+    const chave = `bookside-perfil-anterior-${user.id}`;
+    const copia = JSON.parse(localStorage.getItem(chave) ?? "null");
+    if (copia) {
+      aplicar({ ...perfilInicial, ...copia.dados });
+      if (copia.pendente) localStorage.setItem(PENDENTE, JSON.stringify(copia.pendente));
+      localStorage.removeItem(chave);
+    }
+  } catch {
+    /* a sincronização pode continuar com o estado atual */
+  }
   const { data, error } = await supabase
     .from("perfis")
     .select("dados,atualizado_em")
     .eq("id", user.id)
     .maybeSingle();
+  if (!contaAtual(user.id) || revisao !== revisaoCarga) return usePerfil.getState();
   const local = pendente();
   const tenhoMudancas = !!local && (local.usuario === user.id || local.usuario === null);
   if (error) {
     useNuvem.setState({ estado: "erro", erro: "não conseguimos abrir seu perfil na nuvem." });
+    return usePerfil.getState();
   } else if (data?.dados && Object.keys(data.dados).length) {
     const remoto = { ...perfilInicial, ...(data.dados as Partial<Perfil>) };
     if (tenhoMudancas) {
@@ -197,38 +268,70 @@ export async function carregarPerfil(user: User): Promise<Perfil> {
     usePerfil.setState((s) => ({ email: user.email ?? null, nome: s.nome || nomeDoLogin || "" }));
     await salvarPerfil(user.id);
   }
-  carregado = true;
+  if (contaAtual(user.id) && revisao === revisaoCarga) carregado = true;
   return usePerfil.getState();
 }
 
-export async function sairDaConta() {
+function limparSessaoLocal() {
   carregado = false;
+  ultimaVersao = null;
+  revisaoCarga++;
+  const dono = donoLocal();
+  const local = pendente();
   try {
+    if (dono && local) {
+      localStorage.setItem(`bookside-perfil-anterior-${dono}`, JSON.stringify({
+        dados: dadosDoStore(), pendente: local,
+      }));
+    }
     localStorage.removeItem(PENDENTE);
+    localStorage.removeItem(DONO);
+    aplicar({ ...perfilInicial });
   } catch {
-    /* nada */
+    // Mantém a cópia local pendente quando não há espaço para arquivá-la.
+    useNuvem.setState({ estado: "erro", usuario: null, erro: "não conseguimos arquivar as mudanças deste navegador." });
+    return;
   }
-  if (supabase) await supabase.auth.signOut();
-  usePerfil.getState().sair();
   useNuvem.setState({ estado: supabase ? "sem-conta" : "desligada", usuario: null, erro: null });
+}
+
+export async function sairDaConta() {
+  if (supabase) {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      useNuvem.setState({ estado: "erro", erro: "não conseguimos encerrar sua sessão agora." });
+      return;
+    }
+  }
+  if (useNuvem.getState().usuario || !supabase) limparSessaoLocal();
 }
 
 /** Liga a sincronização (chamado uma vez, no layout). Devolve a função de desligar. */
 export function iniciarNuvem() {
   if (!supabase) return () => {};
   let espera: ReturnType<typeof setTimeout> | undefined;
+  let novaSessao: ReturnType<typeof setTimeout> | undefined;
+  let ativo = true;
 
   supabase.auth.getSession().then(({ data }) => {
-    if (data.session) void carregarPerfil(data.session.user);
-    else useNuvem.setState({ estado: "sem-conta" });
+    if (!ativo) return;
+    if (data.session && !contaAtual(data.session.user.id)) void carregarPerfil(data.session.user);
+    else if (!data.session && !useNuvem.getState().usuario) useNuvem.setState({ estado: "sem-conta" });
   });
 
   const { data: assinatura } = supabase.auth.onAuthStateChange((evento, sessao) => {
     if (evento === "SIGNED_OUT") {
-      carregado = false;
-      useNuvem.setState({ estado: "sem-conta", usuario: null });
-    } else if (sessao) {
+      clearTimeout(espera);
+      clearTimeout(novaSessao);
+      limparSessaoLocal();
+    } else if (sessao && contaAtual(sessao.user.id)) {
       useNuvem.setState({ usuario: sessao.user });
+    } else if (sessao && evento === "SIGNED_IN") {
+      // Fora do callback do Supabase: a leitura do perfil também usa a sessão.
+      clearTimeout(novaSessao);
+      novaSessao = setTimeout(() => {
+        if (useNuvem.getState().usuario?.id !== sessao.user.id) void carregarPerfil(sessao.user);
+      }, 0);
     }
   });
 
@@ -260,6 +363,8 @@ export function iniciarNuvem() {
   const periodico = setInterval(visivel, 45000);
 
   return () => {
+    ativo = false;
+    clearTimeout(novaSessao);
     document.removeEventListener("visibilitychange", visivel);
     window.removeEventListener("focus", visivel);
     clearInterval(periodico);
