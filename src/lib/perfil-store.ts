@@ -187,6 +187,8 @@ export type Perfil = {
   cartaLiteraria: { carta: string; em: string } | null;
   /** citações guardadas a partir do "entre palavras" do início (não ligadas a uma leitura) */
   palavrasGuardadas: { id: string; texto: string; autor: string; obra: string; em: string; origem: "inicio" }[];
+  /** caderno de leitura: nome, capa, papéis, favoritos do mês e prioridades (sincroniza entre aparelhos) */
+  caderno: import("@/lib/caderno").PreferenciasCaderno;
   /** compartilha as métricas pessoais de leitura com a liga dos leitores dos clubes */
   ligaPessoal: boolean;
   onboardingConcluido: boolean;
@@ -273,6 +275,7 @@ export const perfilInicial: Perfil = {
   bookside: null,
   cartaLiteraria: null,
   ligaPessoal: true,
+  caderno: {},
   palavrasGuardadas: [],
   onboardingConcluido: false,
   tourVisto: false,

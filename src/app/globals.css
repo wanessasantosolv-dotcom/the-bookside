@@ -586,3 +586,28 @@ html[data-modo="escuro"] .tokens-app {
   --color-rosa-claro: #6e3a4b; --color-rosa-antigo: #d896a7;
 }
 .tokens-app :is(.font-display, .font-revista) { font-family: var(--font-fraunces), Georgia, serif; }
+
+/* ───────── caderno de leitura ───────── */
+@keyframes folha-vira-frente { from { transform: rotateY(0deg); } to { transform: rotateY(-180deg); } }
+@keyframes folha-vira-tras { from { transform: rotateY(0deg); } to { transform: rotateY(180deg); } }
+@keyframes folha-volta { from { transform: rotateY(-180deg); opacity: .2; } to { transform: rotateY(0deg); opacity: 1; } }
+.folha-vira-frente { animation: folha-vira-frente .7s cubic-bezier(.45,.05,.3,1) forwards; }
+.folha-vira-tras { animation: folha-vira-tras .7s cubic-bezier(.45,.05,.3,1) forwards; }
+.folha-volta { animation: folha-volta .55s cubic-bezier(.45,.05,.3,1) forwards; }
+@keyframes caderno-abrir { from { transform: rotateY(0deg); } to { transform: rotateY(-160deg); opacity: .4; } }
+.caderno-capa { transform-origin: left center; transition: transform .25s; }
+.caderno-capa:hover { transform: rotateY(-6deg); }
+.caderno-abrindo { animation: caderno-abrir .7s cubic-bezier(.45,.05,.3,1) forwards; }
+.caderno-impressao { display: none; }
+@media print {
+  @page { size: A5; margin: 0; }
+  body * { visibility: hidden !important; }
+  .caderno-impressao, .caderno-impressao * { visibility: visible !important; }
+  .caderno-impressao { display: block !important; position: absolute; left: 0; top: 0; }
+  .caderno-impressao-folha { width: 148mm; height: 210mm; overflow: hidden; break-after: page; }
+  .caderno-impressao-folha > div { transform: scale(1.33); transform-origin: top left; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .folha-vira-frente, .folha-vira-tras, .folha-volta, .caderno-abrindo { animation: none; }
+  .caderno-capa:hover { transform: none; }
+}
