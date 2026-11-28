@@ -1499,6 +1499,8 @@ export function JornadaNoPerfil({ de }: { de?: { livros: LivroSalvo[]; meta: num
     <div className="space-y-6 pb-6 lg:space-y-8">
       <Cabecalho anos={anos} ano={ano} onAno={setAno} dela={de?.nome} />
 
+      {alheia ? null : <EntradaCaderno ano={ano} />}
+
       <div className="space-y-3 lg:space-y-4">
         <AnoEmNumeros n={n} atual={atual} dias={diasNoAno} alheia={alheia} />
         {alheia ? null : <MesEmRevista livros={livros} ano={ano} />}
@@ -1548,5 +1550,23 @@ export function JornadaNoPerfil({ de }: { de?: { livros: LivroSalvo[]; meta: num
         </p>
       ) : null}
     </div>
+  );
+}
+
+/** entrada do caderno de leitura: um caderninho fechado, discreto, que abre a experiência */
+function EntradaCaderno({ ano }: { ano: number }) {
+  return (
+    <Link href="/caderno" className="group flex items-center gap-4 border-y border-linha py-3.5">
+      <span aria-hidden className="relative h-[58px] w-[42px] flex-none rounded-[2px_5px_5px_2px] bg-[#692536] shadow-[3px_0_0_-1px_#EFE6D6,0_8px_14px_-8px_rgba(43,20,32,.55)] transition-transform group-hover:-rotate-3">
+        <span className="absolute inset-y-0 left-0 w-[5px] rounded-l-[2px] bg-black/20" />
+        <span className="absolute top-[30%] left-1/2 h-[14px] w-[26px] -translate-x-1/2 rounded-[1px] bg-[#F6F0E5]" />
+        <span className="absolute -bottom-2 left-[68%] h-4 w-[5px] bg-[#ECAABB]" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block font-revista text-[19px] leading-tight text-ameixa">Caderno de leitura</span>
+        <span className="block text-[12px] text-cinza">Registro de leituras, resenhas, favoritos do mês e citações de {ano}</span>
+      </span>
+      <span className="text-[13px] font-semibold text-bordo group-hover:underline">Abrir</span>
+    </Link>
   );
 }
