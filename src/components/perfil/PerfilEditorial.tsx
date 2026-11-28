@@ -164,26 +164,19 @@ function NumerosDeLeitura({ livros }: { livros: LivroSalvo[] }) {
   const doAno = lidos.filter((l) => l.lidoEm?.startsWith(String(ano)));
   const pags = (ls: LivroSalvo[]) => ls.reduce((t, l) => t + (l.paginas ?? 0), 0);
   const n = (x: number) => x.toLocaleString("pt-BR");
-  const b = "font-semibold text-[var(--tinta)] tabular-nums";
+  const celula = (valor: string, rotulo: string) => (
+    <div className="min-w-0 px-2 py-3 text-center">
+      <p className="font-revista text-[24px] leading-none text-[var(--acc)] tabular-nums lg:text-[28px]">{valor}</p>
+      <p className="mt-1 truncate text-[11px] text-[var(--suave)]">{rotulo}</p>
+    </div>
+  );
+  // faixa editorial: três números grandes entre fios finos
   return (
-    <p className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[12.5px] text-[var(--suave)]">
-      <span>
-        <b className={b}>{n(lidos.length)}</b> {lidos.length === 1 ? "livro lido" : "livros lidos"}
-      </span>
-      {pags(lidos) ? (
-        <span>
-          <b className={b}>{n(pags(lidos))}</b> páginas
-        </span>
-      ) : null}
-      <span>
-        em {ano}: <b className={b}>{n(doAno.length)}</b> {doAno.length === 1 ? "livro" : "livros"}
-        {pags(doAno) ? (
-          <>
-            {" "}· <b className={b}>{n(pags(doAno))}</b> págs.
-          </>
-        ) : null}
-      </span>
-    </p>
+    <div className="mt-4 grid max-w-[560px] grid-cols-3 divide-x divide-[var(--linha)] border-y border-[var(--linha)]">
+      {celula(n(lidos.length), lidos.length === 1 ? "livro lido" : "livros lidos")}
+      {celula(pags(lidos) ? n(pags(lidos)) : "—", "páginas")}
+      {celula(n(doAno.length), `em ${ano}${pags(doAno) ? ` · ${n(pags(doAno))} págs.` : ""}`)}
+    </div>
   );
 }
 
