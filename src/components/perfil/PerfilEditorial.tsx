@@ -156,33 +156,6 @@ function Foto({ p, tamanho }: { p: Perfil; tamanho: number }) {
 }
 
 /** a linha discreta embaixo do @usuário, como era antes: "12 seguidores · 8 seguindo" */
-/** os números de leitura no perfil: total de livros e páginas, e o ano corrente */
-function NumerosDeLeitura({ livros }: { livros: LivroSalvo[] }) {
-  const lidos = livros.filter((l) => l.status === "lido");
-  if (!lidos.length) return null;
-  const ano = new Date().getFullYear();
-  const doAno = lidos.filter((l) => l.lidoEm?.startsWith(String(ano)));
-  const pags = (ls: LivroSalvo[]) => ls.reduce((t, l) => t + (l.paginas ?? 0), 0);
-  const n = (x: number) => x.toLocaleString("pt-BR");
-  const celula = (valor: string, rotulo: string, extra?: string) => (
-    <div className="min-w-0 pr-5 pl-0 [&+&]:pl-5">
-      <p className="font-revista text-[20px] leading-none text-[var(--acc)] tabular-nums lg:text-[22px]">{valor}</p>
-      <p className="mt-1 text-[11px] leading-tight whitespace-nowrap text-[var(--suave)]">
-        {rotulo}
-        {extra ? <span className="block opacity-80">{extra}</span> : null}
-      </p>
-    </div>
-  );
-  // faixa editorial compacta: três números entre fios finos, do tamanho do conteúdo
-  return (
-    <div className="mt-3 inline-flex items-start divide-x divide-[var(--linha)] border-t border-[var(--linha)] pt-2.5">
-      {celula(n(lidos.length), lidos.length === 1 ? "livro lido" : "livros lidos")}
-      {celula(pags(lidos) ? n(pags(lidos)) : "—", "páginas")}
-      {celula(n(doAno.length), `em ${ano}`, pags(doAno) ? `${n(pags(doAno))} págs.` : undefined)}
-    </div>
-  );
-}
-
 function Seguidores({ numeros, base }: { numeros: { seguidores: number; seguindo: number } | null; base: string }) {
   if (!numeros) return null;
   return (
@@ -692,7 +665,6 @@ export function PerfilEditorial({
               </h1>
               <p className="mt-1 text-[12px] font-semibold text-[var(--acc)]">@{p.usuario}</p>
               <Seguidores numeros={numeros} base={base} />
-              <NumerosDeLeitura livros={p.livros ?? []} />
               </div>
               {/* à direita: a cartinha do arquétipo (quando publicada) e as ações compactas */}
               <div className="flex flex-none items-end gap-4">
