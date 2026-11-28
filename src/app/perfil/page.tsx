@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { useModoEscuro } from "@/components/Aparencia";
@@ -58,7 +59,7 @@ export default function PerfilPage() {
         aba={aba}
         onAba={mudarAba}
         conteudoAba={{
-          jornada: <JornadaNoPerfil />,
+          jornada: <><div className="mx-auto w-full max-w-[960px] px-5 py-3"><Link href="/caderno" className="block rounded-md border border-[var(--tinta)]/20 px-4 py-3 font-semibold text-[var(--tinta)]">Caderno de leitura →</Link></div><JornadaNoPerfil /></>,
           resenhas: <ResenhasLista />,
           estantes: <EstantesDela p={p} base="" nome="" propria />,
         }}
