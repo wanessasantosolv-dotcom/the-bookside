@@ -31,14 +31,23 @@ export type Celebracao = {
 
 type Estado = {
   atual: Celebracao | null;
+  pendentes: Celebracao[];
   celebrar: (c: Omit<Celebracao, "id">) => void;
   fechar: () => void;
 };
 
+let sequencia = 0;
 export const useCelebracao = create<Estado>((set) => ({
   atual: null,
-  celebrar: (c) => set({ atual: { ...c, id: Date.now() } }),
-  fechar: () => set({ atual: null }),
+  pendentes: [],
+  celebrar: (c) => set((s) => {
+    const evento = { ...c, id: ++sequencia };
+    return s.atual ? { pendentes: [...s.pendentes, evento] } : { atual: evento };
+  }),
+  fechar: () => set((s) => ({
+    atual: s.pendentes[0] ?? null,
+    pendentes: s.pendentes.slice(1),
+  })),
 }));
 
 // o mesmo evento nunca abre duas celebrações (ex.: duas telas reagindo à mesma conclusão)
@@ -47,6 +56,7 @@ export const celebrar = (c: Omit<Celebracao, "id">) => {
   const chave = `${c.tipo}|${c.livroId ?? c.titulo}`;
   const agora = Date.now();
   if (agora - (recentes.get(chave) ?? 0) < 8000) return;
+  for (const [k, em] of recentes) if (agora - em >= 8000) recentes.delete(k);
   recentes.set(chave, agora);
   useCelebracao.getState().celebrar(c);
 };
