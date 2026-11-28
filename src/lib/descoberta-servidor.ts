@@ -36,7 +36,7 @@ export type LivroDescoberto = {
 export type ItemDescoberto = { livro: LivroDescoberto; porque?: string; caracteristicas: string[]; fontes: Fonte[]; pesquisaExterna: boolean };
 export type RespostaDescobrir = { versao: string; resultados: ItemDescoberto[]; pesquisaExterna: boolean; avisos: string[]; medidas: Medidas; diagnostico?: Diagnostico | null };
 /** versão do motor: muda a chave do cache e descarta resultados de regras antigas */
-export const VERSAO_DESCOBERTA = "v6";
+export const VERSAO_DESCOBERTA = "v7";
 type Medidas = { candidatos: number; semEdicaoPt: number; naoLiterarios: number; duplicados: number; comFontes: number; semEvidencia: number; metadadosFracos: number; ms: number };
 
 export const SEMANA = 7 * 864e5;
@@ -162,7 +162,7 @@ async function edicaoPt(titulo: string, autor: string, original?: string): Promi
     const a = norm(v.volumeInfo?.authors?.join(" ") ?? "");
     const palavras = norm(alvo).split(" ").filter((x) => x.length > 2 || /^\d+$/.test(x));
     const batem = palavras.filter((x) => t.includes(` ${x} `)).length;
-    return (palavras.length ? batem / palavras.length >= 0.7 : t.includes(norm(alvo))) && (!sobrenome || a.includes(sobrenome));
+    return (palavras.length ? batem === palavras.length : t.trim() === norm(alvo)) && !!sobrenome && a.split(" ").includes(sobrenome);
   };
   let viuNaoLiterario = false;
   for (const alvo of [titulo, original].filter((x): x is string => !!x)) {
@@ -232,8 +232,7 @@ async function gemini(modelo: string, sistema: string, pergunta: string, extra: 
 export type Diagnostico = { etapa: "sem-chave" | "pesquisa-falhou" | "sem-paginas" | "extracao-falhou" | "ok"; paginas: number; modelo?: string };
 
 async function pesquisaContextual(pergunta: string, ids: Set<string>): Promise<{ candidatos: Candidato[]; externa: boolean; diagnostico: Diagnostico }> {
-  if (!process.env.GEMINI_API_KEY) return { candidatos: [], externa: false, diagnostico: { etapa: "sem-chave", paginas: 0 } };
-  for (const modelo of modelos()) {
+  for (const modelo of (process.env.GEMINI_API_KEY ? modelos() : [])) {
     const a = await gemini(modelo, PESQUISA, pergunta, { tools: [{ google_search: {} }], generationConfig: { temperature: 0.2 } });
     if (!a?.texto) continue;
     const paginas = (a.g?.groundingChunks ?? [])
@@ -267,7 +266,7 @@ async function pesquisaContextual(pergunta: string, ids: Set<string>): Promise<{
       }))
       .filter((l) => l.titulo && l.autor)
       .slice(0, 14);
-    return { candidatos, externa: true, diagnostico: { etapa: "ok", paginas: paginas.length, modelo } };
+    if (candidatos.some((l) => l.fontes.length)) return { candidatos: candidatos.filter((l) => l.fontes.length), externa: true, diagnostico: { etapa: "ok", paginas: paginas.length, modelo } };
 
     // páginas de cada obra: as que a extração indicou + as que sustentam trechos do relatório que citam o título;
     // sem nenhuma específica, as páginas mais relevantes desta pesquisa (todas reais, consultadas para ela)
@@ -276,25 +275,14 @@ async function pesquisaContextual(pergunta: string, ids: Set<string>): Promise<{
       const t = norm(titulo).slice(0, 18);
       for (const sp of a!.g?.groundingSupports ?? []) if (t && norm(sp.segment?.text ?? "").includes(t)) for (const i of sp.groundingChunkIndices ?? []) idx.add(i);
       const proprias = [...idx].map((n) => paginas[n]).filter((f) => f && f.tipo !== "comercial");
-      return proprias.length ? proprias : paginas.filter((f) => f.tipo !== "comercial").slice(0, 3);
+      return proprias;
     }
   }
   // 2ª via: pesquisa na internet pelo Tavily + organização por uma IA (Groq, ou Gemini se houver cota)
   const viaTavily = await pesquisaTavily(pergunta, ids);
   if (viaTavily?.candidatos.length) return viaTavily;
 
-  // 3ª via, sem internet: indicações do conhecimento da curadoria automática,
-  // conferidas uma a uma no catálogo (edição em português), e avisadas como tal
-  const memoria = await iaJson(
-    PESQUISA.replace("Pesquise NA INTERNET recomendações reais", "Indique, com base em recomendações conhecidas,").replace(/Faça várias buscas[^\n]*\n/, "") +
-      `\nResponda SÓ com JSON: {"livros":[{"titulo":string,"autor":string,"original":string,"porque":string,"caracteristicas":[string]}]} usando só estes ids de características: ${[...ids].join(", ")}.`,
-    pergunta,
-  );
-  const candidatos = (memoria?.json.livros ?? [])
-    .map((l) => ({ titulo: texto(l.titulo, 160), autor: texto(l.autor, 120), original: texto(l.original, 160) || undefined, porque: texto(l.porque, 130), caracteristicas: listaDe(l.caracteristicas, 3, 40).filter((x) => ids.has(x)), fontes: [] as Fonte[] }))
-    .filter((l) => l.titulo && l.autor)
-    .slice(0, 16);
-  if (candidatos.length) return { candidatos, externa: false, diagnostico: { etapa: "sem-paginas", paginas: 0, modelo: memoria!.modelo } };
+  // Sem evidência externa, não apresentar sugestões geradas apenas pelo modelo.
   return { candidatos: [], externa: false, diagnostico: { etapa: "pesquisa-falhou", paginas: 0 } };
 }
 
@@ -366,7 +354,8 @@ async function pesquisaTavily(pergunta: string, ids: Set<string>): Promise<{ can
     `Você transforma um pedido de leitura em buscas na internet que encontram LISTAS E RECOMENDAÇÕES de livros (crítica, livreiros, Goodreads, Reddit, blogs literários). Interprete frases poéticas pelo sentido (ex.: "entre livros e segredos" = romances ambientados em bibliotecas/livrarias com mistérios). Responda SÓ com JSON {"livros":[],"buscas":[string,string,string]}: duas buscas em inglês e uma em português, curtas e específicas.`,
     pergunta,
   );
-  const sugeridas = ((estrategia?.json as { buscas?: unknown } | undefined)?.buscas as unknown[] | undefined)?.map((x) => texto(x, 140)).filter(Boolean).slice(0, 3) ?? [];
+  const buscasIA = (estrategia?.json as { buscas?: unknown } | undefined)?.buscas;
+  const sugeridas = Array.isArray(buscasIA) ? buscasIA.map((x) => texto(x, 140)).filter(Boolean).slice(0, 3) : [];
   const buscas = sugeridas.length
     ? sugeridas
     : [`melhores livros ${consulta} recomendações${parecido ? ` parecidos com ${parecido}` : ""}`, `best books ${consulta}${parecido ? ` like ${parecido}` : ""} recommendations`];
@@ -457,10 +446,11 @@ export async function executarDescoberta(corpo: Record<string, unknown>): Promis
   diagnostico = contextual?.diagnostico ?? null;
   // plano B sem IA: a curadoria fixa das características pedidas (conferida no catálogo como tudo)
   const idsPedidos = criterios.map((c) => c.match(/\(([a-z0-9-]+),/)?.[1]).filter((x): x is string => !!x);
-  const fixas = !contextual?.candidatos.length ? obrasFixas(idsPedidos) : [];
+  const permiteFixas = !sem.length && !parecido && !contexto;
+  const fixas = permiteFixas && !contextual?.candidatos.length && !sementes.length ? obrasFixas(idsPedidos) : [];
   if (fixas.length) avisos.push("A curadoria automática está indisponível agora: mostramos uma seleção editorial fixa para essas características, conferida no catálogo.");
   // elegibilidade: candidato da pesquisa só entra com pelo menos uma página real que o recomende
-  const comEvidencia = (contextual?.candidatos ?? []).filter((c) => c.fontes.length || !externa);
+  const comEvidencia = (contextual?.candidatos ?? []).filter((c) => c.fontes.length);
   medidas.semEvidencia = (contextual?.candidatos.length ?? 0) - comEvidencia.length;
   const candidatos: Candidato[] = [
     ...sementes.map((s) => ({ ...s, porque: "", caracteristicas: [], fontes: [] })),
@@ -506,16 +496,7 @@ export async function executarDescoberta(corpo: Record<string, unknown>): Promis
       return { c, i, livro: r.livro };
     }),
   );
-  let resolvidos = await resolver(candidatos);
-  // poucos resultados confiáveis: completa com a seleção editorial fixa das características (também conferida)
-  if (resolvidos.filter(Boolean).length < 6 && !fixas.length) {
-    const ja = new Set(candidatos.map((c) => norm(c.titulo)));
-    const extra = obrasFixas(idsPedidos).filter((o) => !ja.has(norm(o.titulo))).slice(0, 8).map((o) => ({ ...o, porque: "", caracteristicas: [], fontes: [] }));
-    if (extra.length) {
-      resolvidos = [...resolvidos, ...(await resolver(extra, candidatos.length))];
-      candidatos.push(...extra);
-    }
-  }
+  const resolvidos = await resolver(candidatos);
   const unicos = resolvidos
     .filter((x): x is NonNullable<typeof x> => !!x)
     .filter((x) => {
@@ -551,7 +532,7 @@ export async function executarDescoberta(corpo: Record<string, unknown>): Promis
     pesquisaExterna: x.c.fontes.length > 0,
   }));
   medidas.comFontes = resultados.filter((r) => r.fontes.length).length;
-  if (contextual && !externa && resultados.length > sementes.length) avisos.push("A pesquisa em fontes externas não respondeu desta vez: estas indicações vêm da curadoria automática e foram conferidas no catálogo.");
+  if (contextual && !externa && !fixas.length) avisos.push("A pesquisa em fontes externas não respondeu desta vez.");
   if (outrosIdiomas) avisos.push("Edições em outros idiomas aparecem só na pesquisa direta por título, autor ou ISBN.");
   medidas.ms = Date.now() - inicio;
   return { versao: VERSAO_DESCOBERTA, resultados, pesquisaExterna: externa, avisos, medidas, diagnostico };
