@@ -1,5 +1,6 @@
 /** Descoberta literária no servidor (lógica em lib/descoberta-servidor.ts). */
-import { SEMANA, VERSAO_DESCOBERTA, contaValida, executarDescoberta, gravarCache, lerCache, norm, texto, type RespostaDescobrir } from "@/lib/descoberta-servidor";
+import { createHash } from "node:crypto";
+import { SEMANA, VERSAO_DESCOBERTA, contaValida, executarDescoberta, gravarCache, lerCache, texto, type RespostaDescobrir } from "@/lib/descoberta-servidor";
 
 export const maxDuration = 60;
 
@@ -15,7 +16,7 @@ export async function POST(req: Request) {
   if (recentes.length >= 40) return Response.json({ erro: "limite" }, { status: 429 });
 
   const corpo = (await req.json().catch(() => ({}))) as Record<string, unknown>;
-  const chave = VERSAO_DESCOBERTA + ":" + norm(JSON.stringify([corpo.consulta, corpo.criterios, corpo.sem, corpo.parecidoCom, corpo.contexto, (corpo.sementes as unknown[] | undefined)?.length ?? 0]));
+  const chave = VERSAO_DESCOBERTA + ":" + createHash("sha256").update(JSON.stringify([corpo.consulta, corpo.criterios, corpo.sem, corpo.parecidoCom, corpo.contexto, corpo.sementes, corpo.excluir, corpo.ids, corpo.outrosIdiomas])).digest("hex");
   const m = memoria.get(chave);
   if (m && agora - m.em < SEMANA) return Response.json(m.valor);
   const guardada = await lerCache(chave, token!);
