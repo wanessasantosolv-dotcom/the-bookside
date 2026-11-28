@@ -68,4 +68,36 @@ t("diversidade: no máximo 2 por autoria antes das demais", () => {
 t("mesma obra em edições diferentes vira uma chave só", () => {
   assert.equal(Q.chaveDaObra("Piranesi", "Susanna Clarke"), Q.chaveDaObra("Piranesi: edição especial", "susanna clarke"));
 });
+// Carrega as curadorias reais, sem rede, usando o mesmo compilador dos testes existentes.
+const Module = require("module");
+const carregados = new Map();
+function carregar(nome) {
+  if (carregados.has(nome)) return carregados.get(nome).exports;
+  const arquivo = path.join(raiz, "src/lib", nome + ".ts");
+  const m = new Module(arquivo, module);
+  carregados.set(nome, m);
+  m.require = (id) => id.startsWith("@/lib/") ? carregar(id.slice(6)) : require(id);
+  m._compile(ts.transpileModule(fs.readFileSync(arquivo, "utf8"), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 } }).outputText, arquivo);
+  return m.exports;
+}
+const F = carregar("curadoria-fixa");
+t("contingência não inventa obras para critérios desconhecidos", () => {
+  assert.deepEqual(F.obrasFixas([]), []);
+  assert.deepEqual(F.obrasFixas(["lit-coreana", "inexistente"]), []);
+});
+t("contingência combina origem e atmosfera por interseção", () => {
+  const obras = F.obrasFixas(["lit-coreana", "acolhedora"]);
+  assert(obras.length > 0);
+  for (const obra of obras) {
+    for (const id of ["lit-coreana", "acolhedora"]) {
+      assert(F.CURADORIA_FIXA[id].some(x => x.titulo.toLowerCase() === obra.titulo.toLowerCase() && x.autor.toLowerCase() === obra.autor.toLowerCase()));
+    }
+  }
+});
+t("origens incompatíveis não são misturadas para preencher resultados", () => {
+  assert.deepEqual(F.obrasFixas(["lit-coreana", "lit-brasileira"]), []);
+});
+t("critério repetido não altera a seleção editorial", () => {
+  assert.deepEqual(F.obrasFixas(["lit-coreana", "lit-coreana"]), F.obrasFixas(["lit-coreana"]));
+});
 console.log(ok + " testes passaram");
