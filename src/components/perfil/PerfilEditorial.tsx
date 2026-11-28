@@ -164,18 +164,21 @@ function NumerosDeLeitura({ livros }: { livros: LivroSalvo[] }) {
   const doAno = lidos.filter((l) => l.lidoEm?.startsWith(String(ano)));
   const pags = (ls: LivroSalvo[]) => ls.reduce((t, l) => t + (l.paginas ?? 0), 0);
   const n = (x: number) => x.toLocaleString("pt-BR");
-  const celula = (valor: string, rotulo: string) => (
-    <div className="min-w-0 px-2 py-3 text-center">
-      <p className="font-revista text-[24px] leading-none text-[var(--acc)] tabular-nums lg:text-[28px]">{valor}</p>
-      <p className="mt-1 truncate text-[11px] text-[var(--suave)]">{rotulo}</p>
+  const celula = (valor: string, rotulo: string, extra?: string) => (
+    <div className="min-w-0 pr-5 pl-0 [&+&]:pl-5">
+      <p className="font-revista text-[20px] leading-none text-[var(--acc)] tabular-nums lg:text-[22px]">{valor}</p>
+      <p className="mt-1 text-[11px] leading-tight whitespace-nowrap text-[var(--suave)]">
+        {rotulo}
+        {extra ? <span className="block opacity-80">{extra}</span> : null}
+      </p>
     </div>
   );
-  // faixa editorial: três números grandes entre fios finos
+  // faixa editorial compacta: três números entre fios finos, do tamanho do conteúdo
   return (
-    <div className="mt-4 grid max-w-[560px] grid-cols-3 divide-x divide-[var(--linha)] border-y border-[var(--linha)]">
+    <div className="mt-3 inline-flex items-start divide-x divide-[var(--linha)] border-t border-[var(--linha)] pt-2.5">
       {celula(n(lidos.length), lidos.length === 1 ? "livro lido" : "livros lidos")}
       {celula(pags(lidos) ? n(pags(lidos)) : "—", "páginas")}
-      {celula(n(doAno.length), `em ${ano}${pags(doAno) ? ` · ${n(pags(doAno))} págs.` : ""}`)}
+      {celula(n(doAno.length), `em ${ano}`, pags(doAno) ? `${n(pags(doAno))} págs.` : undefined)}
     </div>
   );
 }
@@ -682,8 +685,8 @@ export function PerfilEditorial({
               </div>
             </div>
             {/* o nome fica fora da capa, ao lado da foto: sempre fácil de ler */}
-            <div className="flex flex-col gap-3 pt-2 pr-5 pl-[132px] lg:flex-row lg:items-end lg:justify-between lg:pt-4 lg:pl-[220px]">
-              <div className="min-w-0">
+            <div className="flex flex-col gap-3 pt-2 pr-5 pl-[132px] lg:flex-row lg:items-end lg:justify-between lg:gap-6 lg:pt-4 lg:pl-[220px]">
+              <div className="min-w-0 lg:flex-1">
               <h1 className="font-display text-[26px] leading-[1.05] font-semibold text-[var(--acc)] italic lg:font-revista lg:text-[40px] lg:font-normal lg:text-[var(--tinta)]">
                 {nome}
               </h1>
