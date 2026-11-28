@@ -5,7 +5,7 @@
  * dos dez primeiros continua exigindo leitura humana: os títulos vêm na resposta.
  * Uso (logada): /api/descobrir/avaliacao?de=0&ate=6  (lotes, para caber no tempo)
  */
-import { contaValida, executarDescoberta } from "@/lib/descoberta-servidor";
+import { contaDaDescoberta, executarDescoberta } from "@/lib/descoberta-servidor";
 import { ehEdicaoPt, naoLiterario } from "@/lib/descoberta-qualidade";
 
 export const maxDuration = 60;
@@ -33,15 +33,15 @@ const CONSULTAS = [
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
-  const token = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? url.searchParams.get("token") ?? undefined;
+  const token = req.headers.get("authorization")?.match(/^Bearer\s+(\S+)$/i)?.[1];
   const segredo = process.env.CRON_SECRET && req.headers.get("x-cron-secret") === process.env.CRON_SECRET;
-  if (!segredo && !(await contaValida(token))) return Response.json({ erro: "entre na sua conta" }, { status: 401 });
+  if (!segredo && !(await contaDaDescoberta(token))) return Response.json({ erro: "entre na sua conta" }, { status: 401 });
   const de = Math.max(0, Number(url.searchParams.get("de")) || 0);
-  const ate = Math.min(CONSULTAS.length, Number(url.searchParams.get("ate")) || de + 6);
+  const ate = Math.min(CONSULTAS.length, de + 6, Number(url.searchParams.get("ate")) || de + 6);
   const lote = CONSULTAS.slice(de, ate);
   const rodadas = await Promise.all(
     lote.map(async (consulta) => {
-      const r = await executarDescoberta({ consulta });
+      const r = await executarDescoberta({ consulta }, req.signal);
       const dez = r.resultados.slice(0, 10);
       return {
         consulta,

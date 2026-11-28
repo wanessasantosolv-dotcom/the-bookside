@@ -6,6 +6,7 @@ import { CapaLivro } from "@/components/CapaLivro";
 import { AdicionarALista } from "@/components/descoberta/AdicionarALista";
 import { dadosDoTermino, PerguntaTermino } from "@/components/PerguntaTermino";
 import { chaveTitulo, lembrarLivros, type LivroBusca } from "@/lib/catalogo";
+import { chaveDaObra } from "@/lib/descoberta-qualidade";
 import { corDoLivro } from "@/lib/cores";
 import { buscarDescoberta, surpresa, type Contexto, type Resposta, type Resultado } from "@/lib/descoberta";
 import { usePerfil, type StatusLivro } from "@/lib/perfil-store";
@@ -106,25 +107,27 @@ export function Busca({
     setErro(false);
     setResposta(null);
     const meus = usePerfil.getState().livros.filter((l) => l.status === "lido").map((l) => l.titulo);
-    buscarDescoberta({ consulta, filtros, contexto, excluir: modo.tipo === "descobrir" ? meus : [] }, ctrl.signal)
+    buscarDescoberta({ consulta, filtros, ignorados, contexto, excluir: modo.tipo === "descobrir" ? meus : [] }, ctrl.signal)
       .then((r) => {
         if (ctrl.signal.aborted) return;
-        // um critério reconhecido que a pessoa tirou some do uso
-        const criterios = r.criterios.filter((c) => !ignorados.includes(c.id));
-        setResposta({ ...r, criterios });
+        setResposta(r);
         lembrarLivros(r.resultados.map((x) => x.livro));
       })
       .catch(() => !ctrl.signal.aborted && setErro(true))
       .finally(() => !ctrl.signal.aborted && setCarregando(false));
     return () => ctrl.abort();
-    // o contexto entra pela lista; ignorados filtram só a exibição
+    // o contexto entra pela lista
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [consulta, filtros]);
+  }, [consulta, filtros, ignorados]);
 
   // digitando: espera uma pausa antes de pesquisar
   useEffect(() => {
     if (!restaurado.current || texto === consulta) return;
-    const t = setTimeout(() => setConsulta(texto), texto.trim().length < 3 && texto.trim() ? 99999 : 700);
+    if (texto.trim() && texto.trim().length < 3) return;
+    const t = setTimeout(() => {
+      setIgnorados([]);
+      setConsulta(texto);
+    }, 700);
     return () => clearTimeout(t);
   }, [texto, consulta]);
 
@@ -134,15 +137,13 @@ export function Busca({
     setConsulta(final);
     setIgnorados([]);
   }, []);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => controle?.({ pesquisar, limpar }), [controle, pesquisar]);
-
-  function limpar() {
+  const limpar = useCallback(() => {
     setTexto("");
     setConsulta("");
     setFiltros([]);
     setIgnorados([]);
-  }
+  }, []);
+  useEffect(() => controle?.({ pesquisar, limpar }), [controle, pesquisar, limpar]);
 
   const reconhecidos = (resposta?.interpretacao.criterios ?? []).filter((c) => !ignorados.includes(c.id));
   const escolhidos = filtros.map((id) => PORID.get(id)).filter((x): x is Caracteristica => !!x);
@@ -170,6 +171,7 @@ export function Busca({
         role="search"
         onSubmit={(e) => {
           e.preventDefault();
+          if (texto !== consulta) setIgnorados([]);
           setConsulta(texto);
         }}
         className="flex gap-2"
@@ -323,10 +325,10 @@ function Resultados({
   const guardarLivro = usePerfil((s) => s.guardarLivro);
   const [terminando, setTerminando] = useState<LivroBusca | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
-  const meus = useMemo(() => new Map(livros.map((l) => [chaveTitulo(l.titulo), l])), [livros]);
+  const meus = useMemo(() => new Map(livros.map((l) => [chaveDaObra(l.titulo, l.autor), l])), [livros]);
 
   function marcar(l: LivroBusca, status: StatusLivro, extra = {}) {
-    const ja = meus.get(chaveTitulo(l.titulo));
+    const ja = meus.get(chaveDaObra(l.titulo, l.autor));
     guardarLivro({ ...(ja ?? {}), id: ja?.id ?? l.id, titulo: ja?.titulo ?? l.titulo, autor: ja?.autor ?? l.autor, capa: ja?.capa ?? l.capa, paginas: ja?.paginas ?? l.paginas, genero: ja?.genero ?? l.genero, status, ...extra });
     setAviso(status === "quero" ? "Livro adicionado ao seu quero ler." : "Leitura registrada.");
   }
@@ -397,7 +399,7 @@ function Resultados({
       <ul className="mt-3 divide-y divide-linha">
         {visiveis.map((r) => {
           const l = r.livro;
-          const meu = meus.get(chaveTitulo(l.titulo));
+          const meu = meus.get(chaveDaObra(l.titulo, l.autor));
           const k = chaveTitulo(l.titulo);
           const selecionado = modo.tipo === "lista" && modo.selecionados.has(k);
           const naLista = modo.tipo === "lista" && modo.naLista.has(k);
@@ -423,7 +425,7 @@ function Resultados({
                     <div className="mt-1 space-y-1 border-l border-linha pl-3">
                       {l.editora || l.isbn ? (
                         <p>
-                          Edição em português{l.editora ? ` · ${l.editora}` : ""}
+                          {r.fontes?.length ? "Edição em português" : "Edição"}{l.editora ? ` · ${l.editora}` : ""}
                           {l.isbn ? ` · ISBN ${l.isbn}` : ""}
                         </p>
                       ) : null}

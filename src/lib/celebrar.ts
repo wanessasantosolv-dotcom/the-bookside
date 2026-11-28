@@ -1,5 +1,7 @@
 "use client";
 
+import type { LivroSalvo } from "@/lib/perfil-store";
+import { concluidasNoAno } from "@/lib/leituras";
 import { create } from "zustand";
 
 /*
@@ -55,14 +57,14 @@ const recentes = new Map<string, number>();
 export const celebrar = (c: Omit<Celebracao, "id">) => {
   const chave = `${c.tipo}|${c.livroId ?? c.titulo}`;
   const agora = Date.now();
-  if (agora - (recentes.get(chave) ?? 0) < 8000) return;
+  if (agora - (recentes.get(chave) ?? -Infinity) < 8000) return;
   for (const [k, em] of recentes) if (agora - em >= 8000) recentes.delete(k);
   recentes.set(chave, agora);
   useCelebracao.getState().celebrar(c);
 };
 
 type LivroLido = { id: string; titulo: string; autor?: string; capa?: string; lidoEm?: string; lidoSoAno?: boolean };
-type EstadoEstante = { livros: { status?: string; lidoEm?: string }[]; meta: number | null };
+type EstadoEstante = { livros: LivroSalvo[]; meta: number | null };
 
 // conclusões que chegam juntas (importação, cadastro em lote) viram uma celebração coletiva
 let fila: { livro: LivroLido; estado: EstadoEstante; releitura: boolean }[] = [];
@@ -85,7 +87,7 @@ export function celebrarTermino(livro: LivroLido, estado: EstadoEstante, opcoes:
     for (const { livro: l, estado: e, releitura } of itens) {
       const ano = new Date().getFullYear();
       const desteAno = !!l.lidoEm && l.lidoEm.startsWith(String(ano));
-      const lidosNoAno = e.livros.filter((x) => x.status === "lido" && x.lidoEm?.startsWith(String(ano))).length;
+      const lidosNoAno = concluidasNoAno(e.livros, ano).length;
       const totalLidos = e.livros.filter((x) => x.status === "lido").length;
       const meta = desteAno && e.meta ? { lidos: lidosNoAno, meta: e.meta, ano } : null;
       const bateu = !!meta && meta.lidos === meta.meta;

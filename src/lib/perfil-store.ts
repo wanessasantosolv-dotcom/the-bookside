@@ -112,6 +112,7 @@ export type LivroDaEdicao = {
   nota?: number;
   iniciadoEm?: string;
   lidoEm?: string;
+  lidoSoMes?: boolean;
   formato?: FormatoLivro;
   /** terminou no mês (senão, estava em andamento) */
   concluido: boolean;
@@ -249,7 +250,7 @@ function avisarTermino(antigo: LivroSalvo | undefined, novo: LivroSalvo, get: ()
   if (antigo?.status === "lido" && !releitura) return;
   queueMicrotask(() => {
     const estado = get();
-    celebrarTermino({ id: novo.id, titulo: novo.titulo, autor: novo.autor, capa: novo.capa, lidoEm: novo.lidoEm, lidoSoAno: novo.lidoSoAno }, { livros: estado.livros, meta: estado.meta }, { releitura });
+    celebrarTermino({ id: novo.id, titulo: novo.titulo, autor: novo.autor, capa: novo.capa, lidoEm: novo.lidoEm, lidoSoAno: novo.lidoSoAno }, { livros: estado.livros, meta: estado.meta }, { releitura: releitura || !!novo.releituras?.length });
   });
 }
 

@@ -100,4 +100,7 @@ t("origens incompatíveis não são misturadas para preencher resultados", () =>
 t("critério repetido não altera a seleção editorial", () => {
   assert.deepEqual(F.obrasFixas(["lit-coreana", "lit-coreana"]), F.obrasFixas(["lit-coreana"]));
 });
+t("obras homônimas de autores com o mesmo sobrenome não se confundem", () => {
+  assert.notEqual(Q.chaveDaObra("Um título", "Henry James"), Q.chaveDaObra("Um título", "William James"));
+});
 console.log(ok + " testes passaram");

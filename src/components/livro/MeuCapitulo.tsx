@@ -1,5 +1,5 @@
 "use client";
-import { soAno } from "@/lib/estantes";
+import { dataParcial } from "@/lib/estantes";
 
 import Link from "next/link";
 import { useState } from "react";
@@ -208,7 +208,7 @@ export function MeuCapitulo({
         {status === "lido" ? (
           <>
             <Dado r="começou" v={data(livro.iniciadoEm)} />
-            <Dado r="terminou" v={soAno(livro) ?? data(livro.lidoEm) ?? "sem data"} />
+            <Dado r="terminou" v={dataParcial(livro) ?? data(livro.lidoEm) ?? "sem data"} />
             <Dado
               r="tempo de leitura"
               v={(() => {
@@ -318,7 +318,7 @@ export function MeuCapitulo({
           {releituras.map((r, i) => (
             <li key={i} className="flex justify-between gap-3">
               <span>
-                {i + 1}ª leitura · {data(r.iniciadoEm) ?? "?"} → {data(r.lidoEm) ?? "sem data"}
+                {i + 1}ª leitura · {data(r.iniciadoEm) ?? "?"} → {dataParcial(r) ?? data(r.lidoEm) ?? "sem data"}
               </span>
               <span className="text-rosa-claro">{r.nota ? `${nota1(r.nota)} ★` : ""}</span>
             </li>

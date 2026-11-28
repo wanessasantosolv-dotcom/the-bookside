@@ -10,7 +10,7 @@
  */
 import { buscarLivros, chaveTitulo, type LivroBusca } from "@/lib/catalogo";
 import { CURADORIAS } from "@/lib/curadorias";
-import { ehEdicaoPt, naoLiterario, type TipoFonte } from "@/lib/descoberta-qualidade";
+import { chaveDaObra, ehEdicaoPt, naoLiterario, type TipoFonte } from "@/lib/descoberta-qualidade";
 import { supabase } from "@/lib/supabase";
 import { CARACTERISTICAS, PORID, ehBuscaDireta, interpretarBusca, type Caracteristica, type Interpretacao } from "@/lib/taxonomia";
 
@@ -46,9 +46,16 @@ const norm = (s: string) =>
     .replace(/\s+/g, " ")
     .trim();
 
-const cache = new Map<string, Resposta>();
+const cache = new Map<string, { resposta: Resposta; ate: number }>();
+function guardar(chave: string, resposta: Resposta) {
+  if (cache.size >= 100) {
+    const primeira = cache.keys().next().value;
+    if (primeira) cache.delete(primeira);
+  }
+  cache.set(chave, { resposta, ate: Date.now() + 30 * 60_000 });
+}
 /** versão do motor de descoberta (muda a chave do cache local junto com a do servidor) */
-const VERSAO = "v7";
+const VERSAO = "v8";
 
 /** filtros objetivos: só passam livros cujo dado confirma o critério */
 function confirma(l: LivroBusca, criterios: Caracteristica[]) {
@@ -84,37 +91,34 @@ function casaComAPesquisa(l: LivroBusca, consulta: string) {
 function semRepetir(lista: Resultado[], excluir: Set<string>) {
   const vistos = new Set<string>();
   return lista.filter((r) => {
-    const k = chaveTitulo(r.livro.titulo);
-    if (vistos.has(k) || excluir.has(k)) return false;
+    const k = chaveDaObra(r.livro.titulo, r.livro.autor);
+    if (vistos.has(k) || excluir.has(chaveTitulo(r.livro.titulo))) return false;
     vistos.add(k);
     return true;
   });
 }
 
-async function token() {
-  if (!supabase) return null;
-  const { data } = await supabase.auth.getSession();
-  return data.session?.access_token ?? null;
-}
+type Pedido = { consulta: string; filtros?: string[]; ignorados?: string[]; contexto?: Contexto; excluir?: string[]; sementes?: { titulo: string; autor: string }[] };
 
-type Pedido = { consulta: string; filtros?: string[]; contexto?: Contexto; excluir?: string[]; sementes?: { titulo: string; autor: string }[] };
-
-export async function buscarDescoberta({ consulta, filtros = [], contexto, excluir = [], sementes: pedidas = [] }: Pedido, signal?: AbortSignal): Promise<Resposta> {
+export async function buscarDescoberta({ consulta, filtros = [], ignorados = [], contexto, excluir = [], sementes: pedidas = [] }: Pedido, signal?: AbortSignal): Promise<Resposta> {
   // abrir uma curadoria pela busca usa a mesma seleção verificada dela
   // pelo nome ("Entre livros e segredos") ou pela consulta da curadoria
   const curadoria = CURADORIAS.find((c) => [c.consulta, c.nome].some((x) => x.toLowerCase() === consulta.trim().toLowerCase()));
   const sementes = pedidas.length ? pedidas : (curadoria?.sementes ?? []);
   if (curadoria && consulta.trim().toLowerCase() === curadoria.nome.toLowerCase()) consulta = `${curadoria.consulta} (${curadoria.descricao} Critérios: ${curadoria.criterios.join(", ")})`;
-  const chave = JSON.stringify([VERSAO, consulta.trim().toLowerCase(), [...filtros].sort(), contexto?.nome ?? "", contexto?.descricao ?? "", contexto?.titulos ?? [], [...excluir].sort(), sementes]);
-  const pronto = cache.get(chave);
-  if (pronto) return pronto;
-
-  const interpretacao = interpretarBusca(consulta);
+  const original = interpretarBusca(consulta);
+  const interpretacao = { ...original, criterios: original.criterios.filter((c) => !ignorados.includes(c.id)) };
+  const consultaEfetiva = ignorados.length ? original.resto : consulta;
   const criterios = [...interpretacao.criterios, ...filtros.map((id) => PORID.get(id)).filter((x): x is Caracteristica => !!x && !interpretacao.criterios.includes(x))];
   const avisos = [...interpretacao.avisos];
   const fora = new Set([...excluir, ...(contexto?.titulos ?? [])].map(chaveTitulo));
   const subjetivos = criterios.filter((c) => !c.objetiva);
-  const direta = ehBuscaDireta(interpretacao, consulta) && !subjetivos.length && !contexto && !sementes.length;
+  const direta = ehBuscaDireta(original, consulta) && !subjetivos.length && !contexto && !sementes.length;
+
+  const sessao = !direta && supabase ? (await supabase.auth.getSession()).data.session : null;
+  const chave = JSON.stringify([VERSAO, direta ? null : sessao?.user.id, consulta.trim().toLowerCase(), [...filtros].sort(), [...ignorados].sort(), contexto?.nome ?? "", contexto?.descricao ?? "", contexto?.titulos ?? [], [...excluir].sort(), sementes]);
+  const pronto = cache.get(chave);
+  if (pronto && pronto.ate > Date.now()) return pronto.resposta;
 
   // 1. título, autor ou ISBN: o catálogo de sempre, com correspondência exata primeiro
   if (direta && consulta.trim()) {
@@ -126,22 +130,21 @@ export async function buscarDescoberta({ consulta, filtros = [], contexto, exclu
       fora,
     );
     const resposta: Resposta = { interpretacao, criterios, resultados, fonte: "catalogo", avisos };
-    cache.set(chave, resposta);
+    if (resultados.length) guardar(chave, resposta);
     return resposta;
   }
 
   // 2. descoberta: pesquisa contextual + edição em português verificada, tudo no servidor
-  const tk = await token();
+  const tk = sessao?.access_token;
   let resultados: Resultado[] = [];
   let fonte: Resposta["fonte"] = "descoberta";
-  let pesquisaExterna = false;
   if (tk) {
     const r = await fetch("/api/descobrir", {
       method: "POST",
       signal,
       headers: { "content-type": "application/json", authorization: `Bearer ${tk}` },
       body: JSON.stringify({
-        consulta: consulta.trim(),
+        consulta: consultaEfetiva.trim(),
         criterios: criterios.map((c) => `${c.nome} (${c.id}, ${c.categoria})`),
         sem: interpretacao.sem.map((c) => c.nome),
         parecidoCom: interpretacao.parecidoCom,
@@ -154,19 +157,13 @@ export async function buscarDescoberta({ consulta, filtros = [], contexto, exclu
     const dados = r?.ok
       ? ((await r.json().catch(() => null)) as {
           resultados?: { livro: LivroBusca; porque?: string; caracteristicas: string[]; fontes: { titulo: string; url: string; tipo: TipoFonte }[] }[];
-          pesquisaExterna?: boolean;
           avisos?: string[];
-          diagnostico?: unknown;
-          medidas?: unknown;
         } | null)
       : null;
-    if (dados) console.info(`[descobrir] ${consulta} · ${dados.resultados?.length ?? 0} resultados · ${JSON.stringify(dados.diagnostico)} · ${JSON.stringify(dados.medidas)}`);
-    else if (r) console.info("[descobrir] falhou", r.status);
     if (dados) {
       for (const a of dados.avisos ?? []) if (!avisos.includes(a)) avisos.push(a);
     }
     if (dados?.resultados?.length) {
-      pesquisaExterna = !!dados.pesquisaExterna;
       resultados = dados.resultados.map((x, i) => ({
         livro: { ...x.livro, cor: x.livro.cor ?? ["#692536", "#8297D1", "#667255", "#D8A8B6"][i % 4] },
         porque: x.porque,
@@ -185,9 +182,9 @@ export async function buscarDescoberta({ consulta, filtros = [], contexto, exclu
     fonte = "nenhum";
     avisos.push("Não encontramos recomendações confiáveis para esta pesquisa agora. Tente outras palavras, um autor ou um livro de referência.");
   }
-  pesquisaExterna = resultados.some((r) => !!r.fontes?.length);
+  const pesquisaExterna = resultados.some((r) => !!r.fontes?.length);
   const resposta: Resposta = { interpretacao, criterios, resultados, fonte, avisos, pesquisaExterna };
-  if (resultados.length) cache.set(chave, resposta);
+  if (pesquisaExterna) guardar(chave, resposta);
   return resposta;
 }
 

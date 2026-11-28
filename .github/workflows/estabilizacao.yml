@@ -28,6 +28,12 @@ jobs:
         run: npm ci
       - name: Testes de descoberta
         run: node scripts/testar-descoberta.cjs
+      - name: Testes de leitura e descoberta integrada
+        run: node scripts/testar-estabilizacao.cjs
+      - name: Testes de Nas entrelinhas
+        run: node scripts/testar-entrelinhas.cjs
+      - name: Lint
+        run: npm run lint
       - name: Verificar TypeScript
         run: npx --no-install tsc --noEmit
       - name: Build

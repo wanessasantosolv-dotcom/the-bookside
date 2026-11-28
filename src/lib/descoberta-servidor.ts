@@ -10,7 +10,7 @@
  *     sem edição em português confirmada, o livro sai;
  *  4. tira materiais não literários e duplicatas da mesma obra;
  *  5. classifica (pertinência, curadoria, leitores, recorrência) e diversifica;
- *  6. guarda o resultado em cache (memória + tabela descoberta_cache, 7 dias).
+ *  6. guarda o resultado em cache (memória por conta, 7 dias).
  * Nada da pessoa vai para o Google: só a pesquisa e títulos de livros.
  */
 import { obrasFixas } from "@/lib/curadoria-fixa";
@@ -36,7 +36,7 @@ export type LivroDescoberto = {
 export type ItemDescoberto = { livro: LivroDescoberto; porque?: string; caracteristicas: string[]; fontes: Fonte[]; pesquisaExterna: boolean };
 export type RespostaDescobrir = { versao: string; resultados: ItemDescoberto[]; pesquisaExterna: boolean; avisos: string[]; medidas: Medidas; diagnostico?: Diagnostico | null };
 /** versão do motor: muda a chave do cache e descarta resultados de regras antigas */
-export const VERSAO_DESCOBERTA = "v7";
+export const VERSAO_DESCOBERTA = "v8";
 type Medidas = { candidatos: number; semEdicaoPt: number; naoLiterarios: number; duplicados: number; comFontes: number; semEvidencia: number; metadadosFracos: number; ms: number };
 
 export const SEMANA = 7 * 864e5;
@@ -62,33 +62,30 @@ function supa() {
   return url && chave ? { url, chave } : null;
 }
 
-export async function contaValida(token: string | undefined) {
+export async function contaDaDescoberta(token: string | undefined): Promise<string | null> {
   const s = supa();
-  if (!s || !token) return false;
-  const r = await fetch(`${s.url}/auth/v1/user`, { headers: { apikey: s.chave, Authorization: `Bearer ${token}` } }).catch(() => null);
-  return !!r?.ok;
-}
-
-export async function lerCache(chave: string, token: string): Promise<RespostaDescobrir | null> {
-  const s = supa();
-  if (!s) return null;
-  const r = await fetch(`${s.url}/rest/v1/descoberta_cache?chave=eq.${encodeURIComponent(chave)}&select=resposta,criado_em`, {
+  if (!s || !token) return null;
+  const r = await fetch(`${s.url}/auth/v1/user`, {
     headers: { apikey: s.chave, Authorization: `Bearer ${token}` },
+    cache: "no-store",
+    signal: AbortSignal.timeout(5000),
   }).catch(() => null);
   if (!r?.ok) return null;
-  const linhas = (await r.json().catch(() => [])) as { resposta: RespostaDescobrir; criado_em: string }[];
-  const l = linhas[0];
-  return l && Date.now() - +new Date(l.criado_em) < SEMANA ? l.resposta : null;
+  const conta = await r.json().catch(() => null);
+  return typeof conta?.id === "string" && conta.id ? conta.id : null;
 }
 
-export async function gravarCache(chave: string, consulta: string, resposta: RespostaDescobrir, token: string) {
-  const s = supa();
-  if (!s) return;
-  await fetch(`${s.url}/rest/v1/descoberta_cache`, {
-    method: "POST",
-    headers: { apikey: s.chave, Authorization: `Bearer ${token}`, "content-type": "application/json", Prefer: "resolution=merge-duplicates" },
-    body: JSON.stringify({ chave, consulta, resposta, criado_em: new Date().toISOString() }),
-  }).catch(() => null);
+function registros(valor: unknown): Record<string, unknown>[] {
+  return Array.isArray(valor) ? valor.filter((v) => v && typeof v === "object" && !Array.isArray(v)) : [];
+}
+
+function mencionaObra(trecho: string, alvos: string[]) {
+  const textoNormalizado = ` ${norm(trecho)} `;
+  return alvos.some((titulo) => textoNormalizado.includes(` ${titulo} `));
+}
+
+function urlDaFonte(valor: string) {
+  return URL.canParse(valor) && ["http:", "https:"].includes(new URL(valor).protocol);
 }
 
 /* ───────── Google Books (edição em português) ───────── */
@@ -112,18 +109,18 @@ type VolumeGB = {
   };
 };
 
-async function volumes(q: string, lang?: string): Promise<VolumeGB[]> {
+async function volumes(q: string, lang: string, prazo: AbortSignal): Promise<VolumeGB[]> {
   const u = new URL("https://www.googleapis.com/books/v1/volumes");
   u.searchParams.set("q", q);
   u.searchParams.set("maxResults", "20");
   u.searchParams.set("printType", "books");
   if (lang) u.searchParams.set("langRestrict", lang);
   if (process.env.GOOGLE_BOOKS_API_KEY) u.searchParams.set("key", process.env.GOOGLE_BOOKS_API_KEY);
-  let r = await fetch(u, { next: { revalidate: 86400 * 7 } }).catch(() => null);
+  let r = await fetch(u, { next: { revalidate: 86400 * 7 }, signal: AbortSignal.any([prazo, AbortSignal.timeout(5000)]) }).catch(() => null);
   // o Google recusa rajadas: espera um pouco e tenta de novo (duas vezes)
-  for (let t = 0; t < 2 && r && (r.status === 429 || r.status >= 500); t++) {
+  for (let t = 0; t < 2 && !prazo.aborted && r && (r.status === 429 || r.status >= 500); t++) {
     await new Promise((ok) => setTimeout(ok, 600 * (t + 1)));
-    r = await fetch(u, { next: { revalidate: 86400 * 7 } }).catch(() => null);
+    r = await fetch(u, { next: { revalidate: 86400 * 7 }, signal: AbortSignal.any([prazo, AbortSignal.timeout(5000)]) }).catch(() => null);
   }
   if (!r?.ok) return [];
   return ((await r.json().catch(() => ({}))) as { items?: VolumeGB[] }).items ?? [];
@@ -154,7 +151,7 @@ function paraLivro(v: VolumeGB): LivroDescoberto | null {
 }
 
 /** a edição brasileira (ou portuguesa) de uma obra, conferida por título e sobrenome do autor */
-async function edicaoPt(titulo: string, autor: string, original?: string): Promise<{ livro: LivroDescoberto; motivo?: never } | { livro: null; motivo: "sem-pt" | "nao-literario" }> {
+async function edicaoPt(titulo: string, autor: string, original: string | undefined, prazo: AbortSignal): Promise<{ livro: LivroDescoberto; motivo?: never } | { livro: null; motivo: "sem-pt" | "nao-literario" }> {
   const sobrenome = norm(autor).split(" ").pop() ?? "";
   // título: a maioria das palavras do título procurado está no título do registro; autoria: sobrenome
   const confere = (v: VolumeGB, alvo: string) => {
@@ -166,8 +163,8 @@ async function edicaoPt(titulo: string, autor: string, original?: string): Promi
   };
   let viuNaoLiterario = false;
   for (const alvo of [titulo, original].filter((x): x is string => !!x)) {
-    let lista = await volumes(`intitle:"${alvo}" inauthor:"${sobrenome}"`, "pt");
-    if (!lista.some((v) => confere(v, alvo))) lista = [...lista, ...(await volumes(`${alvo} ${sobrenome}`, "pt"))];
+    let lista = await volumes(`intitle:"${alvo}" inauthor:"${sobrenome}"`, "pt", prazo);
+    if (!lista.some((v) => confere(v, alvo))) lista = [...lista, ...(await volumes(`${alvo} ${sobrenome}`, "pt", prazo))];
     const certos = lista.filter((v) => confere(v, alvo) && ehEdicaoPt({ idioma: v.volumeInfo?.language }));
     for (const v of [...certos.filter((x) => x.volumeInfo?.imageLinks?.thumbnail), ...certos.filter((x) => !x.volumeInfo?.imageLinks?.thumbnail)]) {
       const l = paraLivro(v);
@@ -216,12 +213,12 @@ type Grounding = {
   groundingSupports?: { segment?: { text?: string }; groundingChunkIndices?: number[] }[];
 };
 
-async function gemini(modelo: string, sistema: string, pergunta: string, extra: Record<string, unknown>) {
+async function gemini(modelo: string, sistema: string, pergunta: string, extra: Record<string, unknown>, prazo: AbortSignal) {
   const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent`, {
     method: "POST",
     headers: { "content-type": "application/json", "x-goog-api-key": process.env.GEMINI_API_KEY ?? "" },
     body: JSON.stringify({ systemInstruction: { parts: [{ text: sistema }] }, contents: [{ role: "user", parts: [{ text: pergunta }] }], ...extra }),
-    signal: AbortSignal.timeout(sistema === PESQUISA ? 25000 : 12000),
+    signal: AbortSignal.any([prazo, AbortSignal.timeout(sistema === PESQUISA ? 15000 : 8000)]),
   }).catch(() => null);
   if (!r?.ok) return null;
   const dados = (await r.json().catch(() => ({}))) as { candidates?: { content?: { parts?: { text?: string }[] }; groundingMetadata?: Grounding }[] };
@@ -231,55 +228,52 @@ async function gemini(modelo: string, sistema: string, pergunta: string, extra: 
 
 export type Diagnostico = { etapa: "sem-chave" | "pesquisa-falhou" | "sem-paginas" | "extracao-falhou" | "ok"; paginas: number; modelo?: string };
 
-async function pesquisaContextual(pergunta: string, ids: Set<string>): Promise<{ candidatos: Candidato[]; externa: boolean; diagnostico: Diagnostico }> {
+async function pesquisaContextual(pergunta: string, ids: Set<string>, prazo: AbortSignal): Promise<{ candidatos: Candidato[]; externa: boolean; diagnostico: Diagnostico }> {
+  const prazoGemini = AbortSignal.any([prazo, AbortSignal.timeout(22000)]);
   for (const modelo of (process.env.GEMINI_API_KEY ? modelos() : [])) {
-    const a = await gemini(modelo, PESQUISA, pergunta, { tools: [{ google_search: {} }], generationConfig: { temperature: 0.2 } });
+    if (prazoGemini.aborted) break;
+    const a = await gemini(modelo, PESQUISA, pergunta, { tools: [{ google_search: {} }], generationConfig: { temperature: 0.2 } }, prazoGemini);
     if (!a?.texto) continue;
     const paginas = (a.g?.groundingChunks ?? [])
       .map((ch) => {
         const dominio = (ch.web?.title ?? "").toLowerCase();
         return { titulo: ch.web?.title ?? "", url: ch.web?.uri ?? "", dominio, tipo: tipoDaFonte(dominio) };
-      })
-      .filter((f) => f.url);
-    if (!paginas.length) break;
+      });
+    if (!paginas.some((p) => urlDaFonte(p.url))) continue;
     // trechos do relatório ligados a cada página (ajudam a extração a atribuir as fontes)
     const trechos = new Map<number, string[]>();
     for (const s of a.g?.groundingSupports ?? []) for (const i of s.groundingChunkIndices ?? []) trechos.set(i, [...(trechos.get(i) ?? []), (s.segment?.text ?? "").slice(0, 200)]);
     const lista = paginas.map((p, i) => `[${i}] ${p.dominio}${trechos.get(i)?.length ? ` — citado em: ${trechos.get(i)!.slice(0, 3).join(" | ")}` : ""}`).join("\n");
     const b = await gemini(modelo, EXTRACAO, `Ids permitidos: ${[...ids].join(", ")}\n\nPáginas consultadas:\n${lista}\n\nRelatório:\n${a.texto.slice(0, 12000)}`, {
       generationConfig: { responseMimeType: "application/json", temperature: 0 },
-    });
-    let json: { livros?: Record<string, unknown>[] } = {};
+    }, prazoGemini);
+    let json: { livros?: unknown } | null = null;
     try {
       json = JSON.parse(b?.texto ?? "");
     } catch {
-      break;
+      continue;
     }
-    const candidatos = (json.livros ?? [])
+    const candidatos = registros(json?.livros)
       .map((l) => ({
         titulo: texto(l.titulo, 160),
         autor: texto(l.autor, 120),
         original: texto(l.original, 160) || undefined,
         porque: texto(l.porque, 130),
         caracteristicas: listaDe(l.caracteristicas, 3, 40).filter((x) => ids.has(x)),
-        fontes: fontesDaObra(texto(l.titulo, 160), l.paginas),
+        fontes: fontesDaObra([texto(l.titulo, 160), texto(l.original, 160)]),
       }))
       .filter((l) => l.titulo && l.autor)
       .slice(0, 14);
     if (candidatos.some((l) => l.fontes.length)) return { candidatos: candidatos.filter((l) => l.fontes.length), externa: true, diagnostico: { etapa: "ok", paginas: paginas.length, modelo } };
 
-    // páginas de cada obra: as que a extração indicou + as que sustentam trechos do relatório que citam o título;
-    // sem nenhuma específica, as páginas mais relevantes desta pesquisa (todas reais, consultadas para ela)
-    function fontesDaObra(titulo: string, indicadas: unknown): Fonte[] {
-      const idx = new Set((Array.isArray(indicadas) ? indicadas : []).map(Number).filter((n) => Number.isInteger(n) && n >= 0 && n < paginas.length));
-      const t = norm(titulo).slice(0, 18);
-      for (const sp of a!.g?.groundingSupports ?? []) if (t && norm(sp.segment?.text ?? "").includes(t)) for (const i of sp.groundingChunkIndices ?? []) idx.add(i);
-      const proprias = [...idx].map((n) => paginas[n]).filter((f) => f && f.tipo !== "comercial");
-      return proprias;
+    function fontesDaObra(titulos: string[]): Fonte[] {
+      const alvos = titulos.map(norm).filter(Boolean);
+      return paginas.filter((f, i) => urlDaFonte(f.url) && f.tipo !== "comercial" &&
+        [f.titulo, ...(trechos.get(i) ?? [])].some((trecho) => mencionaObra(trecho, alvos)));
     }
   }
   // 2ª via: pesquisa na internet pelo Tavily + organização por uma IA (Groq, ou Gemini se houver cota)
-  const viaTavily = await pesquisaTavily(pergunta, ids);
+  const viaTavily = await pesquisaTavily(pergunta, ids, prazo);
   if (viaTavily?.candidatos.length) return viaTavily;
 
   // Sem evidência externa, não apresentar sugestões geradas apenas pelo modelo.
@@ -293,9 +287,9 @@ async function pesquisaContextual(pergunta: string, ids: Set<string>): Promise<{
  * pergunta à própria API e prefere os maiores de uso geral.
  */
 let modelosGroq: { em: number; lista: string[] } | null = null;
-export async function modelosDoGroq(chave: string): Promise<string[]> {
+export async function modelosDoGroq(chave: string, prazo = AbortSignal.timeout(8000)): Promise<string[]> {
   if (modelosGroq && Date.now() - modelosGroq.em < 36e5) return modelosGroq.lista;
-  const r = await fetch("https://api.groq.com/openai/v1/models", { headers: { authorization: `Bearer ${chave}` }, signal: AbortSignal.timeout(8000) }).catch(() => null);
+  const r = await fetch("https://api.groq.com/openai/v1/models", { headers: { authorization: `Bearer ${chave}` }, signal: prazo }).catch(() => null);
   const d = r?.ok ? ((await r.json().catch(() => ({}))) as { data?: { id: string; active?: boolean }[] }) : {};
   const ids = (d.data ?? []).filter((m) => m.active !== false).map((m) => m.id).filter((id) => !/whisper|tts|guard|embed|vision|audio|orpheus|playai|compound/i.test(id));
   const peso = (id: string) => (/gpt-oss-120b/.test(id) ? 0 : /llama-4-maverick|kimi|qwen3-32b|70b/.test(id) ? 1 : /llama-4-scout|gpt-oss-20b/.test(id) ? 2 : /8b|instant/.test(id) ? 4 : 3);
@@ -305,15 +299,15 @@ export async function modelosDoGroq(chave: string): Promise<string[]> {
 }
 
 /** pede JSON a uma IA: Groq primeiro (gratuito), depois Gemini (se houver cota) */
-async function iaJson(sistema: string, pergunta: string): Promise<{ json: { livros?: Record<string, unknown>[] }; modelo: string } | null> {
+async function iaJson(sistema: string, pergunta: string, prazo: AbortSignal): Promise<{ json: { livros?: Record<string, unknown>[] }; modelo: string } | null> {
   const groq = process.env.GROQ_API_KEY;
   if (groq) {
-    for (const modelo of [process.env.GROQ_MODEL, ...(await modelosDoGroq(groq))].filter((m, i, a): m is string => !!m && a.indexOf(m) === i)) {
+    for (const modelo of [process.env.GROQ_MODEL, ...(await modelosDoGroq(groq, AbortSignal.any([prazo, AbortSignal.timeout(5000)])))].filter((m, i, a): m is string => !!m && a.indexOf(m) === i)) {
       const r = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
         headers: { "content-type": "application/json", authorization: `Bearer ${groq}` },
         body: JSON.stringify({ model: modelo, temperature: 0.2, response_format: { type: "json_object" }, messages: [{ role: "system", content: sistema }, { role: "user", content: pergunta }] }),
-        signal: AbortSignal.timeout(20000),
+        signal: AbortSignal.any([prazo, AbortSignal.timeout(8000)]),
       }).catch(() => null);
       if (!r?.ok) continue;
       const d = (await r.json().catch(() => ({}))) as { choices?: { message?: { content?: string } }[] };
@@ -324,8 +318,8 @@ async function iaJson(sistema: string, pergunta: string): Promise<{ json: { livr
       }
     }
   }
-  for (const modelo of modelos()) {
-    const c = await gemini(modelo, sistema, pergunta, { generationConfig: { responseMimeType: "application/json", temperature: 0.2 } });
+  for (const modelo of (process.env.GEMINI_API_KEY ? modelos() : [])) {
+    const c = await gemini(modelo, sistema, pergunta, { generationConfig: { responseMimeType: "application/json", temperature: 0.2 } }, prazo);
     try {
       return { json: JSON.parse(c?.texto ?? ""), modelo };
     } catch {
@@ -344,7 +338,7 @@ const dominioDe = (url: string) => {
 };
 
 /** busca recomendações reais no Tavily (português e inglês) e deixa a IA só extrair e organizar */
-async function pesquisaTavily(pergunta: string, ids: Set<string>): Promise<{ candidatos: Candidato[]; externa: boolean; diagnostico: Diagnostico } | null> {
+async function pesquisaTavily(pergunta: string, ids: Set<string>, prazo: AbortSignal): Promise<{ candidatos: Candidato[]; externa: boolean; diagnostico: Diagnostico } | null> {
   const chave = process.env.TAVILY_API_KEY;
   if (!chave || (!process.env.GROQ_API_KEY && !process.env.GEMINI_API_KEY)) return null;
   const consulta = pergunta.match(/Pesquisa: (.*)/)?.[1] ?? pergunta.split("\n")[0];
@@ -353,6 +347,7 @@ async function pesquisaTavily(pergunta: string, ids: Set<string>): Promise<{ can
   const estrategia = await iaJson(
     `Você transforma um pedido de leitura em buscas na internet que encontram LISTAS E RECOMENDAÇÕES de livros (crítica, livreiros, Goodreads, Reddit, blogs literários). Interprete frases poéticas pelo sentido (ex.: "entre livros e segredos" = romances ambientados em bibliotecas/livrarias com mistérios). Responda SÓ com JSON {"livros":[],"buscas":[string,string,string]}: duas buscas em inglês e uma em português, curtas e específicas.`,
     pergunta,
+    prazo,
   );
   const buscasIA = (estrategia?.json as { buscas?: unknown } | undefined)?.buscas;
   const sugeridas = Array.isArray(buscasIA) ? buscasIA.map((x) => texto(x, 140)).filter(Boolean).slice(0, 3) : [];
@@ -365,7 +360,7 @@ async function pesquisaTavily(pergunta: string, ids: Set<string>): Promise<{ can
         method: "POST",
         headers: { "content-type": "application/json", authorization: `Bearer ${chave}` },
         body: JSON.stringify({ query: q, search_depth: "basic", max_results: 5, include_answer: false }),
-        signal: AbortSignal.timeout(15000),
+        signal: AbortSignal.any([prazo, AbortSignal.timeout(10000)]),
       })
         .then((r) => (r.ok ? r.json() : null))
         .catch(() => null),
@@ -373,7 +368,7 @@ async function pesquisaTavily(pergunta: string, ids: Set<string>): Promise<{ can
   );
   const paginas = respostas
     .flatMap((r) => ((r as { results?: { title?: string; url?: string; content?: string }[] } | null)?.results ?? []))
-    .filter((x) => x.url)
+    .filter((x) => x.url && urlDaFonte(x.url))
     .filter((x, i, a) => a.findIndex((y) => y.url === x.url) === i)
     .map((x) => {
       const dominio = dominioDe(x.url!);
@@ -387,23 +382,19 @@ async function pesquisaTavily(pergunta: string, ids: Set<string>): Promise<{ can
 Responda SÓ com JSON: {"livros":[{"titulo":string,"autor":string,"original":string,"porque":string,"caracteristicas":[string],"paginas":[number]}]}
 "paginas": números das páginas onde a obra aparece. "porque": uma frase concreta (até 110 caracteres). "caracteristicas": só ids desta lista (no máximo 3): ${[...ids].join(", ")}.`,
     `${pergunta}\n\nPáginas:\n${lista.slice(0, 14000)}`,
+    prazo,
   );
-  const candidatos = (r?.json.livros ?? [])
+  const candidatos = registros(r?.json.livros)
     .map((l) => {
-      const idx = [...new Set((Array.isArray(l.paginas) ? l.paginas : []).map(Number).filter((n) => Number.isInteger(n) && n >= 0 && n < paginas.length))];
-      // a IA nem sempre aponta as páginas: as que citam o título (ou o original) no texto também valem
-      const alvos = [texto(l.titulo, 160), texto(l.original, 160)].map((t) => norm(t).slice(0, 20)).filter((t) => t.length > 3);
-      paginas.forEach((pg, n) => {
-        const c = norm(`${pg.titulo} ${pg.conteudo}`);
-        if (alvos.some((t) => c.includes(t))) idx.push(n);
-      });
+      const alvos = [texto(l.titulo, 160), texto(l.original, 160)].map(norm).filter(Boolean);
+      const fontes = paginas.filter((pg) => mencionaObra(`${pg.titulo} ${pg.conteudo}`, alvos));
       return {
         titulo: texto(l.titulo, 160),
         autor: texto(l.autor, 120),
         original: texto(l.original, 160) || undefined,
         porque: texto(l.porque, 130),
         caracteristicas: listaDe(l.caracteristicas, 3, 40).filter((x) => ids.has(x)),
-        fontes: [...new Set(idx)].map((n) => ({ titulo: paginas[n].titulo, url: paginas[n].url, dominio: paginas[n].dominio, tipo: paginas[n].tipo })),
+        fontes: fontes.map(({ titulo, url, dominio, tipo }) => ({ titulo, url, dominio, tipo })),
       };
     })
     .filter((l) => l.titulo && l.autor && l.fontes.length)
@@ -413,8 +404,10 @@ Responda SÓ com JSON: {"livros":[{"titulo":string,"autor":string,"original":str
 
 /* ───────── rota ───────── */
 
-export async function executarDescoberta(corpo: Record<string, unknown>): Promise<RespostaDescobrir> {
+export async function executarDescoberta(corpo: Record<string, unknown>, cancelamento?: AbortSignal): Promise<RespostaDescobrir> {
   const inicio = Date.now();
+  const prazo = AbortSignal.any([AbortSignal.timeout(50_000), ...(cancelamento ? [cancelamento] : [])]);
+  const prazoPesquisa = AbortSignal.any([prazo, AbortSignal.timeout(36_000)]);
   const consulta = texto(corpo.consulta, 200);
   const criterios = listaDe(corpo.criterios, 10, 80);
   const sem = listaDe(corpo.sem, 5, 80);
@@ -422,7 +415,7 @@ export async function executarDescoberta(corpo: Record<string, unknown>): Promis
   const contexto = texto(corpo.contexto, 300);
   const excluir = listaDe(corpo.excluir, 80);
   const ids = new Set(listaDe(corpo.ids, 80, 40));
-  const sementes = (Array.isArray(corpo.sementes) ? corpo.sementes : []).slice(0, 20).map((s) => ({ titulo: texto((s as Record<string, unknown>).titulo, 160), autor: texto((s as Record<string, unknown>).autor, 120) })).filter((s) => s.titulo && s.autor);
+  const sementes = registros(corpo.sementes).slice(0, 20).map((s) => ({ titulo: texto(s.titulo, 160), autor: texto(s.autor, 120) })).filter((s) => s.titulo && s.autor);
   const outrosIdiomas = corpo.outrosIdiomas === true;
   const avisos: string[] = [];
   const medidas: Medidas = { candidatos: 0, semEdicaoPt: 0, naoLiterarios: 0, duplicados: 0, comFontes: 0, semEvidencia: 0, metadadosFracos: 0, ms: 0 };
@@ -441,12 +434,12 @@ export async function executarDescoberta(corpo: Record<string, unknown>): Promis
     .join("\n");
 
   // curadoria verificada (sementes) + pesquisa contextual na internet
-  const contextual = consulta || criterios.length || parecido ? await pesquisaContextual(pergunta, ids) : null;
+  const contextual = consulta || criterios.length || parecido ? await pesquisaContextual(pergunta, ids, prazoPesquisa) : null;
   const externa = !!contextual?.externa;
   diagnostico = contextual?.diagnostico ?? null;
   // plano B sem IA: a curadoria fixa das características pedidas (conferida no catálogo como tudo)
   const idsPedidos = criterios.map((c) => c.match(/\(([a-z0-9-]+),/)?.[1]).filter((x): x is string => !!x);
-  const permiteFixas = !sem.length && !parecido && !contexto;
+  const permiteFixas = !sem.length && !parecido && !contexto && idsPedidos.length === criterios.length;
   const fixas = permiteFixas && !contextual?.candidatos.length && !sementes.length ? obrasFixas(idsPedidos) : [];
   if (fixas.length) avisos.push("A curadoria automática está indisponível agora: mostramos uma seleção editorial fixa para essas características, conferida no catálogo.");
   // elegibilidade: candidato da pesquisa só entra com pelo menos uma página real que o recomende
@@ -462,28 +455,21 @@ export async function executarDescoberta(corpo: Record<string, unknown>): Promis
   const fora = new Set(excluir.map((t) => norm(t)));
   const vistos = new Set<string>();
   // no máximo 5 consultas ao Google Books por vez (rajadas são recusadas)
-  const limite = <T,>(fns: (() => Promise<T>)[], n = 5) =>
-    new Promise<T[]>((ok) => {
-      const out: T[] = new Array(fns.length);
-      let prox = 0;
-      let feitos = 0;
-      if (!fns.length) return ok(out);
-      const vai = () => {
+  const limite = async <T,>(fns: (() => Promise<T>)[], n = 5) => {
+    const out: T[] = new Array(fns.length);
+    let prox = 0;
+    await Promise.all(Array.from({ length: Math.min(n, fns.length) }, async () => {
+      while (prox < fns.length) {
         const i = prox++;
-        if (i >= fns.length) return;
-        fns[i]().then((v) => {
-          out[i] = v;
-          if (++feitos === fns.length) ok(out);
-          else vai();
-        });
-      };
-      for (let k = 0; k < Math.min(n, fns.length); k++) vai();
-    });
-  const resolver = (lista: Candidato[], deslocar = 0) => limite(
-    lista.map((c, i0) => async () => {
-      const i = i0 + deslocar;
+        out[i] = await fns[i]();
+      }
+    }));
+    return out;
+  };
+  const resolver = (lista: Candidato[]) => limite(
+    lista.map((c, i) => async () => {
       if (fora.has(norm(c.titulo))) return null;
-      const r = await edicaoPt(c.titulo, c.autor, c.original);
+      const r = await edicaoPt(c.titulo, c.autor, c.original, prazo);
       if (r.livro && (!r.livro.capa || /desconhecid/.test(r.livro.autor))) {
         medidas.metadadosFracos++;
         return null;
@@ -535,6 +521,6 @@ export async function executarDescoberta(corpo: Record<string, unknown>): Promis
   if (contextual && !externa && !fixas.length) avisos.push("A pesquisa em fontes externas não respondeu desta vez.");
   if (outrosIdiomas) avisos.push("Edições em outros idiomas aparecem só na pesquisa direta por título, autor ou ISBN.");
   medidas.ms = Date.now() - inicio;
-  return { versao: VERSAO_DESCOBERTA, resultados, pesquisaExterna: externa, avisos, medidas, diagnostico };
+  return { versao: VERSAO_DESCOBERTA, resultados, pesquisaExterna: medidas.comFontes > 0, avisos, medidas, diagnostico };
 }
 
