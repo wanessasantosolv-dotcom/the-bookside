@@ -66,13 +66,18 @@ export function EntrePalavras() {
     setTimeout(() => setAviso(""), 2000);
   }
 
-  const botao = "grid size-9 place-items-center rounded-full text-cinza hover:bg-bordo/5 hover:text-bordo";
+  const botao = "grid size-9 place-items-center rounded-full text-bordo/70 hover:bg-creme/60 hover:text-bordo";
   return (
-    <figure className="border-y border-linha py-4 lg:py-5">
-      <div className="flex items-start gap-4">
+    <figure className="grao relative overflow-hidden rounded-[10px] bg-rosa-editorial px-4 py-4 lg:px-6 lg:py-5">
+      {/* detalhe azul suave no canto, sem tomar a peça */}
+      <span aria-hidden className="pointer-events-none absolute -top-10 -right-10 size-32 rounded-full bg-descoberta-suave/80" />
+      <div className="relative flex items-start gap-3 lg:gap-4">
+        <span aria-hidden className="font-revista text-[44px] leading-[.8] text-bordo lg:text-[52px]">
+          “
+        </span>
         <div className="min-w-0 flex-1">
-          <p className="mb-1.5 text-[10px] font-semibold tracking-[.18em] text-descoberta-tinta uppercase">entre palavras.</p>
-          <blockquote className="font-revista text-[17px] leading-[1.4] text-ameixa lg:text-[19px]">
+          <p className="mb-1 font-revista text-[15px] leading-none text-bordo italic">quotes</p>
+          <blockquote className="font-revista text-[17px] leading-[1.4] text-ameixa italic lg:text-[19px]">
             {c.texto.split(" / ").map((v, i, a) => (
               <span key={i}>
                 {v}
@@ -81,6 +86,7 @@ export function EntrePalavras() {
             ))}
           </blockquote>
           <figcaption className="mt-2 text-[12px] text-tinta-suave">
+            —{" "}
             {c.autor} ·{" "}
             <Link href={`/buscar?q=${encodeURIComponent(`${c.obra} ${c.autor.replace(/\s*\(.*\)/, "")}`)}`} className="italic hover:text-bordo hover:underline">
               {c.obra}
@@ -105,7 +111,7 @@ export function EntrePalavras() {
           </button>
         </div>
       </div>
-      <span role="status" className="block min-h-0 text-[11px] text-cinza">
+      <span role="status" className="relative block min-h-0 text-[11px] text-tinta-suave">
         {aviso}
       </span>
     </figure>
