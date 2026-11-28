@@ -35,6 +35,20 @@ export default function ConfirmarEmailPage() {
     caixas.current[Math.min(i + limpos.length, DIGITOS - 1)]?.focus();
   }
 
+  if (!supabase) {
+    return (
+      <ContaShell
+        voltar={{ href: "/criar-conta", rotulo: "criar conta" }}
+        titulo="seu perfil local"
+        descricao="a conexão com o Supabase está indisponível. você pode continuar com um perfil salvo neste navegador."
+      >
+        <Botao className="mt-6" onClick={() => router.replace("/criar-perfil/nome")}>
+          continuar
+        </Botao>
+      </ContaShell>
+    );
+  }
+
   return (
     <ContaShell eyebrow="quase lá"
       voltar={{ href: "/criar-conta", rotulo: "criar conta" }}
@@ -74,8 +88,10 @@ export default function ConfirmarEmailPage() {
             if (supabase && email) {
               const { error } = await supabase.auth.resend({ type: "signup", email });
               if (error) return setAviso(mensagemDeErro(error));
+              setAviso("enviamos um novo e-mail ✦");
+            } else {
+              setAviso("volte para criar conta e informe seu e-mail.");
             }
-            setAviso("enviamos um novo código ✦");
           }} className="py-2 font-bold text-bordo">
           reenviar código
         </button>

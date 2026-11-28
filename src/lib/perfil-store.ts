@@ -94,7 +94,7 @@ export type LivroSalvo = {
     naFicha?: boolean;
   }[];
   /** leituras anteriores (quando a pessoa começa uma releitura) */
-  releituras?: { iniciadoEm?: string; lidoEm?: string; nota?: number; formato?: FormatoLivro }[];
+  releituras?: { iniciadoEm?: string; lidoEm?: string; lidoSoAno?: boolean; lidoSoMes?: boolean; nota?: number; formato?: FormatoLivro }[];
   /** ids das estantes criadas pela pessoa onde o livro está */
   estantes?: string[];
   /** só na lista: aparece numa estante própria sem estar na estante pessoal (nunca é salvo em livros) */
@@ -112,6 +112,7 @@ export type LivroDaEdicao = {
   nota?: number;
   iniciadoEm?: string;
   lidoEm?: string;
+  lidoSoMes?: boolean;
   formato?: FormatoLivro;
   /** terminou no mês (senão, estava em andamento) */
   concluido: boolean;
@@ -245,11 +246,11 @@ type Acoes = {
  */
 function avisarTermino(antigo: LivroSalvo | undefined, novo: LivroSalvo, get: () => Perfil & Acoes) {
   if (novo.status !== "lido") return;
-  const releitura = (novo.releituras?.length ?? 0) > (antigo?.releituras?.length ?? 0) || (antigo?.status === "lido" && !!novo.lidoEm && novo.lidoEm !== antigo.lidoEm && !!novo.releituras?.length);
+  const releitura = (novo.releituras?.length ?? 0) > (antigo?.releituras?.length ?? 0);
   if (antigo?.status === "lido" && !releitura) return;
   queueMicrotask(() => {
     const estado = get();
-    celebrarTermino({ id: novo.id, titulo: novo.titulo, autor: novo.autor, capa: novo.capa, lidoEm: novo.lidoEm, lidoSoAno: novo.lidoSoAno }, { livros: estado.livros, meta: estado.meta }, { releitura });
+    celebrarTermino({ id: novo.id, titulo: novo.titulo, autor: novo.autor, capa: novo.capa, lidoEm: novo.lidoEm, lidoSoAno: novo.lidoSoAno }, { livros: estado.livros, meta: estado.meta }, { releitura: releitura || !!novo.releituras?.length });
   });
 }
 

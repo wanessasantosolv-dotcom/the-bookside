@@ -8,6 +8,7 @@
  *
  * Os meses seguem o fuso do aparelho (datas locais).
  */
+import { registrosUnicos } from "@/lib/leituras";
 import { autoresDoLivro, chaveDia } from "@/lib/jornada";
 import type { GeneroAutoria, Pais } from "@/lib/nacionalidade";
 import { generoDoLivro, mesDoReview } from "@/lib/numeros";
@@ -86,7 +87,7 @@ export function livrosDoMes(livros: LivroSalvo[], chave: string): LivroDaEdicao[
   const inicioMes = `${chave}-01`;
   const fimMes = `${chave}-${String(new Date(e.ano, e.mes + 1, 0).getDate()).padStart(2, "0")}`;
   const saida: LivroDaEdicao[] = [];
-  for (const l of livros) {
+  for (const l of registrosUnicos(livros)) {
     const base = {
       id: l.id,
       titulo: l.titulo,
@@ -98,21 +99,23 @@ export function livrosDoMes(livros: LivroSalvo[], chave: string): LivroDaEdicao[
     const sessoes = (l.sessoes ?? []).filter((s) => mesDe(s.em) === chave);
     // leituras anteriores (releituras) terminadas no mês
     for (const r of l.releituras ?? [])
-      if (mesDe(r.lidoEm) === chave)
+      if (!r.lidoSoAno && mesDe(r.lidoEm) === chave)
         saida.push({
           ...base,
           nota: r.nota,
           iniciadoEm: r.iniciadoEm,
           lidoEm: r.lidoEm,
+          lidoSoMes: r.lidoSoMes,
           formato: r.formato,
           concluido: true,
         });
-    if (l.status === "lido" && mesDe(l.lidoEm) === chave) {
+    if (l.status === "lido" && !l.lidoSoAno && mesDe(l.lidoEm) === chave) {
       saida.push({
         ...base,
         nota: l.nota,
         iniciadoEm: l.iniciadoEm,
         lidoEm: l.lidoEm,
+        lidoSoMes: l.lidoSoMes,
         formato: l.formato,
         concluido: true,
         ...(sessoes.length ? { sessoes } : {}),
@@ -123,7 +126,7 @@ export function livrosDoMes(livros: LivroSalvo[], chave: string): LivroDaEdicao[
     const ini = chaveLocal(l.iniciadoEm);
     const andando =
       (l.status === "lendo" || l.status === "pausado" || l.status === "abandonado" ||
-        (l.status === "lido" && (chaveLocal(l.lidoEm) ?? "") > fimMes)) &&
+        (l.status === "lido" && !l.lidoSoAno && (chaveLocal(l.lidoEm) ?? "") > fimMes)) &&
       !!ini &&
       ini <= fimMes &&
       (l.status !== "lido" || (chaveLocal(l.lidoEm) ?? "") >= inicioMes);
@@ -144,7 +147,7 @@ export function livrosDoMes(livros: LivroSalvo[], chave: string): LivroDaEdicao[
 export function assinaturaDe(livros: LivroDaEdicao[]) {
   const texto = livros
     .map((l) =>
-      [l.id, l.concluido ? 1 : 0, l.nota ?? "", l.lidoEm?.slice(0, 10) ?? "", l.iniciadoEm?.slice(0, 10) ?? "", l.paginas ?? "", l.capa ?? ""].join(":"),
+      [l.id, l.concluido ? 1 : 0, l.nota ?? "", l.lidoSoMes ? 1 : 0, l.lidoEm?.slice(0, 10) ?? "", l.iniciadoEm?.slice(0, 10) ?? "", l.paginas ?? "", l.capa ?? ""].join(":"),
     )
     .sort()
     .join("|");
@@ -157,14 +160,14 @@ export function assinaturaDe(livros: LivroDaEdicao[]) {
 export function mesesComLeitura(livros: LivroSalvo[], hoje = new Date()) {
   const meses = new Set<string>();
   const atual = chaveDoMes(hoje.getFullYear(), hoje.getMonth());
-  for (const l of livros) {
+  for (const l of registrosUnicos(livros)) {
     for (const r of l.releituras ?? []) {
-      const m = mesDe(r.lidoEm);
+      const m = r.lidoSoAno ? undefined : mesDe(r.lidoEm);
       if (m) meses.add(m);
     }
-    if (l.status === "lido" && l.lidoEm) meses.add(mesDe(l.lidoEm)!);
+    if (l.status === "lido" && !l.lidoSoAno && l.lidoEm) meses.add(mesDe(l.lidoEm)!);
     const ini = l.iniciadoEm ? new Date(l.iniciadoEm) : null;
-    const fim = l.status === "lido" ? (l.lidoEm ? new Date(l.lidoEm) : null) : l.status === "lendo" ? hoje : null;
+    const fim = l.status === "lido" ? (l.lidoEm && !l.lidoSoAno ? new Date(l.lidoEm) : null) : l.status === "lendo" ? hoje : null;
     if (ini && fim)
       for (let d = new Date(ini.getFullYear(), ini.getMonth(), 1); d <= fim; d.setMonth(d.getMonth() + 1))
         meses.add(chaveDoMes(d.getFullYear(), d.getMonth()));
@@ -218,7 +221,7 @@ export function montarEdicao(
   const paginas = comPaginas.reduce((t, l) => t + (l.paginas ?? 0), 0);
   const notas = concluidos.map((l) => l.nota).filter((n): n is number => !!n);
   const mediaNotas = media(notas);
-  const tempos = concluidos.map((l) => diasEntre(l.iniciadoEm, l.lidoEm)).filter((n): n is number => n !== null);
+  const tempos = concluidos.map((l) => diasEntre(l.iniciadoEm, l.lidoSoMes ? undefined : l.lidoEm)).filter((n): n is number => n !== null);
   const tempoMedio = media(tempos);
 
   // ritmo: os dias do mês com livro aberto (até hoje, se o mês é o atual)
@@ -296,7 +299,7 @@ export function montarEdicao(
     if (min < maxNota!)
       extremos.push({ id: "menos", rotulo: "a menos amada", livros: concluidos.filter((l) => l.nota === min), valor: `${nota1(min)} ★` });
   }
-  const comTempo = concluidos.map((l) => ({ l, d: diasEntre(l.iniciadoEm, l.lidoEm) })).filter((x): x is { l: LivroDaEdicao; d: number } => x.d !== null);
+  const comTempo = concluidos.map((l) => ({ l, d: diasEntre(l.iniciadoEm, l.lidoSoMes ? undefined : l.lidoEm) })).filter((x): x is { l: LivroDaEdicao; d: number } => x.d !== null);
   if (comTempo.length >= 2) {
     const r = Math.min(...comTempo.map((x) => x.d));
     const d = Math.max(...comTempo.map((x) => x.d));

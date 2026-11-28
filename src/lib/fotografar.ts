@@ -10,20 +10,22 @@ type Opcoes = Parameters<typeof toPng>[1];
  * "foto" acontece antes de as imagens entrarem.
  */
 async function embutirImagens(no: HTMLElement) {
-  const trocadas: [HTMLImageElement, string][] = [];
+  const trocadas: [HTMLImageElement, string | null, string | null][] = [];
   await Promise.all(
     Array.from(no.querySelectorAll("img")).map(async (img) => {
       const src = img.currentSrc || img.src;
       if (!src || src.startsWith("data:")) return;
       try {
-        const blob = await (await fetch(src, { cache: "force-cache" })).blob();
+        const resposta = await fetch(src, { cache: "force-cache", signal: AbortSignal.timeout(8000) });
+        if (!resposta.ok) return;
+        const blob = await resposta.blob();
         const dados = await new Promise<string>((ok, erro) => {
           const leitor = new FileReader();
           leitor.onload = () => ok(String(leitor.result));
           leitor.onerror = erro;
           leitor.readAsDataURL(blob);
         });
-        trocadas.push([img, img.getAttribute("src") ?? src]);
+        trocadas.push([img, img.getAttribute("src"), img.getAttribute("srcset")]);
         img.removeAttribute("srcset");
         img.src = dados;
         await img.decode().catch(() => undefined);
@@ -32,7 +34,12 @@ async function embutirImagens(no: HTMLElement) {
       }
     }),
   );
-  return () => trocadas.forEach(([img, original]) => img.setAttribute("src", original));
+  return () => trocadas.forEach(([img, src, srcset]) => {
+    if (src === null) img.removeAttribute("src");
+    else img.setAttribute("src", src);
+    if (srcset === null) img.removeAttribute("srcset");
+    else img.setAttribute("srcset", srcset);
+  });
 }
 
 /** PNG de um bloco da página, com as capas garantidas (inclusive no iPhone) */

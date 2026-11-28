@@ -1,0 +1,40 @@
+name: Estabilização do Bookside
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [fix/estabilizacao-descobrir]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: estabilidade-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  validar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Instalar dependências
+        run: npm ci
+      - name: Testes de descoberta
+        run: node scripts/testar-descoberta.cjs
+      - name: Testes de leitura e descoberta integrada
+        run: node scripts/testar-estabilizacao.cjs
+      - name: Testes de Nas entrelinhas
+        run: node scripts/testar-entrelinhas.cjs
+      - name: Lint
+        run: npm run lint
+      - name: Verificar TypeScript
+        run: npx --no-install tsc --noEmit
+      - name: Build
+        run: npm run build

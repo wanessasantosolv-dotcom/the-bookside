@@ -416,6 +416,8 @@ export default function LivroPage() {
         {
           iniciadoEm: livro!.iniciadoEm,
           lidoEm: livro!.lidoEm,
+          lidoSoAno: livro!.lidoSoAno,
+          lidoSoMes: livro!.lidoSoMes,
           nota: livro!.nota,
           formato: livro!.formato,
         },
@@ -423,6 +425,9 @@ export default function LivroPage() {
       status: "lendo",
       iniciadoEm: new Date().toISOString(),
       lidoEm: undefined,
+      lidoSoAno: undefined,
+      lidoSoMes: undefined,
+      nota: undefined,
       paginaAtual: 0,
       paginas: livro!.paginas,
     });

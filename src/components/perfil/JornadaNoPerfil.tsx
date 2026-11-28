@@ -350,7 +350,7 @@ function WrappedClassico({ livros, ano }: { livros: LivroSalvo[]; ano: number })
               const frente = i === capas.length - 1;
               return (
                 <div
-                  key={l.id}
+                  key={`${l.id}-${i}`}
                   className="absolute bottom-0"
                   style={{
                     left: `${(capas.length - 1 - i) * -14 + 26}%`,
@@ -655,8 +655,8 @@ function ColunaMes({ rotulo, livros }: { rotulo: string; livros: LivroSalvo[] })
     <div className="min-w-0">
       <p className="text-[10px] font-semibold tracking-[.12em] text-cinza uppercase">{rotulo}</p>
       <ul className="mt-2 flex flex-wrap gap-1.5">
-        {livros.map((l) => (
-          <li key={l.id} className={livros.length > 2 ? "w-[34px]" : "w-[52px]"}>
+        {livros.map((l, i) => (
+          <li key={`${l.id}-${i}`} className={livros.length > 2 ? "w-[34px]" : "w-[52px]"}>
             <Link href={`/livro/${l.id}`} title={l.titulo} className="block transition-transform hover:-translate-y-0.5">
               {capaDe(l, "w-full !rounded-[4px] [&>span:last-child]:hidden")}
               <span className="sr-only">{l.titulo}</span>
@@ -695,8 +695,8 @@ function CartaoMes({ m }: { m: MesDoAno }) {
         <>
           {aberto ? (
             <ul className="mt-3 flex flex-wrap gap-1.5 border-t border-linha pt-3 lg:border-fio">
-              {outros.map((l) => (
-                <li key={l.id} className="w-[30px]">
+              {outros.map((l, i) => (
+                <li key={`${l.id}-${i}`} className="w-[30px]">
                   <Link href={`/livro/${l.id}`} title={l.titulo}>
                     {capaDe(l, "w-full !rounded-[3px] [&>span:last-child]:hidden")}
                     <span className="sr-only">{l.titulo}</span>
@@ -1053,8 +1053,8 @@ function LivrosDoPais({
         </button>
       </div>
       <ul className="mt-3 grid grid-cols-[repeat(auto-fill,minmax(84px,1fr))] gap-3">
-        {livros.map((l) => (
-          <li key={l.id}>
+        {livros.map((l, i) => (
+          <li key={`${l.id}-${i}`}>
             <Link href={`/livro/${l.id}`} className="group block">
               {capaDe(l, "w-full")}
               <span className="mt-1.5 line-clamp-2 text-[12px] leading-tight font-semibold text-ameixa group-hover:text-bordo">
@@ -1089,8 +1089,8 @@ function LinhaGenero({ g }: { g: GeneroDoAno }) {
           {Math.round(g.parte * 100)}%
         </span>
         <span aria-hidden className="flex w-[84px] justify-end gap-1">
-          {g.livros.slice(0, 3).map((l) => (
-            <span key={l.id} className="w-[24px]">
+          {g.livros.slice(0, 3).map((l, i) => (
+            <span key={`${l.id}-${i}`} className="w-[24px]">
               {capaDe(l, "w-full !rounded-[2px] [&>span:last-child]:hidden")}
             </span>
           ))}
@@ -1102,8 +1102,8 @@ function LinhaGenero({ g }: { g: GeneroDoAno }) {
             {g.media !== null ? `média ${nota1(g.media)} ★` : "sem notas neste gênero"}
           </p>
           <ul className="mt-2 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
-            {g.livros.map((l) => (
-              <li key={l.id} className="w-[46px] flex-none">
+            {g.livros.map((l, i) => (
+              <li key={`${l.id}-${i}`} className="w-[46px] flex-none">
                 <Link href={`/livro/${l.id}`} title={l.titulo}>
                   {capaDe(l, "w-full !rounded-[4px] [&>span:last-child]:hidden")}
                   <span className="sr-only">{l.titulo}</span>
@@ -1414,8 +1414,8 @@ function NomesQueVoltam({
                 </span>
               </span>
               <span className="flex flex-none -space-x-2.5">
-                {a.livros.slice(0, 3).map((l) => (
-                  <Link key={l.id} href={`/livro/${l.id}`} title={l.titulo} className="w-[26px]">
+                {a.livros.slice(0, 3).map((l, i) => (
+                  <Link key={`${l.id}-${i}`} href={`/livro/${l.id}`} title={l.titulo} className="w-[26px]">
                     {capaDe(l, "w-full !rounded-[3px] ring-2 ring-creme [&>span:last-child]:hidden")}
                     <span className="sr-only">{l.titulo}</span>
                   </Link>

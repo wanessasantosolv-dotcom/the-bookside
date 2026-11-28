@@ -222,5 +222,5 @@ export function diversificar<T extends { autor?: string }>(lista: T[], porAutor 
 /** chave da obra (título sem subtítulo + sobrenome), para não mostrar duas edições da mesma */
 export function chaveDaObra(titulo: string, autor = "") {
   const t = norm(titulo.split(/[:(]/)[0]);
-  return `${t}|${norm(autor).split(" ").pop() ?? ""}`;
+  return `${t}|${norm(autor)}`;
 }

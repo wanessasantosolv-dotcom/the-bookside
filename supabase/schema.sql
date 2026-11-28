@@ -29,3 +29,6 @@ create policy "atualizar o próprio perfil" on public.perfis
 drop policy if exists "apagar o próprio perfil" on public.perfis;
 create policy "apagar o próprio perfil" on public.perfis
   for delete using (auth.uid() = id);
+
+-- O PostgREST exige privilégios de tabela além das políticas por linha.
+grant select, insert, update on table public.perfis to authenticated;

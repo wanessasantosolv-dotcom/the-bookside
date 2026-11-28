@@ -5,6 +5,8 @@
  * Tudo sai dos registros reais do clube: livros do clube, fichas, progresso de
  * cada membro e data de entrada. Nada é estimado nem inventado.
  */
+import { leiturasConcluidas } from "@/lib/leituras";
+import { chaveDaObra } from "@/lib/descoberta-qualidade";
 import type { Ficha, LivroDoClube, Membro, Progresso } from "@/lib/clubes";
 import type { LivroSalvo } from "@/lib/perfil-store";
 
@@ -165,9 +167,9 @@ const mensal = (p: Periodo) => p.id.length === 7;
 /** os livros concluídos de uma pessoa no período (só-ano não entra nos meses), sem repetir o mesmo livro */
 function concluidosPessoais(ls: LivroSalvo[], p: Periodo) {
   const vistos = new Set<string>();
-  return ls.filter((l) => {
+  return leiturasConcluidas(ls).filter((l) => {
     if (l.status !== "lido" || !dentro(l.lidoEm, p) || (l.lidoSoAno && mensal(p))) return false;
-    const k = `${l.titulo.toLowerCase().trim()}|${(l.autor ?? "").toLowerCase().trim()}`;
+    const k = chaveDaObra(l.titulo, l.autor);
     if (vistos.has(k)) return false;
     vistos.add(k);
     return true;
@@ -189,7 +191,9 @@ export function classificacao(d: Dados, cat: Categoria, p: Periodo): Linha[] {
         if (cat === "autores") return { m, valor: new Set(lidos.map((l) => (l.autor ?? "").toLowerCase().trim()).filter(Boolean)).size };
         if (cat === "generos") return { m, valor: new Set(lidos.map((l) => (l as { genero?: string }).genero?.toLowerCase().trim()).filter(Boolean)).size };
         // constância: meses com leitura concluída; no histórico, a maior sequência de meses seguidos
-        const meses = [...new Set(lidos.filter((l) => !l.lidoSoAno).map((l) => l.lidoEm!.slice(0, 7)))].sort();
+        const meses = [...new Set(leiturasConcluidas(ls)
+          .filter((l) => !l.lidoSoAno && dentro(l.lidoEm, p))
+          .map((l) => l.lidoEm!.slice(0, 7)))].sort();
         if (p.id !== "geral") return { m, valor: meses.length };
         let melhor = 0;
         let atual = 0;

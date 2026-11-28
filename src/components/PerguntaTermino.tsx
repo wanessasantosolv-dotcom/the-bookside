@@ -32,7 +32,7 @@ export function dadosDoTermino(t: Termino): Partial<LivroSalvo> {
     ...(t.nota ? { nota: t.nota } : {}),
     ...(t.formato ? { formato: t.formato } : {}),
     ...(t.iniciadoEm ? { iniciadoEm: t.iniciadoEm } : {}),
-    ...(t.releituras ? { releituras: t.releituras } : {}),
+    ...(t.releituras ? { releituras: t.releituras, iniciadoEm: t.iniciadoEm, nota: t.nota } : {}),
   };
 }
 
@@ -125,7 +125,7 @@ export function PerguntaTermino({
       // releitura: a leitura anterior vai para o histórico, sem apagar nota nem datas
       releituras:
         jaLido && releitura
-          ? [...(anterior!.releituras ?? []), { iniciadoEm: anterior!.iniciadoEm, lidoEm: anterior!.lidoEm, nota: anterior!.nota, formato: anterior!.formato }]
+          ? [...(anterior!.releituras ?? []), { iniciadoEm: anterior!.iniciadoEm, lidoEm: anterior!.lidoEm, lidoSoAno: anterior!.lidoSoAno, lidoSoMes: anterior!.lidoSoMes, nota: anterior!.nota, formato: anterior!.formato }]
           : undefined,
     });
   }

@@ -271,6 +271,9 @@ export function Compartilhar({ onFechar, ...p }: Props & { onFechar: () => void 
   const [slide, setSlide] = useState(0);
   const [gerando, setGerando] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
+  const fecharBotao = useRef<HTMLButtonElement>(null);
+  const fecharAtual = useRef(onFechar);
+  useEffect(() => { fecharAtual.current = onFechar; }, [onFechar]);
   const quadros = useRef<(HTMLDivElement | null)[]>([]);
   const atual = PECAS.find((x) => x.id === peca)!;
   const lista =
@@ -285,10 +288,18 @@ export function Compartilhar({ onFechar, ...p }: Props & { onFechar: () => void 
   const escala = largura / atual.w;
 
   useEffect(() => {
-    const esc = (e: KeyboardEvent) => e.key === "Escape" && onFechar();
+    const anterior = document.activeElement;
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    fecharBotao.current?.focus();
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && fecharAtual.current();
     document.addEventListener("keydown", esc);
-    return () => document.removeEventListener("keydown", esc);
-  }, [onFechar]);
+    return () => {
+      document.body.style.overflow = overflow;
+      document.removeEventListener("keydown", esc);
+      if (anterior instanceof HTMLElement) anterior.focus();
+    };
+  }, []);
 
   async function exportar() {
     setGerando(true);
@@ -297,7 +308,8 @@ export function Compartilhar({ onFechar, ...p }: Props & { onFechar: () => void 
       const arquivos: { png: string; arquivo: File }[] = [];
       for (let i = 0; i < lista.length; i++) {
         const no = quadros.current[i];
-        if (no) arquivos.push(await paraArquivo(no, atual.w, atual.h, `the-bookside-journal-${p.ed.chave}-${peca}${lista.length > 1 ? `-${i + 1}` : ""}.png`));
+        if (!no) throw new Error("arte indisponível");
+        arquivos.push(await paraArquivo(no, atual.w, atual.h, `the-bookside-journal-${p.ed.chave}-${peca}${lista.length > 1 ? `-${i + 1}` : ""}.png`));
       }
       const files = arquivos.map((a) => a.arquivo);
       if (navigator.canShare?.({ files })) await navigator.share({ files, title: "the bookside journal" });
@@ -330,7 +342,7 @@ export function Compartilhar({ onFechar, ...p }: Props & { onFechar: () => void 
       >
         <div className="flex items-center justify-between">
           <p className="font-display text-[22px] font-semibold text-ameixa lg:font-revista lg:font-normal">compartilhar a edição</p>
-          <button type="button" onClick={onFechar} className="text-[13px] font-semibold text-cinza hover:text-bordo">
+          <button ref={fecharBotao} type="button" onClick={onFechar} className="text-[13px] font-semibold text-cinza hover:text-bordo">
             fechar
           </button>
         </div>
@@ -341,6 +353,7 @@ export function Compartilhar({ onFechar, ...p }: Props & { onFechar: () => void 
               type="button"
               role="radio"
               aria-checked={peca === x.id}
+              disabled={gerando}
               onClick={() => {
                 setPeca(x.id);
                 setSlide(0);
