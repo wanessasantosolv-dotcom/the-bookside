@@ -343,6 +343,48 @@ function Dados() {
     a.click();
     URL.revokeObjectURL(url);
   }
+  /** planilha (abre no Excel, Numbers e Google Planilhas): uma linha por livro, com tudo que o app guarda dele */
+  function baixarPlanilha() {
+    const p = usePerfil.getState();
+    const nomesDasListas = (l: (typeof p.livros)[number]) =>
+      p.estantesProprias
+        .filter((e) => l.estantes?.includes(e.id))
+        .map((e) => e.nome)
+        .join("; ");
+    const data = (iso?: string, soAno?: boolean, soMes?: boolean) => (!iso ? "" : soAno ? iso.slice(0, 4) : soMes ? iso.slice(0, 7) : iso.slice(0, 10));
+    const STATUS: Record<string, string> = { lido: "lido", lendo: "lendo", quero: "quero ler", parado: "pausado", abandonado: "abandonado" };
+    const colunas: [string, (l: (typeof p.livros)[number]) => unknown][] = [
+      ["título", (l) => l.titulo],
+      ["autoria", (l) => l.autor],
+      ["status", (l) => STATUS[l.status ?? ""] ?? l.status ?? ""],
+      ["nota", (l) => l.nota ?? ""],
+      ["favorito", (l) => (l.amei ? "sim" : "")],
+      ["formato", (l) => l.formato ?? ""],
+      ["gênero", (l) => l.genero ?? ""],
+      ["páginas", (l) => l.paginas ?? ""],
+      ["página atual", (l) => l.paginaAtual ?? ""],
+      ["início", (l) => data(l.iniciadoEm)],
+      ["conclusão", (l) => data(l.lidoEm, l.lidoSoAno, l.lidoSoMes)],
+      ["releituras", (l) => l.releituras?.length || ""],
+      ["listas", nomesDasListas],
+      ["adicionado em", (l) => data(l.adicionadoEm)],
+      ["resenha", (l) => l.resenha ?? ""],
+      ["citação favorita", (l) => l.citacao ?? ""],
+      ["anotações", (l) => l.anotacao ?? ""],
+    ];
+    const celula = (v: unknown) => {
+      const t = String(v ?? "").replace(/\r?\n/g, " ");
+      return /[",;\n]/.test(t) ? `"${t.replace(/"/g, '""')}"` : t;
+    };
+    const csv = [colunas.map(([c]) => c).join(","), ...p.livros.map((l) => colunas.map(([, f]) => celula(f(l))).join(","))].join("\r\n");
+    // o BOM faz o Excel abrir com acentos certos
+    const url = URL.createObjectURL(new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `the-bookside-livros-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
   async function esvaziar() {
     if (!quantos) return;
     if (!confirm(`tirar ${quantos === 1 ? "o livro" : `os ${quantos} livros`} da sua estante? as notas, resenhas e o progresso de leitura deles somem junto. as fichas dos clubes continuam. não dá para desfazer.`)) return;
@@ -356,8 +398,19 @@ function Dados() {
         <h2 className={tituloSecao}>Seus dados</h2>
         <div className={linha}>
           <span>
-            <span className="block text-[14px] font-semibold">Baixar uma cópia</span>
-            <span className="block text-[12px] text-cinza">seus livros, notas, resenhas e estantes num arquivo.</span>
+            <span className="block text-[14px] font-semibold">Exportar meus livros</span>
+            <span className="block text-[12px] text-cinza">
+              {quantos} {quantos === 1 ? "livro" : "livros"} numa planilha: status, notas, datas, páginas, listas, resenhas e citações.
+            </span>
+          </span>
+          <button type="button" onClick={baixarPlanilha} disabled={!quantos} className="min-h-10 text-[13px] font-semibold text-bordo disabled:opacity-40">
+            baixar planilha (.csv)
+          </button>
+        </div>
+        <div className={linha}>
+          <span>
+            <span className="block text-[14px] font-semibold">Cópia completa</span>
+            <span className="block text-[12px] text-cinza">tudo da conta (livros com sessões de leitura, fichas, estantes, meta e perfil), para guardar ou importar.</span>
           </span>
           <button type="button" onClick={baixar} className="min-h-10 text-[13px] font-semibold text-bordo">
             baixar (.json)
