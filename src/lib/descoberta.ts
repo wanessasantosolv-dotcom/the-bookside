@@ -5,10 +5,10 @@
  * 2. pesquisa direta (título, autor, ISBN) vai ao catálogo de sempre;
  * 3. pesquisa por características pede candidatos à IA, quando há, e confere
  *    cada um no catálogo (registro real, capa oficial) antes de mostrar;
- * 4. sem IA, cai numa busca por palavras-chave no catálogo e avisa;
+ * 4. sem pesquisa externa, usa somente uma curadoria editorial compatível;
  * 5. aplica só as restrições que os dados confirmam (páginas, idioma, ano).
  */
-import { buscarLivros, chaveTitulo, livrosDoGoogle, type LivroBusca } from "@/lib/catalogo";
+import { buscarLivros, chaveTitulo, type LivroBusca } from "@/lib/catalogo";
 import { CURADORIAS } from "@/lib/curadorias";
 import { ehEdicaoPt, naoLiterario, type TipoFonte } from "@/lib/descoberta-qualidade";
 import { supabase } from "@/lib/supabase";
@@ -48,7 +48,7 @@ const norm = (s: string) =>
 
 const cache = new Map<string, Resposta>();
 /** versão do motor de descoberta (muda a chave do cache local junto com a do servidor) */
-const VERSAO = "v6";
+const VERSAO = "v7";
 
 /** filtros objetivos: só passam livros cujo dado confirma o critério */
 function confirma(l: LivroBusca, criterios: Caracteristica[]) {
@@ -105,14 +105,14 @@ export async function buscarDescoberta({ consulta, filtros = [], contexto, exclu
   const curadoria = CURADORIAS.find((c) => [c.consulta, c.nome].some((x) => x.toLowerCase() === consulta.trim().toLowerCase()));
   const sementes = pedidas.length ? pedidas : (curadoria?.sementes ?? []);
   if (curadoria && consulta.trim().toLowerCase() === curadoria.nome.toLowerCase()) consulta = `${curadoria.consulta} (${curadoria.descricao} Critérios: ${curadoria.criterios.join(", ")})`;
-  const chave = JSON.stringify([VERSAO, consulta.trim().toLowerCase(), [...filtros].sort(), contexto?.nome ?? "", contexto?.descricao ?? "", sementes.length]);
+  const chave = JSON.stringify([VERSAO, consulta.trim().toLowerCase(), [...filtros].sort(), contexto?.nome ?? "", contexto?.descricao ?? "", contexto?.titulos ?? [], [...excluir].sort(), sementes]);
   const pronto = cache.get(chave);
   if (pronto) return pronto;
 
   const interpretacao = interpretarBusca(consulta);
   const criterios = [...interpretacao.criterios, ...filtros.map((id) => PORID.get(id)).filter((x): x is Caracteristica => !!x && !interpretacao.criterios.includes(x))];
   const avisos = [...interpretacao.avisos];
-  const fora = new Set(excluir.map(chaveTitulo));
+  const fora = new Set([...excluir, ...(contexto?.titulos ?? [])].map(chaveTitulo));
   const subjetivos = criterios.filter((c) => !c.objetiva);
   const direta = ehBuscaDireta(interpretacao, consulta) && !subjetivos.length && !contexto && !sementes.length;
 
@@ -123,21 +123,12 @@ export async function buscarDescoberta({ consulta, filtros = [], contexto, exclu
       r
         .filter((l) => confirma(l, criterios) && !naoLiterario(l, consulta) && casaComAPesquisa(l, consulta))
         .map((livro) => ({ livro, caracteristicas: [] })),
-      new Set(),
+      fora,
     );
     const resposta: Resposta = { interpretacao, criterios, resultados, fonte: "catalogo", avisos };
     cache.set(chave, resposta);
     return resposta;
   }
-
-  // um título que parece pesquisa ("O Pequeno Príncipe", "Cem anos de solidão"): a obra exata vem primeiro
-  const exatos =
-    // só quando a pesquisa não pediu características (senão o livro com o mesmo nome da busca furava a fila)
-    consulta.trim() && consulta.trim().split(/\s+/).length <= 7 && !criterios.length && !sementes.length && !contexto
-      ? buscarLivros(consulta.trim(), signal)
-          .then((r) => r.filter((l) => (norm(l.titulo) === norm(consulta) || norm(l.titulo).startsWith(`${norm(consulta)} `)) && ehEdicaoPt(l) && !naoLiterario(l, consulta)).slice(0, 3))
-          .catch(() => [] as LivroBusca[])
-      : Promise.resolve([] as LivroBusca[]);
 
   // 2. descoberta: pesquisa contextual + edição em português verificada, tudo no servidor
   const tk = await token();
@@ -171,6 +162,9 @@ export async function buscarDescoberta({ consulta, filtros = [], contexto, exclu
       : null;
     if (dados) console.info(`[descobrir] ${consulta} · ${dados.resultados?.length ?? 0} resultados · ${JSON.stringify(dados.diagnostico)} · ${JSON.stringify(dados.medidas)}`);
     else if (r) console.info("[descobrir] falhou", r.status);
+    if (dados) {
+      for (const a of dados.avisos ?? []) if (!avisos.includes(a)) avisos.push(a);
+    }
     if (dados?.resultados?.length) {
       pesquisaExterna = !!dados.pesquisaExterna;
       resultados = dados.resultados.map((x, i) => ({
@@ -179,21 +173,19 @@ export async function buscarDescoberta({ consulta, filtros = [], contexto, exclu
         caracteristicas: x.caracteristicas.map((id) => PORID.get(id)).filter((c): c is Caracteristica => !!c),
         fontes: x.fontes,
       }));
-      for (const a of dados.avisos ?? []) if (!avisos.includes(a)) avisos.push(a);
     }
   }
 
-  // 3. sem recomendações verificadas: nada de completar com resultados brutos do catálogo
+  // Todos os resultados exploratórios passam pelo mesmo filtro final.
+  resultados = semRepetir(resultados.filter((r) =>
+    ehEdicaoPt(r.livro) && !!r.livro.autor && !/desconhecid/i.test(r.livro.autor) &&
+    !!r.livro.capa && !naoLiterario(r.livro) && confirma(r.livro, criterios)
+  ), fora);
   if (!resultados.length) {
     fonte = "nenhum";
     avisos.push("Não encontramos recomendações confiáveis para esta pesquisa agora. Tente outras palavras, um autor ou um livro de referência.");
   }
-
-  const primeiros = (await exatos).map((livro) => ({ livro, caracteristicas: [] as Caracteristica[] }));
-  resultados = semRepetir(
-    [...primeiros, ...resultados.filter((r) => confirma(r.livro, criterios))],
-    fora,
-  );
+  pesquisaExterna = resultados.some((r) => !!r.fontes?.length);
   const resposta: Resposta = { interpretacao, criterios, resultados, fonte, avisos, pesquisaExterna };
   if (resultados.length) cache.set(chave, resposta);
   return resposta;
