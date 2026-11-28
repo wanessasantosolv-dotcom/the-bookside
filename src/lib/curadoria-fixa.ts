@@ -64,16 +64,13 @@ export const CURADORIA_FIXA: Record<string, Obra[]> = {
   misteriosa: daCuradoria("entre-livros-e-segredos"),
 };
 
-/** as obras fixas que respondem a uma lista de características (as que batem em mais de uma vêm primeiro) */
+/** Só usa obras presentes em todas as características pedidas.
+ * Uma característica sem curadoria impede o preenchimento automático.
+ */
 export function obrasFixas(ids: string[], limite = 12): Obra[] {
-  const conta = new Map<string, { obra: Obra; n: number; ordem: number }>();
-  let ordem = 0;
-  for (const id of ids)
-    for (const ob of CURADORIA_FIXA[id] ?? []) {
-      const k = `${ob.titulo.toLowerCase()}|${ob.autor.toLowerCase()}`;
-      const x = conta.get(k) ?? { obra: ob, n: 0, ordem: ordem++ };
-      x.n++;
-      conta.set(k, x);
-    }
-  return [...conta.values()].sort((a, b) => b.n - a.n || a.ordem - b.ordem).slice(0, limite).map((x) => x.obra);
+  const unicos = [...new Set(ids)];
+  if (!unicos.length || unicos.some((id) => !CURADORIA_FIXA[id]?.length)) return [];
+  const chave = (ob: Obra) => `${ob.titulo.toLowerCase()}|${ob.autor.toLowerCase()}`;
+  const conjuntos = unicos.slice(1).map((id) => new Set(CURADORIA_FIXA[id].map(chave)));
+  return CURADORIA_FIXA[unicos[0]].filter((ob) => conjuntos.every((s) => s.has(chave(ob)))).slice(0, limite);
 }
