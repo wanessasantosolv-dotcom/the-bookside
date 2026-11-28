@@ -121,7 +121,7 @@ export type DiaDeLeitura = {
  */
 export function diasDoMes(livros: LivroSalvo[], hoje = new Date()) {
   const intervalos = livros
-    .filter((l) => l.status === "lido" || l.status === "lendo")
+    .filter((l) => l.status === "lendo" || (l.status === "lido" && !l.lidoSoAno && !l.lidoSoMes))
     .map((l) => {
       const fim = l.status === "lido" ? diaDe(l.lidoEm) : chaveDia(hoje);
       const inicio = diaDe(l.iniciadoEm) ?? fim;
@@ -394,6 +394,7 @@ export function diasDeLeituraNoAno(livros: LivroSalvo[], ano: number, hoje = new
   const dias = new Set<string>();
   for (const l of livros) {
     if (l.status !== "lido" && l.status !== "lendo") continue;
+    if (l.status === "lido" && (l.lidoSoAno || l.lidoSoMes)) continue;
     const fim = l.status === "lido" ? (l.lidoEm ? new Date(l.lidoEm) : null) : hoje;
     if (!fim) continue;
     const ini = l.iniciadoEm ? new Date(l.iniciadoEm) : fim;
